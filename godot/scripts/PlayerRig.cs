@@ -6,13 +6,7 @@ namespace TecateSimulator.Scripts;
 public partial class PlayerRig : CharacterBody3D
 {
     [Export]
-    public float Speed { get; set; } = 8.0f; // Standard walking/running speed (8 m/s)
-
-    [Export]
-    public float SprintSpeed { get; set; } = 100.0f; // Rapid exploration sprint speed (100 m/s)
-
-    [Export]
-    public float JumpVelocity { get; set; } = 15.0f; // Physics-consistent jumps
+    public float Speed { get; set; } = 4.0f; // Human walking scale (~14 km/h max walking speed)
 
     [Export]
     public float MouseSensitivity { get; set; } = 0.002f;
@@ -66,13 +60,7 @@ public partial class PlayerRig : CharacterBody3D
             velocity.Y -= _gravity * (float)delta;
         }
 
-        // Handle Jump
-        if (Input.IsKeyPressed(Key.Space) && IsOnFloor())
-        {
-            velocity.Y = JumpVelocity;
-        }
-
-        // Handle walking / sprinting movement
+        // Handle walking movement
         Vector2 inputDir = Vector2.Zero;
 
         if (Input.IsKeyPressed(Key.W))
@@ -95,17 +83,16 @@ public partial class PlayerRig : CharacterBody3D
         inputDir = inputDir.Normalized();
 
         Vector3 direction = (Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized();
-        float currentSpeed = Input.IsKeyPressed(Key.Shift) ? SprintSpeed : Speed;
 
         if (direction != Vector3.Zero)
         {
-            velocity.X = direction.X * currentSpeed;
-            velocity.Z = direction.Z * currentSpeed;
+            velocity.X = direction.X * Speed;
+            velocity.Z = direction.Z * Speed;
         }
         else
         {
-            velocity.X = Mathf.MoveToward(Velocity.X, 0, currentSpeed);
-            velocity.Z = Mathf.MoveToward(Velocity.Z, 0, currentSpeed);
+            velocity.X = Mathf.MoveToward(Velocity.X, 0, Speed);
+            velocity.Z = Mathf.MoveToward(Velocity.Z, 0, Speed);
         }
 
         Velocity = velocity;

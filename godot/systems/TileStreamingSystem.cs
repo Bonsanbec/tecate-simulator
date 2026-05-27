@@ -20,10 +20,10 @@ public partial class TileStreamingSystem : Node
     public NodePath PlayerNodePath { get; set; } = new NodePath("");
 
     [Export]
-    public int ActiveRadiusTiles { get; set; } = 5; // Radical streaming expansion to keep all tiles loaded
+    public int ActiveRadiusTiles { get; set; } = 1;
 
     [Export]
-    public int WarmRadiusTiles { get; set; } = 5;
+    public int WarmRadiusTiles { get; set; } = 2;
 
     [Export]
     public WorldOrigin? OriginOverride { get; set; }
@@ -200,53 +200,26 @@ public partial class TileStreamingSystem : Node
         Node3D tileNode = new Node3D();
         tileNode.Name = "Tile_" + tile.Id;
 
-        // Custom materials for a beautiful, premium, and recognizable Mexican aesthetic
+        // Custom materials for a beautiful, premium aesthetic
         StandardMaterial3D terrainMat = new StandardMaterial3D
         {
-            AlbedoColor = new Color(0.35f, 0.45f, 0.32f, 1f), // soft semi-arid green-brown
-            Roughness = 0.9f
+            AlbedoColor = new Color(0.24f, 0.46f, 0.28f), // Curated harmonic soft green
+            Roughness = 0.85f,
+            Metallic = 0.05f
         };
 
-        StandardMaterial3D asphaltMat = new StandardMaterial3D
+        StandardMaterial3D roadsMat = new StandardMaterial3D
         {
-            AlbedoColor = new Color(0.18f, 0.19f, 0.22f, 1f), // dark slate road
-            Roughness = 0.8f
+            AlbedoColor = new Color(0.18f, 0.19f, 0.22f), // Premium asphalt grey/dark slate
+            Roughness = 0.75f,
+            Metallic = 0.1f
         };
 
-        StandardMaterial3D concreteMat = new StandardMaterial3D
-        {
-            AlbedoColor = new Color(0.68f, 0.70f, 0.72f, 1f), // concrete sidewalk grey
-            Roughness = 0.7f
-        };
-
-        StandardMaterial3D yellowLineMat = new StandardMaterial3D
-        {
-            AlbedoColor = new Color(0.85f, 0.75f, 0.15f, 1f), // bright yellow lane divider
-            Roughness = 0.6f
-        };
-
-        StandardMaterial3D polesMat = new StandardMaterial3D
-        {
-            AlbedoColor = new Color(0.55f, 0.56f, 0.58f, 1f), // concrete pole shade
-            Roughness = 0.8f
-        };
-
-        // Vibrant Mexican architectural pastel palette for district spatial recognition
-        Color[] bldColors = new Color[]
-        {
-            new Color(0.72f, 0.41f, 0.30f, 1f), // Warm Terracotta
-            new Color(0.85f, 0.68f, 0.38f, 1f), // Pale Gold/Ochre
-            new Color(0.40f, 0.65f, 0.68f, 1f), // Soft Turquoise
-            new Color(0.90f, 0.88f, 0.84f, 1f), // Plaster White
-            new Color(0.80f, 0.76f, 0.68f, 1f), // Sandy Beige
-            new Color(0.78f, 0.55f, 0.62f, 1f), // Faded Rose
-        };
-
-        int bldHash = Math.Abs(tile.Id.GetHashCode());
         StandardMaterial3D buildingsMat = new StandardMaterial3D
         {
-            AlbedoColor = bldColors[bldHash % bldColors.Length],
-            Roughness = 0.65f
+            AlbedoColor = new Color(0.85f, 0.83f, 0.80f), // Clean concrete grey/architectural massing
+            Roughness = 0.65f,
+            Metallic = 0.15f
         };
 
         foreach (var kvp in tile.Files)
@@ -285,21 +258,11 @@ public partial class TileStreamingSystem : Node
 
             // Apply specific premium materials
             if (kind == "terrain_mesh")
-            {
                 meshInstance.MaterialOverride = terrainMat;
-            }
             else if (kind == "roads_mesh")
-            {
-                int surfaceCount = mesh.GetSurfaceCount();
-                if (surfaceCount > 0) meshInstance.SetSurfaceOverrideMaterial(0, asphaltMat);
-                if (surfaceCount > 1) meshInstance.SetSurfaceOverrideMaterial(1, concreteMat);
-                if (surfaceCount > 2) meshInstance.SetSurfaceOverrideMaterial(2, yellowLineMat);
-                if (surfaceCount > 3) meshInstance.SetSurfaceOverrideMaterial(3, polesMat);
-            }
+                meshInstance.MaterialOverride = roadsMat;
             else if (kind == "buildings_mesh")
-            {
                 meshInstance.MaterialOverride = buildingsMat;
-            }
 
             tileNode.AddChild(meshInstance);
 
