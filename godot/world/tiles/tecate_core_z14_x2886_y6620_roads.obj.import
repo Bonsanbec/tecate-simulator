@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://byep6c2faiq0"
+path="res://.godot/imported/tecate_core_z14_x2886_y6620_roads.obj-c266dda91040a70dabbb16e7d65081ea.mesh"
+
+[deps]
+
+files=["res://.godot/imported/tecate_core_z14_x2886_y6620_roads.obj-c266dda91040a70dabbb16e7d65081ea.mesh"]
+
+source_file="res://world/tiles/tecate_core_z14_x2886_y6620_roads.obj"
+dest_files=["res://.godot/imported/tecate_core_z14_x2886_y6620_roads.obj-c266dda91040a70dabbb16e7d65081ea.mesh", "res://.godot/imported/tecate_core_z14_x2886_y6620_roads.obj-c266dda91040a70dabbb16e7d65081ea.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

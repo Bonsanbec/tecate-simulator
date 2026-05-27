@@ -1,14 +1,15 @@
-[gd_scene load_steps=7 format=3 uid="uid://tecate_main_scene"]
+[gd_scene load_steps=9 format=3 uid="uid://tecate_main_scene"]
 
 [ext_resource type="Script" path="res://scripts/GameBootstrap.cs" id="1_game_bootstrap"]
 [ext_resource type="PackedScene" path="res://scenes/WorldRoot.tscn" id="2_world_root"]
 [ext_resource type="PackedScene" path="res://scenes/PlayerRig.tscn" id="3_player_rig"]
+[ext_resource type="ArrayMesh" path="res://world/landmark_montana_cuchuma.obj" id="4_cuchuma_mesh"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
-sky_top_color = Color(0.38f, 0.53f, 0.78f)
-sky_horizon_color = Color(0.68f, 0.76f, 0.88f)
-ground_bottom_color = Color(0.2f, 0.2f, 0.2f)
-ground_horizon_color = Color(0.68f, 0.76f, 0.88f)
+sky_top_color = Color(0.38, 0.53, 0.78, 1)
+sky_horizon_color = Color(0.68, 0.76, 0.88, 1)
+ground_bottom_color = Color(0.2, 0.2, 0.2, 1)
+ground_horizon_color = Color(0.68, 0.76, 0.88, 1)
 
 [sub_resource type="Sky" id="Sky_1"]
 sky_material = SubResource("ProceduralSkyMaterial_1")
@@ -22,11 +23,11 @@ tonemap_exposure = 1.05
 glow_enabled = true
 glow_intensity = 0.4
 glow_bloom = 0.15
-fog_enabled = true
-fog_light_color = Color(0.68f, 0.76f, 0.88f)
-fog_density = 0.0006
-fog_sky_affect = 0.6
-volumetric_fog_density = 0.005
+fog_enabled = false
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cuchuma"]
+albedo_color = Color(0.42, 0.44, 0.52, 1)
+roughness = 0.95
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_game_bootstrap")
@@ -44,3 +45,7 @@ shadow_opacity = 0.85
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_1")
+
+[node name="LandmarkCuchuma" type="MeshInstance3D" parent="."]
+mesh = ExtResource("4_cuchuma_mesh")
+material_override = SubResource("StandardMaterial3D_cuchuma")
