@@ -1,8 +1,0 @@
-{
-  "source": "dem",
-  "confidence": 1,
-  "method": "direct",
-  "sourceId": "source_dem_urban_and_cuchuma",
-  "importedAt": "2026-05-27T07:33:52.682Z",
-  "lineage": "Processed from raw/dem_tecate.json using tools/generators/generate-slice-assets.ts"
-}
