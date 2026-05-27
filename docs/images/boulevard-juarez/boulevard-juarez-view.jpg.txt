@@ -1,0 +1,16 @@
+Visual Reference: Boulevard Benito Juárez Streetscape (Tecate main corridor)
+GPS Coordinates: 32.5684 N, -116.6322 W (Center region)
+
+Real-World Reference Photos & Street Views:
+1. Google Street View - Boulevard Juárez and Calle Ortiz Rubio (Facing East toward the Brewery):
+   https://www.google.com/maps/@32.5682855,-116.6267789,3a,75y,90h,90t/data=!3m6!1e1!3m4!1sGSV_Ref_BldJuarez_Brewery!2e0!7i16384!8i8192
+   Description: Shows the massive brick facade of the Cervecería Tecate on the left, the raised concrete sidewalks, and double-story commercial shops with flat plaster walls.
+2. Google Street View - Boulevard Juárez (Facing West toward Cuchumá):
+   https://www.google.com/maps/@32.5684617,-116.6341258,3a,75y,275h,90t/data=!3m6!1e1!3m4!1sGSV_Ref_BldJuarez_West!2e0!7i16384!8i8192
+   Description: Displays the wide asphalt roadway, a central dividing yellow line, raised concrete curbs, concrete utility poles flanking the sidewalks, and the distant silhouette of the mountain.
+
+Perceptual Composition Guidelines:
+- Width and Divider: The roadway spans 12.0 meters wide with a clear, highly visible central yellow lane divider to establish highway hierarchy.
+- Curbs and Sidewalks (Banquetas): Elevated concrete curbs (0.15m height, 2.0m width) must run parallel on both sides, providing a distinct boundary between vehicles and pedestrians.
+- Street Furniture: concrete utility poles (spaced approx. 30m apart) must stand on the sidewalk edges, supporting low-hanging wire paths.
+- Buildings: Continuous low-rise (1-2 stories) commercial storefronts with narrow parcel divisions, painted in warm Mexican pastels, flush with the sidewalk.

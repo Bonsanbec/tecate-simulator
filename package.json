@@ -17,6 +17,7 @@
     "geojson:import": "tsx tools/importers/import-geojson.ts",
     "osm:fetch": "tsx tools/importers/fetch-osm-tecate.ts",
     "dem:generate": "tsx tools/generators/generate-terrain-dem.ts",
+    "cuchuma:generate": "tsx tools/generators/generate-cuchuma-mesh.ts",
     "debug:summary": "tsx tools/debug/print-project-summary.ts",
     "validate": "npm run structure:validate && npm run metadata:validate && npm run data:integrity && npm run tiles:validate"
   },
