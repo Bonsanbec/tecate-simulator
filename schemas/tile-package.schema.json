@@ -33,7 +33,19 @@
               "properties": {
                 "kind": { "type": "string" },
                 "path": { "type": "string" },
-                "sha256": { "type": "string" }
+                "sha256": { "type": "string" },
+                "provenance": {
+                  "type": "object",
+                  "required": ["source", "confidence", "method"],
+                  "properties": {
+                    "source": { "enum": ["dem", "osm", "imagery", "inferred"] },
+                    "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+                    "method": { "enum": ["direct", "extruded", "interpolated", "heuristic"] },
+                    "sourceId": { "type": "string" },
+                    "importedAt": { "type": "string" },
+                    "lineage": {}
+                  }
+                }
               }
             }
           }

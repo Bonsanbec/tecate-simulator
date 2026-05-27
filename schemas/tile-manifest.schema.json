@@ -33,6 +33,14 @@
           "files": {
             "type": "object",
             "additionalProperties": { "type": "string" }
+          },
+          "dataQuality": {
+            "type": "object",
+            "properties": {
+              "coverage": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+              "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+              "hasInferredData": { "type": "boolean" }
+            }
           }
         }
       }

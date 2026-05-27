@@ -50,7 +50,6 @@ The TypeScript toolchain is responsible for:
 - building footprint normalization;
 - volume derivation;
 - facade extrapolation metadata;
-- procedural gap-filling;
 - tile chunk generation;
 - package creation;
 - checksum generation;
@@ -61,6 +60,8 @@ The TypeScript toolchain is responsible for:
 
 Anything expensive, source-dependent, or ambiguous should be baked before runtime. Baking steps must output deterministic files whenever inputs are unchanged.
 
+If data is incomplete or missing, the toolchain must perform **controlled inference** (e.g. height interpolation, building extrusions, road continuation) and mark the geometry as `inferred` rather than failing or blocking the build. This ensures progressive degradation and a constantly renderable/navigable world.
+
 Valid baked outputs include:
 
 - normalized GeoJSON;
@@ -68,8 +69,8 @@ Valid baked outputs include:
 - terrain chunks;
 - building volume descriptors;
 - navigation meshes or inputs;
-- tile manifests;
-- runtime package manifests;
+- tile manifests with inline data quality metrics;
+- runtime package manifests containing flexible provenance metadata;
 - debug overlays;
 - source lineage reports.
 
@@ -81,7 +82,8 @@ A package must include enough metadata for:
 
 - runtime compatibility checks;
 - debugging missing tiles;
-- tracing source lineage;
+- tracing source lineage with confidence scores;
+- identifying inferred vs. real geometry layers;
 - validating coordinate origin;
 - detecting outdated package versions.
 

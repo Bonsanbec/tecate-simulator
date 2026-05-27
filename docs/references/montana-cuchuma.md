@@ -25,7 +25,6 @@ Avoid:
 
 - cinematic exaggeration;
 - compressed horizon distance;
-- procedural reinterpretation of the silhouette;
 - treating the mountain as a flat painted backdrop;
 - sacrificing silhouette recognition for terrain microdetail.
 

@@ -78,7 +78,6 @@ Data priorities:
 - adjacent building density;
 - vegetation and open-edge conditions;
 - visibility relationships;
-- procedural gap-filling constraints.
 
 ## Landmark Handling
 

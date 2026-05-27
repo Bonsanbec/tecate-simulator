@@ -1,99 +1,27 @@
-# Procedural Generation
+# Procedural Boundaries in Geospatial Reconstruction
 
-## Purpose
+## Principle
 
-Procedural generation exists to complete and repair the world after real-derived data has established the primary spatial structure.
+The project follows a strict **data-first architecture**. To ensure historical and geospatial authenticity, all structural geography (terrain elevation, road network layouts, building footprints, building massings, and landmarks) must be reconstructed directly from verified real-world sources (OpenStreetMap and Digital Elevation Models).
 
-It is not a world authoring authority. It is a controlled offline tool.
+Procedural generation is **strictly prohibited** from synthesizing, predicting, or altering any structural features of the physical world.
 
-## Allowed Use
+## Permitted Procedural Scopes
 
-Procedural generation may be used for:
+Procedural generation may only be utilized as a deterministic decorator to add non-structural microdetail and visual fidelity. The permitted scopes are:
 
-- missing secondary building height estimates;
-- simple massing from known footprints;
-- non-landmark facade rhythm extrapolation;
-- roof equipment and minor rooftop forms;
-- curb and sidewalk completion where road geometry is known;
-- low-priority background building fill;
-- vegetation scatter based on documented corridor rules;
-- utility poles, signs, and street furniture as secondary density;
-- debug geometry for validation.
+1. **Vegetation**: Scattering of trees, shrubs, and weeds based on satellite reference maps or density zones, provided it does not obscure road layouts or landmark visibility.
+2. **Textures**: Materials, procedural shader detail, aging/weathering effects, color variation on surfaces, and micro-terrain noise (non-structural surface displacement under 15cm).
+3. **Microdetail**: Non-structural props such as trash cans, utility poles, streetlights, fences, and clutter placed deterministically along road networks based on target era conventions.
 
-## Prohibited Use
+## Prohibited Procedural Scopes
 
-Procedural generation must not:
+The system **must not** generate, infer, or synthesize:
+- **Terrain Relief**: Terrain must be derived entirely from DEM data. No synthetic mountains or procedural hills (e.g., placeholder or simulated heightmaps for Cerro Cuchumá) are permitted.
+- **Road Networks**: No road synthesis, network interpolation, or alignment correction without direct OSM or GIS sources.
+- **Buildings and Footprints**: No procedural city generation, synthetic block planning, or fictitious building footprint generation. Volume derivation must be anchored entirely to verified raw footprints.
+- **Landmarks**: Landmarks must not be synthesized, simplified, or placed procedurally.
 
-- invent new landmarks;
-- modify curated landmarks;
-- move or reshape primary roads;
-- override terrain elevation;
-- replace real-derived building footprints when available;
-- merge identifiable buildings without metadata;
-- create false historic claims;
-- alter the silhouette, position, or scale of Montaña Cuchumá;
-- generate final photogrammetry;
-- make runtime-only irreversible decisions.
+## Provenance Enforcement
 
-## Building Completion
-
-Building completion may convert a footprint and metadata into a simple exterior volume. The output must preserve:
-
-- stable building ID;
-- source footprint reference;
-- confidence level;
-- estimated height source;
-- corridor classification;
-- exterior package reference;
-- optional future interior package reference.
-
-Unknown buildings are not anonymous. They receive stable IDs based on source geometry and tile identity.
-
-## Facade Extrapolation
-
-Facade extrapolation may infer repeated doors, windows, awnings, shutters, signs, and material zones for non-landmark buildings.
-
-Facade extrapolation must record:
-
-- source confidence;
-- rule set version;
-- corridor context;
-- era assumption;
-- whether manual review is required.
-
-Facade output is secondary and may be replaced by curated assets later.
-
-## Secondary Geometry
-
-Secondary geometry includes:
-
-- sidewalks;
-- curbs;
-- low walls;
-- fences;
-- signage supports;
-- poles;
-- benches;
-- planters;
-- small roof structures;
-- generic shopfront density.
-
-Secondary geometry must respect roads, parcels, building entrances, and visibility corridors.
-
-## Scatter Systems
-
-Scatter systems may place vegetation and minor props using deterministic seeds. Scatter must be restricted by metadata zones and must not block pedestrian navigation.
-
-Initial scatter categories:
-
-- dry regional vegetation;
-- urban trees;
-- small commercial props;
-- utility infrastructure;
-- sidewalk detail.
-
-## Landmark Preservation
-
-Landmarks are curated assets or curated geometry packages. Procedural tools may generate helper data around landmarks, but they may not alter landmark identity or shape without a manual landmark update.
-
-Montaña Cuchumá is treated as regional terrain with landmark status. Its silhouette is protected.
+All generated/packaged meshes or features must trace directly back to a raw source listed in `/data/metadata/source-inventory.json`. Any pipeline step producing spatial components must output a companion `.provenance.json` sidecar detailing this lineage, which is checked at both validation and packaging boundaries.

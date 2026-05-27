@@ -3,7 +3,7 @@
   "packageId": "tecate_core_tiles",
   "projectId": "tecate_spatial_memory",
   "createdBy": "tools/packaging/package-tiles.ts",
-  "createdAt": "2026-05-27T04:11:02.452Z",
+  "createdAt": "2026-05-27T07:33:55.917Z",
   "coordinateOriginWgs84": {
     "latitude": 32.5668,
     "longitude": -116.6253,
@@ -67,8 +67,48 @@
     },
     {
       "id": "tecate_core_z14_x2883_y6622",
-      "state": "planned",
-      "files": []
+      "state": "packaged",
+      "files": [
+        {
+          "kind": "terrain",
+          "path": "generated/terrain/tecate_core_z14_x2883_y6622_terrain.json",
+          "sha256": "411ca89bf1d34b84295857ae12a686b09fd4eabd3fd18210b4232adf796b5879",
+          "provenance": {
+            "source": "dem",
+            "confidence": 1,
+            "method": "direct",
+            "sourceId": "source_dem_urban_and_cuchuma",
+            "importedAt": "2026-05-27T07:33:52.682Z",
+            "lineage": "Processed from raw/dem_tecate.json using tools/generators/generate-slice-assets.ts"
+          }
+        },
+        {
+          "kind": "roads",
+          "path": "generated/roads/tecate_core_z14_x2883_y6622_roads.json",
+          "sha256": "9f31ded5c02da6f020d0cf50a6e395e2154afe2cdf8456eb884f2543a7bad32e",
+          "provenance": {
+            "source": "osm",
+            "confidence": 1,
+            "method": "direct",
+            "sourceId": "source_osm_priority_corridors",
+            "importedAt": "2026-05-27T07:33:52.682Z",
+            "lineage": "Processed from raw/osm_tecate.json using tools/generators/generate-slice-assets.ts"
+          }
+        },
+        {
+          "kind": "buildings",
+          "path": "generated/buildings/tecate_core_z14_x2883_y6622_buildings.json",
+          "sha256": "f1a14585de092b3d543a55aeafa693270388129428bd6643c60df3c19330dc97",
+          "provenance": {
+            "source": "osm",
+            "confidence": 1,
+            "method": "direct",
+            "sourceId": "source_osm_priority_corridors",
+            "importedAt": "2026-05-27T07:33:52.682Z",
+            "lineage": "Processed from raw/osm_tecate.json using tools/generators/generate-slice-assets.ts"
+          }
+        }
+      ]
     },
     {
       "id": "tecate_core_z14_x2884_y6622",

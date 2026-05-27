@@ -23,7 +23,12 @@
       },
       "state": "planned",
       "corridorIds": [],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2883_y6620",
@@ -38,7 +43,12 @@
       },
       "state": "planned",
       "corridorIds": [],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2884_y6620",
@@ -53,7 +63,12 @@
       },
       "state": "planned",
       "corridorIds": [],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2885_y6620",
@@ -68,7 +83,12 @@
       },
       "state": "planned",
       "corridorIds": [],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2886_y6620",
@@ -83,7 +103,12 @@
       },
       "state": "planned",
       "corridorIds": [],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2882_y6621",
@@ -100,7 +125,12 @@
       "corridorIds": [
         "road_boulevard_juarez"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2883_y6621",
@@ -119,7 +149,12 @@
         "road_avenida_revolucion",
         "road_avenida_miguel_hidalgo"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2884_y6621",
@@ -138,7 +173,12 @@
         "road_avenida_revolucion",
         "road_avenida_miguel_hidalgo"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2885_y6621",
@@ -157,7 +197,12 @@
         "road_avenida_revolucion",
         "road_avenida_miguel_hidalgo"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2886_y6621",
@@ -172,7 +217,12 @@
       },
       "state": "planned",
       "corridorIds": [],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2882_y6622",
@@ -189,7 +239,12 @@
       "corridorIds": [
         "road_boulevard_juarez"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2883_y6622",
@@ -202,14 +257,23 @@
         "east": -116.630859375,
         "north": 32.58384932565661
       },
-      "state": "planned",
+      "state": "packaged",
       "corridorIds": [
         "road_boulevard_juarez",
         "road_avenida_revolucion",
         "road_avenida_miguel_hidalgo",
         "road_avenida_nuevo_leon"
       ],
-      "files": {}
+      "files": {
+        "terrain": "generated/terrain/tecate_core_z14_x2883_y6622_terrain.json",
+        "roads": "generated/roads/tecate_core_z14_x2883_y6622_roads.json",
+        "buildings": "generated/buildings/tecate_core_z14_x2883_y6622_buildings.json"
+      },
+      "dataQuality": {
+        "coverage": 1,
+        "confidence": 1,
+        "hasInferredData": false
+      }
     },
     {
       "id": "tecate_core_z14_x2884_y6622",
@@ -229,7 +293,12 @@
         "road_avenida_miguel_hidalgo",
         "road_avenida_nuevo_leon"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2885_y6622",
@@ -249,7 +318,12 @@
         "road_avenida_miguel_hidalgo",
         "road_avenida_nuevo_leon"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2886_y6622",
@@ -264,7 +338,12 @@
       },
       "state": "planned",
       "corridorIds": [],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2882_y6623",
@@ -281,7 +360,12 @@
       "corridorIds": [
         "road_boulevard_juarez"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2883_y6623",
@@ -301,7 +385,12 @@
         "road_avenida_miguel_hidalgo",
         "road_avenida_nuevo_leon"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2884_y6623",
@@ -321,7 +410,12 @@
         "road_avenida_miguel_hidalgo",
         "road_avenida_nuevo_leon"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2885_y6623",
@@ -341,7 +435,12 @@
         "road_avenida_miguel_hidalgo",
         "road_avenida_nuevo_leon"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2886_y6623",
@@ -356,7 +455,12 @@
       },
       "state": "planned",
       "corridorIds": [],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2882_y6624",
@@ -371,7 +475,12 @@
       },
       "state": "planned",
       "corridorIds": [],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2883_y6624",
@@ -388,7 +497,12 @@
       "corridorIds": [
         "road_avenida_nuevo_leon"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2884_y6624",
@@ -405,7 +519,12 @@
       "corridorIds": [
         "road_avenida_nuevo_leon"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2885_y6624",
@@ -422,7 +541,12 @@
       "corridorIds": [
         "road_avenida_nuevo_leon"
       ],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     },
     {
       "id": "tecate_core_z14_x2886_y6624",
@@ -437,7 +561,12 @@
       },
       "state": "planned",
       "corridorIds": [],
-      "files": {}
+      "files": {},
+      "dataQuality": {
+        "coverage": 0,
+        "confidence": 1,
+        "hasInferredData": true
+      }
     }
   ]
 }

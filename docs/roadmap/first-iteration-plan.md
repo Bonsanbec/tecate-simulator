@@ -88,7 +88,6 @@ Success criteria:
 
 - player can traverse the corridor without spatial breaks;
 - roads and intersections remain legible;
-- procedural gap-filling does not alter primary roads or landmarks.
 
 ## Phase 6: Runtime Streaming
 

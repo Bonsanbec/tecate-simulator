@@ -31,7 +31,6 @@ Do not paste the entire repository into an LLM prompt. Reference these files ins
 - `docs/conventions/naming.md` for terminology;
 - `docs/architecture/runtime-vs-toolchain.md` for responsibility boundaries;
 - `docs/architecture/world-streaming.md` for tile behavior;
-- `docs/architecture/procedural-generation.md` for gap-filling limits;
 - `docs/state/current-world-state.md` for current status.
 
 ## Avoiding Drift

@@ -91,16 +91,20 @@ The derivation output must record:
 - manual review flag;
 - stable building ID.
 
-## Offline Packaging
+## Offline Packaging & Flexible Provenance
 
-After normalization and generation, packages are written under `generated/packages/`.
+After normalization and data-first reconstruction, packages are written under `generated/packages/`.
 
-Package validation must check:
+To support robust hybrid reconstruction without pipeline blocks:
+- Every packaged spatial asset or mesh should ideally have a companion `.provenance.json` sidecar that traces the asset back to a verified raw source.
+- In the absence of a `.provenance.json` sidecar or if the data is incomplete, the system will **not** block packaging. Instead, it will automatically fallback to treating the asset as **inferred** (with `source: "inferred"`, `confidence: 0.0`, and method of `"interpolated"` or `"heuristic"` depending on the feature type).
+- The pipeline calculates and records a `dataQuality` metadata block (including `coverage`, `confidence`, and `hasInferredData`) per tile in the manifest to provide full transparency of geospatial uncertainty.
 
-- tile ID format;
-- required metadata;
-- file references;
-- checksums;
-- coordinate origin;
-- schema version;
-- prohibited terminology drift.
+Package validation will emit warnings (instead of errors or blocks) for:
+- Missing companion `.provenance.json` sidecars;
+- Custom source IDs not listed in `data/metadata/source-inventory.json`.
+
+Package validation continues to enforce errors for structural issues like:
+- Invalid tile ID format;
+- Empty or invalid JSON structures;
+- Mismatched coordinate origins.

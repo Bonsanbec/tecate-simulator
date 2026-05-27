@@ -33,7 +33,7 @@ The world must not read as:
 6. Visual density.
 7. Microdetail.
 
-Procedural systems are subordinate to real-derived structure. They may fill gaps, complete secondary geometry, extrapolate missing facade detail, and extend low-priority areas. They must not invent landmarks, alter important buildings, redefine roads, replace critical geometry, or reinterpret terrain.
+Procedural systems are strictly subordinate to real-derived structure. They are permitted ONLY for vegetation, textures, and non-structural microdetail. They must not generate terrain, synthesize roads, invent building footprints, or synthesize landmarks.
 
 ## Technical Stack
 
@@ -51,7 +51,7 @@ Procedural systems are subordinate to real-derived structure. They may fill gaps
 
 The Godot runtime is responsible only for rendering, streaming, navigation, interaction, audio, lighting, and loading prepared packages.
 
-The development toolchain is responsible for scraping, GIS ingestion, coordinate conversion, geometry preparation, procedural derivation, baking, packaging, validation, and metadata generation.
+The development toolchain is responsible for scraping, GIS ingestion, coordinate conversion, geometry preparation, baking, packaging, validation, metadata generation, and provenance enforcement.
 
 Heavy processing must happen offline. The final executable should load prepared data and packaged assets. It must not download data, scrape web sources, reconstruct raw GIS, or perform expensive parsing at runtime.
 
