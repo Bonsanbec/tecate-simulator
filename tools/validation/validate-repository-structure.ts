@@ -15,7 +15,6 @@ const requiredDirectories = [
   "docs/references",
   "docs/roadmap",
   "tools/importers",
-  "tools/generators",
   "tools/converters",
   "tools/debug",
   "tools/packaging",

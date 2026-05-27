@@ -59,7 +59,7 @@ Heavy processing must happen offline. The final executable should load prepared 
 
 ```text
 docs/        Permanent project knowledge, design rules, pipeline contracts, and state.
-tools/       TypeScript importers, converters, generators, packaging, validation, and debug utilities.
+tools/       TypeScript importers, converters, packaging, validation, and debug utilities.
 data/        Source and intermediate data organized by domain.
 assets/      Authored runtime assets organized by type. Binary assets are intentionally absent at initialization.
 generated/   Offline generated outputs, tile data, packages, and debug artifacts.
@@ -73,10 +73,9 @@ schemas/     JSON schemas and data contracts used by tooling and runtime package
 1. Place raw GIS, DEM, imagery notes, or reference manifests under `data/`.
 2. Normalize external data with TypeScript importers in `tools/importers/`.
 3. Convert coordinates and bounds with `tools/converters/`.
-4. Generate coarse chunks, derived geometry, and navigation inputs with `tools/generators/`.
-5. Validate metadata and generated structure with `tools/validation/`.
-6. Package prepared tile data with `tools/packaging/`.
-7. Load only prepared packages from the Godot runtime.
+4. Validate metadata and generated structure with `tools/validation/`.
+5. Package prepared tile data with `tools/packaging/`.
+6. Load only prepared packages from the Godot runtime.
 
 ## First Iteration Scope
 

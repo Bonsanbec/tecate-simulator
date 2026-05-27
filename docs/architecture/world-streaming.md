@@ -14,7 +14,6 @@ Runtime owner:
 
 Toolchain owners:
 
-- `tools/generators/generate-basic-chunks.ts`
 - `tools/packaging/package-tiles.ts`
 - `tools/validation/validate-tile-structure.ts`
 
