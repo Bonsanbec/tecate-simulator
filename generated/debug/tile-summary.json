@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "0.1.0",
+  "generatedAt": "2026-05-27T04:10:54.736Z",
+  "tileCount": 25,
+  "corridorTileCounts": {
+    "road_boulevard_juarez": 12,
+    "road_avenida_revolucion": 9,
+    "road_avenida_miguel_hidalgo": 9,
+    "road_avenida_nuevo_leon": 9
+  }
+}

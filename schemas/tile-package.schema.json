@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tecate-simulator.local/schemas/tile-package.schema.json",
+  "title": "Tile Package",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "packageId",
+    "projectId",
+    "createdBy",
+    "coordinateOriginWgs84",
+    "tiles"
+  ],
+  "properties": {
+    "schemaVersion": { "type": "string" },
+    "packageId": { "type": "string" },
+    "projectId": { "type": "string" },
+    "createdBy": { "type": "string" },
+    "coordinateOriginWgs84": { "$ref": "project-area.schema.json#/properties/coordinateOriginWgs84" },
+    "tiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "state", "files"],
+        "properties": {
+          "id": { "type": "string" },
+          "state": { "type": "string" },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["kind", "path", "sha256"],
+              "properties": {
+                "kind": { "type": "string" },
+                "path": { "type": "string" },
+                "sha256": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

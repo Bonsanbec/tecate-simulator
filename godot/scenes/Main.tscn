@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://tecate_main_scene"]
+
+[ext_resource type="Script" path="res://scripts/GameBootstrap.cs" id="1_game_bootstrap"]
+[ext_resource type="PackedScene" path="res://scenes/WorldRoot.tscn" id="2_world_root"]
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_game_bootstrap")
+
+[node name="WorldRoot" parent="." instance=ExtResource("2_world_root")]
+
