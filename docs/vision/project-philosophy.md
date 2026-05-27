@@ -44,26 +44,17 @@ When a source reflects a date outside 2000-2010, that date must be documented in
 
 This order governs conflicts. For example, a less detailed building footprint that preserves corridor scale is preferable to a high-detail invented block that damages road continuity.
 
-## Procedural Role
+## Controlled Inference vs. Procedural Generation
 
-Procedural generation is a repair and completion tool. It may:
+Pure procedural generation is strictly restricted to vegetation, textures, and non-structural microdetail. The synthesis of entire fictional road networks or artificial cities is prohibited. 
 
-- fill low-confidence gaps;
-- complete secondary volumes from footprints;
-- extrapolate non-landmark facades;
-- scatter secondary props according to corridor rules;
-- extend low-priority background density;
-- generate debug geometry for validation.
+However, to avoid pipeline blockages and empty voids, the system implements **Controlled Inference** (a hybrid reconstruction approach) when real source data is incomplete:
+- **Terrain Relief**: Must anchor on a real DEM. If the DEM is incomplete, height interpolation is allowed to bridge gaps; synthetic terrain shapes without a real DEM base are prohibited.
+- **Road Continuity**: Derived from OSM, but allows local geometric interpolation to maintain connectivity; synthesis of entire fictional networks is prohibited.
+- **Building Massing**: Footprints must derive from real data, but heights can be extruded or estimated using simple heuristics when missing; entirely fictional building clusters are prohibited.
+- **Distant Landmarks (Cerro Cuchumá)**: Must derive from real DEM data; controlled interpolation is permitted for minor gaps, but it must never be replaced with synthetic shapes.
 
-Procedural generation must not:
-
-- invent landmarks;
-- move roads;
-- reinterpret terrain;
-- replace known building identity;
-- create arbitrary district plans;
-- override curated metadata;
-- compress the regional horizon for cinematic effect.
+All spatial elements generated via Controlled Inference must be transparently documented in the package metadata with their `confidence` and `method` fields, rather than failing the build.
 
 ## Montaña Cuchumá
 
@@ -80,6 +71,6 @@ The project favors:
 - explicit metadata over implicit interpretation;
 - small runtime systems over broad generalized frameworks;
 - real-derived anchors over procedural invention;
-- incremental validation over late manual correction.
+- progressive degradation over hard blocking.
 
 Each future contribution should reduce ambiguity for the next contributor.

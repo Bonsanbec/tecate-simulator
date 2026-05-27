@@ -74,7 +74,6 @@ Avoid synonyms that create parallel concepts. Use the canonical term:
 | package | bundle, pack, archive when referring to runtime-ready generated data |
 | landmark | hero building, key asset, special object |
 | corridor | route, strip, axis when referring to first-iteration streets |
-| gap-filling | city generation, auto city, procedural replacement |
 | exterior | shell when discussing building representation |
 | interior | inside scene, indoor level |
 

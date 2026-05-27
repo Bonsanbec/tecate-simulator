@@ -34,6 +34,8 @@ public partial class TileStreamingSystem : Node
     private PreparedTileManifest? _manifest;
     private WorldOrigin? _origin;
 
+    public PreparedTileManifest? Manifest => _manifest;
+
     public override void _Ready()
     {
         LoadManifestIfAvailable();

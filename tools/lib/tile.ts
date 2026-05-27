@@ -24,6 +24,11 @@ export interface TileRecord {
   state: "planned" | "generated" | "packaged" | "failed";
   corridorIds: string[];
   files: Record<string, string>;
+  dataQuality?: {
+    coverage: number;
+    confidence: number;
+    hasInferredData: boolean;
+  };
 }
 
 export interface TileManifest {

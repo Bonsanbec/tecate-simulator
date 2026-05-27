@@ -1,0 +1,8 @@
+{
+  "source": "osm",
+  "confidence": 1,
+  "method": "direct",
+  "sourceId": "source_osm_priority_corridors",
+  "importedAt": "2026-05-27T07:33:52.682Z",
+  "lineage": "Processed from raw/osm_tecate.json using tools/generators/generate-slice-assets.ts"
+}
