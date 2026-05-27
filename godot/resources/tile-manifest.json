@@ -1,0 +1,443 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "tecate_spatial_memory",
+  "generatedBy": "tools/generators/generate-basic-chunks.ts",
+  "generatedAt": "2026-05-27T04:10:54.736Z",
+  "coordinateOriginWgs84": {
+    "latitude": 32.5668,
+    "longitude": -116.6253,
+    "elevationMeters": 540
+  },
+  "zoom": 14,
+  "tiles": [
+    {
+      "id": "tecate_core_z14_x2882_y6620",
+      "x": 2882,
+      "y": 6620,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.6748046875,
+        "south": 32.60236166681751,
+        "east": -116.65283203125,
+        "north": 32.62087018318112
+      },
+      "state": "planned",
+      "corridorIds": [],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2883_y6620",
+      "x": 2883,
+      "y": 6620,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.65283203125,
+        "south": 32.60236166681751,
+        "east": -116.630859375,
+        "north": 32.62087018318112
+      },
+      "state": "planned",
+      "corridorIds": [],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2884_y6620",
+      "x": 2884,
+      "y": 6620,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.630859375,
+        "south": 32.60236166681751,
+        "east": -116.60888671875,
+        "north": 32.62087018318112
+      },
+      "state": "planned",
+      "corridorIds": [],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2885_y6620",
+      "x": 2885,
+      "y": 6620,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.60888671875,
+        "south": 32.60236166681751,
+        "east": -116.5869140625,
+        "north": 32.62087018318112
+      },
+      "state": "planned",
+      "corridorIds": [],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2886_y6620",
+      "x": 2886,
+      "y": 6620,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.5869140625,
+        "south": 32.60236166681751,
+        "east": -116.56494140625,
+        "north": 32.62087018318112
+      },
+      "state": "planned",
+      "corridorIds": [],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2882_y6621",
+      "x": 2882,
+      "y": 6621,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.6748046875,
+        "south": 32.58384932565661,
+        "east": -116.65283203125,
+        "north": 32.60236166681751
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_boulevard_juarez"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2883_y6621",
+      "x": 2883,
+      "y": 6621,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.65283203125,
+        "south": 32.58384932565661,
+        "east": -116.630859375,
+        "north": 32.60236166681751
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_boulevard_juarez",
+        "road_avenida_revolucion",
+        "road_avenida_miguel_hidalgo"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2884_y6621",
+      "x": 2884,
+      "y": 6621,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.630859375,
+        "south": 32.58384932565661,
+        "east": -116.60888671875,
+        "north": 32.60236166681751
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_boulevard_juarez",
+        "road_avenida_revolucion",
+        "road_avenida_miguel_hidalgo"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2885_y6621",
+      "x": 2885,
+      "y": 6621,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.60888671875,
+        "south": 32.58384932565661,
+        "east": -116.5869140625,
+        "north": 32.60236166681751
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_boulevard_juarez",
+        "road_avenida_revolucion",
+        "road_avenida_miguel_hidalgo"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2886_y6621",
+      "x": 2886,
+      "y": 6621,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.5869140625,
+        "south": 32.58384932565661,
+        "east": -116.56494140625,
+        "north": 32.60236166681751
+      },
+      "state": "planned",
+      "corridorIds": [],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2882_y6622",
+      "x": 2882,
+      "y": 6622,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.6748046875,
+        "south": 32.56533316084102,
+        "east": -116.65283203125,
+        "north": 32.58384932565661
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_boulevard_juarez"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2883_y6622",
+      "x": 2883,
+      "y": 6622,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.65283203125,
+        "south": 32.56533316084102,
+        "east": -116.630859375,
+        "north": 32.58384932565661
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_boulevard_juarez",
+        "road_avenida_revolucion",
+        "road_avenida_miguel_hidalgo",
+        "road_avenida_nuevo_leon"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2884_y6622",
+      "x": 2884,
+      "y": 6622,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.630859375,
+        "south": 32.56533316084102,
+        "east": -116.60888671875,
+        "north": 32.58384932565661
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_boulevard_juarez",
+        "road_avenida_revolucion",
+        "road_avenida_miguel_hidalgo",
+        "road_avenida_nuevo_leon"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2885_y6622",
+      "x": 2885,
+      "y": 6622,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.60888671875,
+        "south": 32.56533316084102,
+        "east": -116.5869140625,
+        "north": 32.58384932565661
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_boulevard_juarez",
+        "road_avenida_revolucion",
+        "road_avenida_miguel_hidalgo",
+        "road_avenida_nuevo_leon"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2886_y6622",
+      "x": 2886,
+      "y": 6622,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.5869140625,
+        "south": 32.56533316084102,
+        "east": -116.56494140625,
+        "north": 32.58384932565661
+      },
+      "state": "planned",
+      "corridorIds": [],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2882_y6623",
+      "x": 2882,
+      "y": 6623,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.6748046875,
+        "south": 32.54681317351516,
+        "east": -116.65283203125,
+        "north": 32.56533316084102
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_boulevard_juarez"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2883_y6623",
+      "x": 2883,
+      "y": 6623,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.65283203125,
+        "south": 32.54681317351516,
+        "east": -116.630859375,
+        "north": 32.56533316084102
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_boulevard_juarez",
+        "road_avenida_revolucion",
+        "road_avenida_miguel_hidalgo",
+        "road_avenida_nuevo_leon"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2884_y6623",
+      "x": 2884,
+      "y": 6623,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.630859375,
+        "south": 32.54681317351516,
+        "east": -116.60888671875,
+        "north": 32.56533316084102
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_boulevard_juarez",
+        "road_avenida_revolucion",
+        "road_avenida_miguel_hidalgo",
+        "road_avenida_nuevo_leon"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2885_y6623",
+      "x": 2885,
+      "y": 6623,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.60888671875,
+        "south": 32.54681317351516,
+        "east": -116.5869140625,
+        "north": 32.56533316084102
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_boulevard_juarez",
+        "road_avenida_revolucion",
+        "road_avenida_miguel_hidalgo",
+        "road_avenida_nuevo_leon"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2886_y6623",
+      "x": 2886,
+      "y": 6623,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.5869140625,
+        "south": 32.54681317351516,
+        "east": -116.56494140625,
+        "north": 32.56533316084102
+      },
+      "state": "planned",
+      "corridorIds": [],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2882_y6624",
+      "x": 2882,
+      "y": 6624,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.6748046875,
+        "south": 32.52828936482525,
+        "east": -116.65283203125,
+        "north": 32.54681317351516
+      },
+      "state": "planned",
+      "corridorIds": [],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2883_y6624",
+      "x": 2883,
+      "y": 6624,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.65283203125,
+        "south": 32.52828936482525,
+        "east": -116.630859375,
+        "north": 32.54681317351516
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_avenida_nuevo_leon"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2884_y6624",
+      "x": 2884,
+      "y": 6624,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.630859375,
+        "south": 32.52828936482525,
+        "east": -116.60888671875,
+        "north": 32.54681317351516
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_avenida_nuevo_leon"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2885_y6624",
+      "x": 2885,
+      "y": 6624,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.60888671875,
+        "south": 32.52828936482525,
+        "east": -116.5869140625,
+        "north": 32.54681317351516
+      },
+      "state": "planned",
+      "corridorIds": [
+        "road_avenida_nuevo_leon"
+      ],
+      "files": {}
+    },
+    {
+      "id": "tecate_core_z14_x2886_y6624",
+      "x": 2886,
+      "y": 6624,
+      "z": 14,
+      "boundsWgs84": {
+        "west": -116.5869140625,
+        "south": 32.52828936482525,
+        "east": -116.56494140625,
+        "north": 32.54681317351516
+      },
+      "state": "planned",
+      "corridorIds": [],
+      "files": {}
+    }
+  ]
+}

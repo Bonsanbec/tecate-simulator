@@ -41,6 +41,7 @@ Procedural systems are subordinate to real-derived structure. They may fill gaps
 - Game runtime language: C#.
 - GDScript: allowed only for narrow Godot integration cases where C# is not practical.
 - Tooling language: TypeScript running on Node.js.
+- Local SDK pin: .NET 8 through `global.json`.
 - Runtime targets: macOS and Windows.
 - Source control: Git.
 - Data sources: OpenStreetMap, DEM terrain data, GIS extracts, imagery references, and curated street-level references.
@@ -123,3 +124,4 @@ No system may assume that all buildings are permanently non-enterable.
 - [Montaña Cuchumá](docs/references/montana-cuchuma.md)
 - [Current World State](docs/state/current-world-state.md)
 - [First Iteration Plan](docs/roadmap/first-iteration-plan.md)
+- [Development Environment](docs/setup/development-environment.md)

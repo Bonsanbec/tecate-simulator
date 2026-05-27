@@ -17,4 +17,4 @@ Use these files instead of relying on chat context:
 - `references/montana-cuchuma.md` for protected mountain handling;
 - `state/current-world-state.md` for current status;
 - `roadmap/first-iteration-plan.md` for delivery phases.
-
+- `setup/development-environment.md` for local tooling and verification commands.
