@@ -1,12 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://tecate_player_rig"]
+[gd_scene load_steps=2 format=3 uid="uid://tecate_player_rig"]
 
-[ext_resource type="Script" path="res://scripts/PlayerRig.cs" id="1_player_rig"]
 [sub_resource type="CapsuleShape3D" id="1_capsule"]
 radius = 0.32
 height = 1.65
 
 [node name="PlayerRig" type="CharacterBody3D"]
-script = ExtResource("1_player_rig")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("1_capsule")
@@ -15,6 +13,6 @@ shape = SubResource("1_capsule")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Eye"]
-current = true
+current = false
 fov = 78.0
 

@@ -3,7 +3,7 @@
   "packageId": "tecate_core_tiles",
   "projectId": "tecate_spatial_memory",
   "createdBy": "tools/packaging/package-tiles.ts",
-  "createdAt": "2026-05-27T04:52:05.421Z",
+  "createdAt": "2026-05-27T04:11:02.452Z",
   "coordinateOriginWgs84": {
     "latitude": 32.5668,
     "longitude": -116.6253,
@@ -12,483 +12,128 @@
   "tiles": [
     {
       "id": "tecate_core_z14_x2882_y6620",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2882_y6620_terrain.obj",
-          "sha256": "5ec8111082ebc52dd452ed8170a780a0dd20239afcafccbe94659f92c5717244"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2882_y6620_roads.obj",
-          "sha256": "73c7d413c48f048f4751d81d8285690398ddf043f8a15922184950a3501a6d16"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2883_y6620",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6620_terrain.obj",
-          "sha256": "ce9cb5145bca32ae2b543619f43879e2c67c543e7e79d7ea693e9cb26608c613"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6620_roads.obj",
-          "sha256": "a686edba54d9364a808193a46b617db8f432eaa013c3f13b45b93ab76c5d4d9a"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6620_buildings.obj",
-          "sha256": "599f5ea2620d5876e06760b925360b79ddb11f303bb50738a60747b74868a2f0"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2884_y6620",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6620_terrain.obj",
-          "sha256": "e434c7f58135ff7cf17f7dbca415a06cb1e83a3970ae275be1c7a269d6d8958f"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6620_roads.obj",
-          "sha256": "6c9d97c3c3a94e29893454f6b637933da7f595245d81800e3f9f1fa50b16b19b"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6620_buildings.obj",
-          "sha256": "cf249f46e0388c4336aa243508846b3d73c3f877199ade872b2f58f7eb005bb1"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2885_y6620",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2885_y6620_terrain.obj",
-          "sha256": "ff29ceb30cfe2f40d6be33295fba5aaa91327757c3f8b0aec45dc0f13de2f61c"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2885_y6620_roads.obj",
-          "sha256": "5ceb67e3511d9a95623601f66b6b97aa4df02347e16dc627a4973d1da1f4d060"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2886_y6620",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2886_y6620_terrain.obj",
-          "sha256": "66950d819ecc24ce0cf83631ea6b4c913c1cf6cbbd021d64b3a4905467063c81"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2886_y6620_roads.obj",
-          "sha256": "2f548f435d5f36228f13f2dad76ffccda1a294a43499198212ea5c289c330b15"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2882_y6621",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2882_y6621_terrain.obj",
-          "sha256": "8e684e897f7690b4d49ee479ff28642a1e5a68a5d69e56c6cea93abf37f5a7e8"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2882_y6621_roads.obj",
-          "sha256": "85a8d9bc621b14ddad3d9c666db3045b04489a06949ce7222a0847cd69f81b41"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2882_y6621_buildings.obj",
-          "sha256": "7dea57240710b103fd8de3d7b0cbce30c8536a78ee65585b75dad6476bf749b9"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2883_y6621",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6621_terrain.obj",
-          "sha256": "3f6211edb8b3c3bc35ba08ac2a6b65f7bc70de31195c55be3a81c5f677dbc434"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6621_roads.obj",
-          "sha256": "501d7fb681e9ca5de50a65990044388a72fef9f64ed57b35bc243368fe2cb03c"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6621_buildings.obj",
-          "sha256": "4476246cbc035b09952f5bc719eb25b22fb1005072606d08b650ca9b62a6ebc3"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2884_y6621",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6621_terrain.obj",
-          "sha256": "49d8a1d438cc64aaaf90801a39528ab78d63dc65b6be6dc7340ef1a1d2b734ad"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6621_roads.obj",
-          "sha256": "bf851e97ba64d1bf1afa89333e8ea47c6b81111f9c5a76c9fe6a434a8d4410da"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2885_y6621",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2885_y6621_terrain.obj",
-          "sha256": "e4205133477aef1f7c1846d8ecf8d4174d285222fe801c80ff77fd4e6d6fada7"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2885_y6621_roads.obj",
-          "sha256": "00ff3367a8b5c8dbca9b858f4c173ee2abf9fc9b8235ebb2e898214e5a9fee79"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2886_y6621",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2886_y6621_terrain.obj",
-          "sha256": "8166bf98bf80f03c04d5eb79fb3bf9c7c4b63272fd9625a605dd169c8eba3cc5"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2886_y6621_roads.obj",
-          "sha256": "c49b670dfbd9bf2ef25d8d7c531025488a5e55fd6ab9aa602c7f06e0e27c7945"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2882_y6622",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2882_y6622_terrain.obj",
-          "sha256": "192e4100a7bd8f09df2328ae8a09b36b8d44707c42bcef93e44d9ba0e77ac79e"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2882_y6622_roads.obj",
-          "sha256": "4b0ece8433d9788f6118cc6a54b45ffe93312c2594cee98a8f8de93070cd4c29"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2882_y6622_buildings.obj",
-          "sha256": "713666fda7ef07eef9af5ab0c649d684ac3208b2b663e3d5c6298223c85287c2"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2883_y6622",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6622_terrain.obj",
-          "sha256": "022f8ea2bbdd6bf4d87a79f1a93c6a55cc12dacbefaeff6174f27ea4b8100362"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6622_roads.obj",
-          "sha256": "6b92187129b5dc40dcf3243d71b20c77c266b8c8f1a9ee118cbefd50f1d2d8ec"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6622_buildings.obj",
-          "sha256": "8bd6355f758fba159c1229462e5fc1da6b4645e78679d748126879d6c267f833"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2884_y6622",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6622_terrain.obj",
-          "sha256": "2056b01ccaf36cc3b1c843183c29a2328e6df77188ca653478a293040d42dd01"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6622_roads.obj",
-          "sha256": "f74a2b0982d4b2444893ba3929c5353996f763b3744b3caeff3bf132a7988b4e"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6622_buildings.obj",
-          "sha256": "80077b9e9fba89854bec8c4a9c5b3362a2d0f87a824329fffc32f285bb8455c6"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2885_y6622",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2885_y6622_terrain.obj",
-          "sha256": "bffd87f99b18d85ea9ef39c17316ec635711e2203e1bfb44889324383b095118"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2885_y6622_roads.obj",
-          "sha256": "d6c992f1ca23dc107a4f36b35445d259631196c24ff0017626f0c4a5500be47b"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2885_y6622_buildings.obj",
-          "sha256": "0cf6cbdd72e1636f0aed764c8fcd73f030d3dd06b6037ef5da3a015c7fd21944"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2886_y6622",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2886_y6622_terrain.obj",
-          "sha256": "b23ee741687bcef595062b943c1a51b7216aae67b8a14eac652c0d3ec0a6e450"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2886_y6622_roads.obj",
-          "sha256": "0444406c8e5d2aefe6a2c8869577c7dff5fa9edeabca88c0968bcf3451ca2333"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2886_y6622_buildings.obj",
-          "sha256": "40666937758296783fb44f9c92e94d703103e8e4ab5cf84c69f58a9ed08869ad"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2882_y6623",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2882_y6623_terrain.obj",
-          "sha256": "da735f9d4a88ae9df186831d165e823b3116a50368213018eaae3da4b9fabb07"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2882_y6623_roads.obj",
-          "sha256": "f4decde9f235cc6710de3355e3afe0dae264a3e9dc0d03f51f2cad99877b71ee"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2882_y6623_buildings.obj",
-          "sha256": "450cd38a3fa5e2b1d30358bc84f8e32cbfd0abe6c604226fd98f91793201d794"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2883_y6623",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6623_terrain.obj",
-          "sha256": "8e2b56b1fabb2fdea82abddf25876855272fd95ede7e9875e3fd477c7c187258"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6623_roads.obj",
-          "sha256": "0da1e71ed1844228a44f946f81e4335588286482c00893ecf787228c9636ef07"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6623_buildings.obj",
-          "sha256": "c23e1164b5f6b8d3949eac8ec1b2a4027e80e7233cff23769529d36f1c974d3d"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2884_y6623",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6623_terrain.obj",
-          "sha256": "9abaa61be635f7f33deae40d382a2d5ddd7a5ab64468bd032f19c825c7650ec5"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6623_roads.obj",
-          "sha256": "9cfa1cb4a85f2400b1d5ceb04b688a44bafaa82eb93237ed1e8339bba09741eb"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6623_buildings.obj",
-          "sha256": "daf054d31f4e121013f60dff03b3a2f9442c93452029cff3bc2ca1a89351f217"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2885_y6623",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2885_y6623_terrain.obj",
-          "sha256": "81c73d57420dad393850fdfac721aba90eb72305f1206a1eed09f9b78931d4d1"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2885_y6623_roads.obj",
-          "sha256": "1fd2471320228bea1aedc99d2f340274e6e2a6e3004ad5991b7e6691f1705a7b"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2885_y6623_buildings.obj",
-          "sha256": "22a508ee6def033c9ecbfc8ee0edd928e0cbfd9b74c61ef3615519999da0a5b6"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2886_y6623",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2886_y6623_terrain.obj",
-          "sha256": "90864bc6272995e3c0e7f8327bededd1ea46fd1c0503ff7efbb0438eb33f1b0b"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2886_y6623_roads.obj",
-          "sha256": "8b21b6b9e03ae2ffb5ba849d0579e6900024f7af99200f90a5bb95cd36794a62"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2886_y6623_buildings.obj",
-          "sha256": "34b294f2f70e0ba102318023c4ce085d33d87969fd820629302b5d3f7568a1a1"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2882_y6624",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2882_y6624_terrain.obj",
-          "sha256": "49ed2c63374fac83809d2cafa5d763b6c7b845e92b8fae97b3b8cf5f4c93cf88"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2882_y6624_roads.obj",
-          "sha256": "ec7a53e491030f120701cd43516ce4cad5eb07f011999e9b05bac10b4220e006"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2883_y6624",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6624_terrain.obj",
-          "sha256": "d10f3aa6fd4eebb7ec7a923a7fe733d97f73db75e7257ee17c98aad8983bc263"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6624_roads.obj",
-          "sha256": "c7e472dee336fbb83b44f9e41af89ba8a37eaee574a1791a181bb83fd6041ad8"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2883_y6624_buildings.obj",
-          "sha256": "9f1bbe2cbbcdde658b368978b7bf1ba5a1598b295fd685f47d490ec44419356b"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2884_y6624",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6624_terrain.obj",
-          "sha256": "958d20e7e897ac7b9b56e5bc0a5bb5d0fcfd33342b82bf2114dabd5258557df2"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6624_roads.obj",
-          "sha256": "5a54da4049bdf66072b78c31bb5fe4c01c328888d4f67a5710f3e7053ac2d093"
-        },
-        {
-          "kind": "buildings_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2884_y6624_buildings.obj",
-          "sha256": "29ba5f1f203f991d64b65c1c79746e0d0200df716fd9b31580014e4e8106a921"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2885_y6624",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2885_y6624_terrain.obj",
-          "sha256": "45ffc926cbaa8e22b3b0b75752d3cc43f27d551b2da959eea7714eff811a30dd"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2885_y6624_roads.obj",
-          "sha256": "5637f5e822a126c3726e30f33dd9ae6502fb6600b817c2812716c1a263a42b46"
-        }
-      ]
+      "state": "planned",
+      "files": []
     },
     {
       "id": "tecate_core_z14_x2886_y6624",
-      "state": "packaged",
-      "files": [
-        {
-          "kind": "terrain_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2886_y6624_terrain.obj",
-          "sha256": "0769d16e232e4fc36d540db13e683043019db1aa502750f8ed46bbf0ab53f912"
-        },
-        {
-          "kind": "roads_mesh",
-          "path": "godot/world/tiles/tecate_core_z14_x2886_y6624_roads.obj",
-          "sha256": "17172a9e96a60f4ae431f3113a5864980a7b6b7320cd20b8da5c72fcf2aa5716"
-        }
-      ]
+      "state": "planned",
+      "files": []
     }
   ]
 }
