@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "tecate_spatial_memory",
+  "targetEra": {
+    "startYear": 2000,
+    "endYear": 2010
+  },
+  "coordinateOriginWgs84": {
+    "latitude": 32.5668,
+    "longitude": -116.6253,
+    "elevationMeters": 540
+  },
+  "boundsWgs84": {
+    "west": -116.67,
+    "south": 32.535,
+    "east": -116.575,
+    "north": 32.605
+  },
+  "initialTileZoom": 14,
+  "corridors": [
+    {
+      "id": "road_boulevard_juarez",
+      "displayName": "boulevard Juarez",
+      "priority": 1,
+      "boundsWgs84": {
+        "west": -116.66,
+        "south": 32.555,
+        "east": -116.59,
+        "north": 32.585
+      },
+      "status": "initial-scope-needs-source-validation"
+    },
+    {
+      "id": "road_avenida_revolucion",
+      "displayName": "avenida Revolucion",
+      "priority": 1,
+      "boundsWgs84": {
+        "west": -116.64,
+        "south": 32.555,
+        "east": -116.6,
+        "north": 32.59
+      },
+      "status": "initial-scope-needs-source-validation"
+    },
+    {
+      "id": "road_avenida_miguel_hidalgo",
+      "displayName": "avenida Miguel Hidalgo",
+      "priority": 1,
+      "boundsWgs84": {
+        "west": -116.65,
+        "south": 32.55,
+        "east": -116.595,
+        "north": 32.585
+      },
+      "status": "initial-scope-needs-source-validation"
+    },
+    {
+      "id": "road_avenida_nuevo_leon",
+      "displayName": "avenida Nuevo Leon",
+      "priority": 1,
+      "boundsWgs84": {
+        "west": -116.65,
+        "south": 32.545,
+        "east": -116.6,
+        "north": 32.575
+      },
+      "status": "initial-scope-needs-source-validation"
+    }
+  ],
+  "regionalLandmarks": [
+    {
+      "id": "landmark_montana_cuchuma",
+      "displayName": "Montaña Cuchumá",
+      "type": "regional-terrain-landmark",
+      "status": "protected-silhouette-needs-dem-validation",
+      "notes": "Must be represented as geospatially anchored distant terrain or regional mesh, not as the primary content of a static skybox."
+    }
+  ]
+}

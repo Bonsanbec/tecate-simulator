@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tecate-simulator.local/schemas/normalized-feature-set.schema.json",
+  "title": "Normalized Feature Set",
+  "type": "object",
+  "required": ["schemaVersion", "source", "featureCount", "boundsWgs84", "features"],
+  "properties": {
+    "schemaVersion": { "type": "string" },
+    "source": {
+      "type": "object",
+      "required": ["inputPath", "importedAt", "status"],
+      "properties": {
+        "inputPath": { "type": "string" },
+        "importedAt": { "type": "string" },
+        "status": { "type": "string" }
+      }
+    },
+    "featureCount": { "type": "integer" },
+    "boundsWgs84": { "$ref": "project-area.schema.json#/properties/boundsWgs84" },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "geometryType", "properties", "geometry"],
+        "properties": {
+          "id": { "type": "string" },
+          "geometryType": { "type": "string" },
+          "properties": { "type": "object" },
+          "geometry": { "type": "object" }
+        }
+      }
+    }
+  }
+}
+

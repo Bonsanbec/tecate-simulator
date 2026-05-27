@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tecate-simulator.local/schemas/tile-manifest.schema.json",
+  "title": "Tile Manifest",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "projectId",
+    "generatedBy",
+    "coordinateOriginWgs84",
+    "zoom",
+    "tiles"
+  ],
+  "properties": {
+    "schemaVersion": { "type": "string" },
+    "projectId": { "type": "string" },
+    "generatedBy": { "type": "string" },
+    "coordinateOriginWgs84": { "$ref": "project-area.schema.json#/properties/coordinateOriginWgs84" },
+    "zoom": { "type": "integer" },
+    "tiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "x", "y", "z", "boundsWgs84", "state", "corridorIds", "files"],
+        "properties": {
+          "id": { "type": "string" },
+          "x": { "type": "integer" },
+          "y": { "type": "integer" },
+          "z": { "type": "integer" },
+          "boundsWgs84": { "$ref": "project-area.schema.json#/properties/boundsWgs84" },
+          "state": { "enum": ["planned", "generated", "packaged", "failed"] },
+          "corridorIds": { "type": "array", "items": { "type": "string" } },
+          "files": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
+

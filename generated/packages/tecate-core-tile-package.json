@@ -1,0 +1,139 @@
+{
+  "schemaVersion": "0.1.0",
+  "packageId": "tecate_core_tiles",
+  "projectId": "tecate_spatial_memory",
+  "createdBy": "tools/packaging/package-tiles.ts",
+  "createdAt": "2026-05-27T04:11:02.452Z",
+  "coordinateOriginWgs84": {
+    "latitude": 32.5668,
+    "longitude": -116.6253,
+    "elevationMeters": 540
+  },
+  "tiles": [
+    {
+      "id": "tecate_core_z14_x2882_y6620",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2883_y6620",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2884_y6620",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2885_y6620",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2886_y6620",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2882_y6621",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2883_y6621",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2884_y6621",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2885_y6621",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2886_y6621",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2882_y6622",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2883_y6622",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2884_y6622",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2885_y6622",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2886_y6622",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2882_y6623",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2883_y6623",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2884_y6623",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2885_y6623",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2886_y6623",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2882_y6624",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2883_y6624",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2884_y6624",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2885_y6624",
+      "state": "planned",
+      "files": []
+    },
+    {
+      "id": "tecate_core_z14_x2886_y6624",
+      "state": "planned",
+      "files": []
+    }
+  ]
+}

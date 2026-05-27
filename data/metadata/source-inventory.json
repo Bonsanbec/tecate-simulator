@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "0.1.0",
+  "projectId": "tecate_spatial_memory",
+  "sources": [
+    {
+      "id": "source_osm_priority_corridors",
+      "category": "osm",
+      "status": "required-not-acquired",
+      "requiredFor": [
+        "road continuity",
+        "building footprints",
+        "corridor alignment"
+      ],
+      "scope": [
+        "road_boulevard_juarez",
+        "road_avenida_revolucion",
+        "road_avenida_miguel_hidalgo",
+        "road_avenida_nuevo_leon"
+      ],
+      "metadataRequired": [
+        "extract date",
+        "license note",
+        "bounds",
+        "OSM element IDs",
+        "target-era review status"
+      ]
+    },
+    {
+      "id": "source_dem_urban_and_cuchuma",
+      "category": "dem",
+      "status": "required-not-acquired",
+      "requiredFor": [
+        "urban terrain relief",
+        "Montaña Cuchumá altitude relationship",
+        "regional horizon silhouette"
+      ],
+      "scope": [
+        "tecate urban core",
+        "landmark_montana_cuchuma"
+      ],
+      "metadataRequired": [
+        "source",
+        "resolution",
+        "vertical datum",
+        "capture or publication date",
+        "processing extent",
+        "downsampling method"
+      ]
+    },
+    {
+      "id": "source_street_level_references",
+      "category": "street-level-reference",
+      "status": "required-not-acquired",
+      "requiredFor": [
+        "facade rhythm",
+        "commercial density",
+        "materials",
+        "signage",
+        "pedestrian perception"
+      ],
+      "scope": [
+        "first-iteration corridors"
+      ],
+      "metadataRequired": [
+        "source",
+        "capture date or approximate date",
+        "location",
+        "corridor",
+        "target-era reliability",
+        "usage note"
+      ]
+    },
+    {
+      "id": "source_satellite_imagery_references",
+      "category": "imagery-reference",
+      "status": "required-not-acquired",
+      "requiredFor": [
+        "roof patterns",
+        "parcel continuity",
+        "vegetation distribution",
+        "open areas"
+      ],
+      "scope": [
+        "project bounds"
+      ],
+      "metadataRequired": [
+        "source",
+        "capture date",
+        "license or usage note",
+        "resolution",
+        "bounds",
+        "target-era reliability"
+      ]
+    }
+  ]
+}
+

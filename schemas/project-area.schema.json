@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tecate-simulator.local/schemas/project-area.schema.json",
+  "title": "Tecate Project Area",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "projectId",
+    "targetEra",
+    "coordinateOriginWgs84",
+    "boundsWgs84",
+    "initialTileZoom",
+    "corridors",
+    "regionalLandmarks"
+  ],
+  "properties": {
+    "schemaVersion": { "type": "string" },
+    "projectId": { "type": "string" },
+    "targetEra": {
+      "type": "object",
+      "required": ["startYear", "endYear"],
+      "properties": {
+        "startYear": { "type": "integer" },
+        "endYear": { "type": "integer" }
+      }
+    },
+    "coordinateOriginWgs84": {
+      "type": "object",
+      "required": ["latitude", "longitude", "elevationMeters"],
+      "properties": {
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "elevationMeters": { "type": "number" }
+      }
+    },
+    "boundsWgs84": {
+      "type": "object",
+      "required": ["west", "south", "east", "north"],
+      "properties": {
+        "west": { "type": "number" },
+        "south": { "type": "number" },
+        "east": { "type": "number" },
+        "north": { "type": "number" }
+      }
+    },
+    "initialTileZoom": { "type": "integer" },
+    "corridors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "displayName", "priority", "boundsWgs84", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "displayName": { "type": "string" },
+          "priority": { "type": "integer" },
+          "boundsWgs84": { "$ref": "#/properties/boundsWgs84" },
+          "status": { "type": "string" }
+        }
+      }
+    },
+    "regionalLandmarks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "displayName", "type", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "displayName": { "type": "string" },
+          "type": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+

@@ -1,16 +1,34 @@
-# Godot 4+ specific ignores
+# macOS
+.DS_Store
+
+# Node and TypeScript tooling
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Godot local state
 .godot/
-.nomedia
+godot/.godot/
+godot/.mono/
+godot/**/bin/
+godot/**/obj/
+godot/**/.import/
 
-# Godot-specific ignores
-.import/
-export.cfg
-export_credentials.cfg
+# Generated heavy runtime artifacts
+generated/**/*.bin
+generated/**/*.mesh
+generated/**/*.glb
+generated/**/*.gltf
+generated/**/*.res
+generated/**/*.import
 
-# Imported translations (automatically generated from CSV files)
-*.translation
+# Local editor files
+.vscode/
+.idea/
 
-# Mono-specific ignores
-.mono/
-data_*/
-mono_crash.*.json

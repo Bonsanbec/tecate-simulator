@@ -1,0 +1,19 @@
+; Engine configuration file.
+; This project is a runtime scaffold for prepared offline packages.
+
+config_version=5
+
+[application]
+
+config/name="Tecate Spatial Memory Simulator"
+run/main_scene="res://scenes/Main.tscn"
+config/features=PackedStringArray("4.x", "C#", "Forward Plus")
+
+[dotnet]
+
+project/assembly_name="TecateSimulator"
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+
