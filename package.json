@@ -9,7 +9,6 @@
     "structure:validate": "tsx tools/validation/validate-repository-structure.ts",
     "metadata:validate": "tsx tools/validation/validate-metadata.ts",
     "data:integrity": "tsx tools/validation/verify-data-integrity.ts",
-    "tiles:generate": "tsx tools/generators/generate-basic-chunks.ts",
     "tiles:validate": "tsx tools/validation/validate-tile-structure.ts",
     "tiles:package": "tsx tools/packaging/package-tiles.ts",
     "coords:convert": "tsx tools/converters/convert-coordinates.ts",
