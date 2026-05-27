@@ -31,6 +31,7 @@ public partial class TileStreamingSystem : Node
     private readonly Dictionary<string, PreparedTileRecord> _tilesById = new();
     private readonly Dictionary<(int X, int Y), PreparedTileRecord> _tilesByCoordinate = new();
     private readonly Dictionary<string, RuntimeTileState> _states = new();
+    private readonly Dictionary<string, Node3D> _activeTileNodes = new();
     private PreparedTileManifest? _manifest;
     private WorldOrigin? _origin;
 
@@ -171,6 +172,114 @@ public partial class TileStreamingSystem : Node
         }
 
         _states[tileId] = state;
+
+        if (state == RuntimeTileState.Active)
+        {
+            if (!_activeTileNodes.ContainsKey(tileId) && _tilesById.TryGetValue(tileId, out PreparedTileRecord? tile))
+            {
+                Node3D tileNode = LoadTileMeshes(tile);
+                AddChild(tileNode);
+                _activeTileNodes[tileId] = tileNode;
+            }
+        }
+        else
+        {
+            if (_activeTileNodes.TryGetValue(tileId, out Node3D? tileNode))
+            {
+                RemoveChild(tileNode);
+                tileNode.QueueFree();
+                _activeTileNodes.Remove(tileId);
+            }
+        }
+
         EmitSignal(SignalName.TileStateChanged, tileId, state.ToString().ToLowerInvariant());
+    }
+
+    private Node3D LoadTileMeshes(PreparedTileRecord tile)
+    {
+        Node3D tileNode = new Node3D();
+        tileNode.Name = "Tile_" + tile.Id;
+
+        // Custom materials for a beautiful, premium aesthetic
+        StandardMaterial3D terrainMat = new StandardMaterial3D
+        {
+            AlbedoColor = new Color(0.24f, 0.46f, 0.28f), // Curated harmonic soft green
+            Roughness = 0.85f,
+            Metallic = 0.05f
+        };
+
+        StandardMaterial3D roadsMat = new StandardMaterial3D
+        {
+            AlbedoColor = new Color(0.18f, 0.19f, 0.22f), // Premium asphalt grey/dark slate
+            Roughness = 0.75f,
+            Metallic = 0.1f
+        };
+
+        StandardMaterial3D buildingsMat = new StandardMaterial3D
+        {
+            AlbedoColor = new Color(0.85f, 0.83f, 0.80f), // Clean concrete grey/architectural massing
+            Roughness = 0.65f,
+            Metallic = 0.15f
+        };
+
+        foreach (var kvp in tile.Files)
+        {
+            string kind = kvp.Key;
+            string relativePath = kvp.Value;
+
+            // Convert path if needed (ensure res:// prefix)
+            string resPath = relativePath;
+            if (relativePath.StartsWith("godot/"))
+            {
+                resPath = "res://" + relativePath.Substring("godot/".Length);
+            }
+            else if (!relativePath.StartsWith("res://"))
+            {
+                resPath = "res://" + relativePath;
+            }
+
+            if (!Godot.FileAccess.FileExists(resPath))
+            {
+                GD.PushWarning($"Mesh resource file not found at {resPath} for tile {tile.Id}");
+                continue;
+            }
+
+            Mesh? mesh = GD.Load<Mesh>(resPath);
+            if (mesh is null)
+            {
+                GD.PushError($"Failed to load mesh at {resPath} for tile {tile.Id}");
+                continue;
+            }
+
+            // Create MeshInstance3D
+            MeshInstance3D meshInstance = new MeshInstance3D();
+            meshInstance.Mesh = mesh;
+            meshInstance.Name = kind;
+
+            // Apply specific premium materials
+            if (kind == "terrain_mesh")
+                meshInstance.MaterialOverride = terrainMat;
+            else if (kind == "roads_mesh")
+                meshInstance.MaterialOverride = roadsMat;
+            else if (kind == "buildings_mesh")
+                meshInstance.MaterialOverride = buildingsMat;
+
+            tileNode.AddChild(meshInstance);
+
+            // Create physics body and shape for collision
+            StaticBody3D staticBody = new StaticBody3D();
+            staticBody.Name = "StaticBody_" + kind;
+            
+            CollisionShape3D collisionShape = new CollisionShape3D();
+            collisionShape.Name = "CollisionShape";
+            
+            ConcavePolygonShape3D shape = mesh.CreateTrimeshShape();
+            collisionShape.Shape = shape;
+            
+            staticBody.AddChild(collisionShape);
+            tileNode.AddChild(staticBody);
+        }
+
+        return tileNode;
     }
 }

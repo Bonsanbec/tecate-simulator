@@ -6,4 +6,5 @@
 
 [node name="TileStreamingSystem" type="Node" parent="."]
 script = ExtResource("1_tile_streaming")
+PlayerNodePath = NodePath("../../PlayerRig")
 
