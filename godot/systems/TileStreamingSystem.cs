@@ -20,7 +20,7 @@ public partial class TileStreamingSystem : Node
     public NodePath PlayerNodePath { get; set; } = new NodePath("");
 
     [Export]
-    public int ActiveRadiusTiles { get; set; } = 5; // Keep all tiles loaded
+    public int ActiveRadiusTiles { get; set; } = 5; // Radical streaming expansion to keep all tiles loaded
 
     [Export]
     public int WarmRadiusTiles { get; set; } = 5;
@@ -35,37 +35,8 @@ public partial class TileStreamingSystem : Node
     private PreparedTileManifest? _manifest;
     private WorldOrigin? _origin;
 
-    // Shared materials - created once, reused across all tiles
-    private ShaderMaterial? _terrainShaderMaterial;
-    private StandardMaterial3D? _asphaltMat;
-    private StandardMaterial3D? _concreteMat;
-    private StandardMaterial3D? _yellowLineMat;
-    private StandardMaterial3D? _polesMat;
-
-    // Tecate architectural color palette - diverse per-building colors
-    private static readonly Color[] BuildingPalette = new Color[]
-    {
-        new Color(0.90f, 0.88f, 0.84f, 1f),  // Plaster White
-        new Color(0.85f, 0.82f, 0.74f, 1f),  // Cream/Off-white
-        new Color(0.72f, 0.41f, 0.30f, 1f),  // Warm Terracotta
-        new Color(0.85f, 0.68f, 0.38f, 1f),  // Pale Gold/Ochre
-        new Color(0.40f, 0.65f, 0.68f, 1f),  // Soft Turquoise
-        new Color(0.80f, 0.76f, 0.68f, 1f),  // Sandy Beige
-        new Color(0.78f, 0.55f, 0.62f, 1f),  // Faded Rose
-        new Color(0.65f, 0.72f, 0.65f, 1f),  // Sage Green
-        new Color(0.75f, 0.60f, 0.45f, 1f),  // Adobe Tan
-        new Color(0.60f, 0.55f, 0.50f, 1f),  // Concrete Grey
-        new Color(0.82f, 0.78f, 0.70f, 1f),  // Light Sand
-        new Color(0.55f, 0.40f, 0.35f, 1f),  // Dark Adobe
-        new Color(0.70f, 0.75f, 0.82f, 1f),  // Pale Blue
-        new Color(0.88f, 0.85f, 0.78f, 1f),  // Warm White
-        new Color(0.72f, 0.65f, 0.55f, 1f),  // Khaki
-        new Color(0.50f, 0.58f, 0.62f, 1f),  // Steel Blue-Grey
-    };
-
     public override void _Ready()
     {
-        InitializeMaterials();
         LoadManifestIfAvailable();
     }
 
@@ -81,46 +52,6 @@ public partial class TileStreamingSystem : Node
         {
             UpdateStreaming(player.GlobalPosition);
         }
-    }
-
-    private void InitializeMaterials()
-    {
-        // Terrain: ShaderMaterial using the altitude/slope terrain shader
-        Shader? terrainShader = GD.Load<Shader>("res://shaders/terrain.gdshader");
-        if (terrainShader is not null)
-        {
-            _terrainShaderMaterial = new ShaderMaterial();
-            _terrainShaderMaterial.Shader = terrainShader;
-        }
-        else
-        {
-            GD.PushWarning("Terrain shader not found at res://shaders/terrain.gdshader, using fallback material.");
-        }
-
-        // Road materials
-        _asphaltMat = new StandardMaterial3D
-        {
-            AlbedoColor = new Color(0.18f, 0.19f, 0.22f, 1f), // Dark slate road
-            Roughness = 0.8f
-        };
-
-        _concreteMat = new StandardMaterial3D
-        {
-            AlbedoColor = new Color(0.68f, 0.70f, 0.72f, 1f), // Concrete sidewalk grey
-            Roughness = 0.7f
-        };
-
-        _yellowLineMat = new StandardMaterial3D
-        {
-            AlbedoColor = new Color(0.85f, 0.75f, 0.15f, 1f), // Bright yellow lane divider
-            Roughness = 0.6f
-        };
-
-        _polesMat = new StandardMaterial3D
-        {
-            AlbedoColor = new Color(0.55f, 0.56f, 0.58f, 1f), // Concrete pole shade
-            Roughness = 0.8f
-        };
     }
 
     public void UpdateStreaming(Vector3 playerWorldPosition)
@@ -264,35 +195,59 @@ public partial class TileStreamingSystem : Node
         EmitSignal(SignalName.TileStateChanged, tileId, state.ToString().ToLowerInvariant());
     }
 
-    /// <summary>
-    /// Gets a deterministic building color from the palette based on the tile+surface index.
-    /// Uses a hash to distribute colors evenly across buildings within a tile.
-    /// </summary>
-    private static StandardMaterial3D CreateBuildingMaterial(string tileId, int surfaceIndex)
-    {
-        // Combine tile ID hash with surface index for per-building variation
-        int hash = Math.Abs(HashCode.Combine(tileId, surfaceIndex));
-        Color color = BuildingPalette[hash % BuildingPalette.Length];
-
-        // Add slight per-building variation to avoid exact palette repetition
-        float variation = ((hash >> 8) & 0xFF) / 1024.0f - 0.125f;
-        color = new Color(
-            Mathf.Clamp(color.R + variation, 0.1f, 1.0f),
-            Mathf.Clamp(color.G + variation * 0.8f, 0.1f, 1.0f),
-            Mathf.Clamp(color.B + variation * 0.6f, 0.1f, 1.0f)
-        );
-
-        return new StandardMaterial3D
-        {
-            AlbedoColor = color,
-            Roughness = 0.65f + ((hash >> 4) & 0xF) / 160.0f // Slight roughness variation
-        };
-    }
-
     private Node3D LoadTileMeshes(PreparedTileRecord tile)
     {
         Node3D tileNode = new Node3D();
         tileNode.Name = "Tile_" + tile.Id;
+
+        // Custom materials for a beautiful, premium, and recognizable Mexican aesthetic
+        StandardMaterial3D terrainMat = new StandardMaterial3D
+        {
+            AlbedoColor = new Color(0.35f, 0.45f, 0.32f, 1f), // soft semi-arid green-brown
+            Roughness = 0.9f
+        };
+
+        StandardMaterial3D asphaltMat = new StandardMaterial3D
+        {
+            AlbedoColor = new Color(0.18f, 0.19f, 0.22f, 1f), // dark slate road
+            Roughness = 0.8f
+        };
+
+        StandardMaterial3D concreteMat = new StandardMaterial3D
+        {
+            AlbedoColor = new Color(0.68f, 0.70f, 0.72f, 1f), // concrete sidewalk grey
+            Roughness = 0.7f
+        };
+
+        StandardMaterial3D yellowLineMat = new StandardMaterial3D
+        {
+            AlbedoColor = new Color(0.85f, 0.75f, 0.15f, 1f), // bright yellow lane divider
+            Roughness = 0.6f
+        };
+
+        StandardMaterial3D polesMat = new StandardMaterial3D
+        {
+            AlbedoColor = new Color(0.55f, 0.56f, 0.58f, 1f), // concrete pole shade
+            Roughness = 0.8f
+        };
+
+        // Vibrant Mexican architectural pastel palette for district spatial recognition
+        Color[] bldColors = new Color[]
+        {
+            new Color(0.72f, 0.41f, 0.30f, 1f), // Warm Terracotta
+            new Color(0.85f, 0.68f, 0.38f, 1f), // Pale Gold/Ochre
+            new Color(0.40f, 0.65f, 0.68f, 1f), // Soft Turquoise
+            new Color(0.90f, 0.88f, 0.84f, 1f), // Plaster White
+            new Color(0.80f, 0.76f, 0.68f, 1f), // Sandy Beige
+            new Color(0.78f, 0.55f, 0.62f, 1f), // Faded Rose
+        };
+
+        int bldHash = Math.Abs(tile.Id.GetHashCode());
+        StandardMaterial3D buildingsMat = new StandardMaterial3D
+        {
+            AlbedoColor = bldColors[bldHash % bldColors.Length],
+            Roughness = 0.65f
+        };
 
         foreach (var kvp in tile.Files)
         {
@@ -328,48 +283,22 @@ public partial class TileStreamingSystem : Node
             meshInstance.Mesh = mesh;
             meshInstance.Name = kind;
 
-            // Apply materials based on mesh type
+            // Apply specific premium materials
             if (kind == "terrain_mesh")
             {
-                if (_terrainShaderMaterial is not null)
-                {
-                    meshInstance.MaterialOverride = _terrainShaderMaterial;
-                }
-                else
-                {
-                    // Fallback to improved StandardMaterial3D
-                    meshInstance.MaterialOverride = new StandardMaterial3D
-                    {
-                        AlbedoColor = new Color(0.55f, 0.48f, 0.38f, 1f),
-                        Roughness = 0.9f
-                    };
-                }
+                meshInstance.MaterialOverride = terrainMat;
             }
             else if (kind == "roads_mesh")
             {
                 int surfaceCount = mesh.GetSurfaceCount();
-                if (surfaceCount > 0) meshInstance.SetSurfaceOverrideMaterial(0, _asphaltMat);
-                if (surfaceCount > 1) meshInstance.SetSurfaceOverrideMaterial(1, _concreteMat);
-                if (surfaceCount > 2) meshInstance.SetSurfaceOverrideMaterial(2, _yellowLineMat);
-                if (surfaceCount > 3) meshInstance.SetSurfaceOverrideMaterial(3, _polesMat);
+                if (surfaceCount > 0) meshInstance.SetSurfaceOverrideMaterial(0, asphaltMat);
+                if (surfaceCount > 1) meshInstance.SetSurfaceOverrideMaterial(1, concreteMat);
+                if (surfaceCount > 2) meshInstance.SetSurfaceOverrideMaterial(2, yellowLineMat);
+                if (surfaceCount > 3) meshInstance.SetSurfaceOverrideMaterial(3, polesMat);
             }
             else if (kind == "buildings_mesh")
             {
-                // Apply per-surface (per-building-group) materials for visual variety
-                int surfaceCount = mesh.GetSurfaceCount();
-                if (surfaceCount <= 1)
-                {
-                    // Single surface: use tile-hash-based color (legacy behavior, slightly improved)
-                    meshInstance.MaterialOverride = CreateBuildingMaterial(tile.Id, 0);
-                }
-                else
-                {
-                    // Multiple surfaces: assign different colors per surface
-                    for (int i = 0; i < surfaceCount; i += 1)
-                    {
-                        meshInstance.SetSurfaceOverrideMaterial(i, CreateBuildingMaterial(tile.Id, i));
-                    }
-                }
+                meshInstance.MaterialOverride = buildingsMat;
             }
 
             tileNode.AddChild(meshInstance);
@@ -377,13 +306,13 @@ public partial class TileStreamingSystem : Node
             // Create physics body and shape for collision
             StaticBody3D staticBody = new StaticBody3D();
             staticBody.Name = "StaticBody_" + kind;
-
+            
             CollisionShape3D collisionShape = new CollisionShape3D();
             collisionShape.Name = "CollisionShape";
-
+            
             ConcavePolygonShape3D shape = mesh.CreateTrimeshShape();
             collisionShape.Shape = shape;
-
+            
             staticBody.AddChild(collisionShape);
             tileNode.AddChild(staticBody);
         }

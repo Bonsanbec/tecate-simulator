@@ -93,7 +93,7 @@ async function main() {
 
     // 1. Generate Terrain Mesh
     let terrainObj = `# Terrain mesh for ${tile.id}\n`;
-    const gridSize = 32; // 33x33 grid for better terrain detail
+    const gridSize = 16; // 17x17 grid
 
     for (let gy = 0; gy <= gridSize; gy += 1) {
       const lat = tileBounds.south + (gy / gridSize) * (tileBounds.north - tileBounds.south);
@@ -106,7 +106,7 @@ async function main() {
       }
     }
 
-    // Faces with consistent CCW winding (1-indexed)
+    // Faces (1-indexed)
     const stride = gridSize + 1;
     for (let gy = 0; gy < gridSize; gy += 1) {
       for (let gx = 0; gx < gridSize; gx += 1) {
@@ -115,9 +115,8 @@ async function main() {
         const idx2 = (gy + 1) * stride + (gx + 1) + 1;
         const idx3 = (gy + 1) * stride + gx + 1;
 
-        // Both triangles use consistent CCW winding from above
         terrainObj += `f ${idx0} ${idx1} ${idx2}\n`;
-        terrainObj += `f ${idx0} ${idx2} ${idx3}\n`;
+        terrainObj += `f ${idx2} ${idx3} ${idx0}\n`;
       }
     }
 
@@ -448,65 +447,10 @@ async function main() {
       }
     }
 
-    // 4. Generate Buildings Mesh with per-building groups, type-aware heights, and bardas
+    // 4. Generate Buildings Mesh
     if (buildings.length > 0) {
-      let bldVertsObj = "";
-      let bldGroupFaces: { name: string; faces: string }[] = [];
+      let bldObj = `# Buildings mesh for ${tile.id}\n`;
       let vertexCount = 0;
-      let buildingIndex = 0;
-
-      // Helper: estimate building height based on OSM tags
-      function estimateBuildingHeight(props: Record<string, any>): number {
-        // Use explicit height if available
-        if (props.height && parseFloat(props.height) > 0) {
-          return parseFloat(props.height);
-        }
-        // Use levels if available
-        const levels = parseInt(props["building:levels"] || props.levels || "0", 10);
-        if (levels > 0) {
-          return levels * 3.5; // 3.5m per level (Mexican standard)
-        }
-
-        // Heuristic by building type
-        const bldType = (props.building || "").toLowerCase();
-        const amenity = (props.amenity || "").toLowerCase();
-        const shop = (props.shop || "").toLowerCase();
-
-        if (bldType === "church" || amenity === "place_of_worship") return 10 + Math.random() * 5;
-        if (bldType === "industrial" || bldType === "warehouse") return 6 + Math.random() * 6;
-        if (bldType === "commercial" || shop) return 4 + Math.random() * 4;
-        if (bldType === "apartments") return 6 + Math.random() * 6;
-        if (bldType === "house" || bldType === "residential") return 3 + Math.random() * 2;
-        if (bldType === "garage" || bldType === "shed") return 2.5 + Math.random() * 1;
-        if (bldType === "school" || amenity === "school") return 4 + Math.random() * 3;
-        if (bldType === "hospital" || amenity === "hospital") return 8 + Math.random() * 4;
-
-        // Default: typical Tecate 1-2 story building
-        return 3.5 + Math.random() * 3;
-      }
-
-      // Helper: check if building type should have a parapet (commercial/industrial)
-      function shouldHaveParapet(props: Record<string, any>): boolean {
-        const bldType = (props.building || "").toLowerCase();
-        const shop = (props.shop || "").toLowerCase();
-        return bldType === "commercial" || bldType === "industrial" ||
-               bldType === "retail" || bldType === "apartments" ||
-               !!shop;
-      }
-
-      // Helper: check if this is a residential lot that should have a barda (wall)
-      function shouldHaveBarda(props: Record<string, any>): boolean {
-        const bldType = (props.building || "").toLowerCase();
-        return bldType === "house" || bldType === "residential" ||
-               bldType === "yes" || bldType === "";
-      }
-
-      // Seed random per tile for deterministic results
-      let rngState = Math.abs(tile.id.split("").reduce((a, c) => a * 31 + c.charCodeAt(0), 0));
-      function seededRandom(): number {
-        rngState = (rngState * 1103515245 + 12345) & 0x7fffffff;
-        return (rngState % 10000) / 10000;
-      }
 
       for (const building of buildings) {
         const rings = building.geometry.coordinates as [number, number][][];
@@ -514,7 +458,7 @@ async function main() {
         const coords = rings[0]!;
         if (coords.length < 3) continue;
 
-        // Check if building center is inside this tile
+        // Calculate building center WGS84
         let sumLon = 0;
         let sumLat = 0;
         for (const coord of coords) {
@@ -524,46 +468,38 @@ async function main() {
         const centerLon = sumLon / coords.length;
         const centerLat = sumLat / coords.length;
 
-        if (
-          centerLon < tileBounds.west ||
-          centerLon > tileBounds.east ||
-          centerLat < tileBounds.south ||
-          centerLat > tileBounds.north
-        ) {
-          continue; // Building center is outside this tile
-        }
-
+        // Get ground height
         const groundHeight = getElevation(centerLon, centerLat) - origin.elevationMeters;
-        const bldHeight = estimateBuildingHeight(building.properties);
+        const levels = parseInt(building.properties.levels || "1", 10) || 1;
+        const bldHeight = levels * 4.0;
         const roofHeight = groundHeight + bldHeight;
-        const hasParapet = shouldHaveParapet(building.properties);
-        const parapetHeight = hasParapet ? 0.6 : 0; // 60cm parapet
 
+        // Collect footprint vertices in local coordinates
         const localPts = coords.map((c) => localMetersFromLonLat({ longitude: c[0]!, latitude: c[1]! }, origin));
 
         const n = localPts.length;
-        let groupFaces = "";
-
-        // Ground vertices
+        // Output ground vertices (indices 1 to n)
         for (const p of localPts) {
-          bldVertsObj += `v ${p.x.toFixed(3)} ${groundHeight.toFixed(3)} ${p.z.toFixed(3)}\n`;
+          bldObj += `v ${p.x.toFixed(3)} ${groundHeight.toFixed(3)} ${p.z.toFixed(3)}\n`;
         }
-        // Roof vertices
+        // Output roof vertices (indices n+1 to 2n)
         for (const p of localPts) {
-          bldVertsObj += `v ${p.x.toFixed(3)} ${roofHeight.toFixed(3)} ${p.z.toFixed(3)}\n`;
+          bldObj += `v ${p.x.toFixed(3)} ${roofHeight.toFixed(3)} ${p.z.toFixed(3)}\n`;
         }
 
-        // Wall faces
+        // Output walls (connecting ground and roof vertices)
         for (let i = 0; i < n - 1; i += 1) {
           const g0 = vertexCount + i + 1;
           const g1 = vertexCount + i + 2;
           const r0 = vertexCount + n + i + 1;
           const r1 = vertexCount + n + i + 2;
-          groupFaces += `f ${g0} ${g1} ${r1}\n`;
-          groupFaces += `f ${r1} ${r0} ${g0}\n`;
+
+          // Wall quad (g0, g1, r1, r0)
+          bldObj += `f ${g0} ${g1} ${r1}\n`;
+          bldObj += `f ${r1} ${r0} ${g0}\n`;
         }
 
-        // Flat roof using triangle fan from center
+        // Triangulate roof using a simple peak center point (Triangle Fan)
         let sumLocalX = 0;
         let sumLocalZ = 0;
         for (const p of localPts) {
@@ -573,131 +509,21 @@ async function main() {
         const centerLocalX = sumLocalX / localPts.length;
         const centerLocalZ = sumLocalZ / localPts.length;
 
-        bldVertsObj += `v ${centerLocalX.toFixed(3)} ${roofHeight.toFixed(3)} ${centerLocalZ.toFixed(3)}\n`;
+        // Output roof peak vertex (index 2n + 1)
+        bldObj += `v ${centerLocalX.toFixed(3)} ${roofHeight.toFixed(3)} ${centerLocalZ.toFixed(3)}\n`;
         const peakIdx = vertexCount + 2 * n + 1;
 
+        // Output roof triangles
         for (let i = 0; i < n - 1; i += 1) {
           const r0 = vertexCount + n + i + 1;
           const r1 = vertexCount + n + i + 2;
-          groupFaces += `f ${r0} ${r1} ${peakIdx}\n`;
+          bldObj += `f ${r0} ${r1} ${peakIdx}\n`;
         }
 
-        let extraVerts = 2 * n + 1;
-
-        // Parapet geometry (raised lip around roof edge)
-        if (hasParapet && parapetHeight > 0) {
-          const parapetTop = roofHeight + parapetHeight;
-          // Inner parapet vertices at roof level (same as roof verts) already exist
-          // Outer parapet vertices at parapet top
-          for (const p of localPts) {
-            bldVertsObj += `v ${p.x.toFixed(3)} ${parapetTop.toFixed(3)} ${p.z.toFixed(3)}\n`;
-          }
-          // Parapet wall faces (roof edge to parapet top)
-          for (let i = 0; i < n - 1; i += 1) {
-            const roofVert = vertexCount + n + i + 1; // roof vertex
-            const roofVertNext = vertexCount + n + i + 2;
-            const parapetVert = vertexCount + extraVerts + i + 1;
-            const parapetVertNext = vertexCount + extraVerts + i + 2;
-            groupFaces += `f ${roofVert} ${roofVertNext} ${parapetVertNext}\n`;
-            groupFaces += `f ${parapetVertNext} ${parapetVert} ${roofVert}\n`;
-          }
-          extraVerts += n;
-        }
-
-        vertexCount += extraVerts;
-
-        bldGroupFaces.push({
-          name: `building_${buildingIndex}`,
-          faces: groupFaces
-        });
-        buildingIndex += 1;
-      }
-
-      // Generate bardas (perimeter walls) for residential buildings
-      for (const building of buildings) {
-        if (!shouldHaveBarda(building.properties)) continue;
-        const rings = building.geometry.coordinates as [number, number][][];
-        if (!rings || rings.length === 0) continue;
-        const coords = rings[0]!;
-        if (coords.length < 3) continue;
-
-        let sumLon = 0;
-        let sumLat = 0;
-        for (const coord of coords) {
-          sumLon += coord[0]!;
-          sumLat += coord[1]!;
-        }
-        const centerLon = sumLon / coords.length;
-        const centerLat = sumLat / coords.length;
-
-        if (
-          centerLon < tileBounds.west ||
-          centerLon > tileBounds.east ||
-          centerLat < tileBounds.south ||
-          centerLat > tileBounds.north
-        ) {
-          continue;
-        }
-
-        const groundHeight = getElevation(centerLon, centerLat) - origin.elevationMeters;
-        const bardaHeight = 2.0 + seededRandom() * 0.5; // 2.0-2.5m typical Mexican barda
-        const bardaOffset = 1.5 + seededRandom() * 1.0; // Offset from building footprint
-
-        const localPts = coords.map((c) => localMetersFromLonLat({ longitude: c[0]!, latitude: c[1]! }, origin));
-
-        // Compute centroid
-        let cx = 0, cz = 0;
-        for (const p of localPts) { cx += p.x; cz += p.z; }
-        cx /= localPts.length;
-        cz /= localPts.length;
-
-        // Offset each point outward from centroid to create barda footprint
-        const bardaPts = localPts.map((p) => {
-          const dx = p.x - cx;
-          const dz = p.z - cz;
-          const dist = Math.sqrt(dx * dx + dz * dz);
-          if (dist < 0.1) return p;
-          return { x: p.x + (dx / dist) * bardaOffset, z: p.z + (dz / dist) * bardaOffset };
-        });
-
-        let bardaFaces = "";
-        const bn = bardaPts.length;
-        const bardaTop = groundHeight + bardaHeight;
-
-        // Ground and top vertices for barda
-        for (const p of bardaPts) {
-          bldVertsObj += `v ${p.x.toFixed(3)} ${groundHeight.toFixed(3)} ${p.z.toFixed(3)}\n`;
-        }
-        for (const p of bardaPts) {
-          bldVertsObj += `v ${p.x.toFixed(3)} ${bardaTop.toFixed(3)} ${p.z.toFixed(3)}\n`;
-        }
-
-        // Barda wall faces
-        for (let i = 0; i < bn - 1; i += 1) {
-          const g0 = vertexCount + i + 1;
-          const g1 = vertexCount + i + 2;
-          const t0 = vertexCount + bn + i + 1;
-          const t1 = vertexCount + bn + i + 2;
-          bardaFaces += `f ${g0} ${g1} ${t1}\n`;
-          bardaFaces += `f ${t1} ${t0} ${g0}\n`;
-        }
-
-        vertexCount += 2 * bn;
-
-        bldGroupFaces.push({
-          name: `barda_${buildingIndex}`,
-          faces: bardaFaces
-        });
-        buildingIndex += 1;
+        vertexCount += 2 * n + 1;
       }
 
       if (vertexCount > 0) {
-        let bldObj = `# Buildings and bardas mesh for ${tile.id}\n`;
-        bldObj += bldVertsObj;
-        for (const group of bldGroupFaces) {
-          bldObj += `g ${group.name}\n`;
-          bldObj += group.faces;
-        }
         const bldPath = path.join(tilesDir, `${tile.id}_buildings.obj`);
         await fs.writeFile(bldPath, bldObj, "utf8");
         tile.files["buildings_mesh"] = `godot/world/tiles/${tile.id}_buildings.obj`;
