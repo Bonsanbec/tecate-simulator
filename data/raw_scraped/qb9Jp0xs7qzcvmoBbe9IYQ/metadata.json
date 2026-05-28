@@ -1,0 +1,33 @@
+{
+    "pano_id": "qb9Jp0xs7qzcvmoBbe9IYQ",
+    "latitude": 32.570916880832,
+    "longitude": -116.6374136352907,
+    "date": "2009-09",
+    "road_name": "C. Teziutl\u00e1n",
+    "adjacent_links": [
+        {
+            "pano_id": "KLbAfbJJpo7KlSbcYBUbSg",
+            "road_name": "C. Teziutl\u00e1n",
+            "yaw_deg": 174.4786529541016
+        },
+        {
+            "pano_id": "yqFy6jnqWIvO8lIEEcsw7Q",
+            "road_name": "C. Teziutl\u00e1n",
+            "yaw_deg": 354.4507751464844
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Hu_0PxizFPFXHBgmBkPy4w",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "-rrbxMmeCNgpwr1lrkDJjQ",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "yO1XjmevhKzx72VNuLxruQ",
+            "date": "2016-02"
+        }
+    ]
+}
