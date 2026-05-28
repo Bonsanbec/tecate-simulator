@@ -9,7 +9,7 @@ while true; do
 
     git commit -m "Incremental Street View archival $(date)" || true
 
-    git push origin main
+    git push origin master
 
     echo "===== SLEEPING ====="
 
