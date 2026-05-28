@@ -1,6 +1,6 @@
 {
     "system": "Tecate 2009 Urban Reconstruction",
-    "export_time": "2026-05-28T14:23:17Z",
+    "export_time": "2026-05-28T14:31:07Z",
     "domain": "Tecate, Baja California, Mexico",
     "road_graph": {
         "nodes": [
@@ -19613,9 +19613,9 @@
             "latitude": 32.567968750000006,
             "longitude": -116.63699999999999,
             "road_heading": 90.0,
-            "pano_id": "ujNOyRQyBuW1DnIQ5TTlLA",
-            "temporal_probability": 0.7875,
-            "accepted": true
+            "pano_id": "none",
+            "temporal_probability": 0.0,
+            "accepted": false
         },
         {
             "station_id": "cam_1239",
@@ -84179,12 +84179,12 @@
                 },
                 {
                     "surface_id": "block_46_facade_3",
-                    "source": "image",
-                    "pano_id": "ujNOyRQyBuW1DnIQ5TTlLA",
-                    "station_id": "cam_1238",
+                    "source": "procedural_fallback",
+                    "pano_id": "fallback_stucco",
+                    "station_id": "none",
                     "angle_deg": 0.0,
-                    "distance_meters": 31.30860678565935,
-                    "sharpness_val": 28.99971584137529
+                    "distance_meters": 0.0,
+                    "sharpness_val": 0.0
                 }
             ]
         },

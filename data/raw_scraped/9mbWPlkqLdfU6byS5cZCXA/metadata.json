@@ -1,0 +1,29 @@
+{
+    "pano_id": "9mbWPlkqLdfU6byS5cZCXA",
+    "latitude": 32.56844901099473,
+    "longitude": -116.6377408451316,
+    "date": "2009-09",
+    "road_name": "Flores",
+    "adjacent_links": [
+        {
+            "pano_id": "UjChn-QFzlNr19Szivpn-g",
+            "road_name": "Flores",
+            "yaw_deg": 349.5935974121094
+        },
+        {
+            "pano_id": "lc60j5eCJzJu-XgScmF22Q",
+            "road_name": "Flores",
+            "yaw_deg": 169.574462890625
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "-myo0IwI90OnPOS24YFiQQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "5ImFpX4Kam2NcKcZ30C64A",
+            "date": "2022-09"
+        }
+    ]
+}
