@@ -1,0 +1,20 @@
+{
+    "pano_id": "4EX75aWVmofg2lK9O_OcGQ",
+    "latitude": 32.57336298236866,
+    "longitude": -116.6194164549446,
+    "date": "2009-09",
+    "road_name": "C. Rio Tijuana",
+    "adjacent_links": [
+        {
+            "pano_id": "heL39J6OyRJaRZWmSAjxGg",
+            "road_name": "C. Rio Tijuana",
+            "yaw_deg": 173.5817260742188
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "HTKRXPrK3B-JwPhm8cH50Q",
+            "date": "2017-07"
+        }
+    ]
+}

@@ -1,0 +1,57 @@
+{
+    "pano_id": "yLYA9u6bl4OHn_V6UDaT2Q",
+    "latitude": 32.57298381957157,
+    "longitude": -116.6336027798178,
+    "date": "2009-02",
+    "road_name": "Tijuana - Tecate",
+    "adjacent_links": [
+        {
+            "pano_id": "Ihzctm_2R5qLtGJfH9_ORA",
+            "road_name": "M\u00e9xico 2D",
+            "yaw_deg": 265.4122924804688
+        },
+        {
+            "pano_id": "MLFcXgOgIbPDIG7otMHeyQ",
+            "road_name": "Tijuana - Tecate",
+            "yaw_deg": 85.45603942871094
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "56dgO_FXL2otb1_9GWA2Bg",
+            "date": "2015-12"
+        },
+        {
+            "pano_id": "1uFBuRDq2v_fgb-vl1jVeA",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "Z8GXRJ5qymi5cGiwV8_4sQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "A5zjLznvSTK4zmfEtKVgkQ",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "vt5LDZo8utLoT5UYZCOb0w",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "Gsf-fqCg14-nI2AyqwSkdw",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "GPFcRQAC7S_EoWiFBhadwA",
+            "date": "2019-09"
+        },
+        {
+            "pano_id": "EB1flGFg0WFJwLlX3kBcPQ",
+            "date": "2017-09"
+        },
+        {
+            "pano_id": "oLMQ9sp8kkBwabYJTu68Ow",
+            "date": "2009-09"
+        }
+    ]
+}
