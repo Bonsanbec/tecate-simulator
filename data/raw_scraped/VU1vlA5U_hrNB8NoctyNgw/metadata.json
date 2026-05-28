@@ -1,0 +1,53 @@
+{
+    "pano_id": "VU1vlA5U_hrNB8NoctyNgw",
+    "latitude": 32.57392717183792,
+    "longitude": -116.6220683384782,
+    "date": "2009-02",
+    "road_name": "Tecate - Rumorosa Libre",
+    "adjacent_links": [
+        {
+            "pano_id": "cn4Y-5kc5OduAPunNvIFJQ",
+            "road_name": "Tecate - Rumorosa Libre",
+            "yaw_deg": 275.1313171386719
+        },
+        {
+            "pano_id": "wGJOdsQ-n55GhB894tMzHQ",
+            "road_name": "Tecate - Rumorosa Libre",
+            "yaw_deg": 96.94694519042969
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "tLHRHuA49nkzTIiELoFpWA",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "Zl6jtPa4gxyfV9T_sB14ng",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "dgJShPlEps9rvZUfm9cuJA",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "Rjpa5eyJehi8Y5UOXI8idw",
+            "date": "2022-06"
+        },
+        {
+            "pano_id": "bYnLShE7xDHI0g9Wbio7kg",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "scrM25WFOmK6JNQvd_mS_Q",
+            "date": "2017-09"
+        },
+        {
+            "pano_id": "314pTP5br-stg822LFi1sQ",
+            "date": "2009-09"
+        },
+        {
+            "pano_id": "G-8dXpysRXz9EljKTLxkmg",
+            "date": "2020-02"
+        }
+    ]
+}
