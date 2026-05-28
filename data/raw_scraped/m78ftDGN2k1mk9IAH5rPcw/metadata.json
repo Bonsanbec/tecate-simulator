@@ -1,0 +1,42 @@
+{
+    "pano_id": "m78ftDGN2k1mk9IAH5rPcw",
+    "latitude": 32.57178275831944,
+    "longitude": -116.6314996653446,
+    "date": "2009-09",
+    "road_name": "Av. Miguel Hidalgo",
+    "adjacent_links": [
+        {
+            "pano_id": "q5mKaMSfhHAN5xinUsGOqw",
+            "road_name": "Pdte. Adolfo de La Huerta",
+            "yaw_deg": 47.04336547851562
+        },
+        {
+            "pano_id": "Qa0LkAzx52zAwMv7-xabIw",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 84.36668395996094
+        },
+        {
+            "pano_id": "UC099Sn5V40oFlrnADds7w",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 264.3750305175781
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "OY5uQ1-dB5wLFGBwZ7QgjA",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "2R3N3_xCPCBEGaYzOLu06Q",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "cb7CfuDko4j_lcjHpHHoqw",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "_owQjOXKLqbvUABe2sQzuQ",
+            "date": "2016-02"
+        }
+    ]
+}
