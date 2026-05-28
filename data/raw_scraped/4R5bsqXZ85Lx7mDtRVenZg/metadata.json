@@ -1,0 +1,41 @@
+{
+    "pano_id": "4R5bsqXZ85Lx7mDtRVenZg",
+    "latitude": 32.57182631774186,
+    "longitude": -116.6346219411905,
+    "date": "2009-09",
+    "road_name": "Aldrete",
+    "adjacent_links": [
+        {
+            "pano_id": "OE0GKdF8e4eIrq6QEvCASA",
+            "road_name": "Aldrete",
+            "yaw_deg": 353.5214233398438
+        },
+        {
+            "pano_id": "3ZVNG_Z5MxPLfSm4GpfCwQ",
+            "road_name": "Aldrete",
+            "yaw_deg": 173.5305786132812
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "SYwY6bWI2kzN5TTrA9GnwA",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "9Nsxit7REYKFp2fn-L2thQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "KImH4Fup6YIoXvTyjr6HdA",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "bFpiJKNURWkIfkOlTCOqiQ",
+            "date": "2015-12"
+        },
+        {
+            "pano_id": "cfTzFdCNaMbb_P0jJTNyaw",
+            "date": "2017-07"
+        }
+    ]
+}

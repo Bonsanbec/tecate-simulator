@@ -1,0 +1,37 @@
+{
+    "pano_id": "YRrUxZ34sAc1D3sek5lQZQ",
+    "latitude": 32.57132191840014,
+    "longitude": -116.6345629220838,
+    "date": "2009-09",
+    "road_name": "Aldrete",
+    "adjacent_links": [
+        {
+            "pano_id": "eZBbtB6uCgqKrc_bAgBAwg",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 340.1640319824219
+        },
+        {
+            "pano_id": "PUIOzDdalFXBtNYWcmZuWg",
+            "road_name": "Aldrete",
+            "yaw_deg": 176.5128784179688
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "irnju3h68qeWu7kcbPwrkw",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "1oHv_wvPgpavTvb-M5SeeQ",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "iXUubBIAQc_KzOjWlpyHNg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "1vDWEtbnjefZ0P3Q7wFFfQ",
+            "date": "2022-09"
+        }
+    ]
+}
