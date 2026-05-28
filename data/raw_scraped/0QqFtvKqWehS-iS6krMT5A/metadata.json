@@ -1,0 +1,29 @@
+{
+    "pano_id": "0QqFtvKqWehS-iS6krMT5A",
+    "latitude": 32.57215392955825,
+    "longitude": -116.6357253977179,
+    "date": "2009-09",
+    "road_name": "Libertad",
+    "adjacent_links": [
+        {
+            "pano_id": "2DyqzKwAhhUv47SI3xzROw",
+            "road_name": "Libertad",
+            "yaw_deg": 84.21863555908203
+        },
+        {
+            "pano_id": "8F7lWTOizxS93ILRowGjPg",
+            "road_name": "Libertad",
+            "yaw_deg": 264.2153625488281
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "0S_g6wJXMgyho2MmUeu8Nw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "FrX5qYQzhewCfOPNjGmuCA",
+            "date": "2022-09"
+        }
+    ]
+}
