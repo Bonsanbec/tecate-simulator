@@ -1,0 +1,29 @@
+{
+    "pano_id": "QDBlB2Mz4KnDjlABWto0ZA",
+    "latitude": 32.5729207205421,
+    "longitude": -116.6206136482517,
+    "date": "2009-09",
+    "road_name": "Av. Miguel Hidalgo",
+    "adjacent_links": [
+        {
+            "pano_id": "RzKiSNVBbhva-vfXpSQSzg",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 198.0193176269531
+        },
+        {
+            "pano_id": "_5R7OHi3Y-c2NkCkQ6jh6Q",
+            "road_name": "R\u00edo Conchas",
+            "yaw_deg": 355.4626159667969
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "aq0M7m4uw6DXocpzrO9HmA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "hasNj_zTtKiRKg4-Hh8M0g",
+            "date": "2022-10"
+        }
+    ]
+}
