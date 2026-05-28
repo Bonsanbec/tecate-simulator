@@ -1,0 +1,33 @@
+{
+    "pano_id": "X0c_wzITY_OUswlP_5KzTQ",
+    "latitude": 32.57042432462418,
+    "longitude": -116.638633584885,
+    "date": "2009-09",
+    "road_name": "Puebla",
+    "adjacent_links": [
+        {
+            "pano_id": "Mia6oFcbS1r-gHdF2VkJmQ",
+            "road_name": "Puebla",
+            "yaw_deg": 262.5350036621094
+        },
+        {
+            "pano_id": "ntqikKfmdIzzFcRxEUWxow",
+            "road_name": "Acatzingo",
+            "yaw_deg": 113.9652557373047
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "AWVIWirj7KFa_6_bUKq_ow",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "zMKM3wqlX8N6qVNLmwGIzg",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "h-ksiqsZITQqdGb_IU3a_w",
+            "date": "2017-10"
+        }
+    ]
+}
