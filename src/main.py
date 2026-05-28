@@ -49,13 +49,13 @@ def run_pipeline(args):
     
     if args.mode == "real":
         print("[Acquisition] Running Chromium Playwright scraper and public graph crawler...")
-        # Start crawler seed near Tecate main plaza: 32.5678, -116.6261
-        seed_lat = 32.5678
-        seed_lon = -116.6261
+        # Start crawler seed exactly at Parque Hidalgo
+        seed_lat = 32.573229
+        seed_lon = -116.626536
         scraper = GoogleStreetViewScraper(cache_dir=cache_dir, headless=True)
         
-        # Traverse the public navigation graph, downloading tiles, timeline states, and caching locally
-        discovered_nodes = scraper.traverse_street_graph(seed_lat, seed_lon, max_nodes=25)
+        # Crawl priority network centered on Parque Hidalgo within the bounding box
+        discovered_nodes = scraper.crawl_priority_network(seed_lat, seed_lon, max_nodes=25)
         
         # Fallback: if offline or lookup fails, load existing cache folders
         if len(discovered_nodes) == 0:
