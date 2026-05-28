@@ -7,107 +7,127 @@ import requests
 from PIL import Image
 from io import BytesIO
 
+# Bounding Box Limits for Tecate, Mexico
+BBOX_SW_LAT = 32.521704
+BBOX_SW_LON = -116.681499
+BBOX_NE_LAT = 32.580233
+BBOX_NE_LON = -116.510525
+
+# Priority Center: Parque Hidalgo
+PARQUE_HIDALGO_LAT = 32.573229
+PARQUE_HIDALGO_LON = -116.626536
+
 class GoogleStreetViewScraper:
     """
-    Browser-driven scraping and reverse-engineering pipeline targeting the
-    public Google Maps / Street View web client directly.
-    Extracts high-resolution tiles, public JSON metadata, historical timelines,
-    and road connectivity graphs.
+    Reverse-engineered, Chromium-driven historical Street View crawler.
+    Traverses the real public Google Maps Street View graph, detects timeline revisions,
+    extracts the oldest captures, enforces Parque Hidalgo spatial priority queues,
+    checks bounding boxes, and persists crash-resilient states locally.
     """
     def __init__(self, cache_dir: str = "data/raw_scraped", headless: bool = True):
         self.cache_dir = cache_dir
         self.headless = headless
+        self.state_file = "data/scraper_state.json"
         os.makedirs(cache_dir, exist_ok=True)
-        self.visited_panos = set()
+        os.makedirs("data", exist_ok=True)
         
-        # Look up existing cached directories to prevent duplicate scrapes
-        if os.path.exists(cache_dir):
-            for d in os.listdir(cache_dir):
-                if os.path.isdir(os.path.join(cache_dir, d)) and d.startswith("sim_pano_") or len(d) >= 15:
-                    self.visited_panos.add(d)
+        # Load incremental persistence memory
+        self.load_state()
 
-    def run_browser_session_and_intercept(self, lat: float, lon: float) -> dict | None:
+    def load_state(self):
+        """Loads persistent crawler memory from disk, ensuring resilience against crashes."""
+        if os.path.exists(self.state_file):
+            print(f"[Scraper Memory] Resuming crawl from existing state file: {self.state_file}")
+            try:
+                with open(self.state_file, "r", encoding="utf-8") as f:
+                    state = json.load(f)
+                self.visited_panos = set(state.get("visited_panos", []))
+                self.crawl_queue = state.get("crawl_queue", [])
+                self.failed_panos = state.get("failed_panos", {})
+                self.road_graph = state.get("road_graph", [])
+                print(f"[Scraper Memory] State loaded: {len(self.visited_panos)} crawled nodes, {len(self.crawl_queue)} queued nodes.")
+                return
+            except Exception as e:
+                print(f"[Scraper Memory] Failed to parse state: {e}. Reinitializing.")
+                
+        # Fresh initialization
+        self.visited_panos = set()
+        self.crawl_queue = []
+        self.failed_panos = {}
+        self.road_graph = []
+
+    def save_state(self):
+        """Saves current traversal state to disk to survive crashes and restarts."""
+        state = {
+            "visited_panos": list(self.visited_panos),
+            "crawl_queue": self.crawl_queue,
+            "failed_panos": self.failed_panos,
+            "road_graph": self.road_graph
+        }
+        try:
+            with open(self.state_file, "w", encoding="utf-8") as f:
+                json.dump(state, f, indent=4)
+        except Exception as e:
+            print(f"[Scraper Memory] Failed to save state file: {e}")
+
+    def is_within_bbox(self, lat: float, lon: float) -> bool:
+        """Enforces Bounding Box coordinates limit."""
+        return (BBOX_SW_LAT <= lat <= BBOX_NE_LAT) and (BBOX_SW_LON <= lon <= BBOX_NE_LON)
+
+    def calculate_distance_to_parque_hidalgo(self, lat: float, lon: float) -> float:
+        """Computes Euclidean distance in degrees to Parque Hidalgo for spatial priority weightings."""
+        return math.sqrt((lat - PARQUE_HIDALGO_LAT)**2 + (lon - PARQUE_HIDALGO_LON)**2)
+
+    def run_browser_session_and_intercept(self, lat: float, lon: float) -> str | None:
         """
-        Launches a Playwright Chromium session, navigates to the coordinate,
-        and intercepts background network traffic to trace tiles and photometa.
+        Launches Playwright Chromium browser to load Google Maps and intercept
+        client network payloads, extracting the active panorama ID.
         """
         try:
             from playwright.sync_api import sync_playwright
         except ImportError:
-            print("[Warning] Playwright not available. Skipping browser automation session.")
+            print("[Warning] Playwright not found. Browser interception skipped.")
             return None
 
-        # Build public Google Maps Street View URL
         url = f"https://www.google.com/maps/@{lat},{lon},3a,75y,0h,90t/data=!3m4!1e1"
-        print(f"[Browser Scraper] Navigating to Google Maps web client: {url}")
+        print(f"[Playwright] Booting Chromium. Inspecting Maps client: {url}")
         
         pano_id = None
-        captured_metadata = {}
-        intercepted_tiles = []
         
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=self.headless)
                 context = browser.new_context(
                     viewport={"width": 1280, "height": 720},
-                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                    user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
                 )
                 page = context.new_page()
                 
-                # Setup Request Interception to inspect network traffic
+                # Intercept XHR responses to reverse-engineer client tile loaders
                 def intercept_response(response):
-                    nonlocal pano_id, captured_metadata
-                    resp_url = response.url
-                    
-                    # 1. Intercept Street View Client JSON Metadata (Photometa / cbk searches)
-                    if "photometa" in resp_url or "cbk?output=json" in resp_url:
-                        try:
-                            body = response.text()
-                            # Try to extract the JSON payload (some endpoints wrap in outer text)
-                            if body.startswith("/*-secure-"):
-                                body = body[body.find("["):] # strip secure wrapper
-                            data = json.loads(body)
-                            captured_metadata = data
-                            print("[Browser Scraper] Successfully intercepted background client metadata response!")
-                        except Exception as e:
-                            pass
-                            
-                    # 2. Intercept individual cubic/spherical image tiles
-                    elif "output=tile" in resp_url or "/v1/tile" in resp_url:
-                        parsed = urllib.parse.urlparse(resp_url)
+                    nonlocal pano_id
+                    r_url = response.url
+                    if "output=tile" in r_url or "/v1/tile" in r_url:
+                        parsed = urllib.parse.urlparse(r_url)
                         params = urllib.parse.parse_qs(parsed.query)
                         p_id = params.get("panoid", [None])[0]
                         if p_id:
                             pano_id = p_id
 
                 page.on("response", intercept_response)
-                
-                # Navigate and wait for Google Maps JS bundle to execute and load textures
-                page.goto(url, wait_until="networkidle", timeout=30000)
-                
-                # Emulate small cursor movements to ensure client-side rendering is triggered
-                page.mouse.move(200, 200)
-                page.mouse.down()
-                page.mouse.move(300, 200)
-                page.mouse.up()
-                
-                # Wait a few seconds for tile loads to settle
-                time.sleep(5)
+                page.goto(url, wait_until="load", timeout=30000)
+                time.sleep(4)  # Wait for DOM and tiles to render
                 browser.close()
                 
-            if pano_id:
-                print(f"[Browser Scraper] Intercepted active Panorama ID: {pano_id}")
-                return {"pano_id": pano_id, "metadata": captured_metadata}
+            return pano_id
         except Exception as e:
-            print(f"[Warning] Playwright browser execution encountered an issue: {e}")
-            
-        return None
+            print(f"[Warning] Playwright browser session encountered a technical issue: {e}")
+            return None
 
     def fetch_public_metadata(self, lat: float = None, lon: float = None, pano_id: str = None) -> dict | None:
         """
-        Reverse-engineers the unauthenticated, public client-side Google Maps cbk endpoint.
-        Fetches full structural metadata including coordinate mappings, capture dates,
-        historical timeline revisions, and graph edge connections without credentials.
+        Queries Google's unauthenticated client backend endpoint to reverse-engineer 
+        coordinates, date parameters, road labels, timeline listings, and graph links.
         """
         url = "https://cbks0.google.com/cbk"
         params = {"output": "json"}
@@ -120,7 +140,7 @@ class GoogleStreetViewScraper:
             return None
             
         try:
-            # Query the public unauthenticated cbk backend directly (mimics client network payload)
+            # Query the unauthenticated server (mimics background XHR client fetch)
             resp = requests.get(url, params=params, timeout=10)
             if resp.status_code == 200:
                 data = resp.json()
@@ -128,19 +148,18 @@ class GoogleStreetViewScraper:
                     loc = data["Location"]
                     p_id = loc.get("panoId")
                     
-                    # Parse connected street segment neighbors (edges)
-                    edges = []
-                    for link in data.get("Annotation", {}).get("Link", []):
-                        edges.append({
-                            "pano_id": link.get("panoId"),
-                            "road_name": link.get("road_name", ""),
-                            "yaw_deg": float(link.get("yawDeg", 0.0))
+                    # Parse street links (graph edges)
+                    links = []
+                    for l in data.get("Annotation", {}).get("Link", []):
+                        links.append({
+                            "pano_id": l.get("panoId"),
+                            "road_name": l.get("road_name", ""),
+                            "yaw_deg": float(l.get("yawDeg", 0.0))
                         })
                         
-                    # Parse historical timeline states (temporal lineage)
+                    # Parse timeline revisions (historical lineage states)
                     timeline = []
                     for old in data.get("Links", []):
-                        # Timeline links map historical years at this spot
                         timeline.append({
                             "pano_id": old.get("panoId"),
                             "date": old.get("date", "")
@@ -150,41 +169,37 @@ class GoogleStreetViewScraper:
                         "pano_id": p_id,
                         "latitude": float(loc.get("latitude", lat)),
                         "longitude": float(loc.get("longitude", lon)),
-                        "date": data.get("Data", {}).get("image_date", "2009-08"),
+                        "date": data.get("Data", {}).get("image_date", ""),
                         "road_name": loc.get("road_name", ""),
-                        "adjacent_links": edges,
+                        "adjacent_links": links,
                         "timeline": timeline
                     }
                     return meta
             return None
         except Exception as e:
-            print(f"[Warning] Failed to fetch public cbk metadata: {e}")
+            # Silence connection errors during local unit test suites
             return None
 
     def download_and_stitch_tiles(self, pano_id: str, zoom: int = 3) -> Image.Image | None:
         """
-        Downloads individual raw tiles at a high zoom resolution directly from public 
-        servers and stitches them into a seamless equirectangular panorama.
-        - zoom=3: grid of 8 x 4 tiles (each tile 512x512, full panorama size = 4096 x 2048)
-        - zoom=4: grid of 16 x 8 tiles (full size = 8192 x 4096)
+        Downloads cubic projection tiles directly from public servers, stitches them,
+        crops the facade horizon, and saves the authentic high-resolution equirectangular panorama.
         """
-        # For zoom=3: columns (x) run 0 to 7; rows (y) run 0 to 3
         cols = 8
         rows = 4
         tile_w = 512
         tile_h = 512
         
         panorama = Image.new("RGB", (cols * tile_w, rows * tile_h))
-        downloaded_count = 0
+        downloaded = 0
         
-        tile_save_dir = os.path.join(self.cache_dir, pano_id, "tiles")
-        os.makedirs(tile_save_dir, exist_ok=True)
+        tile_dir = os.path.join(self.cache_dir, pano_id, "tiles")
+        os.makedirs(tile_dir, exist_ok=True)
         
         url_template = "https://streetviewpixels-pa.googleapis.com/v1/tile"
         
         for y in range(rows):
             for x in range(cols):
-                # Public unauthenticated tile request parameters
                 params = {
                     "cb_client": "maps_sv",
                     "panoid": pano_id,
@@ -193,177 +208,175 @@ class GoogleStreetViewScraper:
                     "zoom": str(zoom)
                 }
                 
-                tile_filename = f"tile_z{zoom}_{x}_{y}.png"
-                tile_path = os.path.join(tile_save_dir, tile_filename)
+                tile_path = os.path.join(tile_dir, f"tile_z{zoom}_{x}_{y}.png")
                 
-                # Check local cache first to minimize traffic
                 if os.path.exists(tile_path):
                     try:
                         tile_img = Image.open(tile_path)
                         panorama.paste(tile_img, (x * tile_w, y * tile_h))
-                        downloaded_count += 1
+                        downloaded += 1
                         continue
                     except:
                         pass
-                
-                # Download from public server if not cached
+                        
                 try:
                     resp = requests.get(url_template, params=params, timeout=10)
                     if resp.status_code == 200 and len(resp.content) > 500:
                         tile_img = Image.open(BytesIO(resp.content))
-                        # Save raw tile before preprocessing
-                        tile_img.save(tile_path)
-                        
+                        tile_img.save(tile_path)  # Save raw tile before stitch
                         panorama.paste(tile_img, (x * tile_w, y * tile_h))
-                        downloaded_count += 1
-                        time.sleep(0.1)  # Light throttle to prevent IP bans
-                    else:
-                        print(f"[Warning] Failed to download tile {x}, {y} for {pano_id}")
+                        downloaded += 1
+                        time.sleep(0.1)  # Rate limiting throttle
                 except Exception as e:
-                    print(f"[Warning] Error downloading tile {x}, {y}: {e}")
+                    pass
                     
-        # Verify that we got a substantial portion of the panorama
-        if downloaded_count >= (cols * rows) - 2:
-            # Resize wide-format panorama to standard size (2560 x 640) for downstream compatibility
-            # Or keep it as 2048 x 1024 (2:1 aspect ratio) and crop the horizontal strip
-            # Let's crop a wide horizontal strip representing the horizon facades
-            # Full size is 4096 x 2048. Horizon is y-centered.
-            # Facades cover middle 1/3: y from 512 to 1536 (height 1024).
-            # Let's crop and resize to 2560 x 640 (aspect ratio 4:1)
+        if downloaded >= (cols * rows) - 2:
+            # Crop horizontal facade band (aspect ratio 4:1)
             facade_strip = panorama.crop((0, 680, 4096, 1704))
             resized = facade_strip.resize((2560, 640), Image.Resampling.BILINEAR)
             return resized
             
         return None
 
-    def scrape_node_and_cache(self, pano_id: str) -> dict | None:
-        """
-        Runs the full acquisition pipeline for a single node:
-        Queries public metadata, downloads/stitches tiles, and saves all outputs
-        to the local archival cache folder.
-        """
-        if not pano_id:
-            return None
+    def queue_node(self, pano_id: str, lat: float, lon: float):
+        """Calculates Parque Hidalgo priority weight and queues the node, sorted by proximity."""
+        if pano_id in self.visited_panos or any(item["pano_id"] == pano_id for item in self.crawl_queue):
+            return
             
-        node_dir = os.path.join(self.cache_dir, pano_id)
-        metadata_path = os.path.join(node_dir, "metadata.json")
-        panorama_path = os.path.join(node_dir, "panorama.png")
+        dist = self.calculate_distance_to_parque_hidalgo(lat, lon)
         
-        # Load from cache if already completed
-        if os.path.exists(metadata_path) and os.path.exists(panorama_path):
-            try:
-                with open(metadata_path, "r", encoding="utf-8") as f:
-                    meta = json.load(f)
-                meta["image_path"] = os.path.abspath(panorama_path)
-                return meta
-            except:
-                pass
-                
-        os.makedirs(node_dir, exist_ok=True)
-        print(f"[Scraper] Scraping and reverse-engineering public node: {pano_id}...")
+        # Priority entry structure
+        self.crawl_queue.append({
+            "pano_id": pano_id,
+            "latitude": lat,
+            "longitude": lon,
+            "priority_distance": dist
+        })
         
-        # 1. Fetch metadata
-        meta = self.fetch_public_metadata(pano_id=pano_id)
-        if not meta:
-            # Fallback mock metadata if offline
-            print(f"[Warning] Public metadata fetch failed for {pano_id}. Emulating offline mock payload.")
-            meta = {
-                "pano_id": pano_id,
-                "latitude": 32.5678,
-                "longitude": -116.6261,
-                "date": "2009-08",
-                "road_name": "Juarez",
-                "adjacent_links": [],
-                "timeline": []
-            }
-            
-        # 2. Download and stitch high-res tiles
-        pano_img = self.download_and_stitch_tiles(pano_id, zoom=3)
-        if not pano_img:
-            # Generate procedural fallback so downstream pipeline NEVER crashes
-            print(f"[Scraper] Failed to stitch tiles. Generating high-fidelity fallback panorama.")
-            # Create a simple colored facade background
-            pano_img = Image.new("RGB", (2560, 640), (135, 206, 235))
-            # Draw horizon asphalt
-            from PIL import ImageDraw
-            draw = ImageDraw.Draw(pano_img)
-            draw.rectangle([0, 320, 2560, 640], fill=(80, 80, 80))
-            draw.rectangle([0, 480, 2560, 520], fill=(150, 150, 150))
-            
-        # 3. Save to local archival cache
-        try:
-            pano_img.save(panorama_path)
-            with open(metadata_path, "w", encoding="utf-8") as f:
-                json.dump(meta, f, indent=4)
-                
-            self.visited_panos.add(pano_id)
-            meta["image_path"] = os.path.abspath(panorama_path)
-            return meta
-        except Exception as e:
-            print(f"[Error] Failed to cache node {pano_id}: {e}")
-            return None
+        # Sort queue: closest to Parque Hidalgo first (distance ascending)
+        self.crawl_queue.sort(key=lambda x: x["priority_distance"])
 
-    def traverse_street_graph(self, 
-                              seed_lat: float, 
-                              seed_lon: float, 
-                              max_nodes: int = 20) -> list[dict]:
+    def crawl_priority_network(self, seed_lat: float, seed_lon: float, max_nodes: int = 25) -> list[dict]:
         """
-        Performs network graph traversal (BFS) targeting Tecate, Mexico.
-        Walks connected roads, discovering nodes, checking timelines,
-        and building a local historical Street View archive.
+        Executes a priority-weighted, crash-resilient graph traversal along real
+        Street View segments, strictly bounded inside Tecate and sorted outward from Parque Hidalgo.
         """
-        # Discover the initial node ID close to coordinates
-        print(f"[Traversal] Locating seed node near GPS ({seed_lat}, {seed_lon})...")
-        seed_meta = self.fetch_public_metadata(lat=seed_lat, lon=seed_lon)
-        
-        if not seed_meta:
-            print("[Warning] Seed coordinate lookup failed. Executing mock traversal.")
-            return []
+        # Discover initial seed node if queue is empty and we haven't started
+        if len(self.crawl_queue) == 0 and len(self.visited_panos) == 0:
+            print(f"[Scraper] Resolving crawler seed coordinate near ({seed_lat}, {seed_lon})...")
+            # Try browser session first to inspect real client behavior
+            seed_pano = self.run_browser_session_and_intercept(seed_lat, seed_lon)
             
-        queue = [seed_meta["pano_id"]]
-        discovered_nodes = []
-        
-        while queue and len(discovered_nodes) < max_nodes:
-            curr_id = queue.pop(0)
+            # Direct XHR query fallback
+            seed_meta = self.fetch_public_metadata(lat=seed_lat, lon=seed_lon, pano_id=seed_pano)
             
-            if curr_id in self.visited_panos:
-                # Node already archived locally, load metadata
-                node_dir = os.path.join(self.cache_dir, curr_id)
-                meta_path = os.path.join(node_dir, "metadata.json")
+            if seed_meta:
+                self.queue_node(seed_meta["pano_id"], seed_meta["latitude"], seed_meta["longitude"])
+                self.save_state()
+            else:
+                print("[Warning] Scraper seed coordinate lookup returned null. Aborting crawl.")
+                return []
+                
+        crawled_nodes = []
+        crawled_count = 0
+        
+        while self.crawl_queue and crawled_count < max_nodes:
+            # Pop the highest priority node (closest to Parque Hidalgo)
+            curr = self.crawl_queue.pop(0)
+            pano_id = curr["pano_id"]
+            
+            if pano_id in self.visited_panos:
+                # Load metadata directly from local cache to represent incremental memory
+                meta_path = os.path.join(self.cache_dir, pano_id, "metadata.json")
                 if os.path.exists(meta_path):
                     with open(meta_path, "r", encoding="utf-8") as f:
                         meta = json.load(f)
-                    discovered_nodes.append(meta)
-                    # Queue adjacent unvisited links
-                    for link in meta.get("adjacent_links", []):
-                        l_id = link["pano_id"]
-                        if l_id not in self.visited_panos and l_id not in queue:
-                            queue.append(l_id)
+                    crawled_nodes.append(meta)
+                    crawled_count += 1
                 continue
                 
-            # Scrape and cache node
-            meta = self.scrape_node_and_cache(curr_id)
-            if meta:
-                discovered_nodes.append(meta)
-                
-                # Check for historical timeline states at this node!
-                # If we have alternative years, prioritize the pre-2010 timeline panoramas!
-                for tl in meta.get("timeline", []):
-                    tl_id = tl["pano_id"]
-                    tl_date = tl["date"]
-                    # If date matches 2009/pre-2010, prioritize it in queue!
-                    if tl_id not in self.visited_panos and tl_id not in queue:
-                        if tl_date and ("2009" in tl_date or int(tl_date.split("-")[0]) < 2010):
-                            print(f"[Traversal] Prioritized historical timeline node found: {tl_id} (Captured: {tl_date})")
-                            queue.insert(0, tl_id)  # Prepend to prioritize
-                            
-                # Queue adjacent unvisited links
-                for link in meta.get("adjacent_links", []):
-                    l_id = link["pano_id"]
-                    if l_id not in self.visited_panos and l_id not in queue:
-                        queue.append(l_id)
-                        
-            time.sleep(0.5)  # Throttling to prevent IP bans
+            node_dir = os.path.join(self.cache_dir, pano_id)
+            metadata_path = os.path.join(node_dir, "metadata.json")
+            panorama_path = os.path.join(node_dir, "panorama.png")
             
-        print(f"[Traversal] Graph traversal complete. Discovered and cached {len(discovered_nodes)} unique nodes.")
-        return discovered_nodes
+            # Fetch public metadata
+            meta = self.fetch_public_metadata(pano_id=pano_id)
+            if not meta:
+                self.failed_panos[pano_id] = {
+                    "retries": self.failed_panos.get(pano_id, {}).get("retries", 0) + 1,
+                    "reason": "network_timeout"
+                }
+                self.save_state()
+                continue
+                
+            # 1. Reverse-engineer the timeline chronology to ALWAYS lock onto oldest capture date
+            timeline = meta.get("timeline", [])
+            oldest_pano_id = pano_id
+            oldest_date = meta.get("date", "9999-12") # default to far future if blank
+            
+            # Compare dates chronologically to extract the oldest capture variant
+            for tl in timeline:
+                tl_id = tl["pano_id"]
+                tl_date = tl["date"]
+                if tl_date and tl_date < oldest_date:
+                    oldest_pano_id = tl_id
+                    oldest_date = tl_date
+                    
+            if oldest_pano_id != pano_id:
+                print(f"[Temporal Chronology] Found older timeline state: {oldest_pano_id} ({oldest_date}) replaces modern {pano_id}.")
+                # Re-fetch metadata for the oldest timeline node
+                oldest_meta = self.fetch_public_metadata(pano_id=oldest_pano_id)
+                if oldest_meta:
+                    meta = oldest_meta
+                    pano_id = oldest_pano_id
+                    
+            # 2. Download and stitch authentic tiles
+            print(f"[Crawler] Crawling Node: {pano_id} (Distance to Parque Hidalgo: {curr['priority_distance']:.4f} deg)")
+            pano_img = self.download_and_stitch_tiles(pano_id, zoom=3)
+            
+            if pano_img:
+                os.makedirs(node_dir, exist_ok=True)
+                pano_img.save(panorama_path)
+                
+                # Store raw metadata before preprocessing
+                with open(metadata_path, "w", encoding="utf-8") as f:
+                    json.dump(meta, f, indent=4)
+                    
+                self.visited_panos.add(pano_id)
+                meta["image_path"] = os.path.abspath(panorama_path)
+                crawled_nodes.append(meta)
+                crawled_count += 1
+                
+                # 3. Enqueue connected spatial links (graph edges) within Bounding Box limits
+                for link in meta.get("adjacent_links", []):
+                    link_id = link["pano_id"]
+                    
+                    # Fetch coordinate of adjacent link to inspect bounding box and sort priority
+                    link_meta = self.fetch_public_metadata(pano_id=link_id)
+                    if link_meta:
+                        l_lat = link_meta["latitude"]
+                        l_lon = link_meta["longitude"]
+                        
+                        if self.is_within_bbox(l_lat, l_lon):
+                            self.queue_node(link_id, l_lat, l_lon)
+                            
+                            # Record graph connectivity edge
+                            self.road_graph.append({
+                                "u": pano_id,
+                                "v": link_id,
+                                "yaw": link["yaw_deg"]
+                            })
+                            
+                # Save incremental scraper memory
+                self.save_state()
+            else:
+                self.failed_panos[pano_id] = {
+                    "retries": self.failed_panos.get(pano_id, {}).get("retries", 0) + 1,
+                    "reason": "stitch_failure"
+                }
+                self.save_state()
+                
+            time.sleep(0.4)  # Throttling
+            
+        print(f"[Crawler] Progressive crawl finished. Visited total: {len(self.visited_panos)} nodes.")
+        return crawled_nodes

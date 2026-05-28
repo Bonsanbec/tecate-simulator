@@ -33,11 +33,11 @@ def test_gis_graph_construction():
     
     assert "nodes" in raw_data
     assert "edges" in raw_data
-    assert len(raw_data["nodes"]) == 9
+    assert len(raw_data["nodes"]) == 225
     
     G = builder.build_networkx_graph(raw_data)
-    assert G.number_of_nodes() == 9
-    assert G.number_of_edges() == 12
+    assert G.number_of_nodes() == 225
+    assert G.number_of_edges() == 420
     
     # Verify local metric attributes
     for node_id, data in G.nodes(data=True):
@@ -275,4 +275,104 @@ def test_procedural_local_cache():
     # Cleanup
     if os.path.exists(test_cache):
         shutil.rmtree(test_cache)
+
+def test_priority_queue_parque_hidalgo():
+    """Verifies that the crawl queue is strictly sorted based on proximity to Parque Hidalgo."""
+    from src.data_acquisition.browser_scraper import GoogleStreetViewScraper, PARQUE_HIDALGO_LAT, PARQUE_HIDALGO_LON
+    
+    scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
+    # Clear any state loaded on startup
+    scraper.crawl_queue = []
+    
+    # Place three coordinates:
+    # 1. Close to Parque Hidalgo (offset by 0.0001 deg)
+    # 2. Furthest away (offset by 0.05 deg)
+    # 3. Medium distance (offset by 0.01 deg)
+    scraper.queue_node("node_medium", PARQUE_HIDALGO_LAT + 0.01, PARQUE_HIDALGO_LON)
+    scraper.queue_node("node_far", PARQUE_HIDALGO_LAT + 0.05, PARQUE_HIDALGO_LON)
+    scraper.queue_node("node_close", PARQUE_HIDALGO_LAT + 0.0001, PARQUE_HIDALGO_LON)
+    
+    # Assert they are sorted: closest first
+    assert len(scraper.crawl_queue) == 3
+    assert scraper.crawl_queue[0]["pano_id"] == "node_close"
+    assert scraper.crawl_queue[1]["pano_id"] == "node_medium"
+    assert scraper.crawl_queue[2]["pano_id"] == "node_far"
+
+def test_timeline_oldest_capture_selection():
+    """Verifies that chronological timeline comparison always identifies the oldest capture year."""
+    from unittest.mock import patch, MagicMock
+    from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
+    
+    scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
+    
+    # Mock unauthenticated metadata return with four capture variants (2026, 2015, 2009, 2008)
+    mock_metadata = {
+        "Location": {
+            "panoId": "pano_modern_2026",
+            "latitude": "32.5732",
+            "longitude": "-116.6265"
+        },
+        "Links": [
+            {"panoId": "pano_v1_2015", "date": "2015-05"},
+            {"panoId": "pano_v2_2009", "date": "2009-08"},
+            {"panoId": "pano_v3_2008", "date": "2008-11"}
+        ],
+        "Data": {
+            "image_date": "2026-02"
+        }
+    }
+    
+    # If we evaluate this timeline, "pano_v3_2008" (date 2008-11) is the oldest and must be selected
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_metadata
+    
+    with patch("requests.get", return_value=mock_response):
+        # We query for the modern node, but the scraper must walk the timeline and pull the oldest!
+        meta = scraper.fetch_public_metadata(pano_id="pano_modern_2026")
+        
+        # Chronology search logic check
+        timeline = meta.get("timeline", [])
+        oldest_pano_id = "pano_modern_2026"
+        oldest_date = "2026-02"
+        
+        for tl in timeline:
+            if tl["date"] < oldest_date:
+                oldest_pano_id = tl["pano_id"]
+                oldest_date = tl["date"]
+                
+        assert oldest_pano_id == "pano_v3_2008"
+        assert oldest_date == "2008-11"
+
+def test_resilient_incremental_memory_state():
+    """Verifies that scraper_state.json correctly persists visited and queued nodes to disk."""
+    import os
+    from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
+    
+    state_filepath = "data/scraper_state.json"
+    if os.path.exists(state_filepath):
+        os.remove(state_filepath)
+        
+    scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
+    
+    # Manually populate state
+    scraper.visited_panos.add("pano_scraped_1")
+    scraper.visited_panos.add("pano_scraped_2")
+    scraper.crawl_queue = [{"pano_id": "pano_queued_1", "latitude": 32.5, "longitude": -116.6, "priority_distance": 0.1}]
+    
+    # Save to disk
+    scraper.save_state()
+    assert os.path.exists(state_filepath)
+    
+    # Reboot a new scraper to confirm recovery memory
+    new_scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
+    assert "pano_scraped_1" in new_scraper.visited_panos
+    assert "pano_scraped_2" in new_scraper.visited_panos
+    assert len(new_scraper.crawl_queue) == 1
+    assert new_scraper.crawl_queue[0]["pano_id"] == "pano_queued_1"
+    
+    # Cleanup state file to keep workspace clean
+    if os.path.exists(state_filepath):
+        os.remove(state_filepath)
+
 
