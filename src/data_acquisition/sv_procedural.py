@@ -174,3 +174,117 @@ class ProceduralStreetViewGenerator:
             img = Image.fromarray(np_img)
             
         return img
+
+    def generate_and_cache_simulated_dataset(self, 
+                                             camera_stations: list[dict], 
+                                             G, 
+                                             cache_dir: str = "data/raw_scraped") -> list[dict]:
+        """
+        Generates simulated Street View panoramas and structural metadata,
+        saving them directly to the local cache folder. Mimics the exact folder
+        footprint of the browser scraper.
+        """
+        import os
+        import json
+        
+        # Sort camera stations along edges to build adjacent navigation links
+        edge_stations = {}
+        for cam in camera_stations:
+            e_id = cam["edge_id"]
+            if e_id not in edge_stations:
+                edge_stations[e_id] = []
+            edge_stations[e_id].append(cam)
+            
+        for e_id in edge_stations:
+            edge_stations[e_id].sort(key=lambda c: c["dist_along"])
+            
+        cached_nodes = []
+        
+        for idx, station in enumerate(camera_stations):
+            s_id = station["station_id"]
+            edge_id = station["edge_id"]
+            dist_along = station["dist_along"]
+            
+            # Find edge length
+            edge_len = 80.0
+            for u, v, data in G.edges(data=True):
+                if data["id"] == edge_id:
+                    edge_len = data["length"]
+                    break
+                    
+            # 1. Establish temporal split
+            is_modern_segment = (edge_id in ["e_j2", "e_pc2"])
+            
+            # We generate both the 2009 version AND the 2026 version of each panorama!
+            # This is beautiful because it populates a rich historical timeline at each physical node!
+            for year in [2009, 2026]:
+                is_2009 = (year == 2009)
+                
+                # Check if this node matches the primary temporal split or acts as timeline state
+                pano_id = f"sim_pano_{idx:03d}_{'2009' if is_2009 else '2026'}"
+                alt_pano_id = f"sim_pano_{idx:03d}_{'2026' if is_2009 else '2009'}"
+                
+                node_dir = os.path.join(cache_dir, pano_id)
+                metadata_path = os.path.join(node_dir, "metadata.json")
+                panorama_path = os.path.join(node_dir, "panorama.png")
+                
+                # Setup cache folder
+                os.makedirs(node_dir, exist_ok=True)
+                
+                # Render panorama if not cached
+                if not os.path.exists(panorama_path):
+                    facade_elements = self.generate_facade_elements(edge_id, edge_len)
+                    pano_img = self.render_panorama(dist_along, edge_id, edge_len, facade_elements, is_2009)
+                    pano_img.save(panorama_path)
+                    
+                # 2. Build mock adjacency links along the edge segment
+                adjacent_links = []
+                # Find index along this edge
+                curr_edge_list = edge_stations[edge_id]
+                station_idx_in_edge = curr_edge_list.index(station)
+                
+                if station_idx_in_edge > 0:
+                    prev_station = curr_edge_list[station_idx_in_edge - 1]
+                    adjacent_links.append({
+                        "pano_id": f"sim_pano_{camera_stations.index(prev_station):03d}_{'2009' if is_2009 else '2026'}",
+                        "road_name": f"Street_{edge_id}",
+                        "yaw_deg": (station["road_heading"] + 180.0) % 360.0
+                    })
+                    
+                if station_idx_in_edge < len(curr_edge_list) - 1:
+                    next_station = curr_edge_list[station_idx_in_edge + 1]
+                    adjacent_links.append({
+                        "pano_id": f"sim_pano_{camera_stations.index(next_station):03d}_{'2009' if is_2009 else '2026'}",
+                        "road_name": f"Street_{edge_id}",
+                        "yaw_deg": station["road_heading"]
+                    })
+                    
+                # 3. Create mock timeline state (temporal lineage connection)
+                timeline = [{
+                    "pano_id": alt_pano_id,
+                    "date": "2026-02" if is_2009 else "2009-08"
+                }]
+                
+                meta = {
+                    "pano_id": pano_id,
+                    "latitude": float(station["latitude"]),
+                    "longitude": float(station["longitude"]),
+                    "date": "2009-08" if is_2009 else "2026-02",
+                    "road_name": f"Street_{edge_id}",
+                    "adjacent_links": adjacent_links,
+                    "timeline": timeline,
+                    "image_path": os.path.abspath(panorama_path)
+                }
+                
+                # Save metadata JSON
+                with open(metadata_path, "w", encoding="utf-8") as f:
+                    json.dump(meta, f, indent=4)
+                    
+                # We only return the primary temporal node to the main orchestrator loop
+                # representing what a standard single traversal crawl captures.
+                is_primary_crawl_node = (is_modern_segment and not is_2009) or (not is_modern_segment and is_2009)
+                if is_primary_crawl_node:
+                    cached_nodes.append(meta)
+                    
+        print(f"[Procedural Cache] Generated and cached {len(cached_nodes)*2} simulated nodes in '{cache_dir}/'.")
+        return cached_nodes
