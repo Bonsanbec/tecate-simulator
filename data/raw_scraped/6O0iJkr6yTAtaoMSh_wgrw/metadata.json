@@ -1,0 +1,29 @@
+{
+    "pano_id": "6O0iJkr6yTAtaoMSh_wgrw",
+    "latitude": 32.56740107126508,
+    "longitude": -116.6411669385099,
+    "date": "2009-09",
+    "road_name": "C. Downey A.C.",
+    "adjacent_links": [
+        {
+            "pano_id": "Ntt0pnN_JeLJqOe8CnE6Og",
+            "road_name": "C. Downey A.C.",
+            "yaw_deg": 355.165283203125
+        },
+        {
+            "pano_id": "SDlv6cJIbKIkrGH26CLbnA",
+            "road_name": "C. Downey A.C.",
+            "yaw_deg": 171.9299926757812
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "WvQEFRpKZpSTHJ8_KB5eDw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "NnPvRPBrHKlj7cCIAJIYDA",
+            "date": "2017-10"
+        }
+    ]
+}

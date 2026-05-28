@@ -1,0 +1,29 @@
+{
+    "pano_id": "JjYV5vuXy8oCYwQOOlKoBQ",
+    "latitude": 32.56687273527676,
+    "longitude": -116.6410586199835,
+    "date": "2009-09",
+    "road_name": "C. Downey A.C.",
+    "adjacent_links": [
+        {
+            "pano_id": "Poq8mc-4dKlzYdO9xaPU3Q",
+            "road_name": "Blvd. Defensores de Baja California",
+            "yaw_deg": 208.1277923583984
+        },
+        {
+            "pano_id": "u_LpdNOYPTAOT4YMoeiLAg",
+            "road_name": "C. Downey A.C.",
+            "yaw_deg": 345.4636535644531
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "iBeqlWYjMHysPfFsuFjM2Q",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "7uv8l4GdogZgMOez75nP2g",
+            "date": "2017-10"
+        }
+    ]
+}
