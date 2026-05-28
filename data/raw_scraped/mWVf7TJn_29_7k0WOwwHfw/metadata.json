@@ -1,0 +1,29 @@
+{
+    "pano_id": "mWVf7TJn_29_7k0WOwwHfw",
+    "latitude": 32.5727193635082,
+    "longitude": -116.6363555306061,
+    "date": "2009-09",
+    "road_name": "M\u00e9xico 2D",
+    "adjacent_links": [
+        {
+            "pano_id": "GOjMIkftPW9GxXgrYN2b0w",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 175.1692962646484
+        },
+        {
+            "pano_id": "EvvPjAkU_vCX_-yRx57gfw",
+            "road_name": "M\u00e9xico 2D",
+            "yaw_deg": 338.4698791503906
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "etEqkKXA3wFgUAHRM_19cA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "DxvCU8AxJZ9qawBUlf5NWA",
+            "date": "2015-12"
+        }
+    ]
+}
