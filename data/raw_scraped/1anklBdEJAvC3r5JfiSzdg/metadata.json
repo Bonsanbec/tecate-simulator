@@ -1,0 +1,34 @@
+{
+    "pano_id": "1anklBdEJAvC3r5JfiSzdg",
+    "latitude": 32.56953634860872,
+    "longitude": -116.6379761984112,
+    "date": "2009-08",
+    "road_name": "Puebla",
+    "adjacent_links": [
+        {
+            "pano_id": "O0ulWJJvQUZ8rPGqrt0NZw",
+            "road_name": "Venustiano Carranza",
+            "yaw_deg": 180.37353515625
+        },
+        {
+            "pano_id": "L5BnbVXxpyBfyMGbXdczqA",
+            "road_name": "Puebla",
+            "yaw_deg": 313.1206665039062
+        },
+        {
+            "pano_id": "-bsnyQ2Ga5tHutUJgCz5Pw",
+            "road_name": "C. E",
+            "yaw_deg": 312.258056640625
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "lQxZcNB8MyVNZT4U4SuofA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "5IHQuVaH9-nPVKIUKoSdzA",
+            "date": "2022-09"
+        }
+    ]
+}
