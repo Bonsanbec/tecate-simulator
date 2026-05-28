@@ -1,0 +1,29 @@
+{
+    "pano_id": "xm-KGHeESfD1UHINXfFnmg",
+    "latitude": 32.57038591533187,
+    "longitude": -116.6424795318032,
+    "date": "2009-09",
+    "road_name": "Prof. Jos\u00e9 Guti\u00e9rrez Duran",
+    "adjacent_links": [
+        {
+            "pano_id": "M98EEux_wZrXP5qrIa2AGw",
+            "road_name": "Prof. Jos\u00e9 Guti\u00e9rrez Duran",
+            "yaw_deg": 351.29345703125
+        },
+        {
+            "pano_id": "y4Pku6NX7f9-0CEL9ubwgw",
+            "road_name": "Prof. Jos\u00e9 Guti\u00e9rrez Duran",
+            "yaw_deg": 171.2749481201172
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Jzxdm_hY6MMmwOYAB1QzYA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "TtKtu1cQpJd3XSti1B5JMA",
+            "date": "2021-08"
+        }
+    ]
+}
