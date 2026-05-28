@@ -1,0 +1,34 @@
+{
+    "pano_id": "MMVSOtqGsnfOd1-jv25wfA",
+    "latitude": 32.57009451025245,
+    "longitude": -116.6381491145406,
+    "date": "2009-09",
+    "road_name": "Flores",
+    "adjacent_links": [
+        {
+            "pano_id": "aIgafeuQvr9BDP9afzalNg",
+            "road_name": "C. E",
+            "yaw_deg": 83.44532775878906
+        },
+        {
+            "pano_id": "LW9nS1ePmbuLePqY_NPGBg",
+            "road_name": "C. E",
+            "yaw_deg": 264.3931274414062
+        },
+        {
+            "pano_id": "PjGE-LSfqEbG0U3Rm_68Cw",
+            "road_name": "Flores",
+            "yaw_deg": 145.14990234375
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "g87kjoW2ZGVnnG13kno1mQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "l5JIlJd7bELQ5dC-FwBafA",
+            "date": "2022-09"
+        }
+    ]
+}

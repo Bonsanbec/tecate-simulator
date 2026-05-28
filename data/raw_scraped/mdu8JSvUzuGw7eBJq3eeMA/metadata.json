@@ -1,0 +1,61 @@
+{
+    "pano_id": "mdu8JSvUzuGw7eBJq3eeMA",
+    "latitude": 32.5726604371162,
+    "longitude": -116.6385704283642,
+    "date": "2009-03",
+    "road_name": "Av. Benito Ju\u00e1rez",
+    "adjacent_links": [
+        {
+            "pano_id": "sIDo9Yted0uTrso3IhrceQ",
+            "road_name": "Av. Benito Ju\u00e1rez",
+            "yaw_deg": 264.5877990722656
+        },
+        {
+            "pano_id": "LCQXJXK90kFnX5KFbzZ0vg",
+            "road_name": "M\u00e9xico 2D",
+            "yaw_deg": 84.56365966796875
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "m8gwd244uq5I241oXa8srA",
+            "date": "2009-09"
+        },
+        {
+            "pano_id": "eUcIH4CaTYYTa4mXw4Cr5Q",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "SAHLQn1s4-Bz1pP45EYwuw",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "4fcrNLYPHCsmiVs1gl2IyQ",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "jyByk50LD3EFTAisJA3USw",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "3x7EVfhnqUz74FWZVREIKQ",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "G38V4zortLAxBltEuM-KBw",
+            "date": "2020-02"
+        },
+        {
+            "pano_id": "ZVzZL8-Yj_gvoxZJ37660A",
+            "date": "2019-09"
+        },
+        {
+            "pano_id": "6UobBEbeqgFzempyQWSnhA",
+            "date": "2017-09"
+        },
+        {
+            "pano_id": "KSoH_0wjID5hmB7o9sX1Vw",
+            "date": "2016-02"
+        }
+    ]
+}
