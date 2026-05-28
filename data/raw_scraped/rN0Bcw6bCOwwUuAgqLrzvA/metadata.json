@@ -1,0 +1,29 @@
+{
+    "pano_id": "rN0Bcw6bCOwwUuAgqLrzvA",
+    "latitude": 32.56806255142946,
+    "longitude": -116.6380859578843,
+    "date": "2009-09",
+    "road_name": "Acatzingo",
+    "adjacent_links": [
+        {
+            "pano_id": "ew5ri-dF6yi3t6PM3jFRJg",
+            "road_name": "Acatzingo",
+            "yaw_deg": 349.3146667480469
+        },
+        {
+            "pano_id": "K8IUfHQcedpmLhMLvI9qQw",
+            "road_name": "Acatzingo",
+            "yaw_deg": 169.2429504394531
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "y8HW9SVvRXqtz8DXl7G8uA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "pkjPCFlWCj5jG6HnoQeCvg",
+            "date": "2022-09"
+        }
+    ]
+}

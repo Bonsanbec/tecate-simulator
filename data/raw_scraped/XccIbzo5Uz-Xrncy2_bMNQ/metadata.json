@@ -1,0 +1,34 @@
+{
+    "pano_id": "XccIbzo5Uz-Xrncy2_bMNQ",
+    "latitude": 32.56851639400038,
+    "longitude": -116.6381862707988,
+    "date": "2009-09",
+    "road_name": "Venustiano Carranza",
+    "adjacent_links": [
+        {
+            "pano_id": "83WwL1QnVQ1TxtwPPl_OUA",
+            "road_name": "Flores",
+            "yaw_deg": 30.00202751159668
+        },
+        {
+            "pano_id": "QDBJCNK0507T3L-Z1kYrFQ",
+            "road_name": "Acatzingo",
+            "yaw_deg": 169.2189178466797
+        },
+        {
+            "pano_id": "TSULLmOASSPTRjo4vbL98Q",
+            "road_name": "Venustiano Carranza",
+            "yaw_deg": 338.7135314941406
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "xB7G8efKt0txwdXsjctwHA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "_OQQGj9ac7W1rIPRocMojg",
+            "date": "2022-09"
+        }
+    ]
+}
