@@ -1,6 +1,6 @@
 {
     "system": "Tecate 2009 Urban Reconstruction",
-    "export_time": "2026-05-28T09:45:54Z",
+    "export_time": "2026-05-28T09:54:06Z",
     "domain": "Tecate, Baja California, Mexico",
     "road_graph": {
         "nodes": [
@@ -26225,7 +26225,7 @@
             "latitude": 32.569843750000004,
             "longitude": -116.62950000000001,
             "road_heading": 90.0,
-            "pano_id": "0D94b7rAUWoBE9vgBMSOEA",
+            "pano_id": "MsSuOkbtWUUisnAiqKK51w",
             "temporal_probability": 0.7875,
             "accepted": true
         },
@@ -26237,9 +26237,9 @@
             "latitude": 32.5699375,
             "longitude": -116.62950000000001,
             "road_heading": 90.0,
-            "pano_id": "QExm0hUaZGNSkQdsw1wFPQ",
-            "temporal_probability": 0.7875,
-            "accepted": true
+            "pano_id": "none",
+            "temporal_probability": 0.0,
+            "accepted": false
         },
         {
             "station_id": "cam_1791",
@@ -26753,9 +26753,9 @@
             "latitude": 32.569,
             "longitude": -116.62542857142857,
             "road_heading": 0.0,
-            "pano_id": "-H043h0MJfFod3vKBRZ2Bg",
-            "temporal_probability": 0.7875,
-            "accepted": true
+            "pano_id": "none",
+            "temporal_probability": 0.0,
+            "accepted": false
         },
         {
             "station_id": "cam_1834",
@@ -30833,7 +30833,7 @@
             "latitude": 32.5718125,
             "longitude": -116.631,
             "road_heading": 90.0,
-            "pano_id": "LBUG4FTcZdaicOBkctPs2Q",
+            "pano_id": "HwQMZvHWzTkSiMPu3XQFVw",
             "temporal_probability": 0.7875,
             "accepted": true
         },
@@ -35429,9 +35429,9 @@
             "latitude": 32.572,
             "longitude": -116.63067857142859,
             "road_heading": 0.0,
-            "pano_id": "9EjpL-RxB6V_hemNEo91GQ",
-            "temporal_probability": 0.7875,
-            "accepted": true
+            "pano_id": "none",
+            "temporal_probability": 0.0,
+            "accepted": false
         },
         {
             "station_id": "cam_2557",
@@ -35609,9 +35609,9 @@
             "latitude": 32.57246875,
             "longitude": -116.631,
             "road_heading": 90.0,
-            "pano_id": "none",
-            "temporal_probability": 0.0,
-            "accepted": false
+            "pano_id": "Mqu7dWnqE-Vcr7YscC1KLA",
+            "temporal_probability": 0.7875,
+            "accepted": true
         },
         {
             "station_id": "cam_2572",
@@ -35621,9 +35621,9 @@
             "latitude": 32.572562500000004,
             "longitude": -116.631,
             "road_heading": 90.0,
-            "pano_id": "YuHyrrWJzthhTID5C5U3LA",
-            "temporal_probability": 0.7876455540687911,
-            "accepted": true
+            "pano_id": "none",
+            "temporal_probability": 0.0,
+            "accepted": false
         },
         {
             "station_id": "cam_2573",
@@ -35705,9 +35705,9 @@
             "latitude": 32.57321875,
             "longitude": -116.631,
             "road_heading": 90.0,
-            "pano_id": "g1Zrg7rnfv0fX_HhUUMyGw",
-            "temporal_probability": 0.7875466389505308,
-            "accepted": true
+            "pano_id": "none",
+            "temporal_probability": 0.0,
+            "accepted": false
         },
         {
             "station_id": "cam_2580",
@@ -35717,9 +35717,9 @@
             "latitude": 32.5733125,
             "longitude": -116.631,
             "road_heading": 90.0,
-            "pano_id": "SQ1BUmQi2B5FJN3d7xrggw",
-            "temporal_probability": 0.7875262618499016,
-            "accepted": true
+            "pano_id": "none",
+            "temporal_probability": 0.0,
+            "accepted": false
         },
         {
             "station_id": "cam_2581",
@@ -37217,9 +37217,9 @@
             "latitude": 32.572,
             "longitude": -116.62221428571429,
             "road_heading": 0.0,
-            "pano_id": "8PKkyra9HgUdztN1Duw_2g",
-            "temporal_probability": 0.7875,
-            "accepted": true
+            "pano_id": "none",
+            "temporal_probability": 0.0,
+            "accepted": false
         },
         {
             "station_id": "cam_2706",
@@ -37433,9 +37433,9 @@
             "latitude": 32.572,
             "longitude": -116.62178571428572,
             "road_heading": 0.0,
-            "pano_id": "none",
-            "temporal_probability": 0.0,
-            "accepted": false
+            "pano_id": "UHYT1q_6yPMkCNTeBVTlRw",
+            "temporal_probability": 0.7875,
+            "accepted": true
         },
         {
             "station_id": "cam_2724",
@@ -37589,7 +37589,7 @@
             "latitude": 32.5721875,
             "longitude": -116.62199999999999,
             "road_heading": 90.0,
-            "pano_id": "bTUhOl5N_kFBlv8XJveWKQ",
+            "pano_id": "II-RDUUhZrkHaUN789ikQQ",
             "temporal_probability": 0.7875,
             "accepted": true
         },
@@ -37649,7 +37649,7 @@
             "latitude": 32.57265625,
             "longitude": -116.62199999999999,
             "road_heading": 90.0,
-            "pano_id": "XAxEdiUuq3DdUyaHEeIOFg",
+            "pano_id": "W53jGxGYkPIBvQUda-5MVg",
             "temporal_probability": 0.7875,
             "accepted": true
         },
@@ -42497,7 +42497,7 @@
             "latitude": 32.573875,
             "longitude": -116.62199999999999,
             "road_heading": 90.0,
-            "pano_id": "wGJOdsQ-n55GhB894tMzHQ",
+            "pano_id": "JYQqDBR6pMYVWybwzI5OAg",
             "temporal_probability": 0.7875,
             "accepted": true
         },
@@ -42509,9 +42509,9 @@
             "latitude": 32.573968750000006,
             "longitude": -116.62199999999999,
             "road_heading": 90.0,
-            "pano_id": "VU1vlA5U_hrNB8NoctyNgw",
-            "temporal_probability": 0.7875,
-            "accepted": true
+            "pano_id": "none",
+            "temporal_probability": 0.0,
+            "accepted": false
         },
         {
             "station_id": "cam_3147",
@@ -82994,12 +82994,12 @@
                 },
                 {
                     "surface_id": "block_39_facade_2",
-                    "source": "image",
-                    "pano_id": "-H043h0MJfFod3vKBRZ2Bg",
-                    "station_id": "cam_1833",
+                    "source": "procedural_fallback",
+                    "pano_id": "fallback_stucco",
+                    "station_id": "none",
                     "angle_deg": 0.0,
-                    "distance_meters": 30.154841723432277,
-                    "sharpness_val": 23.29518740531057
+                    "distance_meters": 0.0,
+                    "sharpness_val": 0.0
                 },
                 {
                     "surface_id": "block_39_facade_3",
@@ -84684,11 +84684,11 @@
                 {
                     "surface_id": "block_49_facade_3",
                     "source": "image",
-                    "pano_id": "LBUG4FTcZdaicOBkctPs2Q",
+                    "pano_id": "HwQMZvHWzTkSiMPu3XQFVw",
                     "station_id": "cam_2173",
                     "angle_deg": 0.0,
                     "distance_meters": 62.6172135713187,
-                    "sharpness_val": 13.484102702699602
+                    "sharpness_val": 48.90093474742025
                 }
             ]
         },
@@ -84834,20 +84834,20 @@
                 {
                     "surface_id": "block_50_facade_1",
                     "source": "image",
-                    "pano_id": "LBUG4FTcZdaicOBkctPs2Q",
+                    "pano_id": "HwQMZvHWzTkSiMPu3XQFVw",
                     "station_id": "cam_2173",
                     "angle_deg": 0.0,
                     "distance_meters": 62.6172135713187,
-                    "sharpness_val": 29.439229077659547
+                    "sharpness_val": 37.412516221404076
                 },
                 {
                     "surface_id": "block_50_facade_2",
-                    "source": "image",
-                    "pano_id": "9EjpL-RxB6V_hemNEo91GQ",
-                    "station_id": "cam_2556",
+                    "source": "procedural_fallback",
+                    "pano_id": "fallback_stucco",
+                    "station_id": "none",
                     "angle_deg": 0.0,
-                    "distance_meters": 40.206455631243045,
-                    "sharpness_val": 20.78845050558448
+                    "distance_meters": 0.0,
+                    "sharpness_val": 0.0
                 },
                 {
                     "surface_id": "block_50_facade_3",
@@ -85682,12 +85682,12 @@
                 },
                 {
                     "surface_id": "block_55_facade_2",
-                    "source": "image",
-                    "pano_id": "8PKkyra9HgUdztN1Duw_2g",
-                    "station_id": "cam_2705",
+                    "source": "procedural_fallback",
+                    "pano_id": "fallback_stucco",
+                    "station_id": "none",
                     "angle_deg": 0.0,
-                    "distance_meters": 50.25806953990633,
-                    "sharpness_val": 87.86289106309414
+                    "distance_meters": 0.0,
+                    "sharpness_val": 0.0
                 },
                 {
                     "surface_id": "block_55_facade_3",
@@ -85850,12 +85850,12 @@
                 },
                 {
                     "surface_id": "block_56_facade_2",
-                    "source": "procedural_fallback",
-                    "pano_id": "fallback_stucco",
-                    "station_id": "none",
+                    "source": "image",
+                    "pano_id": "UHYT1q_6yPMkCNTeBVTlRw",
+                    "station_id": "cam_2723",
                     "angle_deg": 0.0,
-                    "distance_meters": 0.0,
-                    "sharpness_val": 0.0
+                    "distance_meters": 50.25806953820131,
+                    "sharpness_val": 61.094874455593526
                 },
                 {
                     "surface_id": "block_56_facade_3",
@@ -86868,11 +86868,11 @@
                 {
                     "surface_id": "block_62_facade_3",
                     "source": "image",
-                    "pano_id": "wGJOdsQ-n55GhB894tMzHQ",
-                    "station_id": "cam_3146",
+                    "pano_id": "JYQqDBR6pMYVWybwzI5OAg",
+                    "station_id": "cam_3145",
                     "angle_deg": 0.0,
-                    "distance_meters": 31.30860678565932,
-                    "sharpness_val": 109.29889613296837
+                    "distance_meters": 41.7448090475458,
+                    "sharpness_val": 161.13520377874374
                 }
             ]
         },
@@ -87018,11 +87018,11 @@
                 {
                     "surface_id": "block_63_facade_1",
                     "source": "image",
-                    "pano_id": "wGJOdsQ-n55GhB894tMzHQ",
-                    "station_id": "cam_3146",
+                    "pano_id": "JYQqDBR6pMYVWybwzI5OAg",
+                    "station_id": "cam_3145",
                     "angle_deg": 0.0,
-                    "distance_meters": 31.30860678565932,
-                    "sharpness_val": 79.3312138877809
+                    "distance_meters": 41.7448090475458,
+                    "sharpness_val": 31.30672480072826
                 },
                 {
                     "surface_id": "block_63_facade_2",
