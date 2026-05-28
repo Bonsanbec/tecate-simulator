@@ -1,0 +1,29 @@
+{
+    "pano_id": "NJ9KltlVwIycKMa-cAmMng",
+    "latitude": 32.57060466073273,
+    "longitude": -116.6368490015224,
+    "date": "2009-09",
+    "road_name": "Puebla",
+    "adjacent_links": [
+        {
+            "pano_id": "GDeMA05_PqDoUfeu6o0rog",
+            "road_name": "Puebla",
+            "yaw_deg": 83.17549133300781
+        },
+        {
+            "pano_id": "7c3goPodJIpBaT-p74wpDA",
+            "road_name": "Puebla",
+            "yaw_deg": 263.1266784667969
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "ZSfkL0JlMhVFaLj8C35ijQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "evaOFDWe48CeQcJeR5FaTg",
+            "date": "2022-09"
+        }
+    ]
+}
