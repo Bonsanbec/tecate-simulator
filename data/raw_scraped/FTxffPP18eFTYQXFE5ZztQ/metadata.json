@@ -1,0 +1,53 @@
+{
+    "pano_id": "FTxffPP18eFTYQXFE5ZztQ",
+    "latitude": 32.57382460727562,
+    "longitude": -116.6240082408179,
+    "date": "2009-02",
+    "road_name": "Tecate - Rumorosa Libre",
+    "adjacent_links": [
+        {
+            "pano_id": "WNcFQ0ojhWvSFQGIGPLXRA",
+            "road_name": "Tecate - Rumorosa Libre",
+            "yaw_deg": 265.9896545410156
+        },
+        {
+            "pano_id": "QaeniaGzmDF4VU16g5uOJg",
+            "road_name": "Av. Benito Ju\u00e1rez",
+            "yaw_deg": 85.97016906738281
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "VnxGwBi-EQuWcMAEn3oHgQ",
+            "date": "2017-09"
+        },
+        {
+            "pano_id": "69ij_nHKIHYQc6b1PoMFNg",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "1Q1iZ4g4-i53DMlOijIyDQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "n2aD3xitNs-amTqDk6uRyA",
+            "date": "2022-06"
+        },
+        {
+            "pano_id": "P7FocYZapHEWDHV0g2pCVQ",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "xTgGgVEFZzoco8yi5iuGZQ",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "lFUQBACvFtZvWTF7-nZYVw",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "b-7_rpwfA34CNeTEbsZ6_w",
+            "date": "2009-09"
+        }
+    ]
+}
