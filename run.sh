@@ -13,5 +13,5 @@ while true; do
 
     echo "===== SLEEPING ====="
 
-    sleep 300
+    sleep 30
 done
