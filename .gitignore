@@ -1,1 +1,4 @@
 *.babylon
+/data/raw_scraped
+/export/textures
+/data/screenshots

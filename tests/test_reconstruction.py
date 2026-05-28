@@ -375,4 +375,52 @@ def test_resilient_incremental_memory_state():
     if os.path.exists(state_filepath):
         os.remove(state_filepath)
 
+def test_spiral_search_coordinate_generator():
+    """Verifies that expanding spiral offsets are mathematically generated in correct increments."""
+    from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
+    
+    scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
+    gen = scraper.generate_spiral_offsets()
+    
+    # Take first 4 offsets and confirm they represent correct coordinate steps
+    offsets = [next(gen) for _ in range(4)]
+    assert len(offsets) == 4
+    for lat_offset, lon_offset in offsets:
+        assert abs(lat_offset) > 0.0 or abs(lon_offset) > 0.0
+        assert abs(lat_offset) <= 0.001 and abs(lon_offset) <= 0.001
+
+def test_address_bar_url_pano_id_regex_parsing():
+    """Verifies that the regular expression successfully parses 22-character base64 panoIds from Google Maps URLs."""
+    import re
+    
+    # Standard Google Maps Street View URL with a 22-character Base64-like panoId
+    url_1 = "https://www.google.com/maps/@32.573229,-116.626536,3a,75y,0h,90t/data=!3m6!1e1!3m4!1sABCdefGHIjklMNOpqrSTUv!2e0!7i13312!8i6656"
+    match_1 = re.search(r'!1s([a-zA-Z0-9_\-]{22})', url_1)
+    assert match_1 is not None
+    assert match_1.group(1) == "ABCdefGHIjklMNOpqrSTUv"
+    
+    # URL containing dashes and underscores (standard base64url)
+    url_2 = "https://www.google.com/maps/@32.573,-116.62,3a,75y/data=!3m4!1e1!3m2!1s-_1234567890abcdefGHIJ!2e0"
+    match_2 = re.search(r'!1s([a-zA-Z0-9_\-]{20,22})', url_2)
+    assert match_2 is not None
+    assert match_2.group(1) == "-_1234567890abcdefGHIJ"
+
+def test_zero_synthetic_real_mode_constraint():
+    """Verifies that in real scraping mode, tile downloader strictly returns None on failure instead of fallback images."""
+    from unittest.mock import patch, MagicMock
+    from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
+    
+    scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
+    
+    # Mock requests.get returning empty or failed response
+    mock_response = MagicMock()
+    mock_response.status_code = 404
+    mock_response.content = b""
+    
+    with patch("requests.get", return_value=mock_response):
+        # With allow_synthetic=False, it must return None immediately
+        pano_img = scraper.download_and_stitch_tiles(pano_id="mock_failed_pano", zoom=3, allow_synthetic=False)
+        assert pano_img is None
+
+
 

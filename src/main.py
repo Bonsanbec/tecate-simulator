@@ -52,7 +52,7 @@ def run_pipeline(args):
         # Start crawler seed exactly at Parque Hidalgo
         seed_lat = 32.573229
         seed_lon = -116.626536
-        scraper = GoogleStreetViewScraper(cache_dir=cache_dir, headless=True)
+        scraper = GoogleStreetViewScraper(cache_dir=cache_dir, headless=args.headless)
         
         # Crawl priority network centered on Parque Hidalgo within the bounding box
         discovered_nodes = scraper.crawl_priority_network(seed_lat, seed_lon, max_nodes=25)
@@ -322,6 +322,8 @@ if __name__ == "__main__":
                         help="Classical CV feature extractor (default: 'ORB')")
     parser.add_argument("--output", type=str, default="export/reconstruction_export.json",
                         help="Output JSON file destination (default: export/reconstruction_export.json)")
+    parser.add_argument("--headless", action="store_true", default=False,
+                        help="Run Playwright Chromium browser in headless mode (default: False to support WebGL on Mac)")
     
     args = parser.parse_args()
     run_pipeline(args)
