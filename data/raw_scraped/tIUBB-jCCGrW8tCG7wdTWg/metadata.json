@@ -1,0 +1,49 @@
+{
+    "pano_id": "tIUBB-jCCGrW8tCG7wdTWg",
+    "latitude": 32.57386966511594,
+    "longitude": -116.6188481772976,
+    "date": "2009-02",
+    "road_name": "Tijuana-Mexicali",
+    "adjacent_links": [
+        {
+            "pano_id": "cGMTk3bqubkMbo9Uqp5lGA",
+            "road_name": "Av. Benito Ju\u00e1rez",
+            "yaw_deg": 57.32757949829102
+        },
+        {
+            "pano_id": "kxxni2Wwxj6P7DLW220cFw",
+            "road_name": "Tijuana-Mexicali",
+            "yaw_deg": 239.65087890625
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "D6ObJ9iwnw0iS4G3sbh3YQ",
+            "date": "2009-09"
+        },
+        {
+            "pano_id": "2N1VQeN59HdejpTCEcfycA",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "wl-3FeWMgHuOinuBzRqSgA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "33KhkREaIL2r5_a1CCqpAQ",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "SMVnOkw93oDCRSg86FQSWw",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "sos2bOyOu3b92MGj1UF1SQ",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "fFIH3f-095ZHrWigr8s1Yw",
+            "date": "2017-09"
+        }
+    ]
+}
