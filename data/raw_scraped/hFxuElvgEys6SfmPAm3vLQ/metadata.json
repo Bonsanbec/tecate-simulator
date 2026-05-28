@@ -1,0 +1,33 @@
+{
+    "pano_id": "hFxuElvgEys6SfmPAm3vLQ",
+    "latitude": 32.57250775685833,
+    "longitude": -116.6245394370028,
+    "date": "2009-09",
+    "road_name": "Av. Miguel Hidalgo",
+    "adjacent_links": [
+        {
+            "pano_id": "vN2_i6UDp-AIkbp92Eck1g",
+            "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+            "yaw_deg": 356.2921752929688
+        },
+        {
+            "pano_id": "S3qXH-jUftbfZsqqxL-Reg",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 210.8136901855469
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "_1_KvYjS3pIO-NSqUObivw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "cHL2YmeDIFdgSM0bH63AhA",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "evRkBEuls5Jn6iFrvgrk9g",
+            "date": "2017-07"
+        }
+    ]
+}

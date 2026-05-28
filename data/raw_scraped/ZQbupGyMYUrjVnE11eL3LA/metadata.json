@@ -1,0 +1,33 @@
+{
+    "pano_id": "ZQbupGyMYUrjVnE11eL3LA",
+    "latitude": 32.57233814925781,
+    "longitude": -116.6257038535491,
+    "date": "2009-09",
+    "road_name": "Av. Miguel Hidalgo",
+    "adjacent_links": [
+        {
+            "pano_id": "Gx8ONJO6nBrKqfVJDcnGVA",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 265.2991943359375
+        },
+        {
+            "pano_id": "U0EQ5OSp6QpEIgQHcmGq0w",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 85.22746276855469
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "BA84y1MqfRV0WLhUCXMRUQ",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "9wJbP1ALNZfeZOQfIclNxw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "8AVbU5D9QC-H9SmWtPTn3g",
+            "date": "2022-10"
+        }
+    ]
+}
