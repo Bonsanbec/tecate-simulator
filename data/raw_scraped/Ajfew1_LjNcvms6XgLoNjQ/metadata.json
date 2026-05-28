@@ -1,0 +1,33 @@
+{
+    "pano_id": "Ajfew1_LjNcvms6XgLoNjQ",
+    "latitude": 32.57125588440893,
+    "longitude": -116.636169837716,
+    "date": "2009-09",
+    "road_name": "C. Eufracio Santana",
+    "adjacent_links": [
+        {
+            "pano_id": "eg1Q-UQEtRlnYrAew98YDw",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 174.3186645507812
+        },
+        {
+            "pano_id": "a_X7G0BY8XG2ehttxgkY3A",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 309.9619750976562
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "rnSnov7qcEKsGOCUY_vmsQ",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "k3C9MriiBnG5nf7BM6DMIQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "UQceX5DrwuexUpodOH-zVQ",
+            "date": "2022-07"
+        }
+    ]
+}

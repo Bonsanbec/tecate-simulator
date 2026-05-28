@@ -1,0 +1,29 @@
+{
+    "pano_id": "jeRbXdIn8X1USkiKb246wA",
+    "latitude": 32.57070002235331,
+    "longitude": -116.6361610208986,
+    "date": "2009-09",
+    "road_name": "Puebla",
+    "adjacent_links": [
+        {
+            "pano_id": "10siXqaKgpxKY0MCyp6hbw",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 74.20533752441406
+        },
+        {
+            "pano_id": "ubsiLUhlnOJf6s17szLK6w",
+            "road_name": "Puebla",
+            "yaw_deg": 263.1630249023438
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "P2aR4TigBIUniub5Qe7BPQ",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "f530VVklWYI2n4zg5rZVkQ",
+            "date": "2025-08"
+        }
+    ]
+}
