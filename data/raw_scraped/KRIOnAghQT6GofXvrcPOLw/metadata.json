@@ -1,0 +1,51 @@
+{
+    "pano_id": "KRIOnAghQT6GofXvrcPOLw",
+    "latitude": 32.57226953297913,
+    "longitude": -116.6346763719079,
+    "date": "2009-09",
+    "road_name": "Libertad",
+    "adjacent_links": [
+        {
+            "pano_id": "x5N7r1X79HNlPNWHWIe_7g",
+            "road_name": "Aldrete",
+            "yaw_deg": 173.9174194335938
+        },
+        {
+            "pano_id": "miey6cP79R3NGSM4XMl1Rg",
+            "road_name": "Libertad",
+            "yaw_deg": 252.7303924560547
+        },
+        {
+            "pano_id": "G-cT3dcG5Dl6WIvanCyvcw",
+            "road_name": "Libertad",
+            "yaw_deg": 98.40399932861328
+        },
+        {
+            "pano_id": "mziiERhujGSmGAUnnzMDHA",
+            "road_name": "Aldrete",
+            "yaw_deg": 355.1920776367188
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "P6Qm2syce7082pAZIsEhgg",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "B_O7VIz3PUKRv3c3FNfDrw",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "1M7AKt6U4kKsO_NRTKZbCA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "ujosPFd5uTCQ3SGsViDuIg",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "50OrxpMpRXM1X3uBCKSuvA",
+            "date": "2015-12"
+        }
+    ]
+}
