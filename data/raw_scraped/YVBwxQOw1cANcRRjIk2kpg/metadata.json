@@ -1,0 +1,42 @@
+{
+    "pano_id": "YVBwxQOw1cANcRRjIk2kpg",
+    "latitude": 32.57289252340725,
+    "longitude": -116.6199877902817,
+    "date": "2009-09",
+    "road_name": "Av. Miguel Hidalgo",
+    "adjacent_links": [
+        {
+            "pano_id": "CEbt72J8brTeubm-1df0yg",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 263.0332946777344
+        },
+        {
+            "pano_id": "ED02uJno3IEC6bx0EEY21g",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 78.28643035888672
+        },
+        {
+            "pano_id": "MO0wvBGWB4pAWwSlrrEHJw",
+            "road_name": "C. Rio Armer\u00eda",
+            "yaw_deg": 355.7952270507812
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "qlD4i2HopvV2T0aocfWdbA",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "LG63sd7wEiQcuRmed95ZQw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "tTheXuO2VOb_20LbnInSww",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "XOzXRjZwajPpROs2_qP2NQ",
+            "date": "2022-10"
+        }
+    ]
+}
