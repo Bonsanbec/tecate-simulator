@@ -1,0 +1,41 @@
+{
+    "pano_id": "nY_ASM3EhHfKFfGDk9rdmg",
+    "latitude": 32.57311167246093,
+    "longitude": -116.630060330606,
+    "date": "2009-09",
+    "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "nYLAgzU0SPX4SnlIcsf_6A",
+            "road_name": "Tijuana - Tecate",
+            "yaw_deg": 348.1803283691406
+        },
+        {
+            "pano_id": "xp1Za3NIqxiqUDcqGxHgJA",
+            "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+            "yaw_deg": 174.8341217041016
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "8BZ2NFCuJi2F4H6GKU4vtw",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "9NRkaApHg70-Pc_DoIG-vg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "Qp9yCWzyaKwARCZRyGtl4g",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "So7TXlDno1Bez0MRduw9ig",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "6QDRM26I6cAX1fmrFrsK0Q",
+            "date": "2017-07"
+        }
+    ]
+}
