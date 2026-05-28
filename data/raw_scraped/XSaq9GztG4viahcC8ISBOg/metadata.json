@@ -1,0 +1,38 @@
+{
+    "pano_id": "XSaq9GztG4viahcC8ISBOg",
+    "latitude": 32.5731675181274,
+    "longitude": -116.624553202741,
+    "date": "2009-09",
+    "road_name": "Libertad",
+    "adjacent_links": [
+        {
+            "pano_id": "b9p5RhpEryA4-to0bIjbbw",
+            "road_name": "Libertad",
+            "yaw_deg": 217.3824462890625
+        },
+        {
+            "pano_id": "HRL09reGvR6xiCJ4ladGIg",
+            "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+            "yaw_deg": 356.0404357910156
+        },
+        {
+            "pano_id": "bG_8WXlp2kwvzG4-YGS8NA",
+            "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+            "yaw_deg": 176.1502075195312
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "jjEZwrpV3X9SaQQEW_xfUw",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "TBb40Ql9_t582aVy9ueWLA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "IyLgdbDlrFnnSWE990jl4Q",
+            "date": "2022-10"
+        }
+    ]
+}
