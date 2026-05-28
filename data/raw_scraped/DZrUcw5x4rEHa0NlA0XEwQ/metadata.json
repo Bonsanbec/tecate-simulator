@@ -1,0 +1,25 @@
+{
+    "pano_id": "DZrUcw5x4rEHa0NlA0XEwQ",
+    "latitude": 32.57305877410204,
+    "longitude": -116.6213346963928,
+    "date": "2009-09",
+    "road_name": "R\u00edo T\u00e1mesis",
+    "adjacent_links": [
+        {
+            "pano_id": "zLDeqZdmgf1vLBpW7wz6-w",
+            "road_name": "R\u00edo T\u00e1mesis",
+            "yaw_deg": 174.4995574951172
+        },
+        {
+            "pano_id": "cWarKHF3AnLZWEOD2ZwrTw",
+            "road_name": "R\u00edo T\u00e1mesis",
+            "yaw_deg": 354.5076904296875
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Nd3_WWPM2-9mOgVQPYfF_Q",
+            "date": "2022-10"
+        }
+    ]
+}
