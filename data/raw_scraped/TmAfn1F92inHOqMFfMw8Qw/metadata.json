@@ -1,0 +1,45 @@
+{
+    "pano_id": "TmAfn1F92inHOqMFfMw8Qw",
+    "latitude": 32.57495216049154,
+    "longitude": -116.6112927205117,
+    "date": "2009-02",
+    "road_name": "P.\u00ba Jos\u00e9 Mar\u00eda Morelos y Pav\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "S5oKlTPebTC9mU9Orl1TCg",
+            "road_name": "P.\u00ba Jos\u00e9 Mar\u00eda Morelos y Pav\u00f3n",
+            "yaw_deg": 289.5187377929688
+        },
+        {
+            "pano_id": "SexnxOGirQY-9i05r0RGWw",
+            "road_name": "P.\u00ba Jos\u00e9 Mar\u00eda Morelos y Pav\u00f3n",
+            "yaw_deg": 109.5165481567383
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "IgjKEhpaPu4bIJDec-NEuQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "A7LwkTt7yhCcl8HBpnHqBQ",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "5RFD5H5OuMeKI9dftUxPHA",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "iKC91rkBkN4qa9I6bCNFxA",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "-S6Xs_mKXnSBNJgilQYdLg",
+            "date": "2017-11"
+        },
+        {
+            "pano_id": "MZATA9KFCvQFw0EZAH7Bqw",
+            "date": "2009-09"
+        }
+    ]
+}
