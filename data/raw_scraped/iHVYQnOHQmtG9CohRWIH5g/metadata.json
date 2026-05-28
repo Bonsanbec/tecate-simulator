@@ -1,0 +1,33 @@
+{
+    "pano_id": "iHVYQnOHQmtG9CohRWIH5g",
+    "latitude": 32.57265600829122,
+    "longitude": -116.6286910737388,
+    "date": "2009-09",
+    "road_name": "Libertad",
+    "adjacent_links": [
+        {
+            "pano_id": "qj_17yjgLgfTSN7icYig4w",
+            "road_name": "Libertad",
+            "yaw_deg": 4.459330558776855
+        },
+        {
+            "pano_id": "78o1L_NmLmLjqjSlCiSOvA",
+            "road_name": "Pdte. El\u00edas Calles",
+            "yaw_deg": 174.4644165039062
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "nLzVJpj7AGLnqPxrYUNQ1A",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "VwS-dN1iptXOQfgYp0H8Yg",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "mKCaqi8k9o1h5O66VXAFMw",
+            "date": "2019-09"
+        }
+    ]
+}
