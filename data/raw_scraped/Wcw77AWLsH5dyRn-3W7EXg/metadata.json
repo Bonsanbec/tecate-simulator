@@ -1,0 +1,29 @@
+{
+    "pano_id": "Wcw77AWLsH5dyRn-3W7EXg",
+    "latitude": 32.56896781095652,
+    "longitude": -116.6343185684233,
+    "date": "2009-09",
+    "road_name": "Aldrete",
+    "adjacent_links": [
+        {
+            "pano_id": "SW49Y4gjDNzfQXRydWUtlw",
+            "road_name": "Aldrete",
+            "yaw_deg": 352.0339660644531
+        },
+        {
+            "pano_id": "HmMFyEvogFtJi-Jmtn-akQ",
+            "road_name": "Blvd. Defensores de Baja California",
+            "yaw_deg": 201.7980499267578
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "2osWQkQ-sAd0cJLStXhiJw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "GI3h19xba38Cl3EVfkeGcQ",
+            "date": "2023-07"
+        }
+    ]
+}
