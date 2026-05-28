@@ -195,3 +195,84 @@ def test_texture_normal_calculations():
     normal = texturer.calculate_wall_normal(p1, p2, centroid)
     assert math.isclose(normal[0], 0.0, abs_tol=1e-5)
     assert math.isclose(normal[1], -1.0, abs_tol=1e-5)
+
+def test_scraper_metadata_and_timeline():
+    """Verifies that public unauthenticated metadata JSON is parsed correctly, tracing timelines."""
+    from unittest.mock import patch, MagicMock
+    from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
+    
+    scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
+    
+    # Mock requests.get response
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "Location": {
+            "panoId": "mock_pano_xyz",
+            "latitude": "32.56",
+            "longitude": "-116.6",
+            "road_name": "Av. Juarez"
+        },
+        "Annotation": {
+            "Link": [
+                {"panoId": "adjacent_1", "road_name": "Av. Juarez", "yawDeg": "90.0"}
+            ]
+        },
+        "Links": [
+            {"panoId": "mock_pano_xyz_2009", "date": "2009-08"}
+        ],
+        "Data": {
+            "image_date": "2026-02"
+        }
+    }
+    
+    with patch("requests.get", return_value=mock_response):
+        meta = scraper.fetch_public_metadata(pano_id="mock_pano_xyz")
+        
+        assert meta is not None
+        assert meta["pano_id"] == "mock_pano_xyz"
+        assert meta["latitude"] == 32.56
+        assert meta["road_name"] == "Av. Juarez"
+        assert len(meta["adjacent_links"]) == 1
+        assert meta["adjacent_links"][0]["pano_id"] == "adjacent_1"
+        assert len(meta["timeline"]) == 1
+        assert meta["timeline"][0]["pano_id"] == "mock_pano_xyz_2009"
+        assert meta["timeline"][0]["date"] == "2009-08"
+
+def test_procedural_local_cache():
+    """Verifies that ProceduralStreetViewGenerator generates and writes data to local cache folder correctly."""
+    import shutil
+    import os
+    
+    # Temporary test cache
+    test_cache = "tests/test_scraped_cache"
+    if os.path.exists(test_cache):
+        shutil.rmtree(test_cache)
+        
+    generator = ProceduralStreetViewGenerator(seed=42)
+    
+    # Create simple road network
+    G = nx.MultiGraph()
+    G.add_node("n1", x=0.0, y=0.0, lat=32.5678, lon=-116.6261)
+    G.add_node("n2", x=50.0, y=0.0, lat=32.5678, lon=-116.6256)
+    G.add_edge("n1", "n2", id="e1", length=50.0)
+    
+    camera_stations = [
+        {"station_id": "cam_0", "edge_id": "e1", "dist_along": 20.0, "x": 20.0, "y": 0.0, "latitude": 32.5678, "longitude": -116.6259, "road_heading": 0.0}
+    ]
+    
+    nodes = generator.generate_and_cache_simulated_dataset(camera_stations, G, cache_dir=test_cache)
+    
+    assert len(nodes) == 1
+    node = nodes[0]
+    
+    # Assert folders exist
+    node_dir = os.path.join(test_cache, node["pano_id"])
+    assert os.path.exists(node_dir)
+    assert os.path.exists(os.path.join(node_dir, "metadata.json"))
+    assert os.path.exists(os.path.join(node_dir, "panorama.png"))
+    
+    # Cleanup
+    if os.path.exists(test_cache):
+        shutil.rmtree(test_cache)
+

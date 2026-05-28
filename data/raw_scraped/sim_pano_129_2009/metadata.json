@@ -1,0 +1,26 @@
+{
+    "pano_id": "sim_pano_129_2009",
+    "latitude": 32.5668,
+    "longitude": -116.6278777777778,
+    "date": "2009-08",
+    "road_name": "Street_e_l1",
+    "adjacent_links": [
+        {
+            "pano_id": "sim_pano_128_2009",
+            "road_name": "Street_e_l1",
+            "yaw_deg": 180.0
+        },
+        {
+            "pano_id": "sim_pano_130_2009",
+            "road_name": "Street_e_l1",
+            "yaw_deg": 0.0
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "sim_pano_129_2026",
+            "date": "2026-02"
+        }
+    ],
+    "image_path": "/Users/hakkindavid/Documents/GitHub/tecate-simulator/data/raw_scraped/sim_pano_129_2009/panorama.png"
+}

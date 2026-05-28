@@ -2,12 +2,13 @@ import argparse
 import sys
 import os
 import math
+import json
 import numpy as np
 from PIL import Image
 
 from src.core_io.coords import gps_to_local, local_to_gps
 from src.core_io.io_manager import ensure_dir
-from src.data_acquisition.sv_downloader import StreetViewDownloader
+from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
 from src.data_acquisition.sv_procedural import ProceduralStreetViewGenerator
 from src.gis_graph.graph_builder import TecateGraphBuilder
 from src.image_alignment.aligner import ImageAligner
@@ -29,6 +30,8 @@ def run_pipeline(args):
 
     # Make sure output directories exist
     ensure_dir("export/textures")
+    cache_dir = "data/raw_scraped"
+    ensure_dir(cache_dir)
 
     # 1. BUILD ROAD GRAPH FROM OSM
     builder = TecateGraphBuilder(cache_dir="data")
@@ -39,81 +42,107 @@ def run_pipeline(args):
     print(f"[GIS] Loaded road graph: {G.number_of_nodes()} intersections, {G.number_of_edges()} road segments.")
     print(f"[GIS] Placed {len(camera_stations)} virtual camera stations along segments.")
 
-    # 2. ACQUIRE STREET VIEW PANORAMAS
+    # 2. ACQUIRE STREET VIEW PANORAMAS (PUBLIC WEB SCRAPER & LOCAL ARCHIVAL CACHE)
     raw_panos = []
     pano_registry = {}  # Map station_id -> panorama details
+    discovered_nodes = []
     
     if args.mode == "real":
-        downloader = StreetViewDownloader(api_key=args.api_key)
-        if not downloader.has_api_key():
-            print("[Error] A valid Google Street View API key is required for 'real' mode.")
-            print("Please supply it via --api-key or use '--mode simulated'.")
-            sys.exit(1)
-            
-        print("[Acquisition] Running real scraper pipeline from Google Street View...")
+        print("[Acquisition] Running Chromium Playwright scraper and public graph crawler...")
+        # Start crawler seed near Tecate main plaza: 32.5678, -116.6261
+        seed_lat = 32.5678
+        seed_lon = -116.6261
+        scraper = GoogleStreetViewScraper(cache_dir=cache_dir, headless=True)
+        
+        # Traverse the public navigation graph, downloading tiles, timeline states, and caching locally
+        discovered_nodes = scraper.traverse_street_graph(seed_lat, seed_lon, max_nodes=25)
+        
+        # Fallback: if offline or lookup fails, load existing cache folders
+        if len(discovered_nodes) == 0:
+            print("[Warning] No active nodes crawled. Loading existing cached archives...")
+            if os.path.exists(cache_dir):
+                for d in os.listdir(cache_dir):
+                    meta_path = os.path.join(cache_dir, d, "metadata.json")
+                    if os.path.exists(meta_path):
+                        with open(meta_path, "r", encoding="utf-8") as f:
+                            discovered_nodes.append(json.load(f))
+                            
+        # Distribute locally cached panoramas back to our deterministic GIS camera graph stations
+        print("[Acquisition] Aligning cached/scraped dataset back to GIS graph virtual stations...")
         for station in camera_stations:
-            lat = station["latitude"]
-            lon = station["longitude"]
-            pano = downloader.fetch_full_panorama(lat, lon)
-            if pano:
-                # Store the station alignment directly
-                pano["station_id"] = station["station_id"]
-                raw_panos.append(pano)
-                pano_registry[station["station_id"]] = pano
-                print(f" -> Acquired real panorama {pano['pano_id']} for {station['station_id']} (Captured: {pano['date']})")
+            best_pano = None
+            min_dist = float("inf")
+            
+            for node in discovered_nodes:
+                node_x, node_y = gps_to_local(node["latitude"], node["longitude"])
+                dist = math.sqrt((station["x"] - node_x)**2 + (station["y"] - node_y)**2)
+                if dist < min_dist:
+                    min_dist = dist
+                    best_pano = node
+                    
+            # If a local cached panorama is within a reasonable distance (40 meters), assign it
+            if best_pano and min_dist < 40.0:
+                image_path = os.path.join(cache_dir, best_pano["pano_id"], "panorama.png")
+                if os.path.exists(image_path):
+                    pano_img = Image.open(image_path)
+                    
+                    # Establish metadata temporal probability based on date
+                    captured_date = best_pano.get("date", "")
+                    init_prob = 0.05
+                    if captured_date:
+                        year = int(captured_date.split("-")[0])
+                        if year == 2009 or year < 2010:
+                            init_prob = 0.90
+                            
+                    pano_data = {
+                        "latitude": best_pano["latitude"],
+                        "longitude": best_pano["longitude"],
+                        "pano_id": best_pano["pano_id"],
+                        "date": captured_date,
+                        "temporal_probability": init_prob,
+                        "image": pano_img,
+                        "station_id": station["station_id"],
+                        "edge_id": station["edge_id"],
+                        "dist_along": station["dist_along"]
+                    }
+                    raw_panos.append(pano_data)
+                    pano_registry[station["station_id"]] = pano_data
+                    
     else:
         # SIMULATED MODE
-        print("[Acquisition] Running procedural generator for simulated Tecate Street View...")
+        print("[Acquisition] Running procedural generator and writing simulated data to local cache...")
         generator = ProceduralStreetViewGenerator(seed=42)
         
-        # We will generate panoramas for each camera station.
-        # To test our temporal filtering module, we will intentionally tag a few camera stations
-        # as modern (e.g., stations along edge 'e_j2' or 'e_pc2') and others as circa 2009.
-        for idx, station in enumerate(camera_stations):
-            edge_id = station["edge_id"]
-            dist_along = station["dist_along"]
-            
-            # Retrieve the length of the edge from the graph
-            # In MultiGraph, G.edges(u, v, key) or we can search by edge attribute
-            edge_len = 80.0
-            for u, v, data in G.edges(data=True):
-                if data["id"] == edge_id:
-                    edge_len = data["length"]
+        # Generates, structures timelines/adjacent links, and writes simulated nodes to cache
+        discovered_nodes = generator.generate_and_cache_simulated_dataset(camera_stations, G, cache_dir=cache_dir)
+        
+        # Load nodes strictly and exclusively from the local cache folder footprint!
+        for station in camera_stations:
+            for node in discovered_nodes:
+                if math.isclose(node["latitude"], station["latitude"], abs_tol=1e-5) and \
+                   math.isclose(node["longitude"], station["longitude"], abs_tol=1e-5):
+                    image_path = os.path.join(cache_dir, node["pano_id"], "panorama.png")
+                    pano_img = Image.open(image_path)
+                    
+                    # Check year
+                    init_prob = 0.90 if node["date"].startswith("2009") else 0.05
+                    
+                    pano_data = {
+                        "latitude": station["latitude"],
+                        "longitude": station["longitude"],
+                        "pano_id": node["pano_id"],
+                        "date": node["date"],
+                        "temporal_probability": init_prob,
+                        "image": pano_img,
+                        "station_id": station["station_id"],
+                        "edge_id": station["edge_id"],
+                        "dist_along": station["dist_along"]
+                    }
+                    raw_panos.append(pano_data)
+                    pano_registry[station["station_id"]] = pano_data
                     break
-            
-            # Generate deterministic facade elements along the street edge
-            facade_elements = generator.generate_facade_elements(edge_id, edge_len)
-            
-            # Let's inject a strict temporal split to test the pipeline:
-            # We set one specific avenue (e_j2: Avenida Juárez East) and street (e_pc2: Calle Cárdenas South)
-            # to be Modern (captured in 2026), and all other streets to be historical (2009).
-            is_modern_segment = (edge_id in ["e_j2", "e_pc2"])
-            is_2009 = not is_modern_segment
-            
-            pano_img = generator.render_panorama(dist_along, edge_id, edge_len, facade_elements, is_2009)
-            
-            pano_id = f"sim_pano_{idx:03d}_{'2009' if is_2009 else '2026'}"
-            date_str = "2009-08" if is_2009 else "2026-02"
-            
-            # Set initial metadata probability
-            # 2009 panoramas have high probability; modern have near 0.05
-            init_prob = 0.90 if is_2009 else 0.05
-            
-            pano_data = {
-                "latitude": station["latitude"],
-                "longitude": station["longitude"],
-                "pano_id": pano_id,
-                "date": date_str,
-                "temporal_probability": init_prob,
-                "image": pano_img,
-                "station_id": station["station_id"],
-                "edge_id": edge_id,
-                "dist_along": dist_along
-            }
-            raw_panos.append(pano_data)
-            pano_registry[station["station_id"]] = pano_data
-            
-        print(f"[Acquisition] Procedurally generated {len(raw_panos)} high-fidelity panoramas of Tecate facades.")
+                    
+        print(f"[Acquisition] Local cache consumption complete. Loaded {len(raw_panos)} nodes exclusively from '{cache_dir}/'.")
 
     # 3. IMAGE ANCHORING & ALIGNMENT
     aligner = ImageAligner()
