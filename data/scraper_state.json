@@ -1,0 +1,356 @@
+{
+    "visited_panos": [
+        "iC5pdw4_s0duwq6JUPlyQw",
+        "DH4FUbgNZZLPpRZptDSLnQ",
+        "sEGDOA7YGKHJdJB1_1jlww",
+        "s8jMOjFHZUBdw_QkJoOqUQ",
+        "TKBZ3XviX118BobBo8yqBg",
+        "aG9wTbcMljQTf6M152i_jg",
+        "77oLGonvBikDtblS1_QOVQ",
+        "zpVIs8QgJa887h8HqCBIXw",
+        "Jjim4J9OCYTxi2vfWLaGcg",
+        "eHZz9EAJVJrp-zQeK7kcQw",
+        "MNGyZKvkDSWHDgltYdjHCw",
+        "rylIDyzHWu3yI9gXza7M5g",
+        "o2n_8DSE2jb27t91OTjB_A",
+        "kpS2nz7jqX2fLtV-gx3n0Q",
+        "So5QKCD3HfwX3znKu08miQ",
+        "GHOVd1crq0yfHHkIiAJ_xQ",
+        "wmJvcgiWMjwVwFmiWxn5yw",
+        "nyOHlAdVShsxtoQKFcSFsA",
+        "WqGF0A9xXd8aEE7vJkvv-Q",
+        "t1k-Y2rfrHbjnHocl4lyRw",
+        "3S0GF_PRenWJ_3lYv9GUfA",
+        "aNGj8-qOWUNuMxPPGtCdag",
+        "whYn5Db3JbkSiuPWdWUOfA",
+        "cc7QCw5EXEK0aJ80CUdy0Q",
+        "PkH0zOLyx3_u9xCFGGbWog"
+    ],
+    "crawl_queue": [
+        {
+            "pano_id": "PrEbeatItmtZ2ymfflTl0w",
+            "latitude": 32.57360285520237,
+            "longitude": -116.6271768651907,
+            "priority_distance": 0.0007419406344136688
+        },
+        {
+            "pano_id": "jCGZyZTu0qmivh-MdNyxJA",
+            "latitude": 32.57354049604806,
+            "longitude": -116.6272239200711,
+            "priority_distance": 0.0007551581372022316
+        },
+        {
+            "pano_id": "zb8YAlf6JTqXMSoSS-2IYg",
+            "latitude": 32.57282310091026,
+            "longitude": -116.6258918043219,
+            "priority_distance": 0.0007614080001799867
+        },
+        {
+            "pano_id": "m6eWt4yPai2T0m9b4W4znw",
+            "latitude": 32.57356261252259,
+            "longitude": -116.6272294982781,
+            "priority_distance": 0.0007695694750670684
+        },
+        {
+            "pano_id": "ZC2uJblFs6XVM9c3AL4bpg",
+            "latitude": 32.57365109203809,
+            "longitude": -116.6258905447193,
+            "priority_distance": 0.0007712160579309596
+        },
+        {
+            "pano_id": "2gpvJnx11RqSz8Ub9TYINQ",
+            "latitude": 32.57286337418834,
+            "longitude": -116.6272618878642,
+            "priority_distance": 0.000812770216933291
+        }
+    ],
+    "failed_panos": {},
+    "road_graph": [
+        {
+            "u": "zpVIs8QgJa887h8HqCBIXw",
+            "v": "H8IDlJ5qxDwpqXfSEUxgOw",
+            "yaw": 174.8056182861328
+        },
+        {
+            "u": "zpVIs8QgJa887h8HqCBIXw",
+            "v": "3Lnw-L64pPFFEYhIWIiAWg",
+            "yaw": 354.7586059570312
+        },
+        {
+            "u": "eHZz9EAJVJrp-zQeK7kcQw",
+            "v": "whYn5Db3JbkSiuPWdWUOfA",
+            "yaw": 174.8380889892578
+        },
+        {
+            "u": "o2n_8DSE2jb27t91OTjB_A",
+            "v": "2aYibKfjGbPgAnRodRWDBA",
+            "yaw": 54.06429672241211
+        },
+        {
+            "u": "o2n_8DSE2jb27t91OTjB_A",
+            "v": "PrEbeatItmtZ2ymfflTl0w",
+            "yaw": 354.82666015625
+        },
+        {
+            "u": "o2n_8DSE2jb27t91OTjB_A",
+            "v": "m6eWt4yPai2T0m9b4W4znw",
+            "yaw": 340.2157897949219
+        },
+        {
+            "u": "kpS2nz7jqX2fLtV-gx3n0Q",
+            "v": "rylIDyzHWu3yI9gXza7M5g",
+            "yaw": 84.14295196533203
+        },
+        {
+            "u": "kpS2nz7jqX2fLtV-gx3n0Q",
+            "v": "PkH0zOLyx3_u9xCFGGbWog",
+            "yaw": 264.2928771972656
+        },
+        {
+            "u": "rylIDyzHWu3yI9gXza7M5g",
+            "v": "Jjim4J9OCYTxi2vfWLaGcg",
+            "yaw": 84.14305114746094
+        },
+        {
+            "u": "rylIDyzHWu3yI9gXza7M5g",
+            "v": "kpS2nz7jqX2fLtV-gx3n0Q",
+            "yaw": 264.1429443359375
+        },
+        {
+            "u": "rylIDyzHWu3yI9gXza7M5g",
+            "v": "MNGyZKvkDSWHDgltYdjHCw",
+            "yaw": 123.5407409667969
+        },
+        {
+            "u": "rylIDyzHWu3yI9gXza7M5g",
+            "v": "PkH0zOLyx3_u9xCFGGbWog",
+            "yaw": 264.1649780273438
+        },
+        {
+            "u": "Jjim4J9OCYTxi2vfWLaGcg",
+            "v": "So5QKCD3HfwX3znKu08miQ",
+            "yaw": 84.16000366210938
+        },
+        {
+            "u": "Jjim4J9OCYTxi2vfWLaGcg",
+            "v": "rylIDyzHWu3yI9gXza7M5g",
+            "yaw": 264.1430358886719
+        },
+        {
+            "u": "So5QKCD3HfwX3znKu08miQ",
+            "v": "77oLGonvBikDtblS1_QOVQ",
+            "yaw": 84.1235580444336
+        },
+        {
+            "u": "So5QKCD3HfwX3znKu08miQ",
+            "v": "Jjim4J9OCYTxi2vfWLaGcg",
+            "yaw": 264.1600036621094
+        },
+        {
+            "u": "PkH0zOLyx3_u9xCFGGbWog",
+            "v": "rylIDyzHWu3yI9gXza7M5g",
+            "yaw": 84.16497802734375
+        },
+        {
+            "u": "PkH0zOLyx3_u9xCFGGbWog",
+            "v": "iC5pdw4_s0duwq6JUPlyQw",
+            "yaw": 264.1162109375
+        },
+        {
+            "u": "PkH0zOLyx3_u9xCFGGbWog",
+            "v": "kpS2nz7jqX2fLtV-gx3n0Q",
+            "yaw": 84.2928695678711
+        },
+        {
+            "u": "77oLGonvBikDtblS1_QOVQ",
+            "v": "aG9wTbcMljQTf6M152i_jg",
+            "yaw": 84.1527328491211
+        },
+        {
+            "u": "77oLGonvBikDtblS1_QOVQ",
+            "v": "So5QKCD3HfwX3znKu08miQ",
+            "yaw": 264.1235656738281
+        },
+        {
+            "u": "aG9wTbcMljQTf6M152i_jg",
+            "v": "GHOVd1crq0yfHHkIiAJ_xQ",
+            "yaw": 83.61048126220703
+        },
+        {
+            "u": "aG9wTbcMljQTf6M152i_jg",
+            "v": "77oLGonvBikDtblS1_QOVQ",
+            "yaw": 264.1527404785156
+        },
+        {
+            "u": "aG9wTbcMljQTf6M152i_jg",
+            "v": "sEGDOA7YGKHJdJB1_1jlww",
+            "yaw": 111.7568588256836
+        },
+        {
+            "u": "iC5pdw4_s0duwq6JUPlyQw",
+            "v": "PkH0zOLyx3_u9xCFGGbWog",
+            "yaw": 84.11621856689453
+        },
+        {
+            "u": "iC5pdw4_s0duwq6JUPlyQw",
+            "v": "aNGj8-qOWUNuMxPPGtCdag",
+            "yaw": 265.2546081542969
+        },
+        {
+            "u": "whYn5Db3JbkSiuPWdWUOfA",
+            "v": "t1k-Y2rfrHbjnHocl4lyRw",
+            "yaw": 174.8642578125
+        },
+        {
+            "u": "whYn5Db3JbkSiuPWdWUOfA",
+            "v": "eHZz9EAJVJrp-zQeK7kcQw",
+            "yaw": 354.8381042480469
+        },
+        {
+            "u": "MNGyZKvkDSWHDgltYdjHCw",
+            "v": "rylIDyzHWu3yI9gXza7M5g",
+            "yaw": 303.5407409667969
+        },
+        {
+            "u": "MNGyZKvkDSWHDgltYdjHCw",
+            "v": "cc7QCw5EXEK0aJ80CUdy0Q",
+            "yaw": 174.4647216796875
+        },
+        {
+            "u": "MNGyZKvkDSWHDgltYdjHCw",
+            "v": "DH4FUbgNZZLPpRZptDSLnQ",
+            "yaw": 354.4509582519531
+        },
+        {
+            "u": "DH4FUbgNZZLPpRZptDSLnQ",
+            "v": "MNGyZKvkDSWHDgltYdjHCw",
+            "yaw": 174.4509429931641
+        },
+        {
+            "u": "DH4FUbgNZZLPpRZptDSLnQ",
+            "v": "wmJvcgiWMjwVwFmiWxn5yw",
+            "yaw": 354.5138854980469
+        },
+        {
+            "u": "wmJvcgiWMjwVwFmiWxn5yw",
+            "v": "DH4FUbgNZZLPpRZptDSLnQ",
+            "yaw": 174.5138854980469
+        },
+        {
+            "u": "wmJvcgiWMjwVwFmiWxn5yw",
+            "v": "nyOHlAdVShsxtoQKFcSFsA",
+            "yaw": 354.4552917480469
+        },
+        {
+            "u": "cc7QCw5EXEK0aJ80CUdy0Q",
+            "v": "3S0GF_PRenWJ_3lYv9GUfA",
+            "yaw": 174.4850311279297
+        },
+        {
+            "u": "cc7QCw5EXEK0aJ80CUdy0Q",
+            "v": "MNGyZKvkDSWHDgltYdjHCw",
+            "yaw": 354.4647216796875
+        },
+        {
+            "u": "nyOHlAdVShsxtoQKFcSFsA",
+            "v": "wmJvcgiWMjwVwFmiWxn5yw",
+            "yaw": 174.4552917480469
+        },
+        {
+            "u": "nyOHlAdVShsxtoQKFcSFsA",
+            "v": "sEGDOA7YGKHJdJB1_1jlww",
+            "yaw": 354.710693359375
+        },
+        {
+            "u": "t1k-Y2rfrHbjnHocl4lyRw",
+            "v": "TKBZ3XviX118BobBo8yqBg",
+            "yaw": 222.39111328125
+        },
+        {
+            "u": "t1k-Y2rfrHbjnHocl4lyRw",
+            "v": "whYn5Db3JbkSiuPWdWUOfA",
+            "yaw": 354.8642578125
+        },
+        {
+            "u": "3S0GF_PRenWJ_3lYv9GUfA",
+            "v": "s8jMOjFHZUBdw_QkJoOqUQ",
+            "yaw": 174.2286224365234
+        },
+        {
+            "u": "3S0GF_PRenWJ_3lYv9GUfA",
+            "v": "cc7QCw5EXEK0aJ80CUdy0Q",
+            "yaw": 354.4850463867188
+        },
+        {
+            "u": "aNGj8-qOWUNuMxPPGtCdag",
+            "v": "iC5pdw4_s0duwq6JUPlyQw",
+            "yaw": 85.25460815429688
+        },
+        {
+            "u": "aNGj8-qOWUNuMxPPGtCdag",
+            "v": "jCGZyZTu0qmivh-MdNyxJA",
+            "yaw": 264.7634887695312
+        },
+        {
+            "u": "sEGDOA7YGKHJdJB1_1jlww",
+            "v": "aG9wTbcMljQTf6M152i_jg",
+            "yaw": 291.7568664550781
+        },
+        {
+            "u": "sEGDOA7YGKHJdJB1_1jlww",
+            "v": "nyOHlAdVShsxtoQKFcSFsA",
+            "yaw": 174.7107086181641
+        },
+        {
+            "u": "sEGDOA7YGKHJdJB1_1jlww",
+            "v": "GHOVd1crq0yfHHkIiAJ_xQ",
+            "yaw": 358.0359497070312
+        },
+        {
+            "u": "s8jMOjFHZUBdw_QkJoOqUQ",
+            "v": "WqGF0A9xXd8aEE7vJkvv-Q",
+            "yaw": 175.1660461425781
+        },
+        {
+            "u": "s8jMOjFHZUBdw_QkJoOqUQ",
+            "v": "3S0GF_PRenWJ_3lYv9GUfA",
+            "yaw": 354.2286376953125
+        },
+        {
+            "u": "GHOVd1crq0yfHHkIiAJ_xQ",
+            "v": "ZC2uJblFs6XVM9c3AL4bpg",
+            "yaw": 83.85922241210938
+        },
+        {
+            "u": "GHOVd1crq0yfHHkIiAJ_xQ",
+            "v": "aG9wTbcMljQTf6M152i_jg",
+            "yaw": 263.6104736328125
+        },
+        {
+            "u": "GHOVd1crq0yfHHkIiAJ_xQ",
+            "v": "sEGDOA7YGKHJdJB1_1jlww",
+            "yaw": 178.0359344482422
+        },
+        {
+            "u": "WqGF0A9xXd8aEE7vJkvv-Q",
+            "v": "zb8YAlf6JTqXMSoSS-2IYg",
+            "yaw": 174.8971099853516
+        },
+        {
+            "u": "WqGF0A9xXd8aEE7vJkvv-Q",
+            "v": "s8jMOjFHZUBdw_QkJoOqUQ",
+            "yaw": 355.1660461425781
+        },
+        {
+            "u": "TKBZ3XviX118BobBo8yqBg",
+            "v": "2gpvJnx11RqSz8Ub9TYINQ",
+            "yaw": 266.6302795410156
+        },
+        {
+            "u": "TKBZ3XviX118BobBo8yqBg",
+            "v": "t1k-Y2rfrHbjnHocl4lyRw",
+            "yaw": 42.39112091064453
+        }
+    ],
+    "resolved_seed_coordinate": null
+}
