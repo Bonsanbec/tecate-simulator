@@ -1,0 +1,39 @@
+{
+    "pano_id": "Oi_pdn4QslgjWoMx1q0Xsw",
+    "latitude": 32.57548052351515,
+    "longitude": -116.6289949938772,
+    "date": "2009-09",
+    "road_name": "Cjon. Francisco I. Madero",
+    "adjacent_links": [
+        {
+            "pano_id": "5oqPBVSj0m-WAVsNWy5_uw",
+            "road_name": "Pdte. El\u00edas Calles",
+            "yaw_deg": 174.7201843261719
+        },
+        {
+            "pano_id": "txeZ2VhPBi7-1E500FBx2g",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 287.4147338867188
+        },
+        {
+            "pano_id": "jo_D7CbM9RCDHOvJK7alow",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 55.60499954223633
+        },
+        {
+            "pano_id": "8xFjf1oWr9km4nmeQicN4Q",
+            "road_name": "Pdte. El\u00edas Calles",
+            "yaw_deg": 354.1932067871094
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "z6l96rvcDWuEgM4XbUCxyA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "sYZwEvHZMC_ZQbj8yC5rUQ",
+            "date": "2022-09"
+        }
+    ]
+}

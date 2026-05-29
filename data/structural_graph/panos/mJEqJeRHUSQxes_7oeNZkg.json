@@ -1,0 +1,53 @@
+{
+    "pano_id": "mJEqJeRHUSQxes_7oeNZkg",
+    "latitude": 32.5738581733051,
+    "longitude": -116.6231102249221,
+    "date": "2009-09",
+    "road_name": "Gral. Emilio Portes Gil",
+    "adjacent_links": [
+        {
+            "pano_id": "WE32xDRvkle8j6hUOHVZxA",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 250.0206756591797
+        },
+        {
+            "pano_id": "KZHtN4PkpAT2449rrkBNdA",
+            "road_name": "Tijuana-Mexicali",
+            "yaw_deg": 83.32341766357422
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "142Yf5_owfFzE2vpGJ95zg",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "sDunSRwlMDIid1w7OB7AeA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "Dlx3h5Y9fkwSTqPnA03R_w",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "xJrhc3qxf4xqBHkzTy8LYg",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "2TnPDUrsO0m-4Ob-WSQTqA",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "tA5S3nAub3lSVbejlVhehQ",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "I3A9yvgwYOZwe6PQGbQiBA",
+            "date": "2017-09"
+        },
+        {
+            "pano_id": "Dk0yj_fj_UAzv76adiLmQw",
+            "date": "2009-02"
+        }
+    ]
+}

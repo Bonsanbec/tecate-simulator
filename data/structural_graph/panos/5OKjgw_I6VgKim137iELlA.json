@@ -1,0 +1,29 @@
+{
+    "pano_id": "5OKjgw_I6VgKim137iELlA",
+    "latitude": 32.57584838752317,
+    "longitude": -116.6254710067075,
+    "date": "2009-09",
+    "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+    "adjacent_links": [
+        {
+            "pano_id": "0hKuOUozWb_HXY843XJ1LA",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 264.3255920410156
+        },
+        {
+            "pano_id": "JSqCXn3YQHHoFoiaNbSgzQ",
+            "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+            "yaw_deg": 97.68250274658203
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "m61ZphY5Ez5lGgM-zzK4bA",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "SWpwBjE4p_eazOlIIcNQ2w",
+            "date": "2016-02"
+        }
+    ]
+}

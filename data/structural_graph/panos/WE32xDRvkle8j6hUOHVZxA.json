@@ -1,0 +1,63 @@
+{
+    "pano_id": "WE32xDRvkle8j6hUOHVZxA",
+    "latitude": 32.57387155666581,
+    "longitude": -116.6232640782138,
+    "date": "2009-09",
+    "road_name": "Gral. Emilio Portes Gil",
+    "adjacent_links": [
+        {
+            "pano_id": "mJEqJeRHUSQxes_7oeNZkg",
+            "road_name": "Tecate - Rumorosa Libre",
+            "yaw_deg": 70.02068328857422
+        },
+        {
+            "pano_id": "5OnkyONVnYkKicay3kchIw",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 176.6031494140625
+        },
+        {
+            "pano_id": "NV3ogmLw31rI3sTsbvfO1A",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 343.3600463867188
+        },
+        {
+            "pano_id": "bp8h0Y_yECx8mPvRUDT7vQ",
+            "road_name": "Av. Benito Ju\u00e1rez",
+            "yaw_deg": 287.3151245117188
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "lzAP8PsLLH94KQ-aSl85JQ",
+            "date": "2009-02"
+        },
+        {
+            "pano_id": "is6fl_HeA_SHBcTcMA4cDw",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "7Wfmby_rkmYZIUmv6fyFxg",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "nzwqRmxjGIclxAndDXrXnw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "EhpYaQ14Mte3zevk0mMWXQ",
+            "date": "2022-06"
+        },
+        {
+            "pano_id": "43QQFrCLiitKvoLFkNQ8BA",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "eyvMcfOnmyWWLEPgJ6Q5EQ",
+            "date": "2020-02"
+        },
+        {
+            "pano_id": "yinaYeYVO_Hsn20mmWMi4Q",
+            "date": "2017-09"
+        }
+    ]
+}

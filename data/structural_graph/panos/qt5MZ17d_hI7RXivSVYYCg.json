@@ -1,0 +1,33 @@
+{
+    "pano_id": "qt5MZ17d_hI7RXivSVYYCg",
+    "latitude": 32.5756620732498,
+    "longitude": -116.6275153362159,
+    "date": "2009-08",
+    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+    "adjacent_links": [
+        {
+            "pano_id": "tdXGQZcMhnldGZruVObaHA",
+            "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+            "yaw_deg": 132.3448333740234
+        },
+        {
+            "pano_id": "7-STyY9AIYBdJ2Bcf9HJbQ",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 264.0575866699219
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "soogS63AbjWh8P-7KkrblQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "KN7og-dhYGXuCJpfrkxmqw",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "3hVJDuCRkQ3UB7NDTtbRow",
+            "date": "2016-02"
+        }
+    ]
+}

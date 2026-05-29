@@ -1,0 +1,29 @@
+{
+    "pano_id": "snpmisaSM1HzW0aMhONRqg",
+    "latitude": 32.57578553895145,
+    "longitude": -116.6261092656005,
+    "date": "2009-09",
+    "road_name": "Pdte. Pascual Ortiz Rubio",
+    "adjacent_links": [
+        {
+            "pano_id": "ta0rSIhLEhyOHkngiEwo8w",
+            "road_name": "Pdte. Pascual Ortiz Rubio",
+            "yaw_deg": 270.7088317871094
+        },
+        {
+            "pano_id": "4K4iUPTo-K724pt0F86TMw",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 84.32337951660156
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "2GNk4BYSJZcu-Yk7NoqrBA",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "wYu1XA9t8aD1Prgz-ZyOrg",
+            "date": "2016-02"
+        }
+    ]
+}

@@ -1,0 +1,20 @@
+{
+    "pano_id": "Z-ukZ8qNSyABfPlaZTx5nw",
+    "latitude": 32.57636085229647,
+    "longitude": -116.6264459387942,
+    "date": "2009-09",
+    "road_name": "M\u00e9xico",
+    "adjacent_links": [
+        {
+            "pano_id": "zgbVO1yL13PK3_6GCZrtdQ",
+            "road_name": "M\u00e9xico",
+            "yaw_deg": 85.5195083618164
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "S8XCxCkYOMMze0mOitbBMA",
+            "date": "2016-02"
+        }
+    ]
+}

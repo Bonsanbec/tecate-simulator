@@ -1,0 +1,29 @@
+{
+    "pano_id": "IgRdZJd1yAgPsuPMnUzmQg",
+    "latitude": 32.57504318916155,
+    "longitude": -116.628936873006,
+    "date": "2009-09",
+    "road_name": "Av Revoluci\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "oX9I496xIehD0oNIS9fGLQ",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 150.1690521240234
+        },
+        {
+            "pano_id": "7qPLgD42Ns5HWtt5HKMbGA",
+            "road_name": "Pdte. El\u00edas Calles",
+            "yaw_deg": 354.6920471191406
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "kiL3xKYqnUNBd1hyPWbu3A",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "3reXACZiB3U-Po-N92pnDw",
+            "date": "2022-09"
+        }
+    ]
+}

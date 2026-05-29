@@ -1,0 +1,46 @@
+{
+    "pano_id": "j5n0XUfmpGUFFQFvdajRbg",
+    "latitude": 32.57568821397845,
+    "longitude": -116.6272250896951,
+    "date": "2009-09",
+    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+    "adjacent_links": [
+        {
+            "pano_id": "6reTM36dh7QqLY3ORe8fvA",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 263.3106384277344
+        },
+        {
+            "pano_id": "GdgLeuPQryCwQlfmjStxKA",
+            "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+            "yaw_deg": 238.2973327636719
+        },
+        {
+            "pano_id": "NWzvv2SbLgvADWSC1gcORg",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 86.52031707763672
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "UXFBGs8unVI42Y9KRoia6A",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "7zHlwpRH_SqFZh-ZyVwtwQ",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "-wFQryQB4AZyuHAIOkFdcg",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "ButQDFU2n8EE206hZEbPLw",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "KOTiOcW2Pvfx0iRkvDl-AQ",
+            "date": "2016-02"
+        }
+    ]
+}

@@ -1,0 +1,38 @@
+{
+    "pano_id": "1tZl5aYV16vczJ_DYwspgQ",
+    "latitude": 32.57460328599704,
+    "longitude": -116.6233325473936,
+    "date": "2009-09",
+    "road_name": "Gral. Emilio Portes Gil",
+    "adjacent_links": [
+        {
+            "pano_id": "4MetxEC0nREg8Ct56quaPg",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 271.9109802246094
+        },
+        {
+            "pano_id": "AHGEilW9t8twymtftKetrQ",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 351.7064208984375
+        },
+        {
+            "pano_id": "Xs52dDe-WfrbEIh9I205vg",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 170.5970306396484
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "JY2oKuFmZfAZceH0HAds-Q",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "2MzmZzLwnxD2xwzz08-7vA",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "Bc2UEs-WbquwclmQDHYBsQ",
+            "date": "2016-02"
+        }
+    ]
+}

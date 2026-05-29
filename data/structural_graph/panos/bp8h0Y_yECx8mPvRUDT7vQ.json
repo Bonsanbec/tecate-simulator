@@ -1,0 +1,53 @@
+{
+    "pano_id": "bp8h0Y_yECx8mPvRUDT7vQ",
+    "latitude": 32.57389840605455,
+    "longitude": -116.6233009669992,
+    "date": "2009-09",
+    "road_name": "Gral. Emilio Portes Gil",
+    "adjacent_links": [
+        {
+            "pano_id": "e4SBCSmMWAFKMNXXY8aJOw",
+            "road_name": "Av. Benito Ju\u00e1rez",
+            "yaw_deg": 264.09130859375
+        },
+        {
+            "pano_id": "WE32xDRvkle8j6hUOHVZxA",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 107.3151245117188
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "M74DFavvWXyhmET5IKn0rQ",
+            "date": "2009-02"
+        },
+        {
+            "pano_id": "mIcq5OGTC9sIr6ao9IAD9g",
+            "date": "2017-09"
+        },
+        {
+            "pano_id": "_EZ7qvB7aIqrhop8xf34og",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "2libIKr5NvvQMkLDqeuyWQ",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "oa5CAbOfnMB3ZZHYkhuieQ",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "Nbtdy_LPtMXdwvaYlGC4gw",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "NrZNAuRUwZ8Uhdtujkm9qg",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "oPqHa0Kigvh-ae3y2Fzn3A",
+            "date": "2016-02"
+        }
+    ]
+}
