@@ -1,0 +1,43 @@
+{
+    "pano_id": "OWAndGPe3aCJfWAaeTj50g",
+    "latitude": 32.57522657725943,
+    "longitude": -116.6331416005893,
+    "date": "2009-09",
+    "road_name": "Presidente Venustiano Carranza",
+    "adjacent_links": [
+        {
+            "pano_id": "9Gh7sS7-txwewVono5WLyw",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 250.8852386474609
+        },
+        {
+            "pano_id": "lKm80h3NEPS38PX76-Mtzg",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 102.2880249023438
+        },
+        {
+            "pano_id": "L4qUoKd5X11sme6wj3KOHg",
+            "road_name": "Presidente Venustiano Carranza",
+            "yaw_deg": 355.787109375
+        },
+        {
+            "pano_id": "m5fxgtL6ycsy5FfOlyavMA",
+            "road_name": "Presidente Venustiano Carranza",
+            "yaw_deg": 173.05908203125
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "iLS2vPzjhbE7m6vqwCr8vg",
+            "date": "2015-12"
+        },
+        {
+            "pano_id": "v7LthQsZEAog0t7WltVTjg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "OnOi6YvRPwqsXcBqebWIZQ",
+            "date": "2022-09"
+        }
+    ]
+}
