@@ -1,0 +1,67 @@
+{
+    "pano_id": "OjwS_hnPxhvv8sRMMqW97w",
+    "latitude": 32.57319180036456,
+    "longitude": -116.6314598089053,
+    "date": "2009-09",
+    "road_name": "Pdte. Adolfo de La Huerta",
+    "adjacent_links": [
+        {
+            "pano_id": "HGp5alxO6zEG2gUoBcyzgQ",
+            "road_name": "Tijuana - Tecate",
+            "yaw_deg": 84.27275085449219
+        },
+        {
+            "pano_id": "CZvbmpyegyf1l-4voa7X1Q",
+            "road_name": "Tijuana - Tecate",
+            "yaw_deg": 263.9369506835938
+        },
+        {
+            "pano_id": "dfLhBc7_l9dJhiYcZg0OLw",
+            "road_name": "Pdte. Adolfo de La Huerta",
+            "yaw_deg": 336.7313232421875
+        },
+        {
+            "pano_id": "UwIZu_9iCeEVhZY2H3_JYg",
+            "road_name": "Pdte. Adolfo de La Huerta",
+            "yaw_deg": 215.1529846191406
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "7Ny9cdNz8zLMLCRdbRbYlg",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "PwdlSFXB4lOSUN8qThec2g",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "vvUgtBfT5y-wT1vRQdMc2A",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "U97j4YAZGgXaPS2N0RO7oA",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "B29gY6Fs-J6ZXMuXmp_WMg",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "F7JpEsPzlE9WQLKOKJCqmQ",
+            "date": "2019-09"
+        },
+        {
+            "pano_id": "cLwNITOA5SDe2IdXSBkgEw",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "VjHRgPP6xndUS3C3uKFhQA",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "9IHmtJ5qsnkOS7R9rWdsXw",
+            "date": "2009-02"
+        }
+    ]
+}

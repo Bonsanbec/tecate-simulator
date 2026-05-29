@@ -1,0 +1,29 @@
+{
+    "pano_id": "Zv2ZZ0b2OyU8BF82NrlSSA",
+    "latitude": 32.57407268290232,
+    "longitude": -116.6226241018175,
+    "date": "2009-09",
+    "road_name": "R\u00edo Balsas",
+    "adjacent_links": [
+        {
+            "pano_id": "DOIqC35fldR4ec0_sRwboA",
+            "road_name": "Tecate - Rumorosa Libre",
+            "yaw_deg": 158.3345947265625
+        },
+        {
+            "pano_id": "oiB4C0NqUKF6O0EteEUtrg",
+            "road_name": "R\u00edo Balsas",
+            "yaw_deg": 356.1753540039062
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Y_Kav7MIYu0GLo_0b3MVew",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "1nr7s7IrI_ATC0TDHf-C_w",
+            "date": "2022-10"
+        }
+    ]
+}

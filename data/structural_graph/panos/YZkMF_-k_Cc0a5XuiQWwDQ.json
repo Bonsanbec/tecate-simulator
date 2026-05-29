@@ -1,0 +1,29 @@
+{
+    "pano_id": "YZkMF_-k_Cc0a5XuiQWwDQ",
+    "latitude": 32.57626103496406,
+    "longitude": -116.6229637492935,
+    "date": "2009-09",
+    "road_name": "R\u00edo Bravo",
+    "adjacent_links": [
+        {
+            "pano_id": "GDPX-lfEViO10YiuGGeN5A",
+            "road_name": "R\u00edo Bravo",
+            "yaw_deg": 180.7382507324219
+        },
+        {
+            "pano_id": "hJo2Gmap35xs-9XK-J3rtw",
+            "road_name": "R\u00edo Bravo",
+            "yaw_deg": 0.6429024338722229
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "0nwvSaiRmLh_9QiykR3IAg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "mqCWl76rbu5OfrfwXfnb2w",
+            "date": "2022-10"
+        }
+    ]
+}

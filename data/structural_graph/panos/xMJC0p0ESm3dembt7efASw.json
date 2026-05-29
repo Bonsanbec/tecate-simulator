@@ -1,0 +1,43 @@
+{
+    "pano_id": "xMJC0p0ESm3dembt7efASw",
+    "latitude": 32.57540047931808,
+    "longitude": -116.630370186914,
+    "date": "2009-09",
+    "road_name": "Cjon. Francisco I. Madero",
+    "adjacent_links": [
+        {
+            "pano_id": "Ea1dIde0ElkYPZOZHnzPrg",
+            "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+            "yaw_deg": 354.0511474609375
+        },
+        {
+            "pano_id": "txXUjD1nKoSltiWCHGWVqQ",
+            "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+            "yaw_deg": 173.5647888183594
+        },
+        {
+            "pano_id": "v2Lii0r4UbI72bpxr023fw",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 81.02481079101562
+        },
+        {
+            "pano_id": "Rb4ZbuPqnZnrLCnlfUZPoA",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 275.8958435058594
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "8OAaNXdwvr2ZMNudby3TKw",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "z8p-XtTgCQtpm8i_svgtuA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "kXAvTIxQXvJJds88cFl3QA",
+            "date": "2022-09"
+        }
+    ]
+}

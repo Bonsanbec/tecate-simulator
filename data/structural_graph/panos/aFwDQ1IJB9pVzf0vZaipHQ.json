@@ -1,0 +1,29 @@
+{
+    "pano_id": "aFwDQ1IJB9pVzf0vZaipHQ",
+    "latitude": 32.57543489468947,
+    "longitude": -116.6302051821849,
+    "date": "2009-09",
+    "road_name": "Cjon. Francisco I. Madero",
+    "adjacent_links": [
+        {
+            "pano_id": "O6nepfrO3EAjzrGGXhZiuw",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 84.21324920654297
+        },
+        {
+            "pano_id": "v2Lii0r4UbI72bpxr023fw",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 264.1838684082031
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "5fH3eNbF85-JZcZSG9Z22g",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "Q0JE5mD1-zIh1uziy97q9w",
+            "date": "2017-07"
+        }
+    ]
+}

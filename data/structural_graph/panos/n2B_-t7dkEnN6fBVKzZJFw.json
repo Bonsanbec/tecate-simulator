@@ -1,0 +1,34 @@
+{
+    "pano_id": "n2B_-t7dkEnN6fBVKzZJFw",
+    "latitude": 32.5754356857211,
+    "longitude": -116.622229750215,
+    "date": "2009-09",
+    "road_name": "R\u00edo Balsas",
+    "adjacent_links": [
+        {
+            "pano_id": "zVqq_uiEhtsVhEb3veYuFQ",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 220.8458709716797
+        },
+        {
+            "pano_id": "nQr51OpNFEduXutDSQendw",
+            "road_name": "R\u00edo P\u00e1nuco",
+            "yaw_deg": 357.7978820800781
+        },
+        {
+            "pano_id": "B3mP-WLMBkV-Hc4Zq0nrfg",
+            "road_name": "R\u00edo Balsas",
+            "yaw_deg": 204.4142303466797
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "T-ULQHz6Firr8oyVYuro4Q",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "TebhRQW7sbTnfnw734G2Hg",
+            "date": "2017-10"
+        }
+    ]
+}

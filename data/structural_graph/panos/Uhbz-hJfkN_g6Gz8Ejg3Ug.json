@@ -1,0 +1,29 @@
+{
+    "pano_id": "Uhbz-hJfkN_g6Gz8Ejg3Ug",
+    "latitude": 32.57609769092453,
+    "longitude": -116.6223396073013,
+    "date": "2009-09",
+    "road_name": "R\u00edo P\u00e1nuco",
+    "adjacent_links": [
+        {
+            "pano_id": "y76ad7LYprCIhSARckfGTQ",
+            "road_name": "R\u00edo P\u00e1nuco",
+            "yaw_deg": 176.4543914794922
+        },
+        {
+            "pano_id": "xDBvHUKuJFBCRhue0t8zDA",
+            "road_name": "R\u00edo P\u00e1nuco",
+            "yaw_deg": 354.9863586425781
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "gtPCYMP6wTKTknEevCYYlg",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "TsDVErAwVRAPaFYtCffU9Q",
+            "date": "2025-08"
+        }
+    ]
+}
