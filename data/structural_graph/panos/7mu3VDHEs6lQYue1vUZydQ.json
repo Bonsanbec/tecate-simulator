@@ -1,0 +1,41 @@
+{
+    "pano_id": "7mu3VDHEs6lQYue1vUZydQ",
+    "latitude": 32.5645217070494,
+    "longitude": -116.6271979184271,
+    "date": "2009-09",
+    "road_name": "Av Nuevo Le\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "1n2EiBb7vPigZBrpc6pQJw",
+            "road_name": "Av Nuevo Le\u00f3n",
+            "yaw_deg": 118.5273056030273
+        },
+        {
+            "pano_id": "nANXMlmoWkJ0p6HFsWLbrA",
+            "road_name": "Veracruz",
+            "yaw_deg": 242.0751342773438
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "gqZD8PHWnhPy_wwNl0hQ5g",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "iR5gsGNE9aBxs3UPV2TWyw",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "jcZPtQt840nz09Xif3djew",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "Kxc70Y3n6lRRmDFF6VpOvA",
+            "date": "2022-07"
+        },
+        {
+            "pano_id": "qJzD5bmvw78OafwIfh50HQ",
+            "date": "2017-07"
+        }
+    ]
+}

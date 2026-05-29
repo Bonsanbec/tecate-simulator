@@ -1,0 +1,25 @@
+{
+    "pano_id": "ekoJm1qhVo3IZ1daNKgbWw",
+    "latitude": 32.56646653432232,
+    "longitude": -116.619920759675,
+    "date": "2009-09",
+    "road_name": "C. Gral. Mariano Arista",
+    "adjacent_links": [
+        {
+            "pano_id": "R1n2tPPyUHoBL2_3yLCMFg",
+            "road_name": "C. Gral. Mariano Arista",
+            "yaw_deg": 166.6015777587891
+        },
+        {
+            "pano_id": "1sUju2AH3aEBQNUmbOSrXg",
+            "road_name": "Gral. S\u00e1nchez Taboada",
+            "yaw_deg": 359.0513305664062
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "u40lfJ-GeTCyUd713kqadA",
+            "date": "2022-09"
+        }
+    ]
+}

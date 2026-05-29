@@ -1,0 +1,29 @@
+{
+    "pano_id": "R5qrvNMvutFB1icf_klNhQ",
+    "latitude": 32.56378782803753,
+    "longitude": -116.6273954048871,
+    "date": "2009-09",
+    "road_name": "Zacatecas",
+    "adjacent_links": [
+        {
+            "pano_id": "CPtP-OlFGBCc_DZB-me-Ag",
+            "road_name": "Zacatecas",
+            "yaw_deg": 299.4593505859375
+        },
+        {
+            "pano_id": "PjoX1MXugRJXGGfm7uRIUg",
+            "road_name": "Zacatecas",
+            "yaw_deg": 119.5118942260742
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "JSKi4D_Za6-a3NXWFjubVA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "3-1u4Y2RpUqMBw1oOkleLA",
+            "date": "2022-09"
+        }
+    ]
+}

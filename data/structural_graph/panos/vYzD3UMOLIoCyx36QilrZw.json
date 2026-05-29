@@ -1,0 +1,29 @@
+{
+    "pano_id": "vYzD3UMOLIoCyx36QilrZw",
+    "latitude": 32.56427753718062,
+    "longitude": -116.6274206867404,
+    "date": "2009-09",
+    "road_name": "Veracruz",
+    "adjacent_links": [
+        {
+            "pano_id": "DhTlPu_p37BfSh0kBVoS4w",
+            "road_name": "Veracruz",
+            "yaw_deg": 28.09542274475098
+        },
+        {
+            "pano_id": "eTmjKmnoTBeZYQ_QcLXtFw",
+            "road_name": "Veracruz",
+            "yaw_deg": 208.1305694580078
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Al9OXsrO4aTL6P8LK5wA7A",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "wJy4jl3vnUaVf9qVlpg9Ww",
+            "date": "2022-09"
+        }
+    ]
+}

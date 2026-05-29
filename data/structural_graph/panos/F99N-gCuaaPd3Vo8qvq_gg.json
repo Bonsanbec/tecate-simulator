@@ -1,0 +1,41 @@
+{
+    "pano_id": "F99N-gCuaaPd3Vo8qvq_gg",
+    "latitude": 32.56374980376822,
+    "longitude": -116.6257823088451,
+    "date": "2009-09",
+    "road_name": "Av Nuevo Le\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "cR4cJrlUX_RzN_WhtIRr1w",
+            "road_name": "Ensenada",
+            "yaw_deg": 178.9304962158203
+        },
+        {
+            "pano_id": "3hGJaLoyGn2sHYtzbc_fvA",
+            "road_name": "Av Nuevo Le\u00f3n",
+            "yaw_deg": 353.2691955566406
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "MG0Yo8-cZjE2N7LyPOQSUg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "KznQ8kI9QcsSt3ZTIBrvXQ",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "UtykSuw3lQRWuAlwJpZRxA",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "5uCIf3ToCCNyX6wRXKFJOA",
+            "date": "2022-07"
+        },
+        {
+            "pano_id": "77YdbK_E0SSbfowf_Og7Jg",
+            "date": "2017-07"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "pano_id": "KojD4s8m_teACuRMfJ7vcQ",
+    "latitude": 32.56393108585521,
+    "longitude": -116.6276068366693,
+    "date": "2009-09",
+    "road_name": "Veracruz",
+    "adjacent_links": [
+        {
+            "pano_id": "T4OQ67XsbOh0WXIJY9hncA",
+            "road_name": "Veracruz",
+            "yaw_deg": 28.15222549438477
+        },
+        {
+            "pano_id": "l5QAYjC1ewJ9znbq6npX8g",
+            "road_name": "Zacatecas",
+            "yaw_deg": 164.8556060791016
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "_PHbwiz63EfhWkFWIsKltg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "lPOUPMsN1KkYZbQnzATRaA",
+            "date": "2022-09"
+        }
+    ]
+}
