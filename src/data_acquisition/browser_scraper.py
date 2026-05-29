@@ -386,9 +386,10 @@ class GoogleStreetViewScraper:
     extracts the oldest captures, enforces Parque Hidalgo spatial priority queues,
     checks bounding boxes, and persists crash-resilient states locally.
     """
-    def __init__(self, cache_dir: str = "data/raw_scraped", headless: bool = True):
+    def __init__(self, cache_dir: str = "data/raw_scraped", headless: bool = True, log: bool = False):
         self.cache_dir = cache_dir
         self.headless = headless
+        self.log = log
         self.state_file = "data/scraper_state.json"
         os.makedirs(cache_dir, exist_ok=True)
         os.makedirs("data", exist_ok=True)
@@ -796,7 +797,8 @@ class GoogleStreetViewScraper:
                 except Exception as pe:
                     print(f"[fetch_public_metadata Warning] Playwright fetch failed: {pe}. Falling back to standard requests.")
 
-            print(f"[fetch_public_metadata Debug] Querying URL: {url}")
+            if (self.log):
+                print(f"[fetch_public_metadata Debug] Querying URL: {url}")
             if use_playwright:
                 class MockResponse:
                     def __init__(self, text, status_code):
@@ -812,8 +814,9 @@ class GoogleStreetViewScraper:
                 }
                 resp = requests.get(url, headers=headers, timeout=10)
                 
-            print(f"[fetch_public_metadata Debug] Response Status: {resp.status_code}")
-            print(f"[fetch_public_metadata Debug] Response Text (first 100 chars): {resp.text[:100].strip()}")
+            if (self.log):    
+                print(f"[fetch_public_metadata Debug] Response Status: {resp.status_code}")
+                print(f"[fetch_public_metadata Debug] Response Text (first 100 chars): {resp.text[:100].strip()}")
             if resp.status_code == 200:
                 try:
                     data = resp.json()
