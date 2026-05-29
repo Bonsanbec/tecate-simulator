@@ -1,0 +1,29 @@
+{
+    "pano_id": "6DlXEiagByqgEIj5LS7Ckw",
+    "latitude": 32.56330631000699,
+    "longitude": -116.6206050107757,
+    "date": "2009-09",
+    "road_name": "Carmen Serd\u00e1n",
+    "adjacent_links": [
+        {
+            "pano_id": "kRHZiXsXmQRuHRL7K-uubA",
+            "road_name": "Carmen Serd\u00e1n",
+            "yaw_deg": 351.5655517578125
+        },
+        {
+            "pano_id": "JtwV-eYo4ZPEk3EjrAWlhQ",
+            "road_name": "Carmen Serd\u00e1n",
+            "yaw_deg": 171.5027313232422
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "zKa7H6cPLks1d47emFa7XA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "kCBnPZVlq7GNG38wHunALw",
+            "date": "2022-09"
+        }
+    ]
+}

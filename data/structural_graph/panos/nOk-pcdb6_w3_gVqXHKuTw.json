@@ -1,0 +1,50 @@
+{
+    "pano_id": "nOk-pcdb6_w3_gVqXHKuTw",
+    "latitude": 32.57116775701311,
+    "longitude": -116.637945159862,
+    "date": "2009-09",
+    "road_name": "Av. Miguel Hidalgo",
+    "adjacent_links": [
+        {
+            "pano_id": "u1EFGVWPDawQ0IeZL3vw7w",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 83.42724609375
+        },
+        {
+            "pano_id": "v3scaTWTSyOpkP_WzfpA3Q",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 262.7148132324219
+        },
+        {
+            "pano_id": "ajTc1SRg5yTkchGLg4M8hw",
+            "road_name": "Esteban Cant\u00fa",
+            "yaw_deg": 15.52275562286377
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "5pSkCF2TSaJMOVcFZ3UBfA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "K2z1yYKjnV0gup3q3jh_pQ",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "aklkRCieaB3Vq0Y9H7t02w",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "2B-Nx1fGwF7B80uuvSLmpQ",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "hrvdKjDc5V0LEzVCcOmdlg",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "HJFgvXQ4mwmIm45xNkPaWA",
+            "date": "2009-03"
+        }
+    ]
+}

@@ -1,0 +1,39 @@
+{
+    "pano_id": "ymVgCulZXFrxevDfpOYiJg",
+    "latitude": 32.57731471819524,
+    "longitude": -116.6156347185589,
+    "date": "2009-09",
+    "road_name": "Culiacan",
+    "adjacent_links": [
+        {
+            "pano_id": "jiw9MmM0HXYSSbIdlPXwbg",
+            "road_name": "Culiacan",
+            "yaw_deg": 121.2434692382812
+        },
+        {
+            "pano_id": "pV_v8u-2Rlox0VX5g2erEw",
+            "road_name": "",
+            "yaw_deg": 99.82760620117188
+        },
+        {
+            "pano_id": "r5hn6Exo6U2AnfmDBwHMkg",
+            "road_name": "M\u00e9xico",
+            "yaw_deg": 71.07103729248047
+        },
+        {
+            "pano_id": "hnVsp8SHMHbGzgjTi8Y8NA",
+            "road_name": "M\u00e9xico",
+            "yaw_deg": 248.9435882568359
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "IvJPEHrEQj7CgUr8fMIwcA",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "LOixeaSW9EkWXX8d5T4SPw",
+            "date": "2025-08"
+        }
+    ]
+}

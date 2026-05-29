@@ -1,0 +1,29 @@
+{
+    "pano_id": "rKevhVPvHx3i_ToK0ZJKHw",
+    "latitude": 32.56813500141636,
+    "longitude": -116.6370390122789,
+    "date": "2009-09",
+    "road_name": "Blvd. Defensores de Baja California",
+    "adjacent_links": [
+        {
+            "pano_id": "iFgSMr1eK-en2EiwQf9TlQ",
+            "road_name": "C. Teziutl\u00e1n",
+            "yaw_deg": 352.5697021484375
+        },
+        {
+            "pano_id": "cOLLM868ZHW6ovX3XI_Z9w",
+            "road_name": "Blvd. Defensores de Baja California",
+            "yaw_deg": 202.3431243896484
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "c4JD1wGMMO5mYWhZ6DXMNg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "M89cB7gIrV6QXSoMFN8_Vw",
+            "date": "2017-07"
+        }
+    ]
+}
