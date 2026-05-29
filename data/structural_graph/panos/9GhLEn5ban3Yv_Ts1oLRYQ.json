@@ -1,0 +1,37 @@
+{
+    "pano_id": "9GhLEn5ban3Yv_Ts1oLRYQ",
+    "latitude": 32.57169706853909,
+    "longitude": -116.625236450161,
+    "date": "2009-09",
+    "road_name": "Oscar Bayl\u00f3n y o Defensores de Baja California",
+    "adjacent_links": [
+        {
+            "pano_id": "CSAaMLoCnYWTu7-n_8eS9A",
+            "road_name": "Oscar Bayl\u00f3n y o Defensores de Baja California",
+            "yaw_deg": 253.5642395019531
+        },
+        {
+            "pano_id": "9F2OhGJxm9upQBhtKWY5gw",
+            "road_name": "Oscar Bayl\u00f3n y o Defensores de Baja California",
+            "yaw_deg": 73.46715545654297
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "OwmmPYAX2slwgOlxNtMQfQ",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "Pw2MhzsOf5xWNE_K_yPuMA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "Lddr3JTrwJkRXgHMwBOfhw",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "gwCBDEATA4VLocHqHXQBlQ",
+            "date": "2008-12"
+        }
+    ]
+}

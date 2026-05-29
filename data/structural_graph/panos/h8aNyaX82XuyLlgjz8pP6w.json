@@ -1,0 +1,30 @@
+{
+    "pano_id": "h8aNyaX82XuyLlgjz8pP6w",
+    "latitude": 32.56955164899694,
+    "longitude": -116.624804944656,
+    "date": "2009-09",
+    "road_name": "Pdte. Adolfo L\u00f3pez Mateos",
+    "adjacent_links": [
+        {
+            "pano_id": "WnoitqUl2V3kxjxRRaYMZQ",
+            "road_name": "Pdte. Adolfo L\u00f3pez Mateos",
+            "yaw_deg": 264.6192321777344
+        },
+        {
+            "pano_id": "2_eXbmPqjRoBzY7MmMzmoA",
+            "road_name": "Pdte. Adolfo L\u00f3pez Mateos",
+            "yaw_deg": 264.6606750488281
+        },
+        {
+            "pano_id": "VXJ_USb8qVIP2J1BeBgoAw",
+            "road_name": "Pdte. Adolfo L\u00f3pez Mateos",
+            "yaw_deg": 84.9207992553711
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "vgFcNdFI3Izgyat4tIe4FQ",
+            "date": "2025-08"
+        }
+    ]
+}

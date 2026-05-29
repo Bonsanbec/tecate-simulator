@@ -1,0 +1,29 @@
+{
+    "pano_id": "1DSmp9Y-QZAcI1SQLRARwQ",
+    "latitude": 32.56929427064123,
+    "longitude": -116.6253967799786,
+    "date": "2009-09",
+    "road_name": "Pdte. Adolfo L\u00f3pez Mateos",
+    "adjacent_links": [
+        {
+            "pano_id": "3kRoNWuSx21Lujg87an46Q",
+            "road_name": "Pdte. Adolfo L\u00f3pez Mateos",
+            "yaw_deg": 4.311178207397461
+        },
+        {
+            "pano_id": "Gdwabki_SRQnch__GVyCxA",
+            "road_name": "Ensenada",
+            "yaw_deg": 195.5760498046875
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "dAbsn8o2ur2_7BOsKS8-_w",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "sJNY8pG6R33JfKol388MMQ",
+            "date": "2022-10"
+        }
+    ]
+}

@@ -1,0 +1,37 @@
+{
+    "pano_id": "2zLmzG4TruXWNP6eH95e6Q",
+    "latitude": 32.56874282351142,
+    "longitude": -116.6236592377682,
+    "date": "2009-09",
+    "road_name": "Piedra del Sol",
+    "adjacent_links": [
+        {
+            "pano_id": "AN90vlNtsvs-gKJBM72hZw",
+            "road_name": "Piedra del Sol",
+            "yaw_deg": 85.83329010009766
+        },
+        {
+            "pano_id": "qTEakY3kRUP-oAlAbSGgaA",
+            "road_name": "Piedra del Sol",
+            "yaw_deg": 265.7963562011719
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "-FIuNQpq8edbAVwbKunGIw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "I2EvNIf2rhaSJw7n8_uD7A",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "sczat6R5SraDUiXnp-OM2g",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "HozLVMaDNpFfENckED1u2A",
+            "date": "2016-02"
+        }
+    ]
+}

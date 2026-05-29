@@ -1,0 +1,47 @@
+{
+    "pano_id": "hFb2tF-oQslIAZZ6FIsMhw",
+    "latitude": 32.56872579076258,
+    "longitude": -116.6239870073401,
+    "date": "2009-09",
+    "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+    "adjacent_links": [
+        {
+            "pano_id": "QvbCFO_4Pv5qz2_uX3Zhpg",
+            "road_name": "Piedra del Sol",
+            "yaw_deg": 85.85267639160156
+        },
+        {
+            "pano_id": "LSQw5YFnBKCgmG3bVV0_1w",
+            "road_name": "Piedra del Sol",
+            "yaw_deg": 265.9625244140625
+        },
+        {
+            "pano_id": "7b1l8a1GLK0FUt4fchrPbw",
+            "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+            "yaw_deg": 177.7897186279297
+        },
+        {
+            "pano_id": "XbKumVPbijG-F_ivKdaa4Q",
+            "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+            "yaw_deg": 348.4867858886719
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "B7fdthmcso6n03KwVeUkeQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "iW0EguKp8uGhEvZyXAg-Sw",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "syfqLVgRG62dfUueoFBxew",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "oAqrmMQmf_hgmr8Qt6Y2ng",
+            "date": "2016-02"
+        }
+    ]
+}
