@@ -1,0 +1,33 @@
+{
+    "pano_id": "4GpKodItS4A6d6CUQUGoSQ",
+    "latitude": 32.57362006839872,
+    "longitude": -116.6364244456612,
+    "date": "2009-09",
+    "road_name": "Callejon Reforma",
+    "adjacent_links": [
+        {
+            "pano_id": "IOgM3Z-WGcCPy1QHTgY3yA",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 148.9057922363281
+        },
+        {
+            "pano_id": "tAnfYU42POcpZCU2mu_siA",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 354.0670776367188
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "-ipowvdUv84lGWtubSXrQg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "aqXnKdaNE1Q66nvZgePHmw",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "pNRLIjd4npFuwVKj3hEN5g",
+            "date": "2016-02"
+        }
+    ]
+}

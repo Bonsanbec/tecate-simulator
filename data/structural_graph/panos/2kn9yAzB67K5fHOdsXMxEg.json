@@ -1,0 +1,29 @@
+{
+    "pano_id": "2kn9yAzB67K5fHOdsXMxEg",
+    "latitude": 32.56714252597997,
+    "longitude": -116.61859094032,
+    "date": "2009-09",
+    "road_name": "Nicol\u00e1s Bravo",
+    "adjacent_links": [
+        {
+            "pano_id": "05gQkz4T7_YeILdRZQc_Aw",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 88.34168243408203
+        },
+        {
+            "pano_id": "29hgVEqLbdGR5CnHcajkAQ",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 268.3977355957031
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "EAix9s6zFjeOYFQmmo0APw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "k28beg5LWUn_RNQLNfMCVA",
+            "date": "2022-09"
+        }
+    ]
+}

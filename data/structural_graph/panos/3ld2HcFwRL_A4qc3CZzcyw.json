@@ -1,0 +1,41 @@
+{
+    "pano_id": "3ld2HcFwRL_A4qc3CZzcyw",
+    "latitude": 32.5646292670474,
+    "longitude": -116.6316611603261,
+    "date": "2009-09",
+    "road_name": "Dr. Arturo Guerra",
+    "adjacent_links": [
+        {
+            "pano_id": "4jS0WW1_c9ha2cYGn5AjbQ",
+            "road_name": "Dr. Arturo Guerra",
+            "yaw_deg": 172.0808410644531
+        },
+        {
+            "pano_id": "o32bwVCNIaDfAFURZ0-V4Q",
+            "road_name": "Dr. Arturo Guerra",
+            "yaw_deg": 352.1336364746094
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "nEXpdVOmGdp_m0T97bTpQg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "CIXTS1YPdcRNCxCNda1CAA",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "rkrejz3vdFwzuXdKnvixyg",
+            "date": "2022-11"
+        },
+        {
+            "pano_id": "fevDiqHyK0RXog9ArjHLzA",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "7mqU6gI8tjaDABVGLfh24w",
+            "date": "2016-02"
+        }
+    ]
+}

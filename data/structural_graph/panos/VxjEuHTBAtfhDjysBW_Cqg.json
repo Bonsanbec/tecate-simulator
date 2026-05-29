@@ -1,0 +1,33 @@
+{
+    "pano_id": "VxjEuHTBAtfhDjysBW_Cqg",
+    "latitude": 32.57323617750706,
+    "longitude": -116.636379641881,
+    "date": "2009-09",
+    "road_name": "C. Eufracio Santana",
+    "adjacent_links": [
+        {
+            "pano_id": "S2DqbrsGdUh7CFqk4L1GZw",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 354.7900085449219
+        },
+        {
+            "pano_id": "X7PMGVVusJY39wsfzlv7gA",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 174.7987976074219
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "uLMJgdCtsGbZd4etgUUSsQ",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "xnvwXeD48YsDJZb6nC-IDw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "fRi-l1fwHwh-GAMsq1N7qg",
+            "date": "2017-10"
+        }
+    ]
+}
