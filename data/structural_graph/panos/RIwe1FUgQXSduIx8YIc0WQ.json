@@ -1,0 +1,29 @@
+{
+    "pano_id": "RIwe1FUgQXSduIx8YIc0WQ",
+    "latitude": 32.56636104402517,
+    "longitude": -116.6191556196404,
+    "date": "2009-09",
+    "road_name": "Gral. Abraham A.",
+    "adjacent_links": [
+        {
+            "pano_id": "UvBrv3ncOfO1Rz_Vdhj4qA",
+            "road_name": "Gral. Abraham A.",
+            "yaw_deg": 124.6080551147461
+        },
+        {
+            "pano_id": "gLEZBN3ZyFXcQbZGrxKs2A",
+            "road_name": "C. Gral. Mariano Arista",
+            "yaw_deg": 270.304443359375
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "KIc09nZCWKuEZzErZpbYZQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "xJVkHiZ5qPrBj0D59RVNGg",
+            "date": "2022-09"
+        }
+    ]
+}

@@ -1,0 +1,25 @@
+{
+    "pano_id": "thLt3d_z0gQNPoHQ7521pw",
+    "latitude": 32.56507629191126,
+    "longitude": -116.620562003338,
+    "date": "2009-09",
+    "road_name": "Gral. Ignacio Comonfort",
+    "adjacent_links": [
+        {
+            "pano_id": "R1p5E7tqhAIZn2Bo2YVsuQ",
+            "road_name": "Gral. Ignacio Comonfort",
+            "yaw_deg": 89.9645767211914
+        },
+        {
+            "pano_id": "q7fF-BLQQLQ-UvzHgvfflA",
+            "road_name": "C. Sebasti\u00e1n Lerdo de Tejada",
+            "yaw_deg": 276.1728210449219
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "xzDZmTRGXTYrMIdmJxmVXA",
+            "date": "2022-09"
+        }
+    ]
+}

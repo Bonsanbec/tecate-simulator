@@ -1,0 +1,25 @@
+{
+    "pano_id": "OCElPFwyNDpf310ZrOWQeg",
+    "latitude": 32.56814154359396,
+    "longitude": -116.6179050635945,
+    "date": "2009-09",
+    "road_name": "Manuel Bello",
+    "adjacent_links": [
+        {
+            "pano_id": "VaUy4VUt71O3HbWcFmMjkw",
+            "road_name": "Manuel Bello",
+            "yaw_deg": 270.748779296875
+        },
+        {
+            "pano_id": "mm52EuHDcq1W8j8qVl8FsA",
+            "road_name": "Manuel Bello",
+            "yaw_deg": 90.68733978271484
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "xL_phFLcx2Mvwbt23PgjcQ",
+            "date": "2022-09"
+        }
+    ]
+}

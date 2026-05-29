@@ -1,0 +1,29 @@
+{
+    "pano_id": "KNmrne1fsQTYu0Wtnf8Idg",
+    "latitude": 32.57079358487128,
+    "longitude": -116.6168046693418,
+    "date": "2009-09",
+    "road_name": "Tenoch",
+    "adjacent_links": [
+        {
+            "pano_id": "D62eUxIjbfDZ9vk0EaNuyA",
+            "road_name": "Tenoch",
+            "yaw_deg": 263.9783020019531
+        },
+        {
+            "pano_id": "5naprQnJSUPPJmQ2UlYymA",
+            "road_name": "P.\u00ba de Las \u00c1guilas Este",
+            "yaw_deg": 72.3167953491211
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "4kfzyiJRaq0rGIwIkHje_g",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "pAkFEG94ikSk5x4bW2MWig",
+            "date": "2025-08"
+        }
+    ]
+}

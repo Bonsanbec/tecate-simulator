@@ -1,0 +1,29 @@
+{
+    "pano_id": "Fu2XThddzmChwYfqz4t32Q",
+    "latitude": 32.57179399427454,
+    "longitude": -116.6164912854393,
+    "date": "2009-09",
+    "road_name": "Xochimilco",
+    "adjacent_links": [
+        {
+            "pano_id": "1nsRLMDVrzNT79XqVPp7SQ",
+            "road_name": "Xochimilco",
+            "yaw_deg": 77.3091812133789
+        },
+        {
+            "pano_id": "ekLpJ1ZZylA9iNyjLHpkNw",
+            "road_name": "R\u00edo Tecate",
+            "yaw_deg": 259.7612915039062
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "qtZhzajUl_1HLKxXKRYeoA",
+            "date": "2025-09"
+        },
+        {
+            "pano_id": "T-jDeUhj7YehRautu9gZVw",
+            "date": "2022-10"
+        }
+    ]
+}

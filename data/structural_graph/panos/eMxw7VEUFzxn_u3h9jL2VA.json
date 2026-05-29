@@ -1,0 +1,33 @@
+{
+    "pano_id": "eMxw7VEUFzxn_u3h9jL2VA",
+    "latitude": 32.56584598821711,
+    "longitude": -116.6333310746507,
+    "date": "2009-09",
+    "road_name": "Encinos",
+    "adjacent_links": [
+        {
+            "pano_id": "zkT1XXxNzFM5VJ58ok6t7g",
+            "road_name": "Av Nuevo Le\u00f3n",
+            "yaw_deg": 31.87453651428223
+        },
+        {
+            "pano_id": "8GR9hkNm6FlHiIxikE6myQ",
+            "road_name": "Encinos",
+            "yaw_deg": 190.9120635986328
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Zy7pV_iwpuZ-9x3727QuOg",
+            "date": "2022-11"
+        },
+        {
+            "pano_id": "vD-dfViVGI-laSS4YCHjhA",
+            "date": "2022-06"
+        },
+        {
+            "pano_id": "Q0J8ux-N7pelCDEBPKyZuw",
+            "date": "2017-10"
+        }
+    ]
+}

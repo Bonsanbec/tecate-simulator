@@ -1,0 +1,33 @@
+{
+    "pano_id": "wSI7rxeTktnkHKYFjeB4Ow",
+    "latitude": 32.57491925361499,
+    "longitude": -116.6365127036841,
+    "date": "2009-09",
+    "road_name": "Cjon. Francisco I. Madero",
+    "adjacent_links": [
+        {
+            "pano_id": "NU3XTCNAZRf5M5JPSBlXLg",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 84.71145629882812
+        },
+        {
+            "pano_id": "ERIirySmJxtPwP2VOpBgrg",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 237.6261138916016
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "py1FntcvXa0uPEzaNxBFzw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "KMbJ63PPkAeWN0qlL4dxdg",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "8wIvHxCzHRImJeYmrEquBw",
+            "date": "2016-02"
+        }
+    ]
+}

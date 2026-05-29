@@ -1,0 +1,38 @@
+{
+    "pano_id": "5naprQnJSUPPJmQ2UlYymA",
+    "latitude": 32.57087346775443,
+    "longitude": -116.6167235116802,
+    "date": "2009-09",
+    "road_name": "Tenoch",
+    "adjacent_links": [
+        {
+            "pano_id": "KNmrne1fsQTYu0Wtnf8Idg",
+            "road_name": "Tenoch",
+            "yaw_deg": 252.3167877197266
+        },
+        {
+            "pano_id": "LtY7HJ2ZCq8-iVzZiIo9qg",
+            "road_name": "Chapultepec",
+            "yaw_deg": 170.7011413574219
+        },
+        {
+            "pano_id": "1XH7c3yhBlV0D3tNbI74KA",
+            "road_name": "P.\u00ba de Las \u00c1guilas Este",
+            "yaw_deg": 343.3791809082031
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "hyGUYLE7wUPV0zvBZU2hoA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "gm-grPyqG4shEBVThV7j7g",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "AdxUpweuagHZsJYW4vUXOg",
+            "date": "2021-09"
+        }
+    ]
+}

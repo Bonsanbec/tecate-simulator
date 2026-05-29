@@ -1,0 +1,25 @@
+{
+    "pano_id": "oBsYq2hn-ihxtt5WCVAnGQ",
+    "latitude": 32.56763756761148,
+    "longitude": -116.6181672499575,
+    "date": "2009-09",
+    "road_name": "Cuenca D\u00edaz",
+    "adjacent_links": [
+        {
+            "pano_id": "JI-EzY_7min3ZQIJbDkG2A",
+            "road_name": "Cuenca D\u00edaz",
+            "yaw_deg": 176.8844909667969
+        },
+        {
+            "pano_id": "WMIbdsIFjx0CRARl1JnCIg",
+            "road_name": "Cuenca D\u00edaz",
+            "yaw_deg": 356.8780822753906
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "rSY0wfnhHZWdW5uWnjjlGQ",
+            "date": "2022-09"
+        }
+    ]
+}

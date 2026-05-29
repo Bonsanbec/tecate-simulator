@@ -1,0 +1,38 @@
+{
+    "pano_id": "y4480GJ1HHYTaWuQWQAIXg",
+    "latitude": 32.57423225816402,
+    "longitude": -116.6365555281557,
+    "date": "2009-09",
+    "road_name": "C. Eufracio Santana",
+    "adjacent_links": [
+        {
+            "pano_id": "i6-8IaHNB-yuz1kINkJ8nQ",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 264.625244140625
+        },
+        {
+            "pano_id": "4BST4Yw4AfZCSKkGl-04cQ",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 87.81908416748047
+        },
+        {
+            "pano_id": "NDpvkrQZJOr36hFg1wnesg",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 18.82126426696777
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "lYIEKnoQ298G0rDgDWTHcg",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "j14PKLhI1AVHKc-W-QDRiQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "x9laqfsAVk2QY8l19BST9A",
+            "date": "2015-12"
+        }
+    ]
+}
