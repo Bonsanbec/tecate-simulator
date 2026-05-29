@@ -1,0 +1,42 @@
+{
+    "pano_id": "lwt6L1xdJf0gwt347Vj3Yg",
+    "latitude": 32.57437269823632,
+    "longitude": -116.634993059458,
+    "date": "2009-09",
+    "road_name": "Aldrete",
+    "adjacent_links": [
+        {
+            "pano_id": "aL4Np1KnWzjnRznpwNESLQ",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 263.5650024414062
+        },
+        {
+            "pano_id": "cwlJ-pPAVRyQJgWAiN1kyA",
+            "road_name": "Aldrete",
+            "yaw_deg": 105.1921234130859
+        },
+        {
+            "pano_id": "TSMl3q0T0Pvm0C2fZj5lXA",
+            "road_name": "Aldrete",
+            "yaw_deg": 33.78554153442383
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "DdVmWMBtp4nAABJyJmXBjQ",
+            "date": "2015-12"
+        },
+        {
+            "pano_id": "tdzTbJhS-XQwL0s201YNQQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "NIv31ABU6phRtwNfrnwrvw",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "p-bYb9LaurIryo-gNGmmWA",
+            "date": "2017-07"
+        }
+    ]
+}

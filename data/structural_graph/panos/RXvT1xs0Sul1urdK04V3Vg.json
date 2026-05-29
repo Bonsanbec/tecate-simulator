@@ -1,0 +1,54 @@
+{
+    "pano_id": "RXvT1xs0Sul1urdK04V3Vg",
+    "latitude": 32.56666672083505,
+    "longitude": -116.6320641325373,
+    "date": "2009-09",
+    "road_name": "Huetamo",
+    "adjacent_links": [
+        {
+            "pano_id": "xRsbEiIuyoUqHVcDjMnyAA",
+            "road_name": "Dr. Arturo Guerra",
+            "yaw_deg": 173.6496734619141
+        },
+        {
+            "pano_id": "LOq5jFX2Yxj-QQt2PRUspw",
+            "road_name": "Dr. Arturo Guerra",
+            "yaw_deg": 353.0675354003906
+        },
+        {
+            "pano_id": "R7o0VquCAcACstaOnbtLTQ",
+            "road_name": "Huetamo",
+            "yaw_deg": 48.78916168212891
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "lgZT1Q8m1e3KzeLeWHA99g",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "TRTil0k6DVssmW2niJaDVg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "FXaCtb3q001ltnzSNNUT-g",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "rqn5_2dOOLVPtArjC8JH4Q",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "TWG3Tk9Fr0p3c0o4XBSKTw",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "9rziSXQgx9MEONyDAAHacQ",
+            "date": "2017-11"
+        },
+        {
+            "pano_id": "LkaSS0HImTLpvK22RenG1A",
+            "date": "2017-07"
+        }
+    ]
+}

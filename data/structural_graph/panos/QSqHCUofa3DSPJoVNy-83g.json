@@ -1,0 +1,47 @@
+{
+    "pano_id": "QSqHCUofa3DSPJoVNy-83g",
+    "latitude": 32.57366915884929,
+    "longitude": -116.6348076353525,
+    "date": "2009-09",
+    "road_name": "Callejon Reforma",
+    "adjacent_links": [
+        {
+            "pano_id": "A4LFiteQKnTph4sMs8K8QA",
+            "road_name": "Aldrete",
+            "yaw_deg": 174.3779754638672
+        },
+        {
+            "pano_id": "JOVmsWOrPfaUZHdF6il3EA",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 262.1376647949219
+        },
+        {
+            "pano_id": "b0aGLD2JwbDbPkWXlTyA6g",
+            "road_name": "Aldrete",
+            "yaw_deg": 354.0445556640625
+        },
+        {
+            "pano_id": "j3_2E4AUjssOE8VBUaewSw",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 88.27337646484375
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "VEQ8DJXdZUyVTC4URPedtg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "2dDibF3MbzAkcOEBDQ48Ng",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "27bwFAzbKlU7KZ5g3orIBw",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "qOo62D1BTcdi6YeOjhJlsA",
+            "date": "2015-12"
+        }
+    ]
+}
