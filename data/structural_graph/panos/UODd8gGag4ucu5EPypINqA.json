@@ -1,0 +1,34 @@
+{
+    "pano_id": "UODd8gGag4ucu5EPypINqA",
+    "latitude": 32.5718962087616,
+    "longitude": -116.6158380635102,
+    "date": "2009-09",
+    "road_name": "Xochimilco",
+    "adjacent_links": [
+        {
+            "pano_id": "JE-gTHxP3eVAs9oY65UaFw",
+            "road_name": "Aguila",
+            "yaw_deg": 207.5363616943359
+        },
+        {
+            "pano_id": "n5H9mcDdWW4PxZvkqqTqsQ",
+            "road_name": "Xochimilco",
+            "yaw_deg": 261.1288146972656
+        },
+        {
+            "pano_id": "uDeVtYYRHxqAzou3JS10mg",
+            "road_name": "Xochimilco",
+            "yaw_deg": 83.42986297607422
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "FMiC399SdnuJLwEZ1t3iTw",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "DHyBCb0Apym-OZCtcf34YQ",
+            "date": "2025-09"
+        }
+    ]
+}

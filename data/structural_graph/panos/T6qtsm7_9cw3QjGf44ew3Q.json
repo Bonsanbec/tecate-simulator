@@ -1,0 +1,29 @@
+{
+    "pano_id": "T6qtsm7_9cw3QjGf44ew3Q",
+    "latitude": 32.57164929575261,
+    "longitude": -116.6159017662274,
+    "date": "2009-09",
+    "road_name": "Aguila",
+    "adjacent_links": [
+        {
+            "pano_id": "6dCXqZOzlUAMMvLVfrz21g",
+            "road_name": "Aguila",
+            "yaw_deg": 171.8196105957031
+        },
+        {
+            "pano_id": "fLmnz7kFhYNhhyikAj1PcQ",
+            "road_name": "Aguila",
+            "yaw_deg": 351.7711181640625
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "X-3YuSYgw0wjrKWQdGhFjQ",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "ZGyET-x05f1AEReWp3qPLw",
+            "date": "2025-09"
+        }
+    ]
+}

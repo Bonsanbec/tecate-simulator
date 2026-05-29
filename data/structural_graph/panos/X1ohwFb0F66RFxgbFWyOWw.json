@@ -1,0 +1,46 @@
+{
+    "pano_id": "X1ohwFb0F66RFxgbFWyOWw",
+    "latitude": 32.56371206396637,
+    "longitude": -116.6315298050853,
+    "date": "2009-09",
+    "road_name": "Chihuahua",
+    "adjacent_links": [
+        {
+            "pano_id": "lLznZEcmzY6NwxG_h2PF-A",
+            "road_name": "Dr. Arturo Guerra",
+            "yaw_deg": 174.5674438476562
+        },
+        {
+            "pano_id": "Te5RPAUBjjC9w8B5M8mKpg",
+            "road_name": "Dr. Arturo Guerra",
+            "yaw_deg": 353.4728698730469
+        },
+        {
+            "pano_id": "BWMQ48o35NrlH9TwY0fPEg",
+            "road_name": "Chihuahua",
+            "yaw_deg": 59.65142059326172
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "BjxlTwcpn56PGAry2Rf7hA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "tnfb5FhN30k7eGzzVGCqXQ",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "dCE3nxwv8onmuvV6AzijyQ",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "0sjfToVdAoGL3bn8UHlmxA",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "-NhraY0nP5IXOk3EYZOwDw",
+            "date": "2016-02"
+        }
+    ]
+}

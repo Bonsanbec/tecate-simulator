@@ -1,0 +1,41 @@
+{
+    "pano_id": "9y33LkrZQtdRrp9zSFl9Bw",
+    "latitude": 32.56833443622648,
+    "longitude": -116.6357957524479,
+    "date": "2009-09",
+    "road_name": "Av Nuevo Le\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "Lsf7eodhuSXOBNP_0ZK1EQ",
+            "road_name": "Av Nuevo Le\u00f3n",
+            "yaw_deg": 174.1741638183594
+        },
+        {
+            "pano_id": "FWFO2itTAQDxhbBdmjRjKg",
+            "road_name": "Blvd. Defensores de Baja California",
+            "yaw_deg": 15.86956977844238
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "RbocK_uPQ07fU3nccLUWcQ",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "uRTLeVlPRJJ-Zi6mQMzNVw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "llnDUJmuzvxVlpMMCIpFcg",
+            "date": "2022-07"
+        },
+        {
+            "pano_id": "aoHTPfJ3CVvnK6fZGK8q9g",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "2fiMlz4xTVu_zq0lZViPwA",
+            "date": "2017-07"
+        }
+    ]
+}

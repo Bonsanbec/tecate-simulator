@@ -1,0 +1,25 @@
+{
+    "pano_id": "x0-i1YB5gHKvdmybUivjow",
+    "latitude": 32.56507393117305,
+    "longitude": -116.6196744107782,
+    "date": "2009-09",
+    "road_name": "Gral. Ignacio Comonfort",
+    "adjacent_links": [
+        {
+            "pano_id": "jLYHAzYEXnqsVWCa0v_HuA",
+            "road_name": "Gral. Ignacio Comonfort",
+            "yaw_deg": 89.94263458251953
+        },
+        {
+            "pano_id": "meGF1jytY5v6vVoK-VLsFg",
+            "road_name": "Gral. Ignacio Comonfort",
+            "yaw_deg": 269.950439453125
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "tqyWD8f1UTGhgomqR_38EQ",
+            "date": "2022-09"
+        }
+    ]
+}
