@@ -1,0 +1,29 @@
+{
+    "pano_id": "qX0NrZKIk1vUAigeimpHmg",
+    "latitude": 32.56926002766377,
+    "longitude": -116.6233522513981,
+    "date": "2009-09",
+    "road_name": "Leandro Valle",
+    "adjacent_links": [
+        {
+            "pano_id": "Z6mc64CPrmRI0ZvabMiG5Q",
+            "road_name": "Leandro Valle",
+            "yaw_deg": 356.1414794921875
+        },
+        {
+            "pano_id": "kPiJOVJz7J0pUhEk2brv4g",
+            "road_name": "Leandro Valle",
+            "yaw_deg": 176.1976318359375
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "kmMXZCGwA-O6h_eKQZbByg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "cH1Rzd3ebaywM4T6j4zqeg",
+            "date": "2022-10"
+        }
+    ]
+}

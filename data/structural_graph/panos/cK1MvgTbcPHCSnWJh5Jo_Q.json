@@ -1,0 +1,42 @@
+{
+    "pano_id": "cK1MvgTbcPHCSnWJh5Jo_Q",
+    "latitude": 32.56875421893498,
+    "longitude": -116.6234323270154,
+    "date": "2009-09",
+    "road_name": "Leandro Valle",
+    "adjacent_links": [
+        {
+            "pano_id": "AN90vlNtsvs-gKJBM72hZw",
+            "road_name": "Piedra del Sol",
+            "yaw_deg": 265.8436889648438
+        },
+        {
+            "pano_id": "it3aZe6k61-f8OfSDp65gg",
+            "road_name": "Leandro Valle",
+            "yaw_deg": 60.95552062988281
+        },
+        {
+            "pano_id": "SHBXTjGqIBv-nFeoY841hg",
+            "road_name": "Piedra del Sol",
+            "yaw_deg": 85.57852172851562
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "MghaV-qiyeRrfhwYipiJJA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "dcAQrysmgRXf6lsHx058mA",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "TzJLdqypo2quAJ7L4x_3gA",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "bFjnvYU6cGYa4uQHNWT02w",
+            "date": "2016-02"
+        }
+    ]
+}

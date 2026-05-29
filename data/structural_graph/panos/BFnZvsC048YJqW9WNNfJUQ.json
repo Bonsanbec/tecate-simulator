@@ -1,0 +1,37 @@
+{
+    "pano_id": "BFnZvsC048YJqW9WNNfJUQ",
+    "latitude": 32.57153556279474,
+    "longitude": -116.6222147247126,
+    "date": "2009-09",
+    "road_name": "R\u00edo Tecate",
+    "adjacent_links": [
+        {
+            "pano_id": "zlDHGVv4gvuYvN_IEGNSmg",
+            "road_name": "R\u00edo Tecate",
+            "yaw_deg": 83.25395202636719
+        },
+        {
+            "pano_id": "Kc6Xv3DMmW3MuJGBiyMLnw",
+            "road_name": "R\u00edo Tecate",
+            "yaw_deg": 261.9686889648438
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "YlRQsK6afer2aTEFivqAKw",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "rksSbKOqcvYjgggickaYfg",
+            "date": "2025-09"
+        },
+        {
+            "pano_id": "T6QJZgLyxJLdSBMiF9UzjQ",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "HBGKkCsUP3CKVU_WhNQ2mA",
+            "date": "2017-07"
+        }
+    ]
+}

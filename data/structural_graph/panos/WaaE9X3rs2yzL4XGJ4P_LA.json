@@ -1,0 +1,37 @@
+{
+    "pano_id": "WaaE9X3rs2yzL4XGJ4P_LA",
+    "latitude": 32.57147202797703,
+    "longitude": -116.6228198827824,
+    "date": "2009-09",
+    "road_name": "Gral. Emilio Portes Gil",
+    "adjacent_links": [
+        {
+            "pano_id": "MwYyDmV5q_WYa-HhaK_jCQ",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 241.5936584472656
+        },
+        {
+            "pano_id": "bk1-DXUgqPswpHigLpwMkg",
+            "road_name": "R\u00edo Tecate",
+            "yaw_deg": 80.73770141601562
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "-1m6WZFKewq-7Gc5A4u5iw",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "7cFzSEl3ZUw_swb0Pog4UA",
+            "date": "2025-09"
+        },
+        {
+            "pano_id": "9nCtJ6DlU3nD9sBm9r9ciQ",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "rTCLq12WuwvQEfhXXxSgMw",
+            "date": "2017-07"
+        }
+    ]
+}

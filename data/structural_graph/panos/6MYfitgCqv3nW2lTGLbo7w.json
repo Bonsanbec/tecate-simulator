@@ -1,0 +1,29 @@
+{
+    "pano_id": "6MYfitgCqv3nW2lTGLbo7w",
+    "latitude": 32.56822361646263,
+    "longitude": -116.6239454401025,
+    "date": "2009-09",
+    "road_name": "Gral. Porfirio D\u00edaz",
+    "adjacent_links": [
+        {
+            "pano_id": "E7UKnfPjzNn1e5GkQi0YXQ",
+            "road_name": "Gral. Porfirio D\u00edaz",
+            "yaw_deg": 355.6481018066406
+        },
+        {
+            "pano_id": "3U7TKHiTdKclj-rBjfwk-g",
+            "road_name": "Gral. Porfirio D\u00edaz",
+            "yaw_deg": 175.6809844970703
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "gncFMAOs4HdEkwMO4TrN5w",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "ezyYXCXfE35Xef0VKyHc8Q",
+            "date": "2022-10"
+        }
+    ]
+}

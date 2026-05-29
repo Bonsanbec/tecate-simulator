@@ -1,0 +1,64 @@
+{
+    "pano_id": "DkbRkAad_e_m1UGEbdlQag",
+    "latitude": 32.56749233184848,
+    "longitude": -116.6252620921428,
+    "date": "2009-09",
+    "road_name": "Blvrd Universidad",
+    "adjacent_links": [
+        {
+            "pano_id": "2MzuEXWIH7w6Er7fGcJUXw",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 355.2500305175781
+        },
+        {
+            "pano_id": "KHncyimQuSTIAhYOsUgRrQ",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 175.3483734130859
+        },
+        {
+            "pano_id": "nrXueDyVmU6EjM5dSqV2sw",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 283.8174133300781
+        },
+        {
+            "pano_id": "EcHFfofQ5safQ9vfpu1H3g",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 237.1737518310547
+        },
+        {
+            "pano_id": "SYl3rTTx1yhIZTH-2Bm-dQ",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 59.56911087036133
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "baZ9oaUHJ5YBdVGYaPDdog",
+            "date": "2009-02"
+        },
+        {
+            "pano_id": "JmNht6jh09Rlv9I8QVLJ9g",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "0GEAOdlVa3rWKerb1WW2Tg",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "kpRxXy0YD7SxEzmYjCM-zA",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "D5cpOgVJH_ITK8GXvhouQw",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "kOEegwZN9wzedGTNTvl8iw",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "glkQI13hWm4dgeYeEgEAdg",
+            "date": "2016-02"
+        }
+    ]
+}

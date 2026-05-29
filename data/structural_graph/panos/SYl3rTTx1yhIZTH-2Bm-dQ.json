@@ -1,0 +1,33 @@
+{
+    "pano_id": "SYl3rTTx1yhIZTH-2Bm-dQ",
+    "latitude": 32.56748832258917,
+    "longitude": -116.6252096385418,
+    "date": "2009-09",
+    "road_name": "Blvrd Universidad",
+    "adjacent_links": [
+        {
+            "pano_id": "d7Q4EetnoN85xvU6nWOYig",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 86.1076431274414
+        },
+        {
+            "pano_id": "DkbRkAad_e_m1UGEbdlQag",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 239.5691070556641
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "rj2iFNQbR91RrJUEwEuWQg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "5i6BJnhHUi3wDTkNeHQ6kg",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "RcLjQPjoSkI1OdJd30_jmQ",
+            "date": "2016-02"
+        }
+    ]
+}

@@ -1,0 +1,33 @@
+{
+    "pano_id": "O8_kS3kiM2iJc2jE3QVvPQ",
+    "latitude": 32.56879624041359,
+    "longitude": -116.6227002188855,
+    "date": "2009-09",
+    "road_name": "Piedra del Sol",
+    "adjacent_links": [
+        {
+            "pano_id": "MGAYK12r0-vwKnQFzuDiDw",
+            "road_name": "Vicente Guerrero",
+            "yaw_deg": 85.54036712646484
+        },
+        {
+            "pano_id": "L4VPaVtD86STJJ6RBt24JQ",
+            "road_name": "Piedra del Sol",
+            "yaw_deg": 265.3068237304688
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "87L-HniBafIlRVKAjeu4MQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "uS9w-g05tic4A_b3mli4Sg",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "Zwk1vNjWVWyGXdWiW-oirw",
+            "date": "2016-02"
+        }
+    ]
+}
