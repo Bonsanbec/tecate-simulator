@@ -1,0 +1,45 @@
+{
+    "pano_id": "wrQhcWL6TK78MB1C9y1ntg",
+    "latitude": 32.57366486546362,
+    "longitude": -116.6194117762871,
+    "date": "2009-02",
+    "road_name": "Tijuana-Mexicali",
+    "adjacent_links": [
+        {
+            "pano_id": "aOuzdpwemZLpmd8Nq7Iu4g",
+            "road_name": "Tijuana-Mexicali",
+            "yaw_deg": 71.7646255493164
+        },
+        {
+            "pano_id": "Qfb7C-XWFFC2fuTjZV4xiw",
+            "road_name": "Tijuana-Mexicali",
+            "yaw_deg": 254.1300354003906
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "uaCZAsbUhPOfjUDZDhe-mA",
+            "date": "2017-09"
+        },
+        {
+            "pano_id": "kMkg_Ud9u3pyQm2uPfQi7g",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "ceZCEizPha7EEuK87EHrrg",
+            "date": "2022-06"
+        },
+        {
+            "pano_id": "1IYW749fmCRCdRotqCY0lg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "GJGwlXz1Fyl75sdJYus-WA",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "o-shYg1lP7bU2XieMiLtig",
+            "date": "2009-09"
+        }
+    ]
+}
