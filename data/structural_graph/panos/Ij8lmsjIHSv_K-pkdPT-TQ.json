@@ -1,0 +1,42 @@
+{
+    "pano_id": "Ij8lmsjIHSv_K-pkdPT-TQ",
+    "latitude": 32.57498521884813,
+    "longitude": -116.627412769292,
+    "date": "2009-09",
+    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+    "adjacent_links": [
+        {
+            "pano_id": "WXufz4mSJxnrrtzGqpm8cA",
+            "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+            "yaw_deg": 32.371337890625
+        },
+        {
+            "pano_id": "fZ3_ZroX75mDRbZ_6xNK-A",
+            "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+            "yaw_deg": 93.58525848388672
+        },
+        {
+            "pano_id": "xtmsBPFj-sC4OY-2dx2ohw",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 264.8617858886719
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "WsNiARa3kEIHCCXpynFAYg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "FtrQD4crdp8A4vNlJdu1BQ",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "lpoDMs8tRj3LkwbAR-FjfA",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "NjSH1Llw2Ow7hvxO8sxNNw",
+            "date": "2017-09"
+        }
+    ]
+}

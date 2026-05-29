@@ -1,0 +1,29 @@
+{
+    "pano_id": "GBiveHBtPq_DUBP4QLnFcQ",
+    "latitude": 32.57386878314274,
+    "longitude": -116.6288268391796,
+    "date": "2009-09",
+    "road_name": "Pdte. El\u00edas Calles",
+    "adjacent_links": [
+        {
+            "pano_id": "aqqeetOqTWPsXc38hYkoiQ",
+            "road_name": "Pdte. El\u00edas Calles",
+            "yaw_deg": 173.4424133300781
+        },
+        {
+            "pano_id": "xUmb94ywbzWUwXDLquKtEg",
+            "road_name": "Pdte. El\u00edas Calles",
+            "yaw_deg": 353.4261779785156
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "eP90nnV5gpwVBeqp3U0sKQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "0iUs9XypR2nb5Ha6Jal8ag",
+            "date": "2017-09"
+        }
+    ]
+}

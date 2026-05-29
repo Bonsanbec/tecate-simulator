@@ -1,0 +1,29 @@
+{
+    "pano_id": "iFwNeBW5cbDAAx6boXgGzw",
+    "latitude": 32.57500927771711,
+    "longitude": -116.6271059679528,
+    "date": "2009-09",
+    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+    "adjacent_links": [
+        {
+            "pano_id": "fZ3_ZroX75mDRbZ_6xNK-A",
+            "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+            "yaw_deg": 257.2054443359375
+        },
+        {
+            "pano_id": "q6Lk2prucA3wFlv35iojuA",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 84.56871032714844
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "jSO5NGV4Igt17Z3uR9TC8g",
+            "date": "2017-09"
+        },
+        {
+            "pano_id": "K6e7YY3luqMxGzO_FkI4tA",
+            "date": "2021-09"
+        }
+    ]
+}

@@ -1,0 +1,63 @@
+{
+    "pano_id": "XvC3RuSBooPOYeSMYRZQxw",
+    "latitude": 32.57367094369879,
+    "longitude": -116.6260391777723,
+    "date": "2009-09",
+    "road_name": "Pdte. Pascual Ortiz Rubio",
+    "adjacent_links": [
+        {
+            "pano_id": "1ulK7ZlS3HINobM36BlCtQ",
+            "road_name": "Tecate - Rumorosa Libre",
+            "yaw_deg": 87.04413604736328
+        },
+        {
+            "pano_id": "AkSloTYI5L_JxbZPaJtHsQ",
+            "road_name": "Tijuana - Tecate",
+            "yaw_deg": 260.5233459472656
+        },
+        {
+            "pano_id": "tclidvitKxatGip3bKjjKw",
+            "road_name": "M\u00e9xico 3",
+            "yaw_deg": 175.6899719238281
+        },
+        {
+            "pano_id": "SKE9yL0UxDg9poHQLzKCOg",
+            "road_name": "Pdte. Pascual Ortiz Rubio",
+            "yaw_deg": 354.2189331054688
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "5U2L5FwuMg2sxeWGA88iKQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "OWsrqtHLgG1tF8i2M1b6ww",
+            "date": "2022-06"
+        },
+        {
+            "pano_id": "Qp371JgpNi68G00ElBr9QQ",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "Mt7ADSpqwzunM1HMT54jCQ",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "_tB-z4UBknN4FKDI7mr_Iw",
+            "date": "2019-09"
+        },
+        {
+            "pano_id": "q11adsTEvntmKGri2H8OMg",
+            "date": "2015-12"
+        },
+        {
+            "pano_id": "m1QeNEt5WHsxwwXRD4tBZw",
+            "date": "2017-09"
+        },
+        {
+            "pano_id": "GHOVd1crq0yfHHkIiAJ_xQ",
+            "date": "2009-02"
+        }
+    ]
+}

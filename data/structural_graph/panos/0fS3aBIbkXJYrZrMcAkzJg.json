@@ -1,0 +1,41 @@
+{
+    "pano_id": "0fS3aBIbkXJYrZrMcAkzJg",
+    "latitude": 32.5757666901694,
+    "longitude": -116.6263505691001,
+    "date": "2009-09",
+    "road_name": "Cjon. Francisco I. Madero",
+    "adjacent_links": [
+        {
+            "pano_id": "ta0rSIhLEhyOHkngiEwo8w",
+            "road_name": "Pdte. Pascual Ortiz Rubio",
+            "yaw_deg": 74.47882080078125
+        },
+        {
+            "pano_id": "WTCsavvMhyTPqMDXwZKL5Q",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 263.5719909667969
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "oaDjU_iVae2Jo7083u5MeA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "xfqDSqWDiZ83tyIooEGx-Q",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "x9grYAB6RQYpE1XWaTqpww",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "eHD3y0ItCCtPtY5N1-tEJQ",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "tJ4I7heEFzZ9WpIZZLaEaQ",
+            "date": "2016-02"
+        }
+    ]
+}

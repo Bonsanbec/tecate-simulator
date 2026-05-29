@@ -1,0 +1,37 @@
+{
+    "pano_id": "Z3g3_RgDMq1ATBO7EV6WYQ",
+    "latitude": 32.57409893875447,
+    "longitude": -116.6246799734544,
+    "date": "2009-09",
+    "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+    "adjacent_links": [
+        {
+            "pano_id": "I4Gof5xE_Fx4xn8iFePrNQ",
+            "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+            "yaw_deg": 353.6836242675781
+        },
+        {
+            "pano_id": "ZAvQf8Po1Hz6LzKwxz6mHw",
+            "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+            "yaw_deg": 173.7445526123047
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "EANcPKBOYZAY3NvZ3-g3zw",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "HyXPu6bbNnkuRCcimv2cow",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "2uUxygLXFWyyHMtuBm5u8Q",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "DjmcmHfkO_VCaVW4IImRJQ",
+            "date": "2017-09"
+        }
+    ]
+}

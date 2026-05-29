@@ -1,0 +1,29 @@
+{
+    "pano_id": "01DyAo4v35mQNIuf8cabKg",
+    "latitude": 32.57515324477836,
+    "longitude": -116.6260639199478,
+    "date": "2009-09",
+    "road_name": "Av Revoluci\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "he3nbC1jhx3U8PZXkzpoFQ",
+            "road_name": "Pdte. Pascual Ortiz Rubio",
+            "yaw_deg": 260.4480285644531
+        },
+        {
+            "pano_id": "3-yMb9VRsJj_u7XWHKwuRQ",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 84.02739715576172
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "PdozQNKvyyXVOeZRpFTyzg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "RuAKKT_F6RCDwyb5KE-wDg",
+            "date": "2017-07"
+        }
+    ]
+}

@@ -1,0 +1,33 @@
+{
+    "pano_id": "Vh1mf462yMny-7rVnmjlcg",
+    "latitude": 32.57460216151414,
+    "longitude": -116.6247463728487,
+    "date": "2009-09",
+    "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+    "adjacent_links": [
+        {
+            "pano_id": "LCADQvWLEZuWVZiLZOG4CA",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 147.1010589599609
+        },
+        {
+            "pano_id": "6qpDLfrrXH6ZTGlSEL4V1A",
+            "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+            "yaw_deg": 354.4398498535156
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "EBV40d_5izRS-OFun0kcYA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "n0fND7IOHMxgKGBGf0UaSQ",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "YklnrVnhwuDk1mFJ_RgKsQ",
+            "date": "2017-09"
+        }
+    ]
+}

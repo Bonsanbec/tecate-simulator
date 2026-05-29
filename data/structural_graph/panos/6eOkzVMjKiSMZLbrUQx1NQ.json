@@ -1,0 +1,29 @@
+{
+    "pano_id": "6eOkzVMjKiSMZLbrUQx1NQ",
+    "latitude": 32.57398151881799,
+    "longitude": -116.6288399748641,
+    "date": "2009-09",
+    "road_name": "Pdte. El\u00edas Calles",
+    "adjacent_links": [
+        {
+            "pano_id": "VJZ4gbBuKjMxYvWb21P-xw",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 352.8324890136719
+        },
+        {
+            "pano_id": "xUmb94ywbzWUwXDLquKtEg",
+            "road_name": "Pdte. El\u00edas Calles",
+            "yaw_deg": 173.4306030273438
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "iYlQviVBoOWodkxxYf0Kgw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "i50FkjQ6nNus4epPcEgrhQ",
+            "date": "2017-09"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "pano_id": "5voRbek9ukNNRBtSAsbewg",
+    "latitude": 32.57511841239532,
+    "longitude": -116.624809353286,
+    "date": "2009-09",
+    "road_name": "Av Revoluci\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "drJfRuCTi0ddenCgvleSzg",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 334.9549560546875
+        },
+        {
+            "pano_id": "0F9K-ltA9K2Xol3PGx8APg",
+            "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+            "yaw_deg": 174.4925842285156
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "M9iRVAfCdGzE1q6F_lgDEA",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "AS2iMnViYd3S_s7MlKaYCg",
+            "date": "2017-09"
+        }
+    ]
+}

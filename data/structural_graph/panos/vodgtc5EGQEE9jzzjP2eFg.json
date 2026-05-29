@@ -1,0 +1,33 @@
+{
+    "pano_id": "vodgtc5EGQEE9jzzjP2eFg",
+    "latitude": 32.57443103921231,
+    "longitude": -116.6272761032922,
+    "date": "2009-08",
+    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+    "adjacent_links": [
+        {
+            "pano_id": "VjGz4V9Eok__VMgm6KybwQ",
+            "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+            "yaw_deg": 354.1710510253906
+        },
+        {
+            "pano_id": "K_JnND_7eBSyc5nst5IOWQ",
+            "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+            "yaw_deg": 174.2586975097656
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "pyrGuTxg0fwtgXRRFyKlZg",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "fq5Ow9KD-h-TLHqlCbf1NA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "YHI4MXzTJ-QCWToQnHjudw",
+            "date": "2016-02"
+        }
+    ]
+}

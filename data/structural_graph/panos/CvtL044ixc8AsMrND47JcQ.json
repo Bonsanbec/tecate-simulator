@@ -1,0 +1,33 @@
+{
+    "pano_id": "CvtL044ixc8AsMrND47JcQ",
+    "latitude": 32.57430606592034,
+    "longitude": -116.6261179028667,
+    "date": "2009-09",
+    "road_name": "Pdte. Pascual Ortiz Rubio",
+    "adjacent_links": [
+        {
+            "pano_id": "yTTA0Wgj4yoYLD5yXAmJTw",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 330.8041687011719
+        },
+        {
+            "pano_id": "vlr3-ZZmQ1nBgh14peFZ1A",
+            "road_name": "Pdte. Pascual Ortiz Rubio",
+            "yaw_deg": 175.1220855712891
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "R9hjRI8pXJGmRk9LkY4T0A",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "DT1UkNocAh8k4Z01NQy9ng",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "JQKhlEMohHL4sai5s6ePNw",
+            "date": "2017-07"
+        }
+    ]
+}

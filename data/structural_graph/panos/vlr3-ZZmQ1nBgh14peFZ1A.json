@@ -1,0 +1,33 @@
+{
+    "pano_id": "vlr3-ZZmQ1nBgh14peFZ1A",
+    "latitude": 32.5742093832022,
+    "longitude": -116.6261053068534,
+    "date": "2009-09",
+    "road_name": "Pdte. Pascual Ortiz Rubio",
+    "adjacent_links": [
+        {
+            "pano_id": "CvtL044ixc8AsMrND47JcQ",
+            "road_name": "Pdte. Pascual Ortiz Rubio",
+            "yaw_deg": 355.1221008300781
+        },
+        {
+            "pano_id": "adwWhTmk42IX2pUGI86m4Q",
+            "road_name": "Pdte. Pascual Ortiz Rubio",
+            "yaw_deg": 175.1007232666016
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Nx0V1RzCfvrPG-3vtlPWLg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "_4O5hpQ39AiVSeJDcnBKXw",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "03pMNYGU2XpV0OL4rUfHog",
+            "date": "2017-07"
+        }
+    ]
+}

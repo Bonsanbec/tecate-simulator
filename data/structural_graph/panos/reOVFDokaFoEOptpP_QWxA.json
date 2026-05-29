@@ -1,0 +1,33 @@
+{
+    "pano_id": "reOVFDokaFoEOptpP_QWxA",
+    "latitude": 32.57454512920593,
+    "longitude": -116.6243812659113,
+    "date": "2009-09",
+    "road_name": "Callejon Reforma",
+    "adjacent_links": [
+        {
+            "pano_id": "7OUlulcQuPXT87Ji_Q7I4w",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 264.3517761230469
+        },
+        {
+            "pano_id": "5BfGRH81Td9eX4Bjtk3rbA",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 84.35448455810547
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "kn0p6mRFtKL1AuqseMCBHA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "PPlPpUWQ0oWHGSSYJoJvFw",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "HDmUNNcd_emOPG1TLDKE3g",
+            "date": "2016-02"
+        }
+    ]
+}
