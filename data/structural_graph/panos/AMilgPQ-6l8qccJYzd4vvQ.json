@@ -1,0 +1,41 @@
+{
+    "pano_id": "AMilgPQ-6l8qccJYzd4vvQ",
+    "latitude": 32.56672156237337,
+    "longitude": -116.6348492005946,
+    "date": "2009-09",
+    "road_name": "Av Nuevo Le\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "k4cdapdkejqRPJzbVBiIdA",
+            "road_name": "Av Nuevo Le\u00f3n",
+            "yaw_deg": 135.6879272460938
+        },
+        {
+            "pano_id": "Q7GfHt9ai5fdfbYgFRW1Zw",
+            "road_name": "Av Nuevo Le\u00f3n",
+            "yaw_deg": 315.473876953125
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "r2H_wQrpxcSKXpgM8JceoA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "T6uZlNoxr2ry94Ea66djfA",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "s6qqmZOWRicG1cxpepCt0g",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "abphrhJIdK_MnZAbngklAA",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "vN_9NJshvp5GTsw7AhKHDQ",
+            "date": "2016-02"
+        }
+    ]
+}

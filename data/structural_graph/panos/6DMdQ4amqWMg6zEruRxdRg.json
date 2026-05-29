@@ -1,0 +1,29 @@
+{
+    "pano_id": "6DMdQ4amqWMg6zEruRxdRg",
+    "latitude": 32.56438421410718,
+    "longitude": -116.6208172586593,
+    "date": "2009-09",
+    "road_name": "Carmen Serd\u00e1n",
+    "adjacent_links": [
+        {
+            "pano_id": "024KpN4-5aVZ9oon8cuI-g",
+            "road_name": "Carmen Serd\u00e1n",
+            "yaw_deg": 171.0788726806641
+        },
+        {
+            "pano_id": "hr0eBiuFTLuedi5q41fG5g",
+            "road_name": "Av. Juan Mart\u00ednez el Pipila",
+            "yaw_deg": 34.50677108764648
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "eu67gJhuqseY5NqU8Q-vrg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "0a3F24DxtJsJmQph_rT6AA",
+            "date": "2022-09"
+        }
+    ]
+}

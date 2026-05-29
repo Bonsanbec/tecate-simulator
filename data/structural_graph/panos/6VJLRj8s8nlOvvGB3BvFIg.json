@@ -1,0 +1,34 @@
+{
+    "pano_id": "6VJLRj8s8nlOvvGB3BvFIg",
+    "latitude": 32.56343094527969,
+    "longitude": -116.6300477348122,
+    "date": "2009-09",
+    "road_name": "C. Campeche",
+    "adjacent_links": [
+        {
+            "pano_id": "mvedl4pelHdNk5tGEK-BhA",
+            "road_name": "C. Campeche",
+            "yaw_deg": 34.28310394287109
+        },
+        {
+            "pano_id": "vuuGXeGHHCkMCxG7p5RMPA",
+            "road_name": "C. Campeche",
+            "yaw_deg": 213.4750518798828
+        },
+        {
+            "pano_id": "uxsNRFACL_ZNjxMsl9JLxA",
+            "road_name": "Chihuahua",
+            "yaw_deg": 266.3997192382812
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "FHW8eVd93CxSXUIBxWB15Q",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "9yLWdpYys0vbmd_VFh8oMg",
+            "date": "2022-09"
+        }
+    ]
+}

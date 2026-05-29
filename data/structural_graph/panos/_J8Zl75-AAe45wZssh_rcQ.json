@@ -1,0 +1,29 @@
+{
+    "pano_id": "_J8Zl75-AAe45wZssh_rcQ",
+    "latitude": 32.56378478531395,
+    "longitude": -116.6311717267127,
+    "date": "2009-09",
+    "road_name": "Chihuahua",
+    "adjacent_links": [
+        {
+            "pano_id": "i-nHCMVZfZt_MQce3FKXSw",
+            "road_name": "Chihuahua",
+            "yaw_deg": 95.91447448730469
+        },
+        {
+            "pano_id": "bUEdw_2XQnjByzwdkWTbbA",
+            "road_name": "Chihuahua",
+            "yaw_deg": 266.7941589355469
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "iL-dCq_OTgcZLIGh71aEbA",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "rUkry90nfY-yf0Ub4Xq8oA",
+            "date": "2025-08"
+        }
+    ]
+}

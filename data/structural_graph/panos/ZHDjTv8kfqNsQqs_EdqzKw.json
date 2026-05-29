@@ -1,0 +1,43 @@
+{
+    "pano_id": "ZHDjTv8kfqNsQqs_EdqzKw",
+    "latitude": 32.56582515482885,
+    "longitude": -116.6190779718185,
+    "date": "2009-09",
+    "road_name": "Juan \u00c1lvarez",
+    "adjacent_links": [
+        {
+            "pano_id": "81CvmwtWVjZPlOp_EdFFhg",
+            "road_name": "Gral. Abraham A.",
+            "yaw_deg": 179.2822418212891
+        },
+        {
+            "pano_id": "YwOfFEX3NsjB2pqXPaDvJQ",
+            "road_name": "Gral. Abraham A.",
+            "yaw_deg": 0.2003372311592102
+        },
+        {
+            "pano_id": "Xp3iX32B1dmMZodaXE6-3g",
+            "road_name": "Juan \u00c1lvarez",
+            "yaw_deg": 116.5640182495117
+        },
+        {
+            "pano_id": "yMXG0STockksuo5TEYJtUg",
+            "road_name": "Juan \u00c1lvarez",
+            "yaw_deg": 257.0480651855469
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "pOO0LotTXP2VEJ8Vkkt3cA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "PKzX23xyd3joMXm1ex8Yrw",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "TpC1SJqPw1XaGhXRNtBjHg",
+            "date": "2016-02"
+        }
+    ]
+}

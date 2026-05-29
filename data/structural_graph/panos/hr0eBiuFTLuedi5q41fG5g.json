@@ -1,0 +1,47 @@
+{
+    "pano_id": "hr0eBiuFTLuedi5q41fG5g",
+    "latitude": 32.56445270634672,
+    "longitude": -116.6207319636456,
+    "date": "2009-09",
+    "road_name": "Carmen Serd\u00e1n",
+    "adjacent_links": [
+        {
+            "pano_id": "4oZZ4zIHvbJTKXb0CDE4nA",
+            "road_name": "Av. Juan Mart\u00ednez el Pipila",
+            "yaw_deg": 261.572265625
+        },
+        {
+            "pano_id": "6DMdQ4amqWMg6zEruRxdRg",
+            "road_name": "Carmen Serd\u00e1n",
+            "yaw_deg": 214.5067749023438
+        },
+        {
+            "pano_id": "XmUetc8Fs5m_4rwlW0cjxw",
+            "road_name": "C. Sebasti\u00e1n Lerdo de Tejada",
+            "yaw_deg": 319.0424194335938
+        },
+        {
+            "pano_id": "lCCTvvquWeDrd6gaTLHBDg",
+            "road_name": "Av. Juan Mart\u00ednez el Pipila",
+            "yaw_deg": 82.59889221191406
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "aZLl338YsZhfnwlW9ZY-7w",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "LTHO1IwaYCHY-O1P60ORkw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "h9QtzVauMXJZmgMszGav3w",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "52hVTmFbVQQw46uAapZRlw",
+            "date": "2016-02"
+        }
+    ]
+}
