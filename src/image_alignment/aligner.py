@@ -45,6 +45,8 @@ class ImageAligner:
                 "dist_along": best_station["dist_along"],
                 "graph_x": best_station["x"],
                 "graph_y": best_station["y"],
+                "latitude": pano_data["latitude"],
+                "longitude": pano_data["longitude"],
                 "alignment_distance": min_dist,
                 "road_heading": best_station["road_heading"],
                 "temporal_probability": pano_data.get("temporal_probability", 1.0)

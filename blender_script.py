@@ -5,6 +5,7 @@ import math
 
 try:
     import bpy
+    import mathutils
 except ImportError:
     print("[Error] This script must be run inside Blender's python environment.")
     print("Usage: blender --background --python blender_script.py -- --import export/reconstruction_export.json")
@@ -13,17 +14,84 @@ except ImportError:
 def clear_scene():
     """Clears all objects, meshes, materials, and textures from the active Blender scene."""
     print("[Blender] Clearing default scene items...")
-    if bpy.ops.object.select_all.exists():
+    if hasattr(bpy.ops.object, "select_all"):
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete(use_global=False)
         
     # Clear unused meshes, materials, and images to prevent bloat
     for block in [bpy.data.meshes, bpy.data.materials, bpy.data.images, bpy.data.cameras, bpy.data.lights]:
-        for item in block:
+        for item in list(block):
             block.remove(item)
 
-def create_road_graph_mesh(graph_data: dict):
-    """Visualizes the road network skeleton as an unrendered wireframe mesh."""
+def load_terrain_model() -> list:
+    """Imports the existing detailed georeferenced terrain GLB model into the scene."""
+    terrain_dir = "models/tecate/glb"
+    candidates = [
+        "tecate (detallado sin edificios).glb",
+        "tecate (detallado sin edificios ni vegetación).glb",
+        "tecate (detallado con edificios).glb"
+    ]
+    
+    filepath = None
+    for name in candidates:
+        path = os.path.join(terrain_dir, name)
+        if os.path.exists(path):
+            filepath = path
+            break
+            
+    if filepath is None:
+        if os.path.exists(terrain_dir):
+            for f in os.listdir(terrain_dir):
+                if f.endswith(".glb"):
+                    filepath = os.path.join(terrain_dir, f)
+                    break
+                    
+    if filepath and os.path.exists(filepath):
+        print(f"[Blender] Importing georeferenced terrain model from: {filepath}")
+        try:
+            # Load glb
+            bpy.ops.import_scene.gltf(filepath=filepath)
+            print("[Blender] Terrain imported successfully.")
+            
+            # Gather all imported mesh objects
+            terrain_objs = [obj for obj in bpy.context.scene.objects if obj.type == 'MESH']
+            return terrain_objs
+        except Exception as e:
+            print(f"[Warning] Failed to import terrain model via gltf: {e}")
+    else:
+        print("[Warning] No terrain GLB found. Reconstructing buildings at default z = 0.")
+        
+    return []
+
+def find_terrain_elevation(x: float, y: float, terrain_objs: list) -> float:
+    """Raycasts downwards from (x, y, 1000) onto the terrain meshes to find the exact Z elevation."""
+    if not terrain_objs:
+        return 0.0
+        
+    best_z = 0.0
+    found = False
+    
+    ray_origin = (x, y, 1000.0)
+    ray_direction = (0.0, 0.0, -1.0)
+    
+    for obj in terrain_objs:
+        # Transform ray origin and direction to object local coordinates
+        matrix_inv = obj.matrix_world.inverted()
+        local_origin = matrix_inv @ mathutils.Vector(ray_origin)
+        local_direction = matrix_inv.to_3x3() @ mathutils.Vector(ray_direction)
+        local_direction.normalize()
+        
+        success, location, normal, face_index = obj.ray_cast(local_origin, local_direction)
+        if success:
+            world_location = obj.matrix_world @ location
+            if not found or world_location.z > best_z:
+                best_z = world_location.z
+                found = True
+                
+    return best_z if found else 0.0
+
+def create_road_graph_mesh(graph_data: dict, terrain_objs: list = None):
+    """Visualizes the road network skeleton as an unrendered wireframe mesh, projected onto terrain."""
     print("[Blender] Constructing road graph skeleton...")
     nodes = graph_data.get("nodes", [])
     edges = graph_data.get("edges", [])
@@ -32,7 +100,12 @@ def create_road_graph_mesh(graph_data: dict):
     verts = []
     
     for idx, nd in enumerate(nodes):
-        verts.append((nd["x"], nd["y"], 0.05))  # Elevated slightly above ground level
+        # Snap road intersection heights to terrain elevation
+        z_elevation = 0.05
+        if terrain_objs:
+            z_elevation = find_terrain_elevation(nd["x"], nd["y"], terrain_objs) + 0.05
+            
+        verts.append((nd["x"], nd["y"], z_elevation))
         node_id_map[nd["id"]] = idx
         
     line_edges = []
@@ -49,7 +122,6 @@ def create_road_graph_mesh(graph_data: dict):
     obj = bpy.data.objects.new("RoadNetwork", mesh)
     bpy.context.scene.collection.objects.link(obj)
     
-    # Add a simple wireframe material to roads (dark charcoal color)
     mat = bpy.data.materials.new(name="Road_Material")
     mat.use_nodes = True
     bsdf = mat.node_tree.nodes.get("Principled BSDF")
@@ -68,7 +140,7 @@ def create_point_cloud_object(points_data: list):
     
     for pt in points_data:
         verts.append(pt["coord"])
-        colors.append(pt["color"] + [1.0])  # Add alpha channel
+        colors.append(pt["color"] + [1.0])
         
     mesh = bpy.data.meshes.new(name="SfMPointCloud_Mesh")
     mesh.from_pydata(verts, [], [])
@@ -77,18 +149,15 @@ def create_point_cloud_object(points_data: list):
     obj = bpy.data.objects.new("SfM_PointCloud", mesh)
     bpy.context.scene.collection.objects.link(obj)
     
-    # Bind vertex colors (attribute-based in newer Blender 3.x/4.x versions)
     color_layer = mesh.attributes.new(name="Color", type='FLOAT_COLOR', domain='POINT')
     for idx, col in enumerate(colors):
         color_layer.data[idx].color = col
         
-    # Set up shader material that renders vertex colors
     mat = bpy.data.materials.new(name="PointCloud_Material")
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
     
-    # Remove default base nodes if they exist to rebuild cleanly
     for node in list(nodes):
         nodes.remove(node)
         
@@ -101,14 +170,13 @@ def create_point_cloud_object(points_data: list):
     links.new(node_emission.outputs['Emission'], node_out.inputs['Surface'])
     
     obj.data.materials.append(mat)
-    
-    # Configure Blender viewport to display Point Cloud attributes
     obj.display_type = 'TEXTURED'
 
-def build_block_meshes(blocks_data: list):
+def build_block_meshes(blocks_data: list, terrain_objs: list = None):
     """
     Constructs the 3D block (manzana) volumes, loads texture atlases,
     and maps UV coordinates on facade/roof loops.
+    Snaps buildings base level precisely to the terrain elevation.
     """
     print(f"[Blender] Building {len(blocks_data)} urban blocks (manzanas)...")
     
@@ -117,33 +185,34 @@ def build_block_meshes(blocks_data: list):
         poly = bl["polygon"]
         height = bl["height_meters"]
         
-        # A polygon loop of length N has N-1 distinct vertices.
-        # Note: poly[-1] is identical to poly[0] (closed loop).
         num_verts = len(poly) - 1
+        centroid_x, centroid_y = bl["centroid"]
         
+        # Snapping base to the terrain GLB
+        z_base = 0.0
+        if terrain_objs:
+            z_base = find_terrain_elevation(centroid_x, centroid_y, terrain_objs)
+            print(f"[Blender] Snapping block {b_id} base to terrain Z: {z_base:.2f}m")
+            
         verts = []
         faces = []
         
         # 1. Spawn vertices
-        # Bottom ring (z = 0)
+        # Bottom ring (z = z_base)
         for i in range(num_verts):
-            verts.append((poly[i][0], poly[i][1], 0.0))
-        # Top ring (z = height)
+            verts.append((poly[i][0], poly[i][1], z_base))
+        # Top ring (z = z_base + height)
         for i in range(num_verts):
-            verts.append((poly[i][0], poly[i][1], height))
+            verts.append((poly[i][0], poly[i][1], z_base + height))
             
         # 2. Spawn vertical facade faces
-        # Each facade is a quad connecting two bottom and two top vertices.
         for i in range(num_verts):
             next_idx = (i + 1) % num_verts
-            # Quad face indices: Bottom-Left, Bottom-Right, Top-Right, Top-Left
             face = [i, next_idx, next_idx + num_verts, i + num_verts]
             faces.append(face)
             
         # 3. Spawn roof face (top polygon)
-        # N-sided polygon connecting all top ring vertices in counter-clockwise order
         roof_face = list(range(num_verts, 2 * num_verts))
-        # Reverse to ensure normal points upwards
         roof_face.reverse()
         faces.append(roof_face)
         
@@ -158,26 +227,17 @@ def build_block_meshes(blocks_data: list):
         # 4. Map UV coordinates
         uv_mappings = bl.get("uv_mappings", {})
         if uv_mappings:
-            # Create UV layer
             uv_layer = mesh.uv_layers.new(name="UVMap")
             
-            # Loop index tracking inside loops.
-            # In Blender, a mesh has faces, and each face has loops (corners).
-            # The order of faces in the mesh matches the order we defined:
-            # First, num_verts facade faces. Then, 1 roof face.
             for f_idx, face in enumerate(mesh.polygons):
                 if f_idx < num_verts:
-                    # Facade face w_idx
                     surface_id = f"{b_id}_facade_{f_idx}"
                     uvs = uv_mappings.get(surface_id, [[0.0, 0.0]] * 4)
                 else:
-                    # Roof face
                     surface_id = f"{b_id}_roof"
                     uvs = uv_mappings.get(surface_id, [[0.0, 0.0]] * num_verts)
                     
-                # Loop through loops (corners) of this face
                 for loop_idx, loop_corner in enumerate(face.loop_indices):
-                    # Assign the pre-calculated UV coordinate from JSON
                     uv_layer.data[loop_corner].uv = uvs[loop_idx % len(uvs)]
                     
         # 5. Set up Material Shader and Bind Stitched Texture Atlas
@@ -189,8 +249,6 @@ def build_block_meshes(blocks_data: list):
             links = mat.node_tree.links
             
             bsdf = nodes.get("Principled BSDF")
-            
-            # Create Image Texture node
             node_tex = nodes.new(type='ShaderNodeTexImage')
             
             try:
@@ -199,13 +257,11 @@ def build_block_meshes(blocks_data: list):
             except Exception as e:
                 print(f"[Warning] Failed to load texture atlas {atlas_path}: {e}")
                 
-            # Connect texture output to Principled BSDF base color
             if bsdf:
                 links.new(node_tex.outputs['Color'], bsdf.inputs['Base Color'])
                 
             obj.data.materials.append(mat)
         else:
-            # Safe stucco fallback if no atlas exists
             mat = bpy.data.materials.new(name=f"{b_id}_Material_Fallback")
             mat.use_nodes = True
             bsdf = mat.node_tree.nodes.get("Principled BSDF")
@@ -225,7 +281,7 @@ def setup_lighting_and_camera():
     light_obj.location = (0.0, 0.0, 150.0)
     light_obj.rotation_euler = (math.radians(35.0), math.radians(20.0), math.radians(45.0))
     
-    # Add an ambient Hemi/Grid light
+    # Add an ambient light
     light_data2 = bpy.data.lights.new(name="HemiLight", type='POINT')
     light_data2.energy = 8000.0
     light_obj2 = bpy.data.objects.new(name="HemiLight", object_data=light_data2)
@@ -237,22 +293,17 @@ def setup_lighting_and_camera():
     cam_obj = bpy.data.objects.new(name="OrthoCamera", object_data=cam_data)
     bpy.context.scene.collection.objects.link(cam_obj)
     
-    # Position camera looking down from an angle over Tecate downtown
     cam_obj.location = (0.0, -120.0, 110.0)
     cam_obj.rotation_euler = (math.radians(48.0), 0.0, 0.0)
-    
-    # Make active camera
     bpy.context.scene.camera = cam_obj
 
 def main():
-    # Parse custom arguments passed after '--'
     args = []
     if "--" in sys.argv:
         args = sys.argv[sys.argv.index("--") + 1:]
         
     export_json = "export/reconstruction_export.json"
     
-    # Parse '--import' option
     for idx, arg in enumerate(args):
         if arg == "--import" and idx + 1 < len(args):
             export_json = args[idx + 1]
@@ -264,16 +315,18 @@ def main():
         print(f"[Error] Target export file {export_json} does not exist. Aborting.")
         sys.exit(1)
         
-    # Read structured reconstruction dataset
     with open(export_json, "r", encoding="utf-8") as f:
         scene_doc = json.load(f)
         
     clear_scene()
     
-    # Import modules
-    create_road_graph_mesh(scene_doc.get("road_graph", {}))
+    # 1. Import pre-existing georeferenced detailed terrain model
+    terrain_objs = load_terrain_model()
+    
+    # 2. Reconstruct modules snapped to topography
+    create_road_graph_mesh(scene_doc.get("road_graph", {}), terrain_objs)
     create_point_cloud_object(scene_doc.get("sparse_point_cloud", []))
-    build_block_meshes(scene_doc.get("blocks", []))
+    build_block_meshes(scene_doc.get("blocks", []), terrain_objs)
     setup_lighting_and_camera()
     
     # Save blend file
