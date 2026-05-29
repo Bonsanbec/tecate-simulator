@@ -1,0 +1,25 @@
+{
+    "pano_id": "cjN6440oXIwSJ45NOMSNFw",
+    "latitude": 32.56396128967729,
+    "longitude": -116.6294569912926,
+    "date": "2009-09",
+    "road_name": "Coahuila",
+    "adjacent_links": [
+        {
+            "pano_id": "6NTGaVpqr_Fggx0XlVkKRw",
+            "road_name": "Coahuila",
+            "yaw_deg": 296.2061767578125
+        },
+        {
+            "pano_id": "wbVpNCNd6hpVLhMNmccNRA",
+            "road_name": "Coahuila",
+            "yaw_deg": 116.2222290039062
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "ePFo0cYNhbFqMrw0BUhahw",
+            "date": "2022-09"
+        }
+    ]
+}

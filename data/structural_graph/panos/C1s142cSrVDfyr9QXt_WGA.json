@@ -1,0 +1,34 @@
+{
+    "pano_id": "C1s142cSrVDfyr9QXt_WGA",
+    "latitude": 32.56422165303964,
+    "longitude": -116.6226548725502,
+    "date": "2009-09",
+    "road_name": "Gral. J. Herrera",
+    "adjacent_links": [
+        {
+            "pano_id": "TfUur31xfmMKvP-uYNjQTQ",
+            "road_name": "Amaya",
+            "yaw_deg": 256.8196716308594
+        },
+        {
+            "pano_id": "aaewCVB7mYseEC6X4AO26g",
+            "road_name": "Av. Juan Mart\u00ednez el Pipila",
+            "yaw_deg": 77.70238494873047
+        },
+        {
+            "pano_id": "focx1bFTzIdV9RRBXChFQw",
+            "road_name": "Gral. J. Herrera",
+            "yaw_deg": 23.78924751281738
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "fNgzvZNisBdgSnIEs8u3MA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "CCNFxVix7vdbU1EIOdwRpg",
+            "date": "2022-09"
+        }
+    ]
+}

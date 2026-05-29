@@ -1,0 +1,29 @@
+{
+    "pano_id": "l3fd_mVuSZRYbnXKFkZElw",
+    "latitude": 32.56418434956101,
+    "longitude": -116.6228826838097,
+    "date": "2009-09",
+    "road_name": "Amaya",
+    "adjacent_links": [
+        {
+            "pano_id": "T5PIeJQnt3QW7rgTBCcwjw",
+            "road_name": "Amaya",
+            "yaw_deg": 256.7990417480469
+        },
+        {
+            "pano_id": "TfUur31xfmMKvP-uYNjQTQ",
+            "road_name": "Amaya",
+            "yaw_deg": 76.7912826538086
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "nfQlruTljeZ97Wp4g___Qg",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "KiJmtdUNq3RYJfc5kY_8OA",
+            "date": "2025-08"
+        }
+    ]
+}

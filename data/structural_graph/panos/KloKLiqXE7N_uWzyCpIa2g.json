@@ -1,0 +1,39 @@
+{
+    "pano_id": "KloKLiqXE7N_uWzyCpIa2g",
+    "latitude": 32.57209158128072,
+    "longitude": -116.6363333986127,
+    "date": "2009-09",
+    "road_name": "Libertad",
+    "adjacent_links": [
+        {
+            "pano_id": "6tm3fDP82khC3krlnnU8yg",
+            "road_name": "Libertad",
+            "yaw_deg": 84.32540130615234
+        },
+        {
+            "pano_id": "cF8thTaqmorUIOdqy1ueXw",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 33.21398544311523
+        },
+        {
+            "pano_id": "jwHGdEuxO2ebsQDw_hjvdQ",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 131.7443695068359
+        },
+        {
+            "pano_id": "aA1SdzJcuSutcciPzHHEXw",
+            "road_name": "Libertad",
+            "yaw_deg": 264.6846008300781
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "pbmcnAZht7QExVZlH5tFhA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "ICPZyihq26Tmyy0N0haJMA",
+            "date": "2022-09"
+        }
+    ]
+}

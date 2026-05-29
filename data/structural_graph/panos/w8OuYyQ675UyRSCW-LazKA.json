@@ -1,0 +1,29 @@
+{
+    "pano_id": "w8OuYyQ675UyRSCW-LazKA",
+    "latitude": 32.56392353750053,
+    "longitude": -116.6297162852418,
+    "date": "2009-09",
+    "road_name": "C. Campeche",
+    "adjacent_links": [
+        {
+            "pano_id": "JolQxW-MqanlyEkZoSMVog",
+            "road_name": "C. Campeche",
+            "yaw_deg": 28.0505428314209
+        },
+        {
+            "pano_id": "Nz4naU1TZBJGV4Iqfb1NBA",
+            "road_name": "C. Campeche",
+            "yaw_deg": 208.0251007080078
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "LWA-Key_gsOOKxiVcZUVIw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "MARUURcqfPd0ydcJ_1H6xA",
+            "date": "2022-09"
+        }
+    ]
+}

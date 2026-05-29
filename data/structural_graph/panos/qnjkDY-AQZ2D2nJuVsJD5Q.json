@@ -1,0 +1,29 @@
+{
+    "pano_id": "qnjkDY-AQZ2D2nJuVsJD5Q",
+    "latitude": 32.57140697246356,
+    "longitude": -116.616885197148,
+    "date": "2009-09",
+    "road_name": "P.\u00ba de Las \u00c1guilas Este",
+    "adjacent_links": [
+        {
+            "pano_id": "QJX7HRDhqY2sD_Bh-lGaJw",
+            "road_name": "P.\u00ba de Las \u00c1guilas Este",
+            "yaw_deg": 155.3036804199219
+        },
+        {
+            "pano_id": "ZCtATi3PJirXMM1yWSxPGA",
+            "road_name": "P.\u00ba de Las \u00c1guilas Este",
+            "yaw_deg": 330.5538635253906
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "nyEQsVJGZXOGY1cdBGhrfA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "8c1lILseAXfljjxk_oFE5w",
+            "date": "2021-09"
+        }
+    ]
+}

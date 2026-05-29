@@ -1,0 +1,37 @@
+{
+    "pano_id": "aaewCVB7mYseEC6X4AO26g",
+    "latitude": 32.56423776135281,
+    "longitude": -116.6225202730569,
+    "date": "2009-09",
+    "road_name": "Amaya",
+    "adjacent_links": [
+        {
+            "pano_id": "0djaPebFF7GInzXSJq84cA",
+            "road_name": "Av. Juan Mart\u00ednez el Pipila",
+            "yaw_deg": 80.07237243652344
+        },
+        {
+            "pano_id": "C1s142cSrVDfyr9QXt_WGA",
+            "road_name": "Amaya",
+            "yaw_deg": 257.702392578125
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "qcxmEMSw6OnWugfHd1_dTg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "dAOPjAsk63IXnl5WseJ6gQ",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "W3RIYmU6LpQcHsfpsrktbQ",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "gUd5uusW-iTid9k7RRzgUw",
+            "date": "2016-02"
+        }
+    ]
+}

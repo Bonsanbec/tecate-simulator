@@ -1,0 +1,43 @@
+{
+    "pano_id": "IOgM3Z-WGcCPy1QHTgY3yA",
+    "latitude": 32.57353837786208,
+    "longitude": -116.6363699253974,
+    "date": "2009-09",
+    "road_name": "C. Eufracio Santana",
+    "adjacent_links": [
+        {
+            "pano_id": "HnUiy0CJ1yB8VE34xDVM3g",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 264.4884338378906
+        },
+        {
+            "pano_id": "4GpKodItS4A6d6CUQUGoSQ",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 328.9057922363281
+        },
+        {
+            "pano_id": "QC1ey0ZNc96fVwTFVBcvqA",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 198.5038757324219
+        },
+        {
+            "pano_id": "-NJ3H5IYyt-6aqxpcjo4Yw",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 84.61419677734375
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "41Hzl2lDxzxSXuKX9tNoWg",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "PHdhk6JuK_g7Onv4ihVbTA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "S4N1UVYPrPkaKgwl19a_lg",
+            "date": "2015-12"
+        }
+    ]
+}

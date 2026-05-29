@@ -1,0 +1,29 @@
+{
+    "pano_id": "e7JtvZ05dCeu_eReUojprw",
+    "latitude": 32.57031281714039,
+    "longitude": -116.6171807654433,
+    "date": "2009-09",
+    "road_name": "Chapultepec",
+    "adjacent_links": [
+        {
+            "pano_id": "W7f0jLC2ikEOU7VdevhCPQ",
+            "road_name": "Chapultepec",
+            "yaw_deg": 262.880859375
+        },
+        {
+            "pano_id": "XF-1-WxqNVqO7lUt4O0fwg",
+            "road_name": "Chapultepec",
+            "yaw_deg": 82.85244750976562
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "qoCffUpm9WJI1WQLCL9NUg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "YnMWGJQjAnH9jfZM-oPuYQ",
+            "date": "2022-09"
+        }
+    ]
+}
