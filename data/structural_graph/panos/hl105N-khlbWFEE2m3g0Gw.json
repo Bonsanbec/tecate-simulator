@@ -1,0 +1,29 @@
+{
+    "pano_id": "hl105N-khlbWFEE2m3g0Gw",
+    "latitude": 32.56723034969303,
+    "longitude": -116.6181324297545,
+    "date": "2009-09",
+    "road_name": "Nicol\u00e1s Bravo",
+    "adjacent_links": [
+        {
+            "pano_id": "l6RusyDpYu5kISDgkrI8og",
+            "road_name": "Cuenca D\u00edaz",
+            "yaw_deg": 356.9018859863281
+        },
+        {
+            "pano_id": "qP2DBb1FmZqiY0Re-YD0xw",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 180.0614776611328
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Ltl0GftDhjx3x6oZG37UVQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "xwAJlot6akh2uvDij66BEg",
+            "date": "2022-09"
+        }
+    ]
+}

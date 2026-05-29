@@ -1,0 +1,29 @@
+{
+    "pano_id": "LtY7HJ2ZCq8-iVzZiIo9qg",
+    "latitude": 32.57039402380001,
+    "longitude": -116.616619950143,
+    "date": "2009-09",
+    "road_name": "Chapultepec",
+    "adjacent_links": [
+        {
+            "pano_id": "5naprQnJSUPPJmQ2UlYymA",
+            "road_name": "P.\u00ba de Las \u00c1guilas Este",
+            "yaw_deg": 350.7011413574219
+        },
+        {
+            "pano_id": "XaUhkgICXnT_IakFWNH_gw",
+            "road_name": "Chapultepec",
+            "yaw_deg": 262.887451171875
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "A6a6O6-eg-SEe4xMUGjgnQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "7b_koNdwqpbQxgpecQX2-A",
+            "date": "2022-09"
+        }
+    ]
+}

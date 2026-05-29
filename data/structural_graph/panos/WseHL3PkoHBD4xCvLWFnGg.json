@@ -1,0 +1,37 @@
+{
+    "pano_id": "WseHL3PkoHBD4xCvLWFnGg",
+    "latitude": 32.56444815042816,
+    "longitude": -116.6210295963176,
+    "date": "2009-09",
+    "road_name": "Av. Juan Mart\u00ednez el Pipila",
+    "adjacent_links": [
+        {
+            "pano_id": "C3a4sOSC5ZYTFSexrBrjMw",
+            "road_name": "Av. Juan Mart\u00ednez el Pipila",
+            "yaw_deg": 260.6681823730469
+        },
+        {
+            "pano_id": "4oZZ4zIHvbJTKXb0CDE4nA",
+            "road_name": "Av. Juan Mart\u00ednez el Pipila",
+            "yaw_deg": 80.62572479248047
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "ep369c4b1CDM_Zm3qHUfmw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "WLzqv4C0CqXtLg2nC6x3hA",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "x7oBMyl8-JCrMmyMLdd5aw",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "pt1tAuZvzLj_mbOG17cs7w",
+            "date": "2017-07"
+        }
+    ]
+}

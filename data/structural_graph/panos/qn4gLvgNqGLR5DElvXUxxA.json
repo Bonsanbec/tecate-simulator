@@ -1,0 +1,37 @@
+{
+    "pano_id": "qn4gLvgNqGLR5DElvXUxxA",
+    "latitude": 32.56857482033491,
+    "longitude": -116.6358349783492,
+    "date": "2009-09",
+    "road_name": "Blvd. Defensores de Baja California",
+    "adjacent_links": [
+        {
+            "pano_id": "bgG6jf6Pd8jjetmlEmommg",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 354.4405517578125
+        },
+        {
+            "pano_id": "FWFO2itTAQDxhbBdmjRjKg",
+            "road_name": "Blvd. Defensores de Baja California",
+            "yaw_deg": 144.6028137207031
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "6jBYvGqYXkEpLAk5ruzRig",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "948qHY_uOuSzURMyf4L5JA",
+            "date": "2022-07"
+        },
+        {
+            "pano_id": "SHULlFnbqopNvV4UV-nw3w",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "MtVOQHN8RzJVILTZTs6yHg",
+            "date": "2017-07"
+        }
+    ]
+}
