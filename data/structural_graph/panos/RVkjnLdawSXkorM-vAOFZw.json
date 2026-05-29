@@ -1,0 +1,29 @@
+{
+    "pano_id": "RVkjnLdawSXkorM-vAOFZw",
+    "latitude": 32.56739301524728,
+    "longitude": -116.6319861292651,
+    "date": "2009-09",
+    "road_name": "Dr. Arturo Guerra",
+    "adjacent_links": [
+        {
+            "pano_id": "TAYmZBbTtYozy_e-7cvLnA",
+            "road_name": "Dr. Arturo Guerra",
+            "yaw_deg": 281.5397644042969
+        },
+        {
+            "pano_id": "wI_krCWswFczsZJma6AJOg",
+            "road_name": "Yucat\u00e1n",
+            "yaw_deg": 84.32836151123047
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "nxNte7PVxyVzoOejD_QoDg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "sWMgnEt5tXtzAdCdgh5LyA",
+            "date": "2022-09"
+        }
+    ]
+}

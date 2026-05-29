@@ -1,0 +1,41 @@
+{
+    "pano_id": "wJgVRjPtibGl260hXhTs7A",
+    "latitude": 32.57303247571647,
+    "longitude": -116.6347957595677,
+    "date": "2009-09",
+    "road_name": "Aldrete",
+    "adjacent_links": [
+        {
+            "pano_id": "iM04Mb3XdToHAUwe6t54_A",
+            "road_name": "Av. Benito Ju\u00e1rez",
+            "yaw_deg": 164.9249267578125
+        },
+        {
+            "pano_id": "UGxXJK-bBkcSRu9aoIttiw",
+            "road_name": "Aldrete",
+            "yaw_deg": 354.3328857421875
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "ElKb-MgWcCRBIrEs1c1yRg",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "JWrCvfPdau2dIHhFHfF9tA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "apWqGmRYq_VmXBz8vH9bqg",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "gjDfLn2zxorLHGyHikHCvw",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "hLKSU3W-YZkVc9bIE_QBIQ",
+            "date": "2015-12"
+        }
+    ]
+}
