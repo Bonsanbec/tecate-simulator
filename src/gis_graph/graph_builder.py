@@ -72,14 +72,6 @@ class TecateGraphBuilder:
                     edge_counter += 1
                     
         data = {"nodes": nodes, "edges": edges}
-        
-        # Save to cache
-        try:
-            with open(self.cache_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4)
-        except Exception as e:
-            print(f"[Warning] Could not write cache file: {e}")
-            
         return data
 
     def fetch_osm_tecate(self, bbox: tuple[float, float, float, float] = (32.521704, -116.681499, 32.580233, -116.510525)) -> dict:
