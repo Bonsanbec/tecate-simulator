@@ -57,57 +57,79 @@ def run_pipeline(args):
         # Crawl priority network centered on Parque Hidalgo within the bounding box
         discovered_nodes = scraper.crawl_priority_network(seed_lat, seed_lon, max_nodes=25)
         
-        # Fallback: if offline or lookup fails, load existing cache folders
-        if len(discovered_nodes) == 0:
-            print("[Warning] No active nodes crawled. Loading existing cached archives...")
-            if os.path.exists(cache_dir):
-                for d in os.listdir(cache_dir):
-                    meta_path = os.path.join(cache_dir, d, "metadata.json")
-                    if os.path.exists(meta_path):
-                        with open(meta_path, "r", encoding="utf-8") as f:
-                            discovered_nodes.append(json.load(f))
-                            
-        # Distribute locally cached panoramas back to our deterministic GIS camera graph stations
-        print("[Acquisition] Aligning cached/scraped dataset back to GIS graph virtual stations...")
-        for station in camera_stations:
-            best_pano = None
+        # Load ALL existing cached nodes under raw_scraped to utilize full 11GB footprint
+        cached_nodes = []
+        if os.path.exists(cache_dir):
+            for d in os.listdir(cache_dir):
+                meta_path = os.path.join(cache_dir, d, "metadata.json")
+                image_path = os.path.join(cache_dir, d, "panorama.png")
+                if os.path.exists(meta_path) and os.path.exists(image_path):
+                     try:
+                         with open(meta_path, "r", encoding="utf-8") as f:
+                             cached_nodes.append(json.load(f))
+                     except Exception:
+                         pass
+        print(f"[Acquisition] Loaded {len(cached_nodes)} nodes from local cache directory.")
+        
+        # Merge newly discovered nodes and cached nodes, ensuring uniqueness by pano_id
+        unique_nodes = {n["pano_id"]: n for n in cached_nodes}
+        for n in discovered_nodes:
+            unique_nodes[n["pano_id"]] = n
+        discovered_nodes = list(unique_nodes.values())
+        
+        print(f"[Acquisition] Total unique observational nodes for reconstruction: {len(discovered_nodes)}")
+        
+        # Distribute unique panoramas back to their closest camera station on the GIS graph
+        # (Observation-Driven Sparse Reconstruction: each panorama maps to at most one unique station, preventing duplicates)
+        assigned_stations = {}
+        for node in discovered_nodes:
+            node_x, node_y = gps_to_local(node["latitude"], node["longitude"])
+            best_station = None
             min_dist = float("inf")
             
-            for node in discovered_nodes:
-                node_x, node_y = gps_to_local(node["latitude"], node["longitude"])
+            for station in camera_stations:
                 dist = math.sqrt((station["x"] - node_x)**2 + (station["y"] - node_y)**2)
                 if dist < min_dist:
                     min_dist = dist
-                    best_pano = node
+                    best_station = station
                     
-            # If a local cached panorama is within a reasonable distance (40 meters), assign it
-            if best_pano and min_dist < 40.0:
-                image_path = os.path.join(cache_dir, best_pano["pano_id"], "panorama.png")
-                if os.path.exists(image_path):
-                    pano_img = Image.open(image_path)
+            if best_station and min_dist < 45.0:
+                s_id = best_station["station_id"]
+                if s_id not in assigned_stations or min_dist < assigned_stations[s_id][0]:
+                    assigned_stations[s_id] = (min_dist, node, best_station)
                     
-                    # Establish metadata temporal probability based on date
-                    captured_date = best_pano.get("date", "")
-                    init_prob = 0.05
-                    if captured_date:
+        print(f"[Acquisition] Aligned {len(assigned_stations)} unique observations directly to road graph stations.")
+        for s_id, (dist, node, station) in assigned_stations.items():
+            image_path = os.path.join(cache_dir, node["pano_id"], "panorama.png")
+            if os.path.exists(image_path):
+                pano_img = Image.open(image_path)
+                
+                # Establish metadata temporal probability based on date
+                captured_date = node.get("date", "")
+                init_prob = 0.05
+                if captured_date:
+                    try:
                         year = int(captured_date.split("-")[0])
                         if year == 2009 or year < 2010:
                             init_prob = 0.90
-                            
-                    pano_data = {
-                        "latitude": best_pano["latitude"],
-                        "longitude": best_pano["longitude"],
-                        "pano_id": best_pano["pano_id"],
-                        "date": captured_date,
-                        "temporal_probability": init_prob,
-                        "image": pano_img,
-                        "station_id": station["station_id"],
-                        "edge_id": station["edge_id"],
-                        "dist_along": station["dist_along"]
-                    }
-                    raw_panos.append(pano_data)
-                    pano_registry[station["station_id"]] = pano_data
-                    
+                    except Exception:
+                        pass
+                        
+                pano_data = {
+                    "latitude": node["latitude"],
+                    "longitude": node["longitude"],
+                    "pano_id": node["pano_id"],
+                    "date": captured_date,
+                    "temporal_probability": init_prob,
+                    "image": pano_img,
+                    "station_id": station["station_id"],
+                    "edge_id": station["edge_id"],
+                    "dist_along": station["dist_along"],
+                    "adjacent_links": node.get("adjacent_links", []),
+                    "timeline": node.get("timeline", [])
+                }
+                raw_panos.append(pano_data)
+                pano_registry[station["station_id"]] = pano_data
     else:
         # SIMULATED MODE
         print("[Acquisition] Running procedural generator and writing simulated data to local cache...")
@@ -127,6 +149,7 @@ def run_pipeline(args):
                     # Check year
                     init_prob = 0.90 if node["date"].startswith("2009") else 0.05
                     
+                     # Establish simulated pano metadata structure
                     pano_data = {
                         "latitude": station["latitude"],
                         "longitude": station["longitude"],
@@ -136,12 +159,14 @@ def run_pipeline(args):
                         "image": pano_img,
                         "station_id": station["station_id"],
                         "edge_id": station["edge_id"],
-                        "dist_along": station["dist_along"]
+                        "dist_along": station["dist_along"],
+                        "adjacent_links": node.get("adjacent_links", []),
+                        "timeline": node.get("timeline", [])
                     }
                     raw_panos.append(pano_data)
                     pano_registry[station["station_id"]] = pano_data
                     break
-                    
+                     
         print(f"[Acquisition] Local cache consumption complete. Loaded {len(raw_panos)} nodes exclusively from '{cache_dir}/'.")
 
     # 3. IMAGE ANCHORING & ALIGNMENT
@@ -302,6 +327,19 @@ def run_pipeline(args):
         blocks=blocks,
         block_texture_atlases=block_texture_atlases
     )
+    
+    # 9. GENERATE SPATIAL DIAGNOSTIC VISUALIZATION (coverage_map.png)
+    try:
+        from src.visualization.coverage import SpatialCoverageVisualizer
+        visualizer = SpatialCoverageVisualizer()
+        visualizer.draw_coverage_map(
+            G=G,
+            panoramas=filtered_panos,
+            blocks=blocks,
+            output_path="coverage_map.png"
+        )
+    except Exception as viz_err:
+        print(f"[Warning] Failed to generate spatial coverage map: {viz_err}")
     
     print("-" * 60)
     print("Pipeline Execution Complete!")
