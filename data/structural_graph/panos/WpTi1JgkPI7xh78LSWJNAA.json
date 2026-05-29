@@ -1,0 +1,29 @@
+{
+    "pano_id": "WpTi1JgkPI7xh78LSWJNAA",
+    "latitude": 32.56605067221522,
+    "longitude": -116.6280508427689,
+    "date": "2009-09",
+    "road_name": "Esteban Cant\u00fa",
+    "adjacent_links": [
+        {
+            "pano_id": "21gEgf27SGYelRbyyyXK7Q",
+            "road_name": "Esteban Cant\u00fa",
+            "yaw_deg": 174.1792602539062
+        },
+        {
+            "pano_id": "7ZjO7k0VyJD3sdYfdUunMg",
+            "road_name": "Esteban Cant\u00fa",
+            "yaw_deg": 354.1435241699219
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "gEOaTtcxmt1mThrRfQdy8w",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "PQDCgkkoMDXYCTPEulwKiw",
+            "date": "2022-10"
+        }
+    ]
+}

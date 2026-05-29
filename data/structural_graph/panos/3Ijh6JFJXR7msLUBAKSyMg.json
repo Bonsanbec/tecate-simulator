@@ -1,0 +1,29 @@
+{
+    "pano_id": "3Ijh6JFJXR7msLUBAKSyMg",
+    "latitude": 32.56565751719452,
+    "longitude": -116.6269738902981,
+    "date": "2009-09",
+    "road_name": "C. Del Rosario",
+    "adjacent_links": [
+        {
+            "pano_id": "Pq38tKvTU3PCMMk5N38FNw",
+            "road_name": "C. Del Rosario",
+            "yaw_deg": 4.047160148620605
+        },
+        {
+            "pano_id": "iFQWfaNk-tkPkbflBqckVQ",
+            "road_name": "",
+            "yaw_deg": 184.5207061767578
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "HsYNxQOYd6J_tvni-OE_dQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "VWEfR82UuDUAh2rq0e1xqQ",
+            "date": "2022-10"
+        }
+    ]
+}

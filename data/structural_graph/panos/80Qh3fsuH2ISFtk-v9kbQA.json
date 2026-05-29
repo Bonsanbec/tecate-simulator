@@ -1,0 +1,43 @@
+{
+    "pano_id": "80Qh3fsuH2ISFtk-v9kbQA",
+    "latitude": 32.56897043369195,
+    "longitude": -116.6206936348632,
+    "date": "2009-09",
+    "road_name": "Lerdo Gonz\u00e1lez",
+    "adjacent_links": [
+        {
+            "pano_id": "S8OCP2z6wxOvkYQCNzxPuA",
+            "road_name": "Vicente Guerrero",
+            "yaw_deg": 263.6883544921875
+        },
+        {
+            "pano_id": "wWTvs3auEEk8O41sdryAjw",
+            "road_name": "Vicente Guerrero",
+            "yaw_deg": 84.02748107910156
+        },
+        {
+            "pano_id": "Ckj2ofjdeEIFMtVMasTUNA",
+            "road_name": "Lerdo Gonz\u00e1lez",
+            "yaw_deg": 338.5534057617188
+        },
+        {
+            "pano_id": "ytnYt-QzgH1PNELgRihF6A",
+            "road_name": "Lerdo Gonz\u00e1lez",
+            "yaw_deg": 202.7803955078125
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "bPf0RZcF5MB_UVdPW3qBjw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "1osimfZrNQE1XQPVVnVeqQ",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "oisS-g3_cQNDI39JD-HzGA",
+            "date": "2017-10"
+        }
+    ]
+}

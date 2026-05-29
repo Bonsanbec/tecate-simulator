@@ -1,0 +1,29 @@
+{
+    "pano_id": "ytnYt-QzgH1PNELgRihF6A",
+    "latitude": 32.56880713499381,
+    "longitude": -116.6208196879472,
+    "date": "2009-09",
+    "road_name": "Vicente Guerrero",
+    "adjacent_links": [
+        {
+            "pano_id": "80Qh3fsuH2ISFtk-v9kbQA",
+            "road_name": "Vicente Guerrero",
+            "yaw_deg": 22.78039741516113
+        },
+        {
+            "pano_id": "QTXlfgMoHC3lKGf8nKUJXA",
+            "road_name": "Lerdo Gonz\u00e1lez",
+            "yaw_deg": 182.1754302978516
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "X78QIV6UdYfQPFgoG-qnQA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "RLTKD6RjZcDLaTNUi1UcVA",
+            "date": "2022-09"
+        }
+    ]
+}

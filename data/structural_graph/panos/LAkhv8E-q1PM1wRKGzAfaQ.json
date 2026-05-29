@@ -1,0 +1,29 @@
+{
+    "pano_id": "LAkhv8E-q1PM1wRKGzAfaQ",
+    "latitude": 32.56867055651019,
+    "longitude": -116.6208113203999,
+    "date": "2009-09",
+    "road_name": "Lerdo Gonz\u00e1lez",
+    "adjacent_links": [
+        {
+            "pano_id": "QTXlfgMoHC3lKGf8nKUJXA",
+            "road_name": "Lerdo Gonz\u00e1lez",
+            "yaw_deg": 2.167324304580688
+        },
+        {
+            "pano_id": "t0saEnbWCz-Z1dFn3gjJYQ",
+            "road_name": "Lerdo Gonz\u00e1lez",
+            "yaw_deg": 179.4825744628906
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "roI6wZXwuisSCQ8kimNVnQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "no2t61gUPqX8TORyaqLh-A",
+            "date": "2022-09"
+        }
+    ]
+}

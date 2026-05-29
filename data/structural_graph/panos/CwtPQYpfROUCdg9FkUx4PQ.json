@@ -1,0 +1,43 @@
+{
+    "pano_id": "CwtPQYpfROUCdg9FkUx4PQ",
+    "latitude": 32.56771055055197,
+    "longitude": -116.6214626385611,
+    "date": "2009-09",
+    "road_name": "Guadalupe Victoria",
+    "adjacent_links": [
+        {
+            "pano_id": "aTp0Di9YiF1JBosnqiUH9Q",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 94.16031646728516
+        },
+        {
+            "pano_id": "6m8I0MS312T-hWrv1jjXNQ",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 272.4625244140625
+        },
+        {
+            "pano_id": "2aav0pkQafMoyfcpga4oCQ",
+            "road_name": "Guadalupe Victoria",
+            "yaw_deg": 176.9312896728516
+        },
+        {
+            "pano_id": "KTOSv2KiVQUzcoXv9yvSTg",
+            "road_name": "Guadalupe Victoria",
+            "yaw_deg": 24.93144798278809
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "qrPDpPxkC_53XsX82yBkjQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "K46fbOa2mZ0Z53D4R92bxw",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "HsEP4ca2va1ZtkFHTEN7jA",
+            "date": "2016-02"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "pano_id": "mNCMNcF3K8PDhHxwJn-c6w",
+    "latitude": 32.56804591168937,
+    "longitude": -116.6214358264952,
+    "date": "2009-09",
+    "road_name": "Guadalupe Victoria",
+    "adjacent_links": [
+        {
+            "pano_id": "tBiF17Uvq9haqc7bYhazgw",
+            "road_name": "Guadalupe Victoria",
+            "yaw_deg": 182.3874206542969
+        },
+        {
+            "pano_id": "qi_LT9wwW1TAyOxsr29MAw",
+            "road_name": "Guadalupe Victoria",
+            "yaw_deg": 2.457427978515625
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "LTVNaB2ZOPCkSO_F44x_gg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "1TZZzniJVSjl4qTJ2URe8A",
+            "date": "2022-09"
+        }
+    ]
+}

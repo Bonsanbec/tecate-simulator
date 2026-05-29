@@ -1,0 +1,34 @@
+{
+    "pano_id": "sM4gThWIRZqLq207vgurfA",
+    "latitude": 32.56663458799982,
+    "longitude": -116.6223487845493,
+    "date": "2009-09",
+    "road_name": "Calle Gral. Manuel Gonz\u00e1lez Pedroza",
+    "adjacent_links": [
+        {
+            "pano_id": "gQ72DjvYFSJTpy09VK9kNA",
+            "road_name": "C. Gral. Mariano Arista",
+            "yaw_deg": 267.7077331542969
+        },
+        {
+            "pano_id": "NpYgXRYR7o4EUI6XkvwAxQ",
+            "road_name": "C. Gral. Mariano Arista",
+            "yaw_deg": 87.61685180664062
+        },
+        {
+            "pano_id": "RtYC5t6EwojH11aQY0CLbw",
+            "road_name": "Calle Gral. Manuel Gonz\u00e1lez Pedroza",
+            "yaw_deg": 145.1464080810547
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "HDTfYbEZgciW1hzwDHQWfA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "iVsuYOoi6LHP3OR5LjZr5A",
+            "date": "2022-09"
+        }
+    ]
+}
