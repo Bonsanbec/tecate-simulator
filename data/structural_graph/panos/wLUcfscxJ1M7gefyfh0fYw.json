@@ -1,0 +1,24 @@
+{
+    "pano_id": "wLUcfscxJ1M7gefyfh0fYw",
+    "latitude": 32.57322958445374,
+    "longitude": -116.6206349720193,
+    "date": "2009-09",
+    "road_name": "R\u00edo Conchas",
+    "adjacent_links": [
+        {
+            "pano_id": "lobHrqWy8gV8rfGHNt6G3A",
+            "road_name": "R\u00edo Conchas",
+            "yaw_deg": 175.4710845947266
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "tUAnmRF6bUGrT_foaYQ-sw",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "RXVpykzh2SIBppvJBp4Sng",
+            "date": "2025-08"
+        }
+    ]
+}
