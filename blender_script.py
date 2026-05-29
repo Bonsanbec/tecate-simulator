@@ -329,6 +329,17 @@ def main():
     build_block_meshes(scene_doc.get("blocks", []), terrain_objs)
     setup_lighting_and_camera()
     
+    # 3. Clean up and remove terrain objects to keep the scene as a pure standalone urban overlay layer
+    if terrain_objs:
+        print("[Blender] Purging terrain model mesh objects to contain ONLY reconstructed urban structures...")
+        bpy.ops.object.select_all(action='DESELECT')
+        for obj in terrain_objs:
+            try:
+                obj.select_set(True)
+            except Exception:
+                pass
+        bpy.ops.object.delete()
+        
     # Save blend file
     save_path = "tecate_reconstruction.blend"
     bpy.ops.wm.save_as_mainfile(filepath=save_path)

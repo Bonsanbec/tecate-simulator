@@ -1,9 +1,7 @@
 import argparse
-import sys
 import os
 import math
 import json
-import numpy as np
 from PIL import Image
 
 from src.core_io.coords import gps_to_local, local_to_gps
@@ -13,10 +11,6 @@ from src.data_acquisition.sv_procedural import ProceduralStreetViewGenerator
 from src.gis_graph.graph_builder import TecateGraphBuilder
 from src.image_alignment.aligner import ImageAligner
 from src.temporal_filter.classifier import TemporalVisualClassifier, TemporalMRFSolver
-from src.sfm.sfm_lite import SfMLite
-from src.block_modeling.block_builder import BlockBuilder
-from src.texturing.texture_generator import TextureGenerator
-from src.blender_export.exporter import BlenderSceneExporter
 
 def run_pipeline(args):
     print("=" * 60)
@@ -218,124 +212,15 @@ def run_pipeline(args):
             accepted_registry[s_id] = pano_registry[s_id]
             
     print(f"[Temporal Filter] Enforced strict 2009 constraint. Filtered out non-2009. Accepted: {len(accepted_registry)} / {len(aligned_panos)} panoramas.")
-
-    # 5. OpenCV STRUCTURE-FROM-MOTION LITE
-    print("[SfM] Commencing classical vision Structure-from-Motion pipeline...")
-    sfm = SfMLite(feature_type=args.feature_type)
-    global_point_cloud = []
     
-    # Gather pairs of adjacent cameras along the same edges
-    # Sort aligned panoramas along edges
-    edge_panos = {}
-    for fp in filtered_panos:
-        if not fp["accepted"]:
-            continue
-        edge_id = fp["edge_id"]
-        if edge_id not in edge_panos:
-            edge_panos[edge_id] = []
-        edge_panos[edge_id].append(fp)
-        
-    # Run SfM on adjacent frames along each street segment
-    for edge_id, panos_list in edge_panos.items():
-        panos_list.sort(key=lambda x: x["dist_along"])
-        
-        if len(panos_list) < 2:
-            continue
-            
-        print(f" -> Reconstructing corridor {edge_id} ({len(panos_list)} stations)...")
-        for i in range(len(panos_list) - 1):
-            p1_meta = panos_list[i]
-            p2_meta = panos_list[i+1]
-            
-            s1_id = p1_meta["station_id"]
-            s2_id = p2_meta["station_id"]
-            
-            # Gathers Left (-90 deg) and Right (+90 deg) viewpoint images for stereo-triangulation
-            # In a 2560x640 equirectangular image, the left quadrant is pixels [1920, 2560]
-            # and the right quadrant is pixels [640, 1280]
-            img1 = accepted_registry[s1_id]["image"]
-            img2 = accepted_registry[s2_id]["image"]
-            
-            for side in ["left", "right"]:
-                heading_offset = -90.0 if side == "left" else 90.0
-                
-                # Render perspective viewpoints from the panorama quadrant
-                # We crop the quadrant as perspective images of size 640x640
-                if side == "left":
-                    quad1 = img1.crop((1920, 0, 2560, 640))
-                    quad2 = img2.crop((1920, 0, 2560, 640))
-                else:
-                    quad1 = img1.crop((640, 0, 1280, 640))
-                    quad2 = img2.crop((640, 0, 1280, 640))
-                    
-                # Define global camera poses for coordinate mapping
-                pose1 = {
-                    "x": p1_meta["graph_x"],
-                    "y": p1_meta["graph_y"],
-                    "heading": p1_meta["corrected_road_heading"] + heading_offset
-                }
-                pose2 = {
-                    "x": p2_meta["graph_x"],
-                    "y": p2_meta["graph_y"],
-                    "heading": p2_meta["corrected_road_heading"] + heading_offset
-                }
-                
-                # Recover relative camera motion and triangulate 3D points
-                pts3D, colors, matches = sfm.reconstruct_pair(quad1, quad2, pose1, pose2)
-                
-                if len(pts3D) > 0:
-                    for pt, col in zip(pts3D, colors):
-                        global_point_cloud.append({
-                            "coord": [float(pt[0]), float(pt[1]), float(pt[2])],
-                            "color": [float(c) for c in col]
-                        })
-                        
-    print(f"[SfM] Sparse structure-from-motion complete. Triangulated {len(global_point_cloud)} 3D points.")
-
-    # 6. URBAN BLOCK (MANZANA) SEGMENTATION
-    print("[Block Modeling] Extracting planar urban block footprints...")
-    block_builder = BlockBuilder(G)
-    blocks = block_builder.segment_blocks()
-    
-    # Distribute sparse point clouds and virtual cameras to corresponding urban blocks
-    blocks = block_builder.aggregate_points_and_cameras(
-        blocks=blocks,
-        camera_stations=camera_stations,
-        point_cloud=np.array([pt["coord"] for pt in global_point_cloud]) if len(global_point_cloud) > 0 else np.zeros((0, 3)),
-        point_colors=np.array([pt["color"] for pt in global_point_cloud]) if len(global_point_cloud) > 0 else np.zeros((0, 3))
-    )
-
-    # 7. FACADE TEXTURE RECONSTRUCTION (ATLAS ASSEMBLY)
-    print("[Texturing] Running facade texture projection and atlas generation...")
-    texturer = TextureGenerator(export_dir="export/textures")
-    block_texture_atlases = []
-    
-    for bl in blocks:
-        atlas_data = texturer.process_block_textures(bl, accepted_registry)
-        block_texture_atlases.append(atlas_data)
-        
-    print(f"[Texturing] Assembled {len(block_texture_atlases)} block facade texture atlases from historical imagery.")
-
-    # 8. SCENE EXPORT (INTERMEDIATE REPRESENTATION)
-    print("[Export] Packaging output dataset into Blender structured JSON...")
-    exporter = BlenderSceneExporter(export_path=args.output)
-    export_filepath = exporter.export_scene(
-        G=G,
-        camera_stations=camera_stations,
-        aligned_panos=filtered_panos,
-        point_cloud=global_point_cloud,
-        blocks=blocks,
-        block_texture_atlases=block_texture_atlases
-    )
-    
-    # 9. GENERATE SPATIAL DIAGNOSTIC VISUALIZATION (coverage_map.png)
+    # LAST. GENERATE SPATIAL DIAGNOSTIC VISUALIZATION (coverage_map.png)
     try:
         from src.visualization.coverage import SpatialCoverageVisualizer
         visualizer = SpatialCoverageVisualizer()
         visualizer.draw_coverage_map(
             G=G,
             panoramas=filtered_panos,
-            blocks=blocks,
+            blocks=[],
             output_path="coverage_map.png"
         )
     except Exception as viz_err:
@@ -343,7 +228,7 @@ def run_pipeline(args):
     
     print("-" * 60)
     print("Pipeline Execution Complete!")
-    print(f"Structured JSON output saved to: {export_filepath}")
+    # print(f"Structured JSON output saved to: {export_filepath}")
     print("Texture Atlas PNGs generated in: export/textures/")
     print("Proceed to run the Blender import python script inside Blender.")
     print("=" * 60)

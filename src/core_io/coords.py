@@ -1,8 +1,8 @@
 import math
 
-# Reference center point for Tecate: Miguel Hidalgo Park (Downtown Tecate)
-TECATE_LAT_CENTER = 32.5678
-TECATE_LON_CENTER = -116.6261
+# Reference center point for Tecate: Parque Hidalgo
+TECATE_LAT_CENTER = 32.573229
+TECATE_LON_CENTER = -116.626536
 EARTH_RADIUS = 6378137.0  # in meters
 
 def gps_to_local(lat: float, lon: float) -> tuple[float, float]:
