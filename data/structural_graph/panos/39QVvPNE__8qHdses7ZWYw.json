@@ -1,0 +1,33 @@
+{
+    "pano_id": "39QVvPNE__8qHdses7ZWYw",
+    "latitude": 32.57445524061788,
+    "longitude": -116.6316997571597,
+    "date": "2009-09",
+    "road_name": "Pdte. Adolfo de La Huerta",
+    "adjacent_links": [
+        {
+            "pano_id": "yi2TD8rcEKBZ9YQT4K2oAA",
+            "road_name": "Pdte. Adolfo de La Huerta",
+            "yaw_deg": 175.2528991699219
+        },
+        {
+            "pano_id": "ycbUcWssZZTSpDJm3CDg4w",
+            "road_name": "Pdte. Adolfo de La Huerta",
+            "yaw_deg": 355.2745361328125
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "2xewTMAwhLR2quSKu7DXIw",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "bt5OOTpJd5osOKAZ6bi_WQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "v_-32zEa7OQj7M7KJ8UkCQ",
+            "date": "2022-09"
+        }
+    ]
+}

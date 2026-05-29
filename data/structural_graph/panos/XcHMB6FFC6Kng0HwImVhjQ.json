@@ -1,0 +1,37 @@
+{
+    "pano_id": "XcHMB6FFC6Kng0HwImVhjQ",
+    "latitude": 32.57499210086868,
+    "longitude": -116.6207026322305,
+    "date": "2009-09",
+    "road_name": "R\u00edo Lerma",
+    "adjacent_links": [
+        {
+            "pano_id": "t9Q4BnQaeNxohp8wUx52Vw",
+            "road_name": "R\u00edo Lerma",
+            "yaw_deg": 317.1287841796875
+        },
+        {
+            "pano_id": "4eBtEIin5DBLKwet4Nd6Bg",
+            "road_name": "R\u00edo Lerma",
+            "yaw_deg": 136.3644256591797
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "P9j-8aROi9y4m7aPU5auIA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "yMz6NG-jmzSIjbk85iRPJg",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "OU38Y8Ag-juFsee-G_9rYg",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "zx-pnBiaIM0AqZKoxJKDrg",
+            "date": "2017-07"
+        }
+    ]
+}

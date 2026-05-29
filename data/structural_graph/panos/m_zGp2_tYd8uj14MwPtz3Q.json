@@ -1,0 +1,33 @@
+{
+    "pano_id": "m_zGp2_tYd8uj14MwPtz3Q",
+    "latitude": 32.57529956672558,
+    "longitude": -116.6318595425828,
+    "date": "2009-09",
+    "road_name": "Pdte. Adolfo de La Huerta",
+    "adjacent_links": [
+        {
+            "pano_id": "PJBMEY2GYYlfkPAeqw-g3g",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 266.3684692382812
+        },
+        {
+            "pano_id": "5J0_K1WGnQvp4wAW1tuVPg",
+            "road_name": "Pdte. Adolfo de La Huerta",
+            "yaw_deg": 97.54714965820312
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "terGbsIvKselppFkCRSmpw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "246NUp3h3ZPA-Er21mkjDw",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "xc45bsU0EUM1VRcyivLiTA",
+            "date": "2015-12"
+        }
+    ]
+}
