@@ -1,0 +1,29 @@
+{
+    "pano_id": "1JHX8xP5OxIpUQTnIhA99Q",
+    "latitude": 32.57123050161406,
+    "longitude": -116.6201761056922,
+    "date": "2009-09",
+    "road_name": "C. Tl\u00e1loc",
+    "adjacent_links": [
+        {
+            "pano_id": "GKq7a5JC3YK0wWEKdpblAQ",
+            "road_name": "C. Tl\u00e1loc",
+            "yaw_deg": 191.6343536376953
+        },
+        {
+            "pano_id": "6UFrOUSUj-gzd6v_bUCvBQ",
+            "road_name": "C. Tl\u00e1loc",
+            "yaw_deg": 11.64394664764404
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "uStrIoWSnx4WZ2p9TeoAaA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "mVCFJU2rOsdqmF86ZsiqJQ",
+            "date": "2017-07"
+        }
+    ]
+}

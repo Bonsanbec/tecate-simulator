@@ -1,0 +1,50 @@
+{
+    "pano_id": "_jw2IyFCw1exRSc0IiSTFA",
+    "latitude": 32.5673030513763,
+    "longitude": -116.6252544445345,
+    "date": "2009-09",
+    "road_name": "Blvrd Universidad",
+    "adjacent_links": [
+        {
+            "pano_id": "KHncyimQuSTIAhYOsUgRrQ",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 356.9287414550781
+        },
+        {
+            "pano_id": "AvqAkvqOLCC81lqepNWU7A",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 179.0245361328125
+        },
+        {
+            "pano_id": "EcHFfofQ5safQ9vfpu1H3g",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 306.2148742675781
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "e0BqlwAf6wQ8I9WoPsGPyg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "2NlQyMl2qA_jodz4R3rvzg",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "UJuS3Wbg1vZhBmgN1hdhOQ",
+            "date": "2022-07"
+        },
+        {
+            "pano_id": "AMgPcwdCTvcwVKXzBVCxZw",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "t_Qj0IbvoiC80SgipZTZrA",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "8AfC0IZ9klQn5Qu4rbAinA",
+            "date": "2009-02"
+        }
+    ]
+}

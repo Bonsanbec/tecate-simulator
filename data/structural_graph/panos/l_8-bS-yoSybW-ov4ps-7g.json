@@ -1,0 +1,29 @@
+{
+    "pano_id": "l_8-bS-yoSybW-ov4ps-7g",
+    "latitude": 32.56662326107314,
+    "longitude": -116.6273074132192,
+    "date": "2009-09",
+    "road_name": "5 de Mayo",
+    "adjacent_links": [
+        {
+            "pano_id": "rJbm74LtmjVx9V7gdih_Mw",
+            "road_name": "5 de Mayo",
+            "yaw_deg": 84.29019165039062
+        },
+        {
+            "pano_id": "Z-YlmDVVuZBiayQHeYHY-Q",
+            "road_name": "5 de Mayo",
+            "yaw_deg": 264.21923828125
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "N-_v_v1LZmAsSravQIJlOg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "iKeL-9oE8bn7Csbo0AFQsQ",
+            "date": "2022-10"
+        }
+    ]
+}

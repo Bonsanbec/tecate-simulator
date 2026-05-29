@@ -1,0 +1,34 @@
+{
+    "pano_id": "V8npxbBEf4uVqueedrmmJA",
+    "latitude": 32.5666276819428,
+    "longitude": -116.6269477986542,
+    "date": "2009-09",
+    "road_name": "C. Del Rosario",
+    "adjacent_links": [
+        {
+            "pano_id": "TdCxZjmnR3GeYvYFobImwA",
+            "road_name": "5 de Mayo",
+            "yaw_deg": 84.15100860595703
+        },
+        {
+            "pano_id": "ZFNpZ96QMiNVtAxuDvBrCA",
+            "road_name": "5 de Mayo",
+            "yaw_deg": 264.2343444824219
+        },
+        {
+            "pano_id": "ZfCOjZVkHz3OLFwk0Yn03Q",
+            "road_name": "C. Del Rosario",
+            "yaw_deg": 203.5404815673828
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "EEQvoPv7ebab09_jSneBWQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "COpR_PNvPlqcm4UhXlkb4w",
+            "date": "2022-10"
+        }
+    ]
+}

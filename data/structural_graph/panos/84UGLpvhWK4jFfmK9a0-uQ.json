@@ -1,0 +1,29 @@
+{
+    "pano_id": "84UGLpvhWK4jFfmK9a0-uQ",
+    "latitude": 32.56760888502144,
+    "longitude": -116.6231833727282,
+    "date": "2009-09",
+    "road_name": "Nicol\u00e1s Bravo",
+    "adjacent_links": [
+        {
+            "pano_id": "tivlkhl4_IVuuo535KtomQ",
+            "road_name": "Gral. J. Herrera",
+            "yaw_deg": 170.0994567871094
+        },
+        {
+            "pano_id": "g0ZKuk0aM4l0U57EcZREWQ",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 323.8486938476562
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "qCMPDKyV2nkTkEPvW9mgkA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "HOgXplz7U408CT_0o0b6fw",
+            "date": "2022-09"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "pano_id": "AkVZwdSLJnX9e5VlAiUcxg",
+    "latitude": 32.56753021020885,
+    "longitude": -116.6238685137012,
+    "date": "2009-09",
+    "road_name": "Nicol\u00e1s Bravo",
+    "adjacent_links": [
+        {
+            "pano_id": "NYZ6up2vxg0fQSLfB0Q7XQ",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 353.3656616210938
+        },
+        {
+            "pano_id": "Brd5OuiQ5XaxmdkyETUtZQ",
+            "road_name": "Gral. Porfirio D\u00edaz",
+            "yaw_deg": 173.3375396728516
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "HAz-dyifJ6_9DD6fUAMx7w",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "QIk7uuCN4eiCwxVYbVF_Vw",
+            "date": "2022-10"
+        }
+    ]
+}

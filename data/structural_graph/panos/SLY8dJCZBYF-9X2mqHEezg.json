@@ -1,0 +1,29 @@
+{
+    "pano_id": "SLY8dJCZBYF-9X2mqHEezg",
+    "latitude": 32.56874882270888,
+    "longitude": -116.6225688584447,
+    "date": "2009-09",
+    "road_name": "Gral. Emilio Portes Gil",
+    "adjacent_links": [
+        {
+            "pano_id": "NNnwhU3s9HoXprsvnozmcA",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 175.6949768066406
+        },
+        {
+            "pano_id": "MGAYK12r0-vwKnQFzuDiDw",
+            "road_name": "Vicente Guerrero",
+            "yaw_deg": 26.30353355407715
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Ib_Cvytk2xRNtV380ZMn5Q",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "lP1DndTIV8njyJpjG6hxnw",
+            "date": "2022-09"
+        }
+    ]
+}
