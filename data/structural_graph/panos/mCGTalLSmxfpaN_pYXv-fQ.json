@@ -1,0 +1,38 @@
+{
+    "pano_id": "mCGTalLSmxfpaN_pYXv-fQ",
+    "latitude": 32.56744914193945,
+    "longitude": -116.6199823918443,
+    "date": "2009-09",
+    "road_name": "Gral. S\u00e1nchez Taboada",
+    "adjacent_links": [
+        {
+            "pano_id": "7hH5cMSbTwPm53E2jYeLDw",
+            "road_name": "Gral. S\u00e1nchez Taboada",
+            "yaw_deg": 357.154541015625
+        },
+        {
+            "pano_id": "Aaytq-oiydKJGjRy1xq5yg",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 311.546630859375
+        },
+        {
+            "pano_id": "D7NlNMS8FgTnZwrmANfyiw",
+            "road_name": "Gral. S\u00e1nchez Taboada",
+            "yaw_deg": 177.3984222412109
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "9sGG7rLcnarJrCrzr9Gp8w",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "f07gv-0huy_cKnvmrrf5hQ",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "9LUQoJ_Q5qleP0VSQJojmA",
+            "date": "2016-02"
+        }
+    ]
+}

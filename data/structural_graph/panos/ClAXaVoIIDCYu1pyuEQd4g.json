@@ -1,0 +1,29 @@
+{
+    "pano_id": "ClAXaVoIIDCYu1pyuEQd4g",
+    "latitude": 32.56855491938905,
+    "longitude": -116.6190566479045,
+    "date": "2009-09",
+    "road_name": "Gral. Abraham A.",
+    "adjacent_links": [
+        {
+            "pano_id": "UAZ6WNxzqXohYbMVvxo9fg",
+            "road_name": "Gral. Abraham A.",
+            "yaw_deg": 359.8222961425781
+        },
+        {
+            "pano_id": "LDrY4vX7Mea9eaqGVAHEYw",
+            "road_name": "Gral. Abraham A.",
+            "yaw_deg": 179.8057556152344
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "hR-n8zFpOPZtq8DL2HUgfQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "o6MdgF5soJbwRaNoOC0uBw",
+            "date": "2022-09"
+        }
+    ]
+}

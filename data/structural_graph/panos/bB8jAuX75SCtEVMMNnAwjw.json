@@ -1,0 +1,29 @@
+{
+    "pano_id": "bB8jAuX75SCtEVMMNnAwjw",
+    "latitude": 32.57087709909599,
+    "longitude": -116.6178746521161,
+    "date": "2009-09",
+    "road_name": "C. B",
+    "adjacent_links": [
+        {
+            "pano_id": "DCtczNk2HyHVLsvt0Hw2wA",
+            "road_name": "Tenoch",
+            "yaw_deg": 197.8887786865234
+        },
+        {
+            "pano_id": "GSNigqernqAWM9P0G44i0Q",
+            "road_name": "C. B",
+            "yaw_deg": 12.37418270111084
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "yJdy8i8o63ndeHaG2NjrJg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "PFXeEcdMxtysmFWZAx1nFA",
+            "date": "2022-09"
+        }
+    ]
+}
