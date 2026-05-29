@@ -1,0 +1,41 @@
+{
+    "pano_id": "YGZaQNSB0KU6_kSRL76Bsw",
+    "latitude": 32.56541075337525,
+    "longitude": -116.6289064630087,
+    "date": "2009-09",
+    "road_name": "Av Nuevo Le\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "yH5Ky3VtQ_9xDUzjEYvTHA",
+            "road_name": "Av Nuevo Le\u00f3n",
+            "yaw_deg": 298.7559509277344
+        },
+        {
+            "pano_id": "RsoMIkrrj6S8xR8yC8PnmQ",
+            "road_name": "C. Campeche",
+            "yaw_deg": 84.3354721069336
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "cP6jnmyjbo8q_LNmfxbjwQ",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "HKWlBUCZmSRVb6xa8TP_4Q",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "gtE0udXt1cnpoG8T8GHnSw",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "l125y1zXSLxJH9I84l4UPg",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "n2_UyLaqkYPSlfK8BZ8IVA",
+            "date": "2021-09"
+        }
+    ]
+}

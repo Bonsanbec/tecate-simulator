@@ -1,0 +1,24 @@
+{
+    "pano_id": "6OboL2dkTlAbJxiT2xPHNA",
+    "latitude": 32.56492502261117,
+    "longitude": -116.6262517804502,
+    "date": "2009-09",
+    "road_name": "Calle Jos\u00e9 Mar\u00eda Morelos",
+    "adjacent_links": [
+        {
+            "pano_id": "YLzJ7yBDsJ9gH0pX5Xbw_A",
+            "road_name": "Calle Jos\u00e9 Mar\u00eda Morelos",
+            "yaw_deg": 5.872549533843994
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Ia5yzwJh25TBZLWXwREpPQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "eGlSMHfvHMP3FlNLyK3iLQ",
+            "date": "2022-10"
+        }
+    ]
+}

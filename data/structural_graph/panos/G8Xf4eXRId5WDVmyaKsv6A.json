@@ -1,0 +1,34 @@
+{
+    "pano_id": "G8Xf4eXRId5WDVmyaKsv6A",
+    "latitude": 32.57160784769638,
+    "longitude": -116.6181646406918,
+    "date": "2009-09",
+    "road_name": "Teocali",
+    "adjacent_links": [
+        {
+            "pano_id": "ay4TskzgE49mhsW7VPBZOg",
+            "road_name": "R\u00edo Tecate",
+            "yaw_deg": 79.97740173339844
+        },
+        {
+            "pano_id": "nlbmyBA1HT2iTuZ3I_wT2g",
+            "road_name": "R\u00edo Tecate",
+            "yaw_deg": 261.3025817871094
+        },
+        {
+            "pano_id": "q0tTq_Oumt4BIZ874GERMA",
+            "road_name": "Teocali",
+            "yaw_deg": 205.5762634277344
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "sMZIJKUkFkQjU1jfNZJzMA",
+            "date": "2025-09"
+        },
+        {
+            "pano_id": "vV3HqreCisakveEud69d0w",
+            "date": "2021-09"
+        }
+    ]
+}

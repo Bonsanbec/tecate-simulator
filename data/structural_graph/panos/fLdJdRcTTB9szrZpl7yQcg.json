@@ -1,0 +1,25 @@
+{
+    "pano_id": "fLdJdRcTTB9szrZpl7yQcg",
+    "latitude": 32.56674494874558,
+    "longitude": -116.6215390259393,
+    "date": "2009-09",
+    "road_name": "Guadalupe Victoria",
+    "adjacent_links": [
+        {
+            "pano_id": "ah_GkJ7RkTwbux2TS852Mg",
+            "road_name": "C. Gral. Mariano Arista",
+            "yaw_deg": 237.7828216552734
+        },
+        {
+            "pano_id": "G9BNvUXilGfE81WK_pzkbg",
+            "road_name": "Guadalupe Victoria",
+            "yaw_deg": 4.764614582061768
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "BmxGYVEXABtrytJxUe6q5Q",
+            "date": "2025-08"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "pano_id": "e5S6b5t2ZYo_HLkNjRTsNw",
+    "latitude": 32.56740214914115,
+    "longitude": -116.6207290844885,
+    "date": "2009-09",
+    "road_name": "C. Sebasti\u00e1n Lerdo de Tejada",
+    "adjacent_links": [
+        {
+            "pano_id": "e6eCILIDO2fduN2yL5hqwg",
+            "road_name": "C. Sebasti\u00e1n Lerdo de Tejada",
+            "yaw_deg": 359.606201171875
+        },
+        {
+            "pano_id": "k9XJp5iwsFFNq4LXjUWPTA",
+            "road_name": "C. Sebasti\u00e1n Lerdo de Tejada",
+            "yaw_deg": 179.5457611083984
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Xv3Bldu7Pt7HQnyZQoPspQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "OrC_izM60MT4WVFX5ObM2A",
+            "date": "2022-09"
+        }
+    ]
+}

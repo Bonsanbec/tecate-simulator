@@ -1,0 +1,25 @@
+{
+    "pano_id": "bw44PoY2lk7jn95Oo3I-cQ",
+    "latitude": 32.56666199374614,
+    "longitude": -116.6219154740797,
+    "date": "2009-09",
+    "road_name": "C. Gral. Mariano Arista",
+    "adjacent_links": [
+        {
+            "pano_id": "6MNs39s4vJLxuFWixzBsWg",
+            "road_name": "C. Gral. Mariano Arista",
+            "yaw_deg": 267.498291015625
+        },
+        {
+            "pano_id": "FIFZKy94zyneSnrrTsBHXQ",
+            "road_name": "C. Gral. Mariano Arista",
+            "yaw_deg": 87.56803894042969
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "dz1yoWgXV8HZaB4yEiciWQ",
+            "date": "2025-08"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "pano_id": "ru_-ShFBk2TqIydMP9jTSw",
+    "latitude": 32.56575377069928,
+    "longitude": -116.6227958600352,
+    "date": "2009-09",
+    "road_name": "Gral. J. Herrera",
+    "adjacent_links": [
+        {
+            "pano_id": "F0s8OREm9d8ToJzlkYO2Lg",
+            "road_name": "Gral. J. Herrera",
+            "yaw_deg": 172.8880615234375
+        },
+        {
+            "pano_id": "Pr-rxVUz0YvGLSS9bVHCfQ",
+            "road_name": "Gral. J. Herrera",
+            "yaw_deg": 352.8951416015625
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Wrvgo7p5A8sGUiANngHieg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "9Qfz0v8uoh0jo95_NAEV_A",
+            "date": "2022-09"
+        }
+    ]
+}

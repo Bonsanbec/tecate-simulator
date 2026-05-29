@@ -1,0 +1,33 @@
+{
+    "pano_id": "YbtkBXvJ6hCqTvnYpQ1Wiw",
+    "latitude": 32.56907173201859,
+    "longitude": -116.6194249125176,
+    "date": "2009-09",
+    "road_name": "Vicente Guerrero",
+    "adjacent_links": [
+        {
+            "pano_id": "ivgXsOQA4lj6rwZfslwqPQ",
+            "road_name": "Vicente Guerrero",
+            "yaw_deg": 84.01287841796875
+        },
+        {
+            "pano_id": "Sa5Wvl4DDutXN0H8Nogl9Q",
+            "road_name": "Vicente Guerrero",
+            "yaw_deg": 264.0017395019531
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "DhhwF6CNYrTlUATEcNOXYA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "JPGOVFFnlFCJCfPuA7dKtg",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "eVRZXQrIaUUsorLl23mqNg",
+            "date": "2017-10"
+        }
+    ]
+}
