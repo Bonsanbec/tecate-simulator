@@ -1,0 +1,29 @@
+{
+    "pano_id": "U4Q-Z6I6V9rEAZ3aEDRJSw",
+    "latitude": 32.56878586108169,
+    "longitude": -116.6397253262244,
+    "date": "2009-09",
+    "road_name": "Venustiano Carranza",
+    "adjacent_links": [
+        {
+            "pano_id": "72sK8PLrRZqMiQ8vnWNPcA",
+            "road_name": "Venustiano Carranza",
+            "yaw_deg": 82.28023529052734
+        },
+        {
+            "pano_id": "eRoSmiDfO1lkwOGLAOJgPg",
+            "road_name": "Venustiano Carranza",
+            "yaw_deg": 263.1380004882812
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "nN_8QJIl5SmHlkb74InTCQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "eHsINdIL71NOEVfB15r5vg",
+            "date": "2017-10"
+        }
+    ]
+}

@@ -1,0 +1,33 @@
+{
+    "pano_id": "ZJlf1728Ig1HwpdVcgkExw",
+    "latitude": 32.57040529785055,
+    "longitude": -116.6410741840275,
+    "date": "2009-09",
+    "road_name": "Antonio Girbau",
+    "adjacent_links": [
+        {
+            "pano_id": "T_DOH25Tip5AlNawXveGFw",
+            "road_name": "Antonio Girbau",
+            "yaw_deg": 355.0319519042969
+        },
+        {
+            "pano_id": "-19oynhwyRlyLpAw8ocwhg",
+            "road_name": "Antonio Girbau",
+            "yaw_deg": 174.7005157470703
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "mDgjN2zJAR9-TEsihVgQOg",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "HEpeXeD1y6cQu_L0IJSFkw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "_wqPSoyFNpEVQWGjjMyKCg",
+            "date": "2022-09"
+        }
+    ]
+}

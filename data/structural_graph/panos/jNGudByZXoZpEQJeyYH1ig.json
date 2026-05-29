@@ -1,0 +1,46 @@
+{
+    "pano_id": "jNGudByZXoZpEQJeyYH1ig",
+    "latitude": 32.57224614841439,
+    "longitude": -116.6258220763128,
+    "date": "2009-02",
+    "road_name": "Pdte. Pascual Ortiz Rubio",
+    "adjacent_links": [
+        {
+            "pano_id": "lltnVCPR92o8UAz3RLgR2Q",
+            "road_name": "Ensenada",
+            "yaw_deg": 176.8290863037109
+        },
+        {
+            "pano_id": "k2UEGK2pnTOJmjqyI9-fsg",
+            "road_name": "Ensenada",
+            "yaw_deg": 174.3057708740234
+        },
+        {
+            "pano_id": "VwvHfvmvGA8D728jy3xPag",
+            "road_name": "Pdte. Pascual Ortiz Rubio",
+            "yaw_deg": 356.58984375
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Q-pDhBVtSnWwmbBCadioFw",
+            "date": "2009-09"
+        },
+        {
+            "pano_id": "YnOI_eq-GV5xsByPJyk6Lw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "-rvdpgPs6teJl2AWpALPpw",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "JqVb4--bMuP1NqcryWbRPg",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "e7iYEPakM5_w1GE5QKkG_g",
+            "date": "2016-02"
+        }
+    ]
+}

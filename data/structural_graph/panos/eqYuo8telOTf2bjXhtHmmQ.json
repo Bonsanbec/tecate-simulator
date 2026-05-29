@@ -1,0 +1,37 @@
+{
+    "pano_id": "eqYuo8telOTf2bjXhtHmmQ",
+    "latitude": 32.57154858807689,
+    "longitude": -116.6326683645855,
+    "date": "2009-09",
+    "road_name": "Av. Miguel Hidalgo",
+    "adjacent_links": [
+        {
+            "pano_id": "Xx4d33dQUnK55kqTLbzuCw",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 350.2765197753906
+        },
+        {
+            "pano_id": "Bare_2KygPh8ulc-k3YpoA",
+            "road_name": "Dr. Arturo Guerra",
+            "yaw_deg": 174.1641235351562
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "eO3w0zheDfH3p4FC4nZ7ZQ",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "ra-voGFYMUGb2PWLozKIuw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "Lum2N4i0eUnYbXO42x-ClQ",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "h3NVn5EsGrjquXESS-Ykrw",
+            "date": "2016-02"
+        }
+    ]
+}

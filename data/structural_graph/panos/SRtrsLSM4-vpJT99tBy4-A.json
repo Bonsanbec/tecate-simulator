@@ -1,0 +1,25 @@
+{
+    "pano_id": "SRtrsLSM4-vpJT99tBy4-A",
+    "latitude": 32.57276826603213,
+    "longitude": -116.6213474726182,
+    "date": "2009-09",
+    "road_name": "Av. Miguel Hidalgo",
+    "adjacent_links": [
+        {
+            "pano_id": "iJL2zO30tfgaO_YTT1S2JA",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 236.8463897705078
+        },
+        {
+            "pano_id": "O7ur_8RBMR1SEu8VVVr6ZA",
+            "road_name": "R\u00edo T\u00e1mesis",
+            "yaw_deg": 354.5032958984375
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "XdMyssTNa_Ng5TtWBuCTVA",
+            "date": "2022-10"
+        }
+    ]
+}

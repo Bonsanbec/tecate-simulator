@@ -1,0 +1,746 @@
+{
+    "total_blocks": 165,
+    "total_facades": 5840,
+    "textured_facades": 41,
+    "coverage_percentage": 0.702054794520548,
+    "provenance": {
+        "block_3_facade_92": {
+            "source_pano_id": "RQ_TDCAJN3vDRTwkCHW0BA",
+            "source_date": "2008-12",
+            "source_lat_lon": [
+                32.57227598059656,
+                -116.6210078227194
+            ],
+            "selected_score": 0.0583935952804318,
+            "facade_normal": [
+                -0.1427354689812812,
+                0.9897608730873806
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 17.11882015365295
+            }
+        },
+        "block_3_facade_93": {
+            "source_pano_id": "RQ_TDCAJN3vDRTwkCHW0BA",
+            "source_date": "2008-12",
+            "source_lat_lon": [
+                32.57227598059656,
+                -116.6210078227194
+            ],
+            "selected_score": 0.13732404809738563,
+            "facade_normal": [
+                -0.1427354689812812,
+                0.9897608730873806
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 17.11882015365295
+            }
+        },
+        "block_3_facade_94": {
+            "source_pano_id": "-EBq6tXoaBPYk3VjWs2SEw",
+            "source_date": "2008-12",
+            "source_lat_lon": [
+                32.57226307943962,
+                -116.6211163307954
+            ],
+            "selected_score": 0.6218110155913453,
+            "facade_normal": [
+                -0.1427354689812812,
+                0.9897608730873806
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 17.11882015365295
+            }
+        },
+        "block_3_facade_95": {
+            "source_pano_id": "tlLWtA8wYRAM4iErM7e90A",
+            "source_date": "2008-12",
+            "source_lat_lon": [
+                32.57224925748269,
+                -116.6212288876253
+            ],
+            "selected_score": 0.3007080313745581,
+            "facade_normal": [
+                -0.14273546898128173,
+                0.9897608730873804
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 17.125706258494894
+            }
+        },
+        "block_4_facade_9": {
+            "source_pano_id": "tlLWtA8wYRAM4iErM7e90A",
+            "source_date": "2008-12",
+            "source_lat_lon": [
+                32.57224925748269,
+                -116.6212288876253
+            ],
+            "selected_score": 0.08754279940343627,
+            "facade_normal": [
+                0.14273546898128064,
+                -0.9897608730873807
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 17.11193404881101
+            }
+        },
+        "block_4_facade_10": {
+            "source_pano_id": "-EBq6tXoaBPYk3VjWs2SEw",
+            "source_date": "2008-12",
+            "source_lat_lon": [
+                32.57226307943962,
+                -116.6211163307954
+            ],
+            "selected_score": 0.1909386195944081,
+            "facade_normal": [
+                0.1427354689812812,
+                -0.9897608730873806
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 17.11882015365295
+            }
+        },
+        "block_4_facade_11": {
+            "source_pano_id": "RQ_TDCAJN3vDRTwkCHW0BA",
+            "source_date": "2008-12",
+            "source_lat_lon": [
+                32.57227598059656,
+                -116.6210078227194
+            ],
+            "selected_score": 0.13636354456859606,
+            "facade_normal": [
+                0.1427354689812812,
+                -0.9897608730873806
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 17.11882015365295
+            }
+        },
+        "block_4_facade_43": {
+            "source_pano_id": "1c94slyL1CEbE2InrWHKeQ",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57279197868861,
+                -116.6209797509699
+            ],
+            "selected_score": 0.05761669296818596,
+            "facade_normal": [
+                -0.1099329058508466,
+                0.9939390103075686
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 16.566737671722343
+            }
+        },
+        "block_4_facade_44": {
+            "source_pano_id": "Pk6WRhX9LQUWQiEaw97Aug",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57277784163091,
+                -116.621103554557
+            ],
+            "selected_score": 0.09074560938659593,
+            "facade_normal": [
+                -0.10993290585084663,
+                0.9939390103075686
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 16.53090740396547
+            }
+        },
+        "block_4_facade_45": {
+            "source_pano_id": "TWeIZx85ozOMTa2qigcTew",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57277392934057,
+                -116.6211422431641
+            ],
+            "selected_score": 0.33025760264620735,
+            "facade_normal": [
+                -0.10993290585084663,
+                0.9939390103075686
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 16.53090740396547
+            }
+        },
+        "block_4_facade_46": {
+            "source_pano_id": "TWeIZx85ozOMTa2qigcTew",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57277392934057,
+                -116.6211422431641
+            ],
+            "selected_score": 0.09597787026463526,
+            "facade_normal": [
+                -0.10993290585084728,
+                0.9939390103075684
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 16.539094560502786
+            }
+        },
+        "block_5_facade_30": {
+            "source_pano_id": "1c94slyL1CEbE2InrWHKeQ",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57279197868861,
+                -116.6209797509699
+            ],
+            "selected_score": 0.08871637264863508,
+            "facade_normal": [
+                -0.10993290585084663,
+                0.9939390103075686
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 7.0,
+                "facade_length": 16.53090740396547
+            }
+        },
+        "block_5_facade_31": {
+            "source_pano_id": "Pk6WRhX9LQUWQiEaw97Aug",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57277784163091,
+                -116.621103554557
+            ],
+            "selected_score": 0.13303107641830822,
+            "facade_normal": [
+                -0.10993290585084663,
+                0.9939390103075686
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 7.0,
+                "facade_length": 16.53090740396547
+            }
+        },
+        "block_5_facade_32": {
+            "source_pano_id": "TWeIZx85ozOMTa2qigcTew",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57277392934057,
+                -116.6211422431641
+            ],
+            "selected_score": 0.09597787026463526,
+            "facade_normal": [
+                -0.10993290585084728,
+                0.9939390103075684
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 7.0,
+                "facade_length": 16.539094560502786
+            }
+        },
+        "block_12_facade_44": {
+            "source_pano_id": "dKAaxApVRxV9y6vdGASd2Q",
+            "source_date": "2008-12",
+            "source_lat_lon": [
+                32.56951160660577,
+                -116.6307443711291
+            ],
+            "selected_score": 0.11268808044552868,
+            "facade_normal": [
+                0.9840755269517848,
+                0.17775082912483697
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 6.984325554553449
+            }
+        },
+        "block_12_facade_109": {
+            "source_pano_id": "y0A5h9qS7YkwT_ylRATtCA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.56775176124449,
+                -116.6253131061822
+            ],
+            "selected_score": 0.08814705847820335,
+            "facade_normal": [
+                0.994726451193335,
+                0.10256357685023346
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 4.597420406310027
+            }
+        },
+        "block_12_facade_111": {
+            "source_pano_id": "y0A5h9qS7YkwT_ylRATtCA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.56775176124449,
+                -116.6253131061822
+            ],
+            "selected_score": 0.07808458257587607,
+            "facade_normal": [
+                0.9946400190294878,
+                0.10339841654986806
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 12.792608938640674
+            }
+        },
+        "block_12_facade_112": {
+            "source_pano_id": "WOiPeiBDt1iJrwb8oshANA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.56804105123692,
+                -116.6253462158172
+            ],
+            "selected_score": 0.10979766829294771,
+            "facade_normal": [
+                0.9946578373678832,
+                0.10322686938314912
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 13.632053270198517
+            }
+        },
+        "block_12_facade_113": {
+            "source_pano_id": "WOiPeiBDt1iJrwb8oshANA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.56804105123692,
+                -116.6253462158172
+            ],
+            "selected_score": 0.0698613116665446,
+            "facade_normal": [
+                0.9946578373678832,
+                0.10322686938314915
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 13.631535859999207
+            }
+        },
+        "block_12_facade_114": {
+            "source_pano_id": "WOiPeiBDt1iJrwb8oshANA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.56804105123692,
+                -116.6253462158172
+            ],
+            "selected_score": 0.06544533986420482,
+            "facade_normal": [
+                0.9946578373678833,
+                0.10322686938314833
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 13.645312935475266
+            }
+        },
+        "block_53_facade_15": {
+            "source_pano_id": "q6-i92HPSCQRFdUjxC9ZWA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57309941209947,
+                -116.6321784833064
+            ],
+            "selected_score": 0.14896530657134155,
+            "facade_normal": [
+                -0.08697688838823456,
+                0.9962103296424407
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 18.387501045626667
+            }
+        },
+        "block_54_facade_3": {
+            "source_pano_id": "q6-i92HPSCQRFdUjxC9ZWA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57309941209947,
+                -116.6321784833064
+            ],
+            "selected_score": 0.06524057895980193,
+            "facade_normal": [
+                0.0869768883882344,
+                -0.9962103296424408
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 18.38752854031178
+            }
+        },
+        "block_54_facade_4": {
+            "source_pano_id": "q6-i92HPSCQRFdUjxC9ZWA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57309941209947,
+                -116.6321784833064
+            ],
+            "selected_score": 0.1164756153216098,
+            "facade_normal": [
+                0.08697688838823449,
+                -0.9962103296424408
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 18.387556034996894
+            }
+        },
+        "block_98_facade_15": {
+            "source_pano_id": "gYps4NMiVhk_5NJYxfBc5g",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57175674231945,
+                -116.6316787943115
+            ],
+            "selected_score": 0.07117053946273764,
+            "facade_normal": [
+                -0.12330383623616645,
+                0.9923689656420361
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 17.748903032126695
+            }
+        },
+        "block_98_facade_16": {
+            "source_pano_id": "Wyx-TzypyeSil7g-a9XUNA",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57174904522674,
+                -116.6317693034191
+            ],
+            "selected_score": 0.20984134880816838,
+            "facade_normal": [
+                -0.12330383623616666,
+                0.9923689656420361
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 17.78528580682517
+            }
+        },
+        "block_98_facade_17": {
+            "source_pano_id": "HcTl6RLlcyMXnC_ANvD4zw",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57174476056579,
+                -116.6318177068833
+            ],
+            "selected_score": 0.6041731546901874,
+            "facade_normal": [
+                -0.12330383623616702,
+                0.9923689656420359
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 17.785285806825115
+            }
+        },
+        "block_98_facade_18": {
+            "source_pano_id": "Lqe_n512eLfkH8suE9vdKg",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57173537504409,
+                -116.6319216213484
+            ],
+            "selected_score": 0.26079821667994224,
+            "facade_normal": [
+                -0.1233038362361686,
+                0.9923689656420357
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 17.78528580682512
+            }
+        },
+        "block_98_facade_51": {
+            "source_pano_id": "_qNC5rjmHlj5suhX4JUoTQ",
+            "source_date": "2008-12",
+            "source_lat_lon": [
+                32.5695380032744,
+                -116.6306617789463
+            ],
+            "selected_score": 0.3723006626753515,
+            "facade_normal": [
+                0.3590901654098168,
+                -0.933302873190665
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 19.14276473889341
+            }
+        },
+        "block_105_facade_16": {
+            "source_pano_id": "Lqe_n512eLfkH8suE9vdKg",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57173537504409,
+                -116.6319216213484
+            ],
+            "selected_score": 0.06576428625238864,
+            "facade_normal": [
+                0.12330383623616784,
+                -0.992368965642036
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 17.78528580682523
+            }
+        },
+        "block_105_facade_17": {
+            "source_pano_id": "HcTl6RLlcyMXnC_ANvD4zw",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57174476056579,
+                -116.6318177068833
+            ],
+            "selected_score": 0.19663064492966068,
+            "facade_normal": [
+                0.12330383623616702,
+                -0.9923689656420359
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 17.785285806825115
+            }
+        },
+        "block_105_facade_18": {
+            "source_pano_id": "gYps4NMiVhk_5NJYxfBc5g",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57175674231945,
+                -116.6316787943115
+            ],
+            "selected_score": 0.17563163272510937,
+            "facade_normal": [
+                0.12330383623616702,
+                -0.9923689656420359
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 17.785285806825115
+            }
+        },
+        "block_114_facade_11": {
+            "source_pano_id": "y0A5h9qS7YkwT_ylRATtCA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.56775176124449,
+                -116.6253131061822
+            ],
+            "selected_score": 0.05416463451907229,
+            "facade_normal": [
+                0.9959068578695045,
+                0.09038545485027255
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 17.28126831314973
+            }
+        },
+        "block_114_facade_12": {
+            "source_pano_id": "y0A5h9qS7YkwT_ylRATtCA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.56775176124449,
+                -116.6253131061822
+            ],
+            "selected_score": 0.1334683405486371,
+            "facade_normal": [
+                0.9959068578695046,
+                0.09038545485027172
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 17.280725743365917
+            }
+        },
+        "block_114_facade_13": {
+            "source_pano_id": "WOiPeiBDt1iJrwb8oshANA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.56804105123692,
+                -116.6253462158172
+            ],
+            "selected_score": 0.07080092540124529,
+            "facade_normal": [
+                0.9959068578695045,
+                0.09038545485027252
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 17.28072574336592
+            }
+        },
+        "block_114_facade_14": {
+            "source_pano_id": "WOiPeiBDt1iJrwb8oshANA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.56804105123692,
+                -116.6253462158172
+            ],
+            "selected_score": 0.09918530252354764,
+            "facade_normal": [
+                0.9959068578695045,
+                0.09038545485027218
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 17.212594809890845
+            }
+        },
+        "block_117_facade_19": {
+            "source_pano_id": "WOiPeiBDt1iJrwb8oshANA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.56804105123692,
+                -116.6253462158172
+            ],
+            "selected_score": 0.14654248301669803,
+            "facade_normal": [
+                -0.9959068578695045,
+                -0.09038545485027115
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 11.361942164179265
+            }
+        },
+        "block_117_facade_21": {
+            "source_pano_id": "y0A5h9qS7YkwT_ylRATtCA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.56775176124449,
+                -116.6253131061822
+            ],
+            "selected_score": 0.13359647074457048,
+            "facade_normal": [
+                -0.9959068578695046,
+                -0.09038545485027172
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 17.280725743365917
+            }
+        },
+        "block_117_facade_22": {
+            "source_pano_id": "y0A5h9qS7YkwT_ylRATtCA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.56775176124449,
+                -116.6253131061822
+            ],
+            "selected_score": 0.054425119584255895,
+            "facade_normal": [
+                -0.9959068578695044,
+                -0.0903854548502725
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 11.0,
+                "facade_length": 17.28018317358211
+            }
+        },
+        "block_125_facade_27": {
+            "source_pano_id": "NOeKFOsqmUOJphh3X8H7MA",
+            "source_date": "2008-12",
+            "source_lat_lon": [
+                32.56956448531368,
+                -116.6305781070965
+            ],
+            "selected_score": 0.1898641251896022,
+            "facade_normal": [
+                -0.3590901654098158,
+                0.9333028731906654
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 7.0,
+                "facade_length": 19.14276473889346
+            }
+        },
+        "block_125_facade_28": {
+            "source_pano_id": "_qNC5rjmHlj5suhX4JUoTQ",
+            "source_date": "2008-12",
+            "source_lat_lon": [
+                32.5695380032744,
+                -116.6306617789463
+            ],
+            "selected_score": 0.13991895353024092,
+            "facade_normal": [
+                -0.3590901654098168,
+                0.933302873190665
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 7.0,
+                "facade_length": 19.14276473889341
+            }
+        },
+        "block_125_facade_29": {
+            "source_pano_id": "dKAaxApVRxV9y6vdGASd2Q",
+            "source_date": "2008-12",
+            "source_lat_lon": [
+                32.56951160660577,
+                -116.6307443711291
+            ],
+            "selected_score": 0.12233328361284282,
+            "facade_normal": [
+                -0.3590901654098148,
+                0.9333028731906657
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 7.0,
+                "facade_length": 14.179622624853858
+            }
+        }
+    }
+}

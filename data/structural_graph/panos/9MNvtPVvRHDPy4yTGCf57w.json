@@ -1,0 +1,70 @@
+{
+    "pano_id": "9MNvtPVvRHDPy4yTGCf57w",
+    "latitude": 32.57268729748806,
+    "longitude": -116.6381068301716,
+    "date": "2009-03",
+    "road_name": "Esteban Cant\u00fa",
+    "adjacent_links": [
+        {
+            "pano_id": "XCfQcJaEDifNJYMDSLrc_A",
+            "road_name": "M\u00e9xico 2D",
+            "yaw_deg": 264.5623779296875
+        },
+        {
+            "pano_id": "canjhmb3Fv5oPaluaxe2YQ",
+            "road_name": "Tecate - Tijuana",
+            "yaw_deg": 84.80068969726562
+        },
+        {
+            "pano_id": "GgGERoWfWjJQpkJ4_tWT8w",
+            "road_name": "Esteban Cant\u00fa",
+            "yaw_deg": 156.2804870605469
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "tRwetez1l_Ej0k3MWlfMoA",
+            "date": "2009-09"
+        },
+        {
+            "pano_id": "ioCM8cp0SMXXm3i_uIcy6Q",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "kKetjnKHbc56IeQ7oiuWvA",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "U_v19JDxeyLG1CJS3w-klQ",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "JYhQrUc9lPueVDhEvHUhTA",
+            "date": "2022-06"
+        },
+        {
+            "pano_id": "nQDO3b3Rf69sGnnc7mpshw",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "NKqLmrnuqvlra9tTNrs5XA",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "JWhnOYTbZw6H_xuVAMCKyw",
+            "date": "2019-09"
+        },
+        {
+            "pano_id": "n5HiG1SBIKqdRZYmaKFO0g",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "zYVGB_WeMN0-Gfs2lIKsKQ",
+            "date": "2015-12"
+        },
+        {
+            "pano_id": "etud4VkKHGIpjw-wTa6PXg",
+            "date": "2016-02"
+        }
+    ]
+}

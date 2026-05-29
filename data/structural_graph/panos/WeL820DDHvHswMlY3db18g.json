@@ -1,0 +1,29 @@
+{
+    "pano_id": "WeL820DDHvHswMlY3db18g",
+    "latitude": 32.56851639291459,
+    "longitude": -116.6405378086689,
+    "date": "2009-09",
+    "road_name": "C. 13",
+    "adjacent_links": [
+        {
+            "pano_id": "Kkf7T5VW0rdEmAgpvP14eg",
+            "road_name": "C. 13",
+            "yaw_deg": 351.6933288574219
+        },
+        {
+            "pano_id": "CSOdxC-vfkUwzhVrllJ0Ow",
+            "road_name": "C. 13",
+            "yaw_deg": 171.7019500732422
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "8HUTb_EpaATVkI0dNfIPWw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "r_2xkXR5bHpElavpnz4HmA",
+            "date": "2022-09"
+        }
+    ]
+}

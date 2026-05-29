@@ -1,0 +1,49 @@
+{
+    "pano_id": "txDGVwFJ-DTW5wfVihxCdg",
+    "latitude": 32.57508798731093,
+    "longitude": -116.6114333551502,
+    "date": "2008-12",
+    "road_name": "M\u00e9xico 2D",
+    "adjacent_links": [
+        {
+            "pano_id": "UAVLKoFbuMVgLat0e_Urog",
+            "road_name": "M\u00e9xico 2D",
+            "yaw_deg": 109.8981399536133
+        },
+        {
+            "pano_id": "GXJA6rubefXW-B383GIFQA",
+            "road_name": "M\u00e9xico 2D",
+            "yaw_deg": 289.9572448730469
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "azRml5dJTW-u0KQu0NPw4g",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "2MAc6k6n1spi_V1K0mTQwg",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "VWTakJxGQCByvEh03CokbQ",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "U3WE-j75gD7m8gFh4ljVfA",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "Ex6HlrT88I6oBA_578b3dg",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "fVMRrCoqtypD2QVekQnvXA",
+            "date": "2017-09"
+        },
+        {
+            "pano_id": "Z-M78ZjeZlBQFfhaIp1bcA",
+            "date": "2009-09"
+        }
+    ]
+}

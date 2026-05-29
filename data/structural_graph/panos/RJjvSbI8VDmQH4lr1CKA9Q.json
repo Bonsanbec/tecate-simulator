@@ -1,0 +1,33 @@
+{
+    "pano_id": "RJjvSbI8VDmQH4lr1CKA9Q",
+    "latitude": 32.57099808908149,
+    "longitude": -116.6386442909031,
+    "date": "2009-09",
+    "road_name": "Av. Miguel Hidalgo",
+    "adjacent_links": [
+        {
+            "pano_id": "5rmvLvo0PFkhgjVYjBYU3Q",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 300.1477661132812
+        },
+        {
+            "pano_id": "nzXLe91pfLAGmbOkWlBcqA",
+            "road_name": "Acatzingo",
+            "yaw_deg": 173.0722045898438
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "cpTQkj0smD7d37Kmup5xSg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "e1dT_XD96oE9Q8IAMzA1AQ",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "J7KPop9BRjGO8KdVLtFXxg",
+            "date": "2016-02"
+        }
+    ]
+}

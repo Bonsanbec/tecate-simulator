@@ -1,0 +1,49 @@
+{
+    "pano_id": "xvc3Gpzvs_ZL8EFGYCLQFw",
+    "latitude": 32.56711933241873,
+    "longitude": -116.6399644560084,
+    "date": "2008-12",
+    "road_name": "Blvd. Defensores de Baja California",
+    "adjacent_links": [
+        {
+            "pano_id": "YXZM2xikB-vnzuBGkGss9A",
+            "road_name": "Blvd. Defensores de Baja California",
+            "yaw_deg": 70.72886657714844
+        },
+        {
+            "pano_id": "iQEtp19ulqpIRwl4-7ptKg",
+            "road_name": "Blvd. Defensores de Baja California",
+            "yaw_deg": 250.6820526123047
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "UIBwxgK4AvQz4RAviN7-1w",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "sE3mFln2ZeBy2chsx6fOKg",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "x2CdKRDRTJLweJXF9PgtJA",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "i7XeTpE6xsOENkuQwvr94Q",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "FHiJchGQfMjKgvr2sYC_5g",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "YNCRtH46fATyxx501jT-gw",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "MUyEFLvqNUhSQKY53JARSQ",
+            "date": "2009-09"
+        }
+    ]
+}

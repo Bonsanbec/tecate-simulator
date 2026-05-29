@@ -1,0 +1,29 @@
+{
+    "pano_id": "KcGxpA10T7l8sqXHInHaGA",
+    "latitude": 32.5689332066317,
+    "longitude": -116.6381923885356,
+    "date": "2009-08",
+    "road_name": "Venustiano Carranza",
+    "adjacent_links": [
+        {
+            "pano_id": "f9zpfyci4an6vcosvHY25w",
+            "road_name": "Venustiano Carranza",
+            "yaw_deg": 83.35694885253906
+        },
+        {
+            "pano_id": "Vl9ZdLOWxmaehfhhXfsNcw",
+            "road_name": "Acatzingo",
+            "yaw_deg": 216.5968780517578
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "-Jq_piqBH7NTbEai4vqiHg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "BjT3b-hv14PxA-biPSg75g",
+            "date": "2022-09"
+        }
+    ]
+}

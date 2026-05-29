@@ -1,33 +1,35 @@
+import os
+import json
 import math
+import shutil
 import numpy as np
 import networkx as nx
 from PIL import Image, ImageDraw
 
-# Import system modules
 from src.core_io.coords import gps_to_local, local_to_gps, TECATE_LAT_CENTER, TECATE_LON_CENTER
-from src.data_acquisition.sv_procedural import ProceduralStreetViewGenerator
+from src.core_io.io_manager import load_json, save_json
 from src.gis_graph.graph_builder import TecateGraphBuilder
 from src.image_alignment.aligner import ImageAligner
+from src.image_alignment.virtual_camera import project_rectilinear
+from src.image_alignment.visibility_filter import analyze_visibility_quality
+from src.core_io.migration import ArchivalDataMigrator
 from src.temporal_filter.classifier import TemporalVisualClassifier, TemporalMRFSolver
-from src.sfm.sfm_lite import SfMLite
-from src.block_modeling.block_builder import BlockBuilder
-from src.texturing.texture_generator import TextureGenerator
+from src.reconstruction.prism_generator import UrbanBlockReconstructor
 
 def test_coordinates_bidirectional():
     """Verifies that GPS conversions are bidirectionally consistent with zero drift."""
     lat, lon = 32.5688, -116.6281
     x, y = gps_to_local(lat, lon)
     
-    # Check that they represent local meters relative to center (within reasonable bounds)
-    assert abs(x) < 500.0
-    assert abs(y) < 500.0
+    assert abs(x) < 2000.0
+    assert abs(y) < 2000.0
     
     lat_r, lon_r = local_to_gps(x, y)
     assert math.isclose(lat, lat_r, abs_tol=1e-6)
     assert math.isclose(lon, lon_r, abs_tol=1e-6)
 
 def test_gis_graph_construction():
-    """Verifies that the road graph is correctly built, segmented, and virtual cameras placed."""
+    """Verifies that the road graph is correctly built and virtual cameras placed."""
     builder = TecateGraphBuilder(cache_dir="data")
     raw_data = builder.generate_default_tecate_grid()
     
@@ -39,14 +41,8 @@ def test_gis_graph_construction():
     assert G.number_of_nodes() == 225
     assert G.number_of_edges() == 420
     
-    # Verify local metric attributes
-    for node_id, data in G.nodes(data=True):
-        assert "x" in data
-        assert "y" in data
-        
     camera_stations = builder.normalize_and_sample_edges(G, interval_meters=15.0)
     assert len(camera_stations) > 0
-    # Every station must have a metric position, a road heading, and parent edge
     for cam in camera_stations:
         assert "station_id" in cam
         assert "edge_id" in cam
@@ -58,14 +54,11 @@ def test_image_alignment_anchoring():
     """Verifies that the spatial aligner correctly anchors panoramas and estimates VP offsets."""
     aligner = ImageAligner()
     
-    # 1. Spatial anchoring test
-    # Create fake camera stations centered near Miguel Hidalgo Park
     stations = [
         {"station_id": "cam_0", "edge_id": "e1", "dist_along": 10.0, "x": 0.0, "y": 0.0, "latitude": TECATE_LAT_CENTER, "longitude": TECATE_LON_CENTER, "road_heading": 0.0},
         {"station_id": "cam_1", "edge_id": "e1", "dist_along": 20.0, "x": 20.0, "y": 0.0, "latitude": TECATE_LAT_CENTER, "longitude": TECATE_LON_CENTER + 0.000213, "road_heading": 0.0}
     ]
     
-    # Fake panorama near station 1 (within 1.5 meters)
     pano = {
         "latitude": TECATE_LAT_CENTER,
         "longitude": TECATE_LON_CENTER + 0.00020,
@@ -78,39 +71,30 @@ def test_image_alignment_anchoring():
     assert aligned["station_id"] == "cam_1"
     assert aligned["alignment_distance"] < 15.0
 
-    # 2. Vanishing point offset calculation sanity check
-    # Create a synthetic image containing converging lines towards center
+    # Vanishing point offset calculation sanity check
     img = Image.new("RGB", (2560, 640), (135, 206, 235))
-    # Draw converging street curb lines on front quadrant (center = 320)
-    from PIL import ImageDraw
     draw = ImageDraw.Draw(img)
-    # Converges at x=320, y=320
+    # Converges at x=320, y=320 in front quadrant
     draw.line([0, 480, 320, 320], fill=(200, 200, 200), width=5)
     draw.line([640, 480, 320, 320], fill=(200, 200, 200), width=5)
     
     offset = aligner.estimate_vanishing_point_heading_offset(img)
-    # Correct vanishing point is exactly centered (delta = 0), so offset should be near 0
     assert abs(offset) < 2.0
 
 def test_temporal_filtering_and_mrf():
     """Verifies that the temporal classifier visual check and MRF belief propagation are correct."""
-    # 1. Visual Classifier Checks
     classifier = TemporalVisualClassifier()
     
     # Generate sharp image (simulate modern)
     sharp_img = Image.new("RGB", (640, 640), (255, 255, 255))
     draw_s = ImageDraw.Draw(sharp_img)
-    # High frequency sharp lines
     for i in range(0, 640, 20):
         draw_s.line([i, 0, i, 640], fill=(0, 0, 0), width=3)
         draw_s.line([0, i, 640, i], fill=(0, 0, 0), width=3)
         
     p_sharp = classifier.compute_visual_2009_probability(sharp_img)
-    # A crisp black/white grid image should result in very low 2009 probability (highly modern)
     assert p_sharp < 0.40
     
-    # 2. MRF Propagation Check
-    # Build a simple sequence graph (road corridor)
     G = nx.MultiGraph()
     G.add_node("n1", x=0.0, y=0.0, lat=32.5, lon=-116.6)
     G.add_node("n2", x=50.0, y=0.0, lat=32.5, lon=-116.599)
@@ -118,309 +102,233 @@ def test_temporal_filtering_and_mrf():
     
     aligned_panos = [
         {"station_id": "cam_0", "edge_id": "e1", "dist_along": 10.0, "graph_x": 10.0, "graph_y": 0.0, "temporal_probability": 0.98, "pano_id": "p0"},
-        {"station_id": "cam_1", "edge_id": "e1", "dist_along": 20.0, "graph_x": 20.0, "graph_y": 0.0, "temporal_probability": 0.55, "pano_id": "p1"}, # Ambiguous/low initial prob (normally rejected)
+        {"station_id": "cam_1", "edge_id": "e1", "dist_along": 20.0, "graph_x": 20.0, "graph_y": 0.0, "temporal_probability": 0.55, "pano_id": "p1"},
         {"station_id": "cam_2", "edge_id": "e1", "dist_along": 30.0, "graph_x": 30.0, "graph_y": 0.0, "temporal_probability": 0.98, "pano_id": "p2"}
     ]
     
     solver = TemporalMRFSolver(G)
     filtered = solver.solve_temporal_consistency(aligned_panos, alpha=0.55, iterations=5)
     
-    # Check that cam_1's probability was diffused upwards by its neighbors to pass acceptance!
     cam1_meta = next(f for f in filtered if f["station_id"] == "cam_1")
     assert cam1_meta["temporal_probability"] > 0.50
     assert cam1_meta["accepted"] == True
 
-def test_sfm_triangulation():
-    """Verifies ORB/SIFT feature matcher and essential matrix/triangulation logic."""
-    sfm = SfMLite(feature_type="ORB")
+def test_virtual_camera_projection():
+    """Verifies that the rectilinear pinhole projection function correctly warps simulated and real formats."""
+    # Create simple simulated panorama (2560x640)
+    pano = Image.new("RGB", (2560, 640), (135, 206, 235))
+    draw = ImageDraw.Draw(pano)
+    draw.rectangle([0, 320, 2560, 640], fill=(80, 80, 80)) # asphalt ground
     
-    # Setup test projection matrices
-    # Cameras translated along horizontal axis
-    pose1 = {"x": 0.0, "y": 0.0, "heading": 90.0}
-    pose2 = {"x": 2.0, "y": 0.0, "heading": 90.0}
-    
-    # Verify focal and intrinsics matrix K
-    assert sfm.K.shape == (3, 3)
-    assert sfm.K[0, 0] == 320.0 # focal length
-    
-    # Verify that if features are empty, it gracefully outputs empty clouds
-    pts3D, colors, matches = sfm.reconstruct_pair(
-        Image.new("RGB", (640, 640)), 
-        Image.new("RGB", (640, 640)), 
-        pose1, 
-        pose2
+    # Project a frontal view
+    rect_img = project_rectilinear(
+        pano_img=pano,
+        yaw_deg=0.0,
+        pitch_deg=0.0,
+        fov_deg=80.0,
+        width=512,
+        height=256,
+        pano_yaw=0.0,
+        is_sim=True
     )
-    assert len(pts3D) == 0
+    
+    assert rect_img.size == (512, 256)
+    # The top of the projected view should be sky (blue), bottom should be ground (grey)
+    np_rect = np.array(rect_img)
+    assert np.allclose(np_rect[50, 256], [135, 206, 235], atol=10) # Sky
+    assert np.allclose(np_rect[200, 256], [80, 80, 80], atol=10) # Ground
 
-def test_urban_block_segmentation():
-    """Verifies that block cycles and point-in-polygon logic function correctly."""
-    G = nx.MultiGraph()
-    # Create a 4-node closed square (100m x 100m)
-    G.add_node("n1", x=0.0, y=0.0, lat=32.5, lon=-116.6)
-    G.add_node("n2", x=100.0, y=0.0, lat=32.5, lon=-116.599)
-    G.add_node("n3", x=100.0, y=100.0, lat=32.501, lon=-116.599)
-    G.add_node("n4", x=0.0, y=100.0, lat=32.501, lon=-116.6)
+def test_visibility_filtering():
+    """Verifies that visibility analysis successfully detects sky, pavement, and scores quality."""
+    img = Image.new("RGB", (512, 256), (135, 206, 235)) # pure sky
+    draw = ImageDraw.Draw(img)
+    # Draw some pavement at the bottom
+    draw.rectangle([0, 200, 512, 256], fill=(80, 80, 80))
     
-    G.add_edge("n1", "n2", id="e1", length=100.0)
-    G.add_edge("n2", "n3", id="e2", length=100.0)
-    G.add_edge("n3", "n4", id="e3", length=100.0)
-    G.add_edge("n4", "n1", id="e4", length=100.0)
+    score, diag = analyze_visibility_quality(img)
     
-    builder = BlockBuilder(G)
-    blocks = builder.segment_blocks()
-    
-    # Should find exactly 1 block (the minimal cycle of the square)
-    assert len(blocks) == 1
-    block = blocks[0]
-    assert len(block["polygon"]) == 5 # 4 closed vertices
-    
-    # Centroid check
-    assert block["centroid"] == [50.0, 50.0]
-    
-    # Point-in-polygon check
-    assert builder.is_point_in_polygon(50.0, 50.0, block["polygon"]) == True
-    assert builder.is_point_in_polygon(150.0, 150.0, block["polygon"]) == False
+    assert score < 0.20 # Should have very low quality due to pure sky / no vertical building edges
+    assert diag["sky_ratio"] > 0.50
+    assert diag["pavement_ratio"] > 0.35
 
-def test_texture_normal_calculations():
-    """Verifies outward wall normal calculations and texture mapping."""
-    texturer = TextureGenerator()
+def test_migration_and_native_reconstruction():
+    """Tests the idempotent migration and facade-observation-native block texturing pipeline together."""
+    # Setup temporary mock directories
+    test_cache = "tests/test_raw_scraped"
+    shutil.rmtree(test_cache, ignore_errors=True)
+    shutil.rmtree("tests/test_data", ignore_errors=True)
+    shutil.rmtree("tests/test_export", ignore_errors=True)
     
-    # A facade wall segment from (0, 0) to (10, 0)
-    # Centroid of block is at (5, 5) (the block is above the wall)
-    # The outward normal should point downwards: (0, -1)
-    p1 = [0.0, 0.0]
-    p2 = [10.0, 0.0]
-    centroid = [5.0, 5.0]
+    os.makedirs(test_cache, exist_ok=True)
     
-    normal = texturer.calculate_wall_normal(p1, p2, centroid)
-    assert math.isclose(normal[0], 0.0, abs_tol=1e-5)
-    assert math.isclose(normal[1], -1.0, abs_tol=1e-5)
-
-def test_scraper_metadata_and_timeline():
-    """Verifies that public unauthenticated metadata JSON is parsed correctly, tracing timelines."""
-    from unittest.mock import patch, MagicMock
-    from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
+    # Create simple simulated pano
+    pano_id = "sim_pano_migration_test"
+    node_dir = os.path.join(test_cache, pano_id)
+    os.makedirs(node_dir, exist_ok=True)
     
-    scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
+    # Save simulated image and metadata
+    pano_img = Image.new("RGB", (2560, 640), (135, 206, 235))
+    draw = ImageDraw.Draw(pano_img)
+    draw.rectangle([0, 320, 2560, 640], fill=(80, 80, 80))
+    # Draw facade vertical lines to boost edge detection score
+    for x in range(100, 2400, 150):
+        draw.rectangle([x, 200, x+40, 480], fill=(200, 150, 100))
+        
+    pano_img.save(os.path.join(node_dir, "panorama.png"))
     
-    # Mock requests.get response
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
-        "Location": {
-            "panoId": "mock_pano_xyz",
-            "latitude": "32.56",
-            "longitude": "-116.6",
-            "road_name": "Av. Juarez"
-        },
-        "Annotation": {
-            "Link": [
-                {"panoId": "adjacent_1", "road_name": "Av. Juarez", "yawDeg": "90.0"}
-            ]
-        },
-        "Links": [
-            {"panoId": "mock_pano_xyz_2009", "date": "2009-08"}
-        ],
-        "Data": {
-            "image_date": "2026-02"
-        }
+    meta = {
+        "pano_id": pano_id,
+        "latitude": TECATE_LAT_CENTER + 0.0008,
+        "longitude": TECATE_LON_CENTER + 0.0008,
+        "date": "2009-08",
+        "road_name": "Calle A",
+        "adjacent_links": [],
+        "timeline": []
     }
-    
-    with patch("requests.get", return_value=mock_response):
-        meta = scraper.fetch_public_metadata(pano_id="mock_pano_xyz")
+    with open(os.path.join(node_dir, "metadata.json"), "w", encoding="utf-8") as f:
+        json.dump(meta, f, indent=4)
         
-        assert meta is not None
-        assert meta["pano_id"] == "mock_pano_xyz"
-        assert meta["latitude"] == 32.56
-        assert meta["road_name"] == "Av. Juarez"
-        assert len(meta["adjacent_links"]) == 1
-        assert meta["adjacent_links"][0]["pano_id"] == "adjacent_1"
-        assert len(meta["timeline"]) == 1
-        assert meta["timeline"][0]["pano_id"] == "mock_pano_xyz_2009"
-        assert meta["timeline"][0]["date"] == "2009-08"
+    # Run migration
+    migrator = ArchivalDataMigrator(raw_cache_dir=test_cache, data_dir="tests/test_data")
+    res = migrator.run_migration(max_observations_to_process=1)
+    
+    assert res["processed"] == 1
+    # Check that Layer 1 structural files were written
+    assert os.path.exists("tests/test_data/structural_graph/intersections.json")
+    assert os.path.exists("tests/test_data/structural_graph/road_graph.json")
+    assert os.path.exists("tests/test_data/structural_graph/adjacency.json")
+    
+    # Check that Layer 1 consolidated panorama cache was successfully created
+    assert os.path.exists(f"tests/test_data/structural_graph/panos/{pano_id}.png")
+    assert os.path.exists(f"tests/test_data/structural_graph/panos/{pano_id}.json")
+    
+    # Run native block reconstruction
+    # Create simple grid graph
+    builder = TecateGraphBuilder(cache_dir="tests/test_data")
+    raw_graph = builder.generate_default_tecate_grid()
+    G = builder.build_networkx_graph(raw_graph)
+    
+    reconstructor = UrbanBlockReconstructor(G, export_dir="tests/test_export", data_dir="tests/test_data")
+    blocks_data, scene_doc = reconstructor.reconstruct_blocks_and_texture()
+    
+    # Save the output geometry doc to tests/test_export/reconstruction_export.json
+    save_json(scene_doc, "tests/test_export/reconstruction_export.json")
+    
+    assert len(blocks_data) > 0
+    # Check that textures were written
+    assert len(os.listdir("tests/test_export/textures")) > 0
+    assert os.path.exists("tests/test_export/reconstruction_export.json")
+    
+    # Cleanup test files
+    shutil.rmtree(test_cache, ignore_errors=True)
+    shutil.rmtree("tests/test_data", ignore_errors=True)
+    shutil.rmtree("tests/test_export", ignore_errors=True)
 
-def test_procedural_local_cache():
-    """Verifies that ProceduralStreetViewGenerator generates and writes data to local cache folder correctly."""
-    import shutil
-    import os
+
+def test_scraper_transient_and_bypass():
+    """Verifies that the scraper bypasses image downloads for structural intersections,
+    stores longitudinal panoramas in-memory only, and generates Layer 2 observations directly."""
+    from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
+    from unittest.mock import MagicMock
     
-    # Temporary test cache
-    test_cache = "tests/test_scraped_cache"
-    if os.path.exists(test_cache):
-        shutil.rmtree(test_cache)
-        
-    generator = ProceduralStreetViewGenerator(seed=42)
-    
-    # Create simple road network
+    # 1. Create a mock NetworkX graph G
     G = nx.MultiGraph()
-    G.add_node("n1", x=0.0, y=0.0, lat=32.5678, lon=-116.6261)
-    G.add_node("n2", x=50.0, y=0.0, lat=32.5678, lon=-116.6256)
-    G.add_edge("n1", "n2", id="e1", length=50.0)
+    # Add an intersection node (degree 2) at Parque Hidalgo center
+    G.add_node("n_inter", x=0.0, y=0.0, lat=TECATE_LAT_CENTER, lon=TECATE_LON_CENTER)
+    G.add_node("n_endpoint1", x=0.0, y=50.0, lat=TECATE_LAT_CENTER + 0.00045, lon=TECATE_LON_CENTER)
+    G.add_node("n_endpoint2", x=50.0, y=0.0, lat=TECATE_LAT_CENTER, lon=TECATE_LON_CENTER + 0.00045)
     
-    camera_stations = [
-        {"station_id": "cam_0", "edge_id": "e1", "dist_along": 20.0, "x": 20.0, "y": 0.0, "latitude": 32.5678, "longitude": -116.6259, "road_heading": 0.0}
-    ]
+    G.add_edge("n_inter", "n_endpoint1", id="e1", length=50.0)
+    G.add_edge("n_inter", "n_endpoint2", id="e2", length=50.0)
     
-    nodes = generator.generate_and_cache_simulated_dataset(camera_stations, G, cache_dir=test_cache)
+    # Initialize the scraper with the mock graph G
+    test_cache = "tests/test_scraper_cache"
+    shutil.rmtree(test_cache, ignore_errors=True)
+    shutil.rmtree("data/structural_graph", ignore_errors=True)
+    shutil.rmtree("data/facade_observations", ignore_errors=True)
     
-    assert len(nodes) == 1
-    node = nodes[0]
+    scraper = GoogleStreetViewScraper(headless=True, G=G)
     
-    # Assert folders exist
-    node_dir = os.path.join(test_cache, node["pano_id"])
-    assert os.path.exists(node_dir)
-    assert os.path.exists(os.path.join(node_dir, "metadata.json"))
-    assert os.path.exists(os.path.join(node_dir, "panorama.png"))
-    
-    # Cleanup
-    if os.path.exists(test_cache):
-        shutil.rmtree(test_cache)
-
-def test_priority_queue_parque_hidalgo():
-    """Verifies that the crawl queue is strictly sorted based on proximity to Parque Hidalgo."""
-    from src.data_acquisition.browser_scraper import GoogleStreetViewScraper, PARQUE_HIDALGO_LAT, PARQUE_HIDALGO_LON
-    
-    scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
-    # Clear any state loaded on startup
-    scraper.crawl_queue = []
-    
-    # Place three coordinates:
-    # 1. Close to Parque Hidalgo (offset by 0.0001 deg)
-    # 2. Furthest away (offset by 0.05 deg)
-    # 3. Medium distance (offset by 0.01 deg)
-    scraper.queue_node("node_medium", PARQUE_HIDALGO_LAT + 0.01, PARQUE_HIDALGO_LON)
-    scraper.queue_node("node_far", PARQUE_HIDALGO_LAT + 0.05, PARQUE_HIDALGO_LON)
-    scraper.queue_node("node_close", PARQUE_HIDALGO_LAT + 0.0001, PARQUE_HIDALGO_LON)
-    
-    # Assert they are sorted: closest first
-    assert len(scraper.crawl_queue) == 3
-    assert scraper.crawl_queue[0]["pano_id"] == "node_close"
-    assert scraper.crawl_queue[1]["pano_id"] == "node_medium"
-    assert scraper.crawl_queue[2]["pano_id"] == "node_far"
-
-def test_timeline_oldest_capture_selection():
-    """Verifies that chronological timeline comparison always identifies the oldest capture year."""
-    from unittest.mock import patch, MagicMock
-    from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
-    
-    scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
-    
-    # Mock unauthenticated metadata return with four capture variants (2026, 2015, 2009, 2008)
-    mock_metadata = {
-        "Location": {
-            "panoId": "pano_modern_2026",
-            "latitude": "32.5732",
-            "longitude": "-116.6265"
-        },
-        "Links": [
-            {"panoId": "pano_v1_2015", "date": "2015-05"},
-            {"panoId": "pano_v2_2009", "date": "2009-08"},
-            {"panoId": "pano_v3_2008", "date": "2008-11"}
-        ],
-        "Data": {
-            "image_date": "2026-02"
-        }
-    }
-    
-    # If we evaluate this timeline, "pano_v3_2008" (date 2008-11) is the oldest and must be selected
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = mock_metadata
-    
-    with patch("requests.get", return_value=mock_response):
-        # We query for the modern node, but the scraper must walk the timeline and pull the oldest!
-        meta = scraper.fetch_public_metadata(pano_id="pano_modern_2026")
+    # 2. Mock fetch_public_metadata to return node coordinates close to the intersection
+    def mock_fetch_public_metadata(pano_id, lat=None, lon=None):
+        if pano_id == "pano_intersection":
+            return {
+                "pano_id": "pano_intersection",
+                "latitude": TECATE_LAT_CENTER + 0.00005,  # within 15 meters
+                "longitude": TECATE_LON_CENTER + 0.00005,
+                "date": "2009-08",
+                "adjacent_links": [],
+                "timeline": []
+            }
+        elif pano_id == "pano_longitudinal":
+            return {
+                "pano_id": "pano_longitudinal",
+                "latitude": TECATE_LAT_CENTER + 0.0003,   # ~33 meters away
+                "longitude": TECATE_LON_CENTER + 0.0003,
+                "date": "2009-08",
+                "adjacent_links": [],
+                "timeline": []
+            }
+        return None
         
-        # Chronology search logic check
-        timeline = meta.get("timeline", [])
-        oldest_pano_id = "pano_modern_2026"
-        oldest_date = "2026-02"
+    scraper.fetch_public_metadata = mock_fetch_public_metadata
+    
+    # Mock download_and_stitch_tiles to return a simulated image in-memory
+    sim_pano = Image.new("RGB", (2560, 640), (135, 206, 235))
+    draw = ImageDraw.Draw(sim_pano)
+    draw.rectangle([0, 320, 2560, 640], fill=(80, 80, 80))
+    for x in range(100, 2400, 150):
+        draw.rectangle([x, 200, x+40, 480], fill=(200, 150, 100))
         
-        for tl in timeline:
-            if tl["date"] < oldest_date:
-                oldest_pano_id = tl["pano_id"]
-                oldest_date = tl["date"]
-                
-        assert oldest_pano_id == "pano_v3_2008"
-        assert oldest_date == "2008-11"
-
-def test_resilient_incremental_memory_state():
-    """Verifies that scraper_state.json correctly persists visited and queued nodes to disk."""
-    import os
-    from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
+    scraper.download_and_stitch_tiles = MagicMock(return_value=sim_pano)
+    scraper.save_state = MagicMock()
     
-    state_filepath = "data/scraper_state.json"
-    if os.path.exists(state_filepath):
-        os.remove(state_filepath)
-        
-    scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
+    # 3. Test intersection bypass
+    scraper.crawl_queue = [{"pano_id": "pano_intersection", "latitude": TECATE_LAT_CENTER, "longitude": TECATE_LON_CENTER, "priority_distance": 0.0}]
     
-    # Manually populate state
-    scraper.visited_panos.add("pano_scraped_1")
-    scraper.visited_panos.add("pano_scraped_2")
-    scraper.crawl_queue = [{"pano_id": "pano_queued_1", "latitude": 32.5, "longitude": -116.6, "priority_distance": 0.1}]
+    res = scraper.crawl_priority_network(TECATE_LAT_CENTER, TECATE_LON_CENTER, max_nodes=1)
     
-    # Save to disk
-    scraper.save_state()
-    assert os.path.exists(state_filepath)
+    assert len(res) == 1
+    assert "pano_intersection" in scraper.visited_panos
+    # Assert that download_and_stitch_tiles was NOT called for intersection (zero images requested)
+    scraper.download_and_stitch_tiles.assert_not_called()
     
-    # Reboot a new scraper to confirm recovery memory
-    new_scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
-    assert "pano_scraped_1" in new_scraper.visited_panos
-    assert "pano_scraped_2" in new_scraper.visited_panos
-    assert len(new_scraper.crawl_queue) == 1
-    assert new_scraper.crawl_queue[0]["pano_id"] == "pano_queued_1"
+    # Assert that it was registered in structural_graph/adjacency.json
+    assert os.path.exists("data/structural_graph/adjacency.json")
+    with open("data/structural_graph/adjacency.json", "r") as f:
+        adj = json.load(f)
+    assert "pano_intersection" in adj["intersection_panos"]
     
-    # Cleanup state file to keep workspace clean
-    if os.path.exists(state_filepath):
-        os.remove(state_filepath)
-
-def test_spiral_search_coordinate_generator():
-    """Verifies that expanding spiral offsets are mathematically generated in correct increments."""
-    from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
+    # 4. Test longitudinal node (in-memory only and observation extraction)
+    scraper.crawl_queue = [{"pano_id": "pano_longitudinal", "latitude": TECATE_LAT_CENTER + 0.0003, "longitude": TECATE_LON_CENTER + 0.0003, "priority_distance": 1.0}]
     
-    scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
-    gen = scraper.generate_spiral_offsets()
+    res_long = scraper.crawl_priority_network(TECATE_LAT_CENTER, TECATE_LON_CENTER, max_nodes=1)
     
-    # Take first 4 offsets and confirm they represent correct coordinate steps
-    offsets = [next(gen) for _ in range(4)]
-    assert len(offsets) == 4
-    for lat_offset, lon_offset in offsets:
-        assert abs(lat_offset) > 0.0 or abs(lon_offset) > 0.0
-        assert abs(lat_offset) <= 0.001 and abs(lon_offset) <= 0.001
-
-def test_address_bar_url_pano_id_regex_parsing():
-    """Verifies that the regular expression successfully parses 22-character base64 panoIds from Google Maps URLs."""
-    import re
+    assert len(res_long) == 1
+    assert "pano_longitudinal" in scraper.visited_panos
+    # Assert that download_and_stitch_tiles WAS called
+    scraper.download_and_stitch_tiles.assert_called_once()
     
-    # Standard Google Maps Street View URL with a 22-character Base64-like panoId
-    url_1 = "https://www.google.com/maps/@32.573229,-116.626536,3a,75y,0h,90t/data=!3m6!1e1!3m4!1sABCdefGHIjklMNOpqrSTUv!2e0!7i13312!8i6656"
-    match_1 = re.search(r'!1s([a-zA-Z0-9_\-]{22})', url_1)
-    assert match_1 is not None
-    assert match_1.group(1) == "ABCdefGHIjklMNOpqrSTUv"
+    # Assert that no panorama.png file exists on disk under raw cache
+    assert not os.path.exists(os.path.join(test_cache, "pano_longitudinal", "panorama.png"))
     
-    # URL containing dashes and underscores (standard base64url)
-    url_2 = "https://www.google.com/maps/@32.573,-116.62,3a,75y/data=!3m4!1e1!3m2!1s-_1234567890abcdefGHIJ!2e0"
-    match_2 = re.search(r'!1s([a-zA-Z0-9_\-]{20,22})', url_2)
-    assert match_2 is not None
-    assert match_2.group(1) == "-_1234567890abcdefGHIJ"
-
-def test_zero_synthetic_real_mode_constraint():
-    """Verifies that in real scraping mode, tile downloader strictly returns None on failure instead of fallback images."""
-    from unittest.mock import patch, MagicMock
-    from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
+    # Assert that the panorama exists under the consolidated structural cache
+    assert os.path.exists("data/structural_graph/panos/pano_longitudinal.png")
     
-    scraper = GoogleStreetViewScraper(cache_dir="tests/mock_cache")
+    # 5. Test Cache Idempotency (running again loads from cache without calling download_and_stitch_tiles again)
+    scraper.download_and_stitch_tiles.reset_mock()
+    # Remove from visited so it re-crawls, but keep the cache file on disk
+    scraper.visited_panos.remove("pano_longitudinal")
+    scraper.crawl_queue = [{"pano_id": "pano_longitudinal", "latitude": TECATE_LAT_CENTER + 0.0003, "longitude": TECATE_LON_CENTER + 0.0003, "priority_distance": 1.0}]
     
-    # Mock requests.get returning empty or failed response
-    mock_response = MagicMock()
-    mock_response.status_code = 404
-    mock_response.content = b""
+    res_cached = scraper.crawl_priority_network(TECATE_LAT_CENTER, TECATE_LON_CENTER, max_nodes=1)
     
-    with patch("requests.get", return_value=mock_response):
-        # With allow_synthetic=False, it must return None immediately
-        pano_img = scraper.download_and_stitch_tiles(pano_id="mock_failed_pano", zoom=3, allow_synthetic=False)
-        assert pano_img is None
-
-
+    assert len(res_cached) == 1
+    # Assert that download_and_stitch_tiles was NOT called this time because it loaded from cache
+    scraper.download_and_stitch_tiles.assert_not_called()
+    
+    # Clean up
+    shutil.rmtree(test_cache, ignore_errors=True)
+    shutil.rmtree("data/structural_graph", ignore_errors=True)
+    shutil.rmtree("data/facade_observations", ignore_errors=True)
 

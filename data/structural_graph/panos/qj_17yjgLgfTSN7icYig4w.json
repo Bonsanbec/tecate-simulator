@@ -1,0 +1,43 @@
+{
+    "pano_id": "qj_17yjgLgfTSN7icYig4w",
+    "latitude": 32.57274015075136,
+    "longitude": -116.6286725398154,
+    "date": "2009-09",
+    "road_name": "Libertad",
+    "adjacent_links": [
+        {
+            "pano_id": "XojuSEJUDzKq7HpqUaPprA",
+            "road_name": "Libertad",
+            "yaw_deg": 264.0201721191406
+        },
+        {
+            "pano_id": "iHVYQnOHQmtG9CohRWIH5g",
+            "road_name": "Pdte. El\u00edas Calles",
+            "yaw_deg": 184.4593353271484
+        },
+        {
+            "pano_id": "YwjW__IJmH6rGJ3cOl-9dg",
+            "road_name": "Pdte. El\u00edas Calles",
+            "yaw_deg": 352.03173828125
+        },
+        {
+            "pano_id": "CXRE4752iEXI8mvB6pRqzQ",
+            "road_name": "Libertad",
+            "yaw_deg": 83.68376159667969
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "_0A0aTFmN-4cKmUTaET5QQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "kvyZ3I83bAAzVScmoUqdTg",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "9Yd0h-aVN6cQLIRwto4OjQ",
+            "date": "2015-12"
+        }
+    ]
+}

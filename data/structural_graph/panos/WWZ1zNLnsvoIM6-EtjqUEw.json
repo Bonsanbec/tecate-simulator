@@ -1,0 +1,29 @@
+{
+    "pano_id": "WWZ1zNLnsvoIM6-EtjqUEw",
+    "latitude": 32.56959806911012,
+    "longitude": -116.6399410648444,
+    "date": "2009-09",
+    "road_name": "Tecate, Baja California",
+    "adjacent_links": [
+        {
+            "pano_id": "PsTFWgq5Ju_wXcyLLowxDg",
+            "road_name": "",
+            "yaw_deg": 354.8404235839844
+        },
+        {
+            "pano_id": "FfMxk_JrZ9DzDf6TQl_bDQ",
+            "road_name": "",
+            "yaw_deg": 174.8360290527344
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "2wCg9IN1nEZ2p3MX6Vo4cw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "B34sIV8vW3sQB0n1xoa_yA",
+            "date": "2022-09"
+        }
+    ]
+}

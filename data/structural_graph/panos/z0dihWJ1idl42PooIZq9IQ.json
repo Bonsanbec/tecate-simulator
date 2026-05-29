@@ -1,0 +1,33 @@
+{
+    "pano_id": "z0dihWJ1idl42PooIZq9IQ",
+    "latitude": 32.57173835056951,
+    "longitude": -116.6327086706564,
+    "date": "2009-09",
+    "road_name": "Presidente Venustiano Carranza",
+    "adjacent_links": [
+        {
+            "pano_id": "Xx4d33dQUnK55kqTLbzuCw",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 178.5702056884766
+        },
+        {
+            "pano_id": "KPJBBb-HDLzTJcLWc-w-Pg",
+            "road_name": "Presidente Venustiano Carranza",
+            "yaw_deg": 353.3736877441406
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "aE9i86KstF6O1Qft6P5Z1Q",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "0lzrqBsim5hbv6WhzQ_TVg",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "bZtkZxE8pBQT6UOkSwcDyA",
+            "date": "2016-02"
+        }
+    ]
+}

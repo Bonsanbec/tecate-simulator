@@ -1,0 +1,42 @@
+{
+    "pano_id": "qFdohRFQjh7FTQtvTF58Wg",
+    "latitude": 32.57200917351227,
+    "longitude": -116.6286490575123,
+    "date": "2009-09",
+    "road_name": "Av. Miguel Hidalgo",
+    "adjacent_links": [
+        {
+            "pano_id": "FVRaGTOf__LNytSdEhPZ3A",
+            "road_name": "Pdte. El\u00edas Calles",
+            "yaw_deg": 15.76287841796875
+        },
+        {
+            "pano_id": "E_3Jejs7O5J43pT552hjWA",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 82.56880187988281
+        },
+        {
+            "pano_id": "LThFeutDSrUEPlBGSWiaUQ",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 262.4857177734375
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "MbUT23yqN-0sbLYUNJbe5g",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "qO1XgKyLBp7_qjulRFoXqA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "9uNMFDDTFUqf7kjUOPBYPA",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "TRvHxo6zmeLTC5hVUFLuCQ",
+            "date": "2016-02"
+        }
+    ]
+}

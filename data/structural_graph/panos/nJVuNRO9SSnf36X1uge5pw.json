@@ -1,0 +1,33 @@
+{
+    "pano_id": "nJVuNRO9SSnf36X1uge5pw",
+    "latitude": 32.56928571673816,
+    "longitude": -116.6345112803528,
+    "date": "2009-09",
+    "road_name": "C. G",
+    "adjacent_links": [
+        {
+            "pano_id": "RGjNH84ugc-TZcLaVUHAvA",
+            "road_name": "C. G",
+            "yaw_deg": 264.0152893066406
+        },
+        {
+            "pano_id": "gczzPXLM407aG9InxLpxHg",
+            "road_name": "C. G",
+            "yaw_deg": 84.06243896484375
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "kJ-4okpIcDfA6bJj1tLAcg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "fGrECQWClj-ZRh9LeeikWw",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "yv3H71FFtmAkQ2ZFTwl_DA",
+            "date": "2016-02"
+        }
+    ]
+}

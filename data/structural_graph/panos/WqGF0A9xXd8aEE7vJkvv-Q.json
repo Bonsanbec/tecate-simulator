@@ -1,0 +1,45 @@
+{
+    "pano_id": "WqGF0A9xXd8aEE7vJkvv-Q",
+    "latitude": 32.57291225230151,
+    "longitude": -116.6259012513408,
+    "date": "2009-02",
+    "road_name": "M\u00e9xico 3",
+    "adjacent_links": [
+        {
+            "pano_id": "zb8YAlf6JTqXMSoSS-2IYg",
+            "road_name": "Pdte. Pascual Ortiz Rubio",
+            "yaw_deg": 174.8971099853516
+        },
+        {
+            "pano_id": "s8jMOjFHZUBdw_QkJoOqUQ",
+            "road_name": "M\u00e9xico 3",
+            "yaw_deg": 355.1660461425781
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "makhS9yaUSRGK5YWy2lkiw",
+            "date": "2009-09"
+        },
+        {
+            "pano_id": "LRVnV5ZeiNrGEWORbmJTkg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "Pp85MUlCa9C5T7FHoSj6Tw",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "TVkqFpfD-eS_gKG8DwosyQ",
+            "date": "2019-09"
+        },
+        {
+            "pano_id": "pXZEPB3YGGTfHLcSc0IViQ",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "wI_doltAMYASpezMsdVZ3g",
+            "date": "2017-07"
+        }
+    ]
+}

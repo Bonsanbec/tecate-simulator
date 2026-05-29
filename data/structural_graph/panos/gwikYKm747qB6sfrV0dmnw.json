@@ -1,0 +1,49 @@
+{
+    "pano_id": "gwikYKm747qB6sfrV0dmnw",
+    "latitude": 32.57469722610251,
+    "longitude": -116.6101665605343,
+    "date": "2008-12",
+    "road_name": "P.\u00ba Jos\u00e9 Mar\u00eda Morelos y Pav\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "HljUx4uZJB3KXok7MbE2yg",
+            "road_name": "Tijuana-Mexicali",
+            "yaw_deg": 110.0973663330078
+        },
+        {
+            "pano_id": "KXpNgpkOdSIiv4KRvxmCjQ",
+            "road_name": "P.\u00ba Jos\u00e9 Mar\u00eda Morelos y Pav\u00f3n",
+            "yaw_deg": 290.4323425292969
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "_4u_w1dQdsuTeX28zmtpRQ",
+            "date": "2017-09"
+        },
+        {
+            "pano_id": "nmuSzSvYUHjBWvfigPxxPQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "oyYKnuPd6uqxJZdy8eaRzw",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "TivnwgGFTZ4m1HMdIWz-KA",
+            "date": "2022-06"
+        },
+        {
+            "pano_id": "wQVN_8aP6m6wy2-LzkPVMA",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "QeJ8EFIe4lJDBy4cUiiyYw",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "ETaRmz0A29viqeE-1kl3Jw",
+            "date": "2009-09"
+        }
+    ]
+}

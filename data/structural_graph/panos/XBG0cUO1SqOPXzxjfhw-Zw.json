@@ -1,0 +1,47 @@
+{
+    "pano_id": "XBG0cUO1SqOPXzxjfhw-Zw",
+    "latitude": 32.57055777654017,
+    "longitude": -116.6373672122999,
+    "date": "2009-09",
+    "road_name": "Puebla",
+    "adjacent_links": [
+        {
+            "pano_id": "ZIAf6FMsNmCBRkJaYTmBaw",
+            "road_name": "C. Teziutl\u00e1n",
+            "yaw_deg": 172.1891021728516
+        },
+        {
+            "pano_id": "TxsJTU3A27mJq1L08HsW8g",
+            "road_name": "C. Teziutl\u00e1n",
+            "yaw_deg": 354.1985473632812
+        },
+        {
+            "pano_id": "U26omurxY_njXj5ilPtjXw",
+            "road_name": "Puebla",
+            "yaw_deg": 275.00439453125
+        },
+        {
+            "pano_id": "JiZ6aHHtEx3NSfOXg6P1dQ",
+            "road_name": "Puebla",
+            "yaw_deg": 74.93717956542969
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "DI8dFywDrBl_kMTZqkzlkA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "S8WZrDYnqK-RptgWvmZcrw",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "XUOCWXWi_eOd7PDSmm3wgg",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "Phu0_Q4D5Sh2qHMVNaw4Ug",
+            "date": "2016-02"
+        }
+    ]
+}

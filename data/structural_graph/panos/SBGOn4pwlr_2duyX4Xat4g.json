@@ -1,0 +1,38 @@
+{
+    "pano_id": "SBGOn4pwlr_2duyX4Xat4g",
+    "latitude": 32.57233541794979,
+    "longitude": -116.6379949115054,
+    "date": "2009-03",
+    "road_name": "M\u00e9xico 2D",
+    "adjacent_links": [
+        {
+            "pano_id": "LCQXJXK90kFnX5KFbzZ0vg",
+            "road_name": "M\u00e9xico 2D",
+            "yaw_deg": 311.4278259277344
+        },
+        {
+            "pano_id": "XyQp_vCy3Mcd0X7zKUa1Rw",
+            "road_name": "Esteban Cant\u00fa",
+            "yaw_deg": 353.6290588378906
+        },
+        {
+            "pano_id": "6ZQhox1kUAKTrsCR5oqMhg",
+            "road_name": "Esteban Cant\u00fa",
+            "yaw_deg": 173.6600341796875
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "XbJVozHz5iLQLupe_RzJZg",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "s0b0LYLtS-U-DBrhKs5Q2A",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "B9GAS8Mm-ZPWY_RPBpmApA",
+            "date": "2009-09"
+        }
+    ]
+}

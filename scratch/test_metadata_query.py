@@ -5,7 +5,7 @@ import requests
 from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
 
 def test():
-    scraper = GoogleStreetViewScraper(cache_dir="data/raw_scraped")
+    scraper = GoogleStreetViewScraper()
     
     # 1. Query by coordinate
     print("Querying by coordinate near Parque Hidalgo...")

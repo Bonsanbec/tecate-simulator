@@ -1,0 +1,29 @@
+{
+    "pano_id": "O0ulWJJvQUZ8rPGqrt0NZw",
+    "latitude": 32.5689513130118,
+    "longitude": -116.6379952713726,
+    "date": "2009-08",
+    "road_name": "Flores",
+    "adjacent_links": [
+        {
+            "pano_id": "1anklBdEJAvC3r5JfiSzdg",
+            "road_name": "Flores",
+            "yaw_deg": 0.3735374808311462
+        },
+        {
+            "pano_id": "f9zpfyci4an6vcosvHY25w",
+            "road_name": "Venustiano Carranza",
+            "yaw_deg": 263.4100036621094
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Y_eMubIexyIiEIC_4r7j5A",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "7T0ZO3GUkmLNQwozdZP_5Q",
+            "date": "2022-09"
+        }
+    ]
+}

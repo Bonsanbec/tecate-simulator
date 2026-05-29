@@ -1,0 +1,42 @@
+{
+    "pano_id": "fMZXdf5CfEGZY8P6PGgC6w",
+    "latitude": 32.57085071799051,
+    "longitude": -116.6345026434071,
+    "date": "2009-09",
+    "road_name": "Aldrete",
+    "adjacent_links": [
+        {
+            "pano_id": "vPsEZA9TvHANh2tNlG20Bw",
+            "road_name": "Aldrete",
+            "yaw_deg": 175.3738098144531
+        },
+        {
+            "pano_id": "6WdrKCCHmDvUeeGjAD379w",
+            "road_name": "Puebla",
+            "yaw_deg": 256.5745239257812
+        },
+        {
+            "pano_id": "kQ-2G8SrD_GrIuBrN3pvQQ",
+            "road_name": "Aldrete",
+            "yaw_deg": 356.502685546875
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "nyQ6Nwjr1uNL3cYK9-NsFw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "VgxL79KtyVUer1UpGItDAw",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "3YzEtLv0V9lGsGs90SUWkw",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "EP2y-_6m3e2T8_21tdTRPg",
+            "date": "2016-02"
+        }
+    ]
+}

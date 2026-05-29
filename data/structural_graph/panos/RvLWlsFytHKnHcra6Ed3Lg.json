@@ -1,0 +1,25 @@
+{
+    "pano_id": "RvLWlsFytHKnHcra6Ed3Lg",
+    "latitude": 32.57310132692135,
+    "longitude": -116.6200522116246,
+    "date": "2009-09",
+    "road_name": "C. Rio Armer\u00eda",
+    "adjacent_links": [
+        {
+            "pano_id": "hfxhpMTusYH8PI2OdL4Dfg",
+            "road_name": "C. Rio Armer\u00eda",
+            "yaw_deg": 350.5254821777344
+        },
+        {
+            "pano_id": "-11dFaN-zzn-pGTFfxtikg",
+            "road_name": "C. Rio Armer\u00eda",
+            "yaw_deg": 170.52880859375
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "7NugMXoSu14216Q91vOslw",
+            "date": "2022-10"
+        }
+    ]
+}

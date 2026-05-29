@@ -1,0 +1,49 @@
+{
+    "pano_id": "yGzjg1duZQIlwFFHjT2Pyg",
+    "latitude": 32.57535936544613,
+    "longitude": -116.6124247234062,
+    "date": "2008-12",
+    "road_name": "P.\u00ba Jos\u00e9 Mar\u00eda Morelos y Pav\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "XAptj7g1xVahzbYkbr7cSA",
+            "road_name": "P.\u00ba Jos\u00e9 Mar\u00eda Morelos y Pav\u00f3n",
+            "yaw_deg": 103.0162811279297
+        },
+        {
+            "pano_id": "SQRGZZOfDRWM4ois4IWZnQ",
+            "road_name": "Tecate - Rumorosa Libre",
+            "yaw_deg": 278.3207092285156
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "fJbDKG5a9y_JAm1TgZYR-Q",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "18_COyYqQZgJA9quIXw5Bw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "QHZmzgMRzcoLOleJhBN_Vg",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "7rnzYYhePtWAVuOqZoq0vw",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "mi3cerRo_bTfl4YEfFMH7A",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "mnxVhII3jV7TtTuIGVgHtQ",
+            "date": "2017-09"
+        },
+        {
+            "pano_id": "blCxnp-PH80i5TlWzX2Hzw",
+            "date": "2009-09"
+        }
+    ]
+}

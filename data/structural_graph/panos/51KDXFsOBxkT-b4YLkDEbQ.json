@@ -1,0 +1,53 @@
+{
+    "pano_id": "51KDXFsOBxkT-b4YLkDEbQ",
+    "latitude": 32.55959118779167,
+    "longitude": -116.6229002285063,
+    "date": "2009-02",
+    "road_name": "Ensenada",
+    "adjacent_links": [
+        {
+            "pano_id": "6yspXmZHZ_nfBe9KdLeshw",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 136.9532318115234
+        },
+        {
+            "pano_id": "o18rLYz96OQ6j7aPJ2G_LQ",
+            "road_name": "Ensenada",
+            "yaw_deg": 319.2041320800781
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "B8m7JcwRjYVryyKK7ODjYw",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "1UrqR3HSx6RvhBNYjM9u9w",
+            "date": "2025-09"
+        },
+        {
+            "pano_id": "Ht0KPPb2ociwkEuC_cvtHQ",
+            "date": "2023-06"
+        },
+        {
+            "pano_id": "LElModoK8SF3j2N8F7GG6w",
+            "date": "2022-11"
+        },
+        {
+            "pano_id": "xMSdVlDa-zkKwss4xXU-UA",
+            "date": "2022-07"
+        },
+        {
+            "pano_id": "HTfLgJZUAN_jl_5Afn52gw",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "ru1JzejaR8621as5AYiDeg",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "kVmqmjWVkHUSTNzIJL87EA",
+            "date": "2009-09"
+        }
+    ]
+}

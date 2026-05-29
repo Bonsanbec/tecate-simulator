@@ -1,0 +1,42 @@
+{
+    "pano_id": "wjWYPK2CxfxBBpGmXwOehg",
+    "latitude": 32.57121550611809,
+    "longitude": -116.6374270403773,
+    "date": "2009-09",
+    "road_name": "Av. Miguel Hidalgo",
+    "adjacent_links": [
+        {
+            "pano_id": "Q8BM0DUFK5ut_KKMaAT9OA",
+            "road_name": "C. Teziutl\u00e1n",
+            "yaw_deg": 189.6027069091797
+        },
+        {
+            "pano_id": "d3JjeTbW6Qn63x95GgyXOg",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 84.1438980102539
+        },
+        {
+            "pano_id": "UmtBFXUOwxNaYTfOrEaPwQ",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 264.2113647460938
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "YXzX3RexyrfaguRt3pLZ2A",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "Fx-XMPyv8GaXIDNyUbxfZA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "d3httdCZjViDLAYBtNMNkQ",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "PIxmRsRwA7fzvSarkuYkbg",
+            "date": "2017-07"
+        }
+    ]
+}

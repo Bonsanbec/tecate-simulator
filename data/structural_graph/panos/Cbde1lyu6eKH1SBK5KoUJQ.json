@@ -1,0 +1,43 @@
+{
+    "pano_id": "Cbde1lyu6eKH1SBK5KoUJQ",
+    "latitude": 32.5688521601414,
+    "longitude": -116.6390423025122,
+    "date": "2009-09",
+    "road_name": "Venustiano Carranza",
+    "adjacent_links": [
+        {
+            "pano_id": "7WHhojpHb-jscNkLnspu1A",
+            "road_name": "Venustiano Carranza",
+            "yaw_deg": 70.99486541748047
+        },
+        {
+            "pano_id": "RzgJCUdudDnqyEEJpzQzyg",
+            "road_name": "C. 12",
+            "yaw_deg": 170.2100219726562
+        },
+        {
+            "pano_id": "m9vijMfhXgxYDO087E6LmQ",
+            "road_name": "Venustiano Carranza",
+            "yaw_deg": 271.5686950683594
+        },
+        {
+            "pano_id": "QCYOI_KJq_SpHj29tlRJAQ",
+            "road_name": "C. 12",
+            "yaw_deg": 351.1590270996094
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "ZQandOVrrmlAc6jc_mohCA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "ppLkgMbmEL15q0HJbAvn7g",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "hKd-RU8heMS8vsjfOl7_eA",
+            "date": "2017-10"
+        }
+    ]
+}

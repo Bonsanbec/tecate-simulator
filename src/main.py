@@ -6,7 +6,7 @@ import subprocess
 from PIL import Image
 
 from src.core_io.coords import gps_to_local, local_to_gps
-from src.core_io.io_manager import ensure_dir
+from src.core_io.io_manager import ensure_dir, load_json
 from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
 from src.data_acquisition.sv_procedural import ProceduralStreetViewGenerator
 from src.gis_graph.graph_builder import TecateGraphBuilder
@@ -55,8 +55,6 @@ def run_pipeline(args):
 
     # Make sure output directories exist
     ensure_dir("export/textures")
-    cache_dir = "data/raw_scraped"
-    ensure_dir(cache_dir)
 
     # 1. BUILD ROAD GRAPH FROM OSM
     builder = TecateGraphBuilder(cache_dir="data")
@@ -67,154 +65,113 @@ def run_pipeline(args):
     print(f"[GIS] Loaded road graph: {G.number_of_nodes()} intersections, {G.number_of_edges()} road segments.")
     print(f"[GIS] Placed {len(camera_stations)} virtual camera stations along segments.")
 
-    # 2. ACQUIRE STREET VIEW PANORAMAS (PUBLIC WEB SCRAPER & LOCAL ARCHIVAL CACHE)
-    raw_panos = []
-    pano_registry = {}  # Map station_id -> panorama details
+    # 2. ACQUIRE STREET VIEW PANORAMAS (CRAWLER TRAVERSAL)
     discovered_nodes = []
-    
+    scraper = None
     if not args.skip_scraper:
-        print("[Acquisition] Running Chromium Playwright scraper and public graph crawler...")
-        # Start crawler seed exactly at Parque Hidalgo
+        print("[Acquisition] Running Playwright scraper and public graph crawler...")
         seed_lat = 32.573229
         seed_lon = -116.626536
-        scraper = GoogleStreetViewScraper(cache_dir=cache_dir, headless=args.headless)
-        
-        # Crawl priority network centered on Parque Hidalgo within the bounding box
+        scraper = GoogleStreetViewScraper(headless=args.headless, G=G)
         discovered_nodes = scraper.crawl_priority_network(seed_lat, seed_lon, max_nodes=25)
     else:
-        print("[Acquisition] Skipping active Playwright crawling as requested. Using cached raw_scraped nodes.")
+        print("[Acquisition] Skipping active Playwright crawling. Proceeding to migrate cache.")
         
-    # Load ALL existing cached nodes under raw_scraped to utilize full 11GB footprint
-    cached_nodes = []
-    if os.path.exists(cache_dir):
-        for d in os.listdir(cache_dir):
-            meta_path = os.path.join(cache_dir, d, "metadata.json")
-            image_path = os.path.join(cache_dir, d, "panorama.png")
-            if os.path.exists(meta_path) and os.path.exists(image_path):
-                 try:
-                     with open(meta_path, "r", encoding="utf-8") as f:
-                         cached_nodes.append(json.load(f))
-                 except Exception:
-                     pass
-    print(f"[Acquisition] Loaded {len(cached_nodes)} nodes from local cache directory.")
-    
-    # Merge newly discovered nodes and cached nodes, ensuring uniqueness by pano_id
-    unique_nodes = {n["pano_id"]: n for n in cached_nodes}
-    for n in discovered_nodes:
-        unique_nodes[n["pano_id"]] = n
-    discovered_nodes = list(unique_nodes.values())
-    
-    print(f"[Acquisition] Total unique observational nodes for reconstruction: {len(discovered_nodes)}")
-    
-    # Distribute unique panoramas back to their closest camera station on the GIS graph
-    # (Observation-Driven Sparse Reconstruction: each panorama maps to at most one unique station, preventing duplicates)
-    assigned_stations = {}
-    for node in discovered_nodes:
-        node_x, node_y = gps_to_local(node["latitude"], node["longitude"])
-        best_station = None
-        min_dist = float("inf")
-        
-        for station in camera_stations:
-            dist = math.sqrt((station["x"] - node_x)**2 + (station["y"] - node_y)**2)
-            if dist < min_dist:
-                min_dist = dist
-                best_station = station
-                
-        if best_station and min_dist < 45.0:
-            s_id = best_station["station_id"]
-            if s_id not in assigned_stations or min_dist < assigned_stations[s_id][0]:
-                assigned_stations[s_id] = (min_dist, node, best_station)
-                
-    print(f"[Acquisition] Aligned {len(assigned_stations)} unique observations directly to road graph stations.")
-    for s_id, (dist, node, station) in assigned_stations.items():
-        image_path = os.path.join(cache_dir, node["pano_id"], "panorama.png")
-        if os.path.exists(image_path):
-            pano_img = Image.open(image_path)
-            
-            # Establish metadata temporal probability based on date
-            captured_date = node.get("date", "")
-            init_prob = 0.05
-            if captured_date:
-                try:
-                    year = int(captured_date.split("-")[0])
-                    if year == 2009 or year < 2010:
-                        init_prob = 0.90
-                except Exception:
-                    pass
-                    
-            pano_data = {
-                "latitude": node["latitude"],
-                "longitude": node["longitude"],
-                "pano_id": node["pano_id"],
-                "date": captured_date,
-                "temporal_probability": init_prob,
-                "image": pano_img,
-                "station_id": station["station_id"],
-                "edge_id": station["edge_id"],
-                "dist_along": station["dist_along"],
-                "adjacent_links": node.get("adjacent_links", []),
-                "timeline": node.get("timeline", [])
-            }
-            raw_panos.append(pano_data)
-            pano_registry[station["station_id"]] = pano_data
+    if args.harvest_only:
+        print("\n" + "="*60)
+        visited_count = len(scraper.visited_panos) if scraper else 0
+        print(f"[Harvest Mode] Scraping and data harvesting complete. Scraped and cached {visited_count} total nodes under Layer 1/2 structures.")
+        print("[Harvest Mode] Skipping all downstream filtering, homography mapping, and Blender 3D reconstruction.")
+        print("="*60 + "\n")
+        return
 
-    # 3. IMAGE ANCHORING & ALIGNMENT
-    aligner = ImageAligner()
-    aligned_panos = []
-    
-    print("[Alignment] Geospatially anchoring and correcting camera orientations...")
-    for pano in raw_panos:
-        # Find closest graph coordinates
-        aligned_meta = aligner.anchor_to_graph(pano, camera_stations)
-        if aligned_meta:
-            # Re-estimate vanishing point to correct yaw heading offsets!
-            # Since our procedural generator maps lines correctly, we can verify it
-            offset = aligner.estimate_vanishing_point_heading_offset(pano["image"])
-            aligned_meta["heading_correction"] = float(offset)
-            
-            # Update registered pose heading
-            aligned_meta["corrected_road_heading"] = (aligned_meta["road_heading"] + offset) % 360.0
-            
-            aligned_panos.append(aligned_meta)
-            
-    print(f"[Alignment] Successfully anchored {len(aligned_panos)} panoramas to graph. Vanishing point heading offsets evaluated.")
+    # 3. RUN LAYER 1 & LAYER 2 ARCHIVAL DATA MIGRATION
+    # Idempotent, deterministic migration. Will transiently stitch new crawler nodes
+    # and extract Layer 2 frontal observations, deprecating persistent raw panoramas.
+    from src.core_io.migration import ArchivalDataMigrator
+    migrator = ArchivalDataMigrator(raw_cache_dir="data/raw_scraped", data_dir="data")
+    # Cap processing to prevent time limits
+    migrator.run_migration(max_observations_to_process=120)
+
+    # Load migrated Layer 1 structures
+    intersections = load_json("data/structural_graph/intersections.json")
+    road_graph = load_json("data/structural_graph/road_graph.json")
+    adjacency = load_json("data/structural_graph/adjacency.json")
 
     # 4. TEMPORAL FILTERING LAYER (STRICT 2009 CONSTRAINT)
     print("[Temporal Filter] Applying strict circa 2009 temporal classifier...")
-    visual_classifier = TemporalVisualClassifier()
     
-    # Update probabilities using visual analysis first (simulates missing timestamps)
-    for idx, pano in enumerate(aligned_panos):
-        s_id = pano["station_id"]
-        raw_pano_img = pano_registry[s_id]["image"]
-        
-        # Calculate visual 2009 probability from SIFT/ORB/Laplacian metrics
-        v_prob = visual_classifier.compute_visual_2009_probability(raw_pano_img)
-        
-        # Unify: metadata probability + visual probability
-        combined_prob = 0.85 * pano["temporal_probability"] + 0.15 * v_prob
-        pano["temporal_probability"] = combined_prob
-        
-    # Solve graph neighborhood consistency using Markov Random Field belief propagation
+    # Construct the panorama structural graph nodes to run MRF belief propagation
+    # We collect all raw scraped nodes metadata from the structural graph panos directory
+    mrf_nodes = []
+    pano_meta_dir = "data/structural_graph/panos"
+    scraped_meta_files = os.listdir(pano_meta_dir) if os.path.exists(pano_meta_dir) else []
+    
+    for f_name in scraped_meta_files:
+        if f_name.endswith(".json"):
+            m_path = os.path.join(pano_meta_dir, f_name)
+            if os.path.exists(m_path):
+                try:
+                    meta = load_json(m_path)
+                    p_id = meta["pano_id"]
+                    
+                    # Establish metadata temporal probability based on date
+                    captured_date = meta.get("date", "")
+                    init_prob = 0.05
+                    if captured_date:
+                        try:
+                            year = int(captured_date.split("-")[0])
+                            if year == 2009 or year < 2010:
+                                init_prob = 0.90
+                        except Exception:
+                            pass
+                            
+                    # Determine its spatial position
+                    node_x, node_y = gps_to_local(meta["latitude"], meta["longitude"])
+                    
+                    # Assign to closest camera station
+                    best_station = None
+                    min_dist = float("inf")
+                    for station in camera_stations:
+                        dist = math.sqrt((station["x"] - node_x)**2 + (station["y"] - node_y)**2)
+                        if dist < min_dist:
+                            min_dist = dist
+                            best_station = station
+                            
+                    if best_station and min_dist < 45.0:
+                        mrf_nodes.append({
+                            "pano_id": p_id,
+                            "station_id": best_station["station_id"],
+                            "edge_id": best_station["edge_id"],
+                            "dist_along": best_station["dist_along"],
+                            "graph_x": best_station["x"],
+                            "graph_y": best_station["y"],
+                            "latitude": meta["latitude"],
+                            "longitude": meta["longitude"],
+                            "temporal_probability": init_prob,
+                            "road_heading": best_station["road_heading"],
+                            "corrected_road_heading": best_station["road_heading"],
+                            "adjacent_links": meta.get("adjacent_links", [])
+                        })
+                except Exception:
+                    pass
+
+    print(f"[Temporal Filter] Running MRF Solver over {len(mrf_nodes)} structural reference nodes...")
     mrf_solver = TemporalMRFSolver(G)
-    filtered_panos = mrf_solver.solve_temporal_consistency(aligned_panos, alpha=0.55, iterations=8)
+    filtered_panos = mrf_solver.solve_temporal_consistency(mrf_nodes, alpha=0.55, iterations=8)
     
-    # Re-build our registry to only contain accepted 2009-consistent panoramas
-    accepted_registry = {}
-    for fp in filtered_panos:
-        s_id = fp["station_id"]
-        if fp["accepted"]:
-            pano_details = dict(pano_registry[s_id])
-            pano_details["graph_x"] = fp["graph_x"]
-            pano_details["graph_y"] = fp["graph_y"]
-            pano_details["corrected_road_heading"] = fp["corrected_road_heading"]
-            accepted_registry[s_id] = pano_details
-            
-    print(f"[Temporal Filter] Enforced strict 2009 constraint. Filtered out non-2009. Accepted: {len(accepted_registry)} / {len(aligned_panos)} panoramas.")
+    # Register accepted panoramas
+    accepted_pano_ids = set([fp["pano_id"] for fp in filtered_panos if fp.get("accepted", False)])
+    print(f"[Temporal Filter] Accepted {len(accepted_pano_ids)} / {len(mrf_nodes)} panoramas as circa-2009 consistent.")
+
+    # 5. HISTORICAL URBAN BLOCK RECONSTRUCTION (FACADE-OBSERVATION-NATIVE)
+    print("[Reconstruction] Running facade-observation-native block prism reconstruction...")
     
-    # 5. HISTORICAL URBAN BLOCK RECONSTRUCTION & PRISM TEXTURE EXPORT
-    print("[Reconstruction] Running prism reconstruction and perspective facade extraction...")
-    reconstructor = UrbanBlockReconstructor(G, list(accepted_registry.values()), export_dir="export")
+    reconstructor = UrbanBlockReconstructor(G, export_dir="export")
+    # Filter reconstructor panoramas to only keep accepted temporal ones
+    reconstructor.panoramas = [p for p in reconstructor.panoramas if p["pano_id"] in accepted_pano_ids]
+    
+    print(f"[Reconstruction] Feeding {len(reconstructor.panoramas)} accepted panoramas to geometry generator.")
     blocks_data, scene_doc = reconstructor.reconstruct_blocks_and_texture()
     
     export_filepath = "export/reconstruction_export.json"
@@ -249,7 +206,9 @@ if __name__ == "__main__":
     parser.add_argument("--headless", action="store_true", default=False,
                         help="Run Playwright Chromium browser in headless mode (default: False to support WebGL on Mac)")
     parser.add_argument("--skip-scraper", action="store_true", default=False,
-                        help="Bypass Playwright browser crawling and load directly from 3,512 cached raw_scraped nodes")
+                        help="Bypass Playwright browser crawling and load directly from cached structural_graph nodes")
+    parser.add_argument("--harvest-only", action="store_true", default=False,
+                        help="Harvest data mode: performs scraping/crawling but skips all processing, filtering, and 3D reconstruction.")
     
     args = parser.parse_args()
     run_pipeline(args)

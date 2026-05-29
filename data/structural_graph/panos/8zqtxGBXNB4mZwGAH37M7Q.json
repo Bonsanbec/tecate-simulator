@@ -1,0 +1,51 @@
+{
+    "pano_id": "8zqtxGBXNB4mZwGAH37M7Q",
+    "latitude": 32.57027583717189,
+    "longitude": -116.6360641258524,
+    "date": "2009-09",
+    "road_name": "C. E",
+    "adjacent_links": [
+        {
+            "pano_id": "eWtt-1uEK99mt_B0I9UNLQ",
+            "road_name": "C. E",
+            "yaw_deg": 283.6040344238281
+        },
+        {
+            "pano_id": "yX4268ErpKJC2nDCe5vA3Q",
+            "road_name": "C. E",
+            "yaw_deg": 64.72476196289062
+        },
+        {
+            "pano_id": "IZAvPvouVsLuu2lGUPckbQ",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 173.7919769287109
+        },
+        {
+            "pano_id": "lpA9PcCOlPCF_VwZYYZx5A",
+            "road_name": "C. Eufracio Santana",
+            "yaw_deg": 355.9753112792969
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "XJOjL9_ChFh5LeGzWwJS3A",
+            "date": "2022-07"
+        },
+        {
+            "pano_id": "ZL4rc9qiA81irChkPIi4AQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "npQUM88ovdf1Ec4yXRQjfQ",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "_UPrvPBy8mn2o4-1UFq3BA",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "wHazrPIaxAJAmvGd6J5hKQ",
+            "date": "2022-09"
+        }
+    ]
+}

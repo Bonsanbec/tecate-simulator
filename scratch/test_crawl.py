@@ -10,8 +10,7 @@ logging.basicConfig(level=logging.INFO)
 
 from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
 
-cache_dir = "data/raw_scraped"
-scraper = GoogleStreetViewScraper(cache_dir=cache_dir, headless=False)
+scraper = GoogleStreetViewScraper(headless=False)
 
 seed_lat = 32.573229
 seed_lon = -116.626536

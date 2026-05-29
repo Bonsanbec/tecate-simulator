@@ -1,0 +1,25 @@
+{
+    "pano_id": "qUWPuWibzJl7tX2jIFWMAA",
+    "latitude": 32.57304559239508,
+    "longitude": -116.6193981002107,
+    "date": "2009-09",
+    "road_name": "Av. Miguel Hidalgo",
+    "adjacent_links": [
+        {
+            "pano_id": "mkv54uxY7FEXCZ7LdZcUEA",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 218.7022094726562
+        },
+        {
+            "pano_id": "-Pk_SnctMPclI4ZuYlJZng",
+            "road_name": "C. Rio Tijuana",
+            "yaw_deg": 353.5733337402344
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "brn9Hs9SD-QQA8Tg-yf7xg",
+            "date": "2017-07"
+        }
+    ]
+}

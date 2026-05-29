@@ -1,0 +1,38 @@
+{
+    "pano_id": "FaJjKmd7zvPedTHO1DKqWA",
+    "latitude": 32.5726426911166,
+    "longitude": -116.6230516526766,
+    "date": "2009-09",
+    "road_name": "Oscar Bayl\u00f3n y o Defensores de Baja California",
+    "adjacent_links": [
+        {
+            "pano_id": "hAILslY5YdG1OR-q6OBTwQ",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 354.6996765136719
+        },
+        {
+            "pano_id": "9qCGLMhlGhFfFvznroZw-w",
+            "road_name": "Av. Miguel Hidalgo",
+            "yaw_deg": 124.7903366088867
+        },
+        {
+            "pano_id": "I8TfuOi_z9b2TIMpkm2Oxw",
+            "road_name": "Oscar Bayl\u00f3n y o Defensores de Baja California",
+            "yaw_deg": 176.4130096435547
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "8vBKqQUmpS5GjaSvOhB2OA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "Dflw_V09ah7NJ6rV0Ix0YQ",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "B17GIYMVhjzexDYc0Rjpag",
+            "date": "2021-09"
+        }
+    ]
+}

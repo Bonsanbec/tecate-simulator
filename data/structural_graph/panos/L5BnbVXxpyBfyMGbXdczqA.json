@@ -1,0 +1,34 @@
+{
+    "pano_id": "L5BnbVXxpyBfyMGbXdczqA",
+    "latitude": 32.57038430857376,
+    "longitude": -116.6390782890607,
+    "date": "2009-08",
+    "road_name": "Flores",
+    "adjacent_links": [
+        {
+            "pano_id": "-bsnyQ2Ga5tHutUJgCz5Pw",
+            "road_name": "C. E",
+            "yaw_deg": 134.4814758300781
+        },
+        {
+            "pano_id": "uFDvyrg6FC4F7jO1ibr2TA",
+            "road_name": "Puebla",
+            "yaw_deg": 262.5850830078125
+        },
+        {
+            "pano_id": "1anklBdEJAvC3r5JfiSzdg",
+            "road_name": "Flores",
+            "yaw_deg": 133.1206512451172
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "dDlJWWDCCfbPtSG5pJKvTg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "_z7vk-Q7QDRBoEQEN-ve8Q",
+            "date": "2022-09"
+        }
+    ]
+}
