@@ -1,0 +1,33 @@
+{
+    "pano_id": "UgqgZK2-3G7712CHf542Dg",
+    "latitude": 32.56290755021102,
+    "longitude": -116.6216581506097,
+    "date": "2009-09",
+    "road_name": "Leona Vicario",
+    "adjacent_links": [
+        {
+            "pano_id": "TCwi6FiDompm6E9Xg4bwKg",
+            "road_name": "Leona Vicario",
+            "yaw_deg": 171.3868713378906
+        },
+        {
+            "pano_id": "8Te2xKaykw2R5prY-GwLQg",
+            "road_name": "Leona Vicario",
+            "yaw_deg": 351.4232482910156
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "VFqU7TqOdcDBE4MxWjilBA",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "HuZHHRTh_P6KKgjacxwzqQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "rQCVNxundPawoBv-bUDaBw",
+            "date": "2017-07"
+        }
+    ]
+}

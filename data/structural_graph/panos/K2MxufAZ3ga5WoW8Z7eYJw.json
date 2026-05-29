@@ -1,0 +1,33 @@
+{
+    "pano_id": "K2MxufAZ3ga5WoW8Z7eYJw",
+    "latitude": 32.56466478718539,
+    "longitude": -116.6188500667602,
+    "date": "2009-09",
+    "road_name": "Luis Donaldo Colosio Murrieta",
+    "adjacent_links": [
+        {
+            "pano_id": "HlUA8x_FjOfN9I-qYKHS3g",
+            "road_name": "Luis Donaldo Colosio Murrieta",
+            "yaw_deg": 76.50984191894531
+        },
+        {
+            "pano_id": "O9a78LdsDQiWSPdtMWgPlQ",
+            "road_name": "Luis Donaldo Colosio Murrieta",
+            "yaw_deg": 256.6054382324219
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "oRn6T7gVViE1BH31kP1V4w",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "bLS-SHpnx1CBtD9AW8Oopg",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "Bc6kIMxnC3oVU9o9vGmMOA",
+            "date": "2017-07"
+        }
+    ]
+}

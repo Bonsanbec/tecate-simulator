@@ -1,0 +1,29 @@
+{
+    "pano_id": "2Oi_76QdtskiQb4eELANEg",
+    "latitude": 32.56315904474226,
+    "longitude": -116.6211523201955,
+    "date": "2009-09",
+    "road_name": "Josefa Ortiz de Dom\u00ednguez",
+    "adjacent_links": [
+        {
+            "pano_id": "ScQbdlWxKMl_SZL_mLhE8g",
+            "road_name": "Josefa Ortiz de Dom\u00ednguez",
+            "yaw_deg": 171.7377471923828
+        },
+        {
+            "pano_id": "EVOYZ_n0k69p7ocOx3kAYQ",
+            "road_name": "Josefa Ortiz de Dom\u00ednguez",
+            "yaw_deg": 351.7837829589844
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Yn0mEojsAfyzTLYg5dtfDg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "e5D0ehIxWZyLKUDd3-Qycg",
+            "date": "2022-09"
+        }
+    ]
+}

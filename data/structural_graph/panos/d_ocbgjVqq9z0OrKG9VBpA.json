@@ -1,0 +1,29 @@
+{
+    "pano_id": "d_ocbgjVqq9z0OrKG9VBpA",
+    "latitude": 32.56400288448261,
+    "longitude": -116.6196602848473,
+    "date": "2009-09",
+    "road_name": "C. Gertrudis Bocanegra",
+    "adjacent_links": [
+        {
+            "pano_id": "_KUbe0sdOzlGW-xiCooE3w",
+            "road_name": "C. Gertrudis Bocanegra",
+            "yaw_deg": 350.9714660644531
+        },
+        {
+            "pano_id": "FpN79aoLeblOrsYVcyJmFA",
+            "road_name": "C. Gertrudis Bocanegra",
+            "yaw_deg": 170.9549560546875
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "zcIxl87VN9h7yqgxsX9FkA",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "sTxPz8jXO2yr5nDmfETQqw",
+            "date": "2025-08"
+        }
+    ]
+}
