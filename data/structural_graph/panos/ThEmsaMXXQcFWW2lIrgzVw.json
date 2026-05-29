@@ -1,0 +1,50 @@
+{
+    "pano_id": "ThEmsaMXXQcFWW2lIrgzVw",
+    "latitude": 32.56572261476501,
+    "longitude": -116.6318219354382,
+    "date": "2009-09",
+    "road_name": "Dr. Arturo Guerra",
+    "adjacent_links": [
+        {
+            "pano_id": "DG29hg3ef0ML7PnEStxBwA",
+            "road_name": "Dr. Arturo Guerra",
+            "yaw_deg": 352.5892333984375
+        },
+        {
+            "pano_id": "N5GvvuactJOugYl8YPjevg",
+            "road_name": "Dr. Arturo Guerra",
+            "yaw_deg": 172.5809020996094
+        },
+        {
+            "pano_id": "2BGgXlOLAYZQD5Dj_Vkm3w",
+            "road_name": "Av Nuevo Le\u00f3n",
+            "yaw_deg": 23.80444145202637
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "huBwJBSYTS5tBesx80W4VQ",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "jykYIzPOXxKgaoXbpXTBow",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "rf9Y12J1EwHaqP3TjO3q-Q",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "2MSZWADIV19sAgLUon6NYA",
+            "date": "2022-11"
+        },
+        {
+            "pano_id": "TFrfhoWr8xhOeelQ2jhYPg",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "q0b_R0Z6CQ9N1R7ode25rw",
+            "date": "2016-02"
+        }
+    ]
+}

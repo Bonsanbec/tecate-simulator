@@ -1,0 +1,30 @@
+{
+    "pano_id": "BVZRGIxGH-zLzHmnTSB_mQ",
+    "latitude": 32.56591122142109,
+    "longitude": -116.6206841876271,
+    "date": "2009-09",
+    "road_name": "Juan \u00c1lvarez",
+    "adjacent_links": [
+        {
+            "pano_id": "SGNjUSEuZ4lgZe0A1CrEzg",
+            "road_name": "C. Sebasti\u00e1n Lerdo de Tejada",
+            "yaw_deg": 0.69508957862854
+        },
+        {
+            "pano_id": "D0_k3-rHe2NatRDMqiyS_Q",
+            "road_name": "Juan \u00c1lvarez",
+            "yaw_deg": 152.0869598388672
+        },
+        {
+            "pano_id": "uNQuCMySJnqORUkgW_9YkQ",
+            "road_name": "C. Sebasti\u00e1n Lerdo de Tejada",
+            "yaw_deg": 180.0590972900391
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "n5X8PaR_KhKawRewcBwNSQ",
+            "date": "2022-09"
+        }
+    ]
+}

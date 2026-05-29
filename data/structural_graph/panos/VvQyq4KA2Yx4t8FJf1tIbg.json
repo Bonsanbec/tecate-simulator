@@ -1,0 +1,25 @@
+{
+    "pano_id": "VvQyq4KA2Yx4t8FJf1tIbg",
+    "latitude": 32.56662933076478,
+    "longitude": -116.6199159910539,
+    "date": "2009-09",
+    "road_name": "Gral. S\u00e1nchez Taboada",
+    "adjacent_links": [
+        {
+            "pano_id": "1sUju2AH3aEBQNUmbOSrXg",
+            "road_name": "Gral. S\u00e1nchez Taboada",
+            "yaw_deg": 179.0856170654297
+        },
+        {
+            "pano_id": "NCls6NsZcRDf7NIw2OlDOQ",
+            "road_name": "Gral. S\u00e1nchez Taboada",
+            "yaw_deg": 359.1011962890625
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "TdPDvw6BCVy5ZKay-cR8Iw",
+            "date": "2022-09"
+        }
+    ]
+}

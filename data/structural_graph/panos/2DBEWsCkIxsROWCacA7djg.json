@@ -1,0 +1,61 @@
+{
+    "pano_id": "2DBEWsCkIxsROWCacA7djg",
+    "latitude": 32.57290321871393,
+    "longitude": -116.635827690969,
+    "date": "2009-02",
+    "road_name": "Tecate - Tijuana",
+    "adjacent_links": [
+        {
+            "pano_id": "ww-2Taf_RgixXadT3Re-cQ",
+            "road_name": "Av. Benito Ju\u00e1rez",
+            "yaw_deg": 264.236083984375
+        },
+        {
+            "pano_id": "T1vWAiTR5nfxu5XXFX_HpA",
+            "road_name": "Tecate - Tijuana",
+            "yaw_deg": 84.21569061279297
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "3aQbc-KiuAfhuTlusNuWtQ",
+            "date": "2009-09"
+        },
+        {
+            "pano_id": "Z14P_7vtum4NttO7zqPpcA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "jNyRF4uOwcnIZuUaG8PifA",
+            "date": "2023-07"
+        },
+        {
+            "pano_id": "QwQFOV-3alZCIsaFxPg-TA",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "msebMa82bCrTKVKVQrI7zg",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "vXoai5yOhRHngyjQkmjdfg",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "p0gVGLkPHq7WQjErFhQRRQ",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "6gpPA9-f9cCx3gZfz5aZqA",
+            "date": "2019-09"
+        },
+        {
+            "pano_id": "eTnvDOf2zjkoDelvLQTdbA",
+            "date": "2017-09"
+        },
+        {
+            "pano_id": "r71L1PS8yiJNjqH0ocyGHg",
+            "date": "2016-02"
+        }
+    ]
+}
