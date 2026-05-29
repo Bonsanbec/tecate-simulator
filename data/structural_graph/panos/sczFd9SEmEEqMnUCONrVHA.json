@@ -1,0 +1,39 @@
+{
+    "pano_id": "sczFd9SEmEEqMnUCONrVHA",
+    "latitude": 32.56718322542726,
+    "longitude": -116.6190344242451,
+    "date": "2009-09",
+    "road_name": "Gral. Abraham A.",
+    "adjacent_links": [
+        {
+            "pano_id": "rWPy-hXngk_9V8UXj8TtQA",
+            "road_name": "Gral. Abraham A.",
+            "yaw_deg": 180.2920074462891
+        },
+        {
+            "pano_id": "gk7L1oKcZGqUlfu9CVUDrw",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 122.8704299926758
+        },
+        {
+            "pano_id": "Tx5PgqDaH3s1We1rVo-eHw",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 232.7531280517578
+        },
+        {
+            "pano_id": "3yil5_RB0Vz9Ph2sgMXZ8A",
+            "road_name": "Gral. Abraham A.",
+            "yaw_deg": 359.8497924804688
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "99V3r16HQW_J9iqkrK-ohw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "fWxIgOxdJu-I_ax_1CmCAg",
+            "date": "2022-09"
+        }
+    ]
+}

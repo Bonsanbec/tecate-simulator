@@ -1,0 +1,55 @@
+{
+    "pano_id": "3-BttKoCaCi8M_2ShEonAQ",
+    "latitude": 32.56368249059236,
+    "longitude": -116.6255542305868,
+    "date": "2009-09",
+    "road_name": "Ensenada",
+    "adjacent_links": [
+        {
+            "pano_id": "3hGJaLoyGn2sHYtzbc_fvA",
+            "road_name": "Av Nuevo Le\u00f3n",
+            "yaw_deg": 314.5971374511719
+        },
+        {
+            "pano_id": "Z2wx9DaFzbLfU7V0D8gjqA",
+            "road_name": "Ensenada",
+            "yaw_deg": 182.6364593505859
+        },
+        {
+            "pano_id": "MUAmLjCPunV4Zmc5BJA2qQ",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 4.041800975799561
+        },
+        {
+            "pano_id": "C3jPVowkHSjMKxEv_7lMFQ",
+            "road_name": "Amaya",
+            "yaw_deg": 123.4633102416992
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "UXHjT75Wzb8KhWd6TR29ZA",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "RM6dQvT8TcFqI5v57bz-Nw",
+            "date": "2025-09"
+        },
+        {
+            "pano_id": "LMrxxW5PhbSp5pbmcsi8Lg",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "7rQ71Z51jS7plvICaSt16A",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "rDlnzYzrnnyl7X9x_5VOVw",
+            "date": "2017-08"
+        },
+        {
+            "pano_id": "X9_ve0mHDpTKyW5CXUD8sg",
+            "date": "2009-02"
+        }
+    ]
+}

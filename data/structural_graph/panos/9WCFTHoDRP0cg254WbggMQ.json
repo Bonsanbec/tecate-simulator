@@ -1,0 +1,33 @@
+{
+    "pano_id": "9WCFTHoDRP0cg254WbggMQ",
+    "latitude": 32.56516174003787,
+    "longitude": -116.6316839225621,
+    "date": "2009-09",
+    "road_name": "Dr. Arturo Guerra",
+    "adjacent_links": [
+        {
+            "pano_id": "We4JoR-x2FhKWe9nW4ABAA",
+            "road_name": "Zacatecas",
+            "yaw_deg": 82.53828430175781
+        },
+        {
+            "pano_id": "E3rHPGmxaaXPuHA9bKnP-g",
+            "road_name": "Dr. Arturo Guerra",
+            "yaw_deg": 252.8458709716797
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "2RUSgFq4vbT6TT8sqSuxcA",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "qSMEgmsTrKuz8RYuyXObAg",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "o-xN4SMoimyDVKsAjGkMbQ",
+            "date": "2017-07"
+        }
+    ]
+}

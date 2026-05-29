@@ -1,0 +1,29 @@
+{
+    "pano_id": "gk7L1oKcZGqUlfu9CVUDrw",
+    "latitude": 32.56715390250369,
+    "longitude": -116.6189819692024,
+    "date": "2009-09",
+    "road_name": "Gral. Abraham A.",
+    "adjacent_links": [
+        {
+            "pano_id": "sczFd9SEmEEqMnUCONrVHA",
+            "road_name": "Gral. Abraham A.",
+            "yaw_deg": 302.8704223632812
+        },
+        {
+            "pano_id": "subZWTsbIsOlNRQNnP-rZQ",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 88.35848236083984
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "_ZR8FZpzjHlgA--GhhKvfQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "SCHioK9y1wgG_fe6Wzb8tQ",
+            "date": "2022-09"
+        }
+    ]
+}
