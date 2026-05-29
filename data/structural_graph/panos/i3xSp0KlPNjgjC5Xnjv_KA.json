@@ -1,0 +1,29 @@
+{
+    "pano_id": "i3xSp0KlPNjgjC5Xnjv_KA",
+    "latitude": 32.57075976415315,
+    "longitude": -116.6184393332203,
+    "date": "2009-09",
+    "road_name": "Teocali",
+    "adjacent_links": [
+        {
+            "pano_id": "HjXR2vAPUrERFLtjf4-pVg",
+            "road_name": "Teocali",
+            "yaw_deg": 13.16938972473145
+        },
+        {
+            "pano_id": "y2Aig8DuNkRlSVIScHIXvQ",
+            "road_name": "Teocali",
+            "yaw_deg": 192.0363464355469
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "0FQu952zlRPxvo8BiymJYw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "jGttUodxQw5XSH0BT_e9zg",
+            "date": "2022-09"
+        }
+    ]
+}

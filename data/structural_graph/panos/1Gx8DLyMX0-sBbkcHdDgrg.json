@@ -1,0 +1,29 @@
+{
+    "pano_id": "1Gx8DLyMX0-sBbkcHdDgrg",
+    "latitude": 32.56904491841951,
+    "longitude": -116.6189601954075,
+    "date": "2009-09",
+    "road_name": "Gral. Abraham A.",
+    "adjacent_links": [
+        {
+            "pano_id": "kVf5AZ89KJysBXcTMOWAUQ",
+            "road_name": "Piedra del Sol",
+            "yaw_deg": 45.32984924316406
+        },
+        {
+            "pano_id": "93s_jF7zifs4TWtyJyY4cA",
+            "road_name": "Gral. Abraham A.",
+            "yaw_deg": 200.8928680419922
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Z_Iwb9ioUUAHDge-ZXiElw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "JZ8KKf-BnAnvoy90oGp4uQ",
+            "date": "2022-09"
+        }
+    ]
+}

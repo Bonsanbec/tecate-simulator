@@ -1,0 +1,38 @@
+{
+    "pano_id": "kVf5AZ89KJysBXcTMOWAUQ",
+    "latitude": 32.56914650171777,
+    "longitude": -116.6188928045994,
+    "date": "2009-09",
+    "road_name": "Vicente Guerrero",
+    "adjacent_links": [
+        {
+            "pano_id": "La5mdZTZvnvAI4Y_g9UALA",
+            "road_name": "Piedra del Sol",
+            "yaw_deg": 83.5671615600586
+        },
+        {
+            "pano_id": "JSjDoKNxw9JUFSStSUsaxA",
+            "road_name": "Vicente Guerrero",
+            "yaw_deg": 263.786376953125
+        },
+        {
+            "pano_id": "1Gx8DLyMX0-sBbkcHdDgrg",
+            "road_name": "Gral. Abraham A.",
+            "yaw_deg": 225.3298492431641
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "ln4XXMGIbLRiRiQTVesNaw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "YXrlpvjV6tmyC_2Uv1NnBw",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "98EUoeRyGDp6O9biTdjsRw",
+            "date": "2017-10"
+        }
+    ]
+}

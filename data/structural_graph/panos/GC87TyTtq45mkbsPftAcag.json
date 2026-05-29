@@ -1,0 +1,29 @@
+{
+    "pano_id": "GC87TyTtq45mkbsPftAcag",
+    "latitude": 32.57035728967467,
+    "longitude": -116.6183868780399,
+    "date": "2009-09",
+    "road_name": "Teocali",
+    "adjacent_links": [
+        {
+            "pano_id": "tthSgflItbfuXiDWc4Ml_g",
+            "road_name": "Teocali",
+            "yaw_deg": 296.7204284667969
+        },
+        {
+            "pano_id": "CqtcUQZjjGPtyYOfbCpdCw",
+            "road_name": "Chapultepec",
+            "yaw_deg": 95.88426208496094
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "c295GyUD7PlT075GmkU54g",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "1DWsIydVCD2_LldCA18RgQ",
+            "date": "2022-09"
+        }
+    ]
+}

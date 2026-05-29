@@ -1,0 +1,29 @@
+{
+    "pano_id": "jpCHjQQNh12w6-PAZTSbFA",
+    "latitude": 32.57041060015813,
+    "longitude": -116.6346809602818,
+    "date": "2009-09",
+    "road_name": "C. E",
+    "adjacent_links": [
+        {
+            "pano_id": "RPsbUw58zNtcmZTzcFcZLQ",
+            "road_name": "C. E",
+            "yaw_deg": 264.4420166015625
+        },
+        {
+            "pano_id": "zK7ho6lIjMpVueP9xZO0fQ",
+            "road_name": "C. E",
+            "yaw_deg": 84.47161102294922
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "i1MihBZLBY4WAKmMOD4Zew",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "thLUPQ12RSIkyCLsvVTf5g",
+            "date": "2022-09"
+        }
+    ]
+}
