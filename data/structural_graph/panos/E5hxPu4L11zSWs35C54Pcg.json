@@ -1,0 +1,34 @@
+{
+    "pano_id": "E5hxPu4L11zSWs35C54Pcg",
+    "latitude": 32.56732357131065,
+    "longitude": -116.6261911396729,
+    "date": "2009-09",
+    "road_name": "Calle Jos\u00e9 Mar\u00eda Morelos",
+    "adjacent_links": [
+        {
+            "pano_id": "s9cjnzJOGp5ZvtZnhFY7dg",
+            "road_name": "Huetamo",
+            "yaw_deg": 266.1067504882812
+        },
+        {
+            "pano_id": "pjy1JNAhAL9nOi09aUOsbQ",
+            "road_name": "Calle Jos\u00e9 Mar\u00eda Morelos",
+            "yaw_deg": 239.1008911132812
+        },
+        {
+            "pano_id": "FdDoQveOK7PaoDUJ5drZ6A",
+            "road_name": "Huetamo",
+            "yaw_deg": 87.73295593261719
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Oz8bc0cPAXb2TnaHd086bg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "QO4DaALPbcPlkJuDwAocbA",
+            "date": "2022-10"
+        }
+    ]
+}

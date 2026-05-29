@@ -1,0 +1,29 @@
+{
+    "pano_id": "VvHCI_y3z3yr0HRdv707YQ",
+    "latitude": 32.56729028955403,
+    "longitude": -116.6255475726776,
+    "date": "2009-09",
+    "road_name": "Huetamo",
+    "adjacent_links": [
+        {
+            "pano_id": "EcHFfofQ5safQ9vfpu1H3g",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 46.73360824584961
+        },
+        {
+            "pano_id": "1hz5uNzFo_JKcaRHB4gb7Q",
+            "road_name": "Huetamo",
+            "yaw_deg": 267.7611999511719
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Gmn125rd8rfbjIOZzyeU3g",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "Un7GmvyBXNbmRjTp_mor_g",
+            "date": "2022-09"
+        }
+    ]
+}

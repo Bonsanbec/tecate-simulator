@@ -1,0 +1,39 @@
+{
+    "pano_id": "8X1N-7KR2f-MCvFZZhu2pA",
+    "latitude": 32.56715886963238,
+    "longitude": -116.6281953357514,
+    "date": "2009-09",
+    "road_name": "Huetamo",
+    "adjacent_links": [
+        {
+            "pano_id": "MGDH9BAUX9ZzAgXnWFVPig",
+            "road_name": "Esteban Cant\u00fa",
+            "yaw_deg": 173.9974212646484
+        },
+        {
+            "pano_id": "WkrIfl53ygSv-QYFF86AHg",
+            "road_name": "Huetamo",
+            "yaw_deg": 226.5192260742188
+        },
+        {
+            "pano_id": "0wr4TcwuWmMK22JlelSFqQ",
+            "road_name": "Esteban Cant\u00fa",
+            "yaw_deg": 354.5348510742188
+        },
+        {
+            "pano_id": "UXxOf2G8_NfAxb6X95rHag",
+            "road_name": "Huetamo",
+            "yaw_deg": 107.7977600097656
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "NCqOFHCbgr00GzpbYJxOog",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "qHG9tHof1vgA624LQxoQGQ",
+            "date": "2022-10"
+        }
+    ]
+}

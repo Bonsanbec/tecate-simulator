@@ -1,0 +1,29 @@
+{
+    "pano_id": "A9V0_qxQmeJyoHzBGjmBrA",
+    "latitude": 32.5670144379006,
+    "longitude": -116.6292701231235,
+    "date": "2009-09",
+    "road_name": "Huetamo",
+    "adjacent_links": [
+        {
+            "pano_id": "MqpOzvTJBQMskHljv8J0LQ",
+            "road_name": "Huetamo",
+            "yaw_deg": 82.63525390625
+        },
+        {
+            "pano_id": "lgO0k0ti1r9hv9YPObhWrQ",
+            "road_name": "Huetamo",
+            "yaw_deg": 262.6809692382812
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "SYUneOx3q1k5LH3wRJ35Xw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "evq4AgcWT_NFGPqZ3N4-9g",
+            "date": "2022-09"
+        }
+    ]
+}

@@ -1,0 +1,37 @@
+{
+    "pano_id": "hPnryrynjbs_EkYHM6rklA",
+    "latitude": 32.56788972641915,
+    "longitude": -116.6254963787475,
+    "date": "2009-09",
+    "road_name": "Ensenada",
+    "adjacent_links": [
+        {
+            "pano_id": "Fgf83vT01jMvfcEWX0alAA",
+            "road_name": "Ensenada",
+            "yaw_deg": 354.0127868652344
+        },
+        {
+            "pano_id": "3pUC_W7VUJMS9xwLuEd2jg",
+            "road_name": "Ensenada",
+            "yaw_deg": 175.2425994873047
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "4l5-aEZuPvBBkr8jdxZaIw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "IgfwfEkX_rGGKqIgWmC2AQ",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "1aMPyi_XsKshGdD7BoEr3g",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "fBFGPEKKLLcJ_i2c_Tmaxg",
+            "date": "2016-02"
+        }
+    ]
+}

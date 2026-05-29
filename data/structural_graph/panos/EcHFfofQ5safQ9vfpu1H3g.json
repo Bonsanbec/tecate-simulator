@@ -1,0 +1,43 @@
+{
+    "pano_id": "EcHFfofQ5safQ9vfpu1H3g",
+    "latitude": 32.56740661557244,
+    "longitude": -116.625450583113,
+    "date": "2009-09",
+    "road_name": "Blvrd Universidad",
+    "adjacent_links": [
+        {
+            "pano_id": "nrXueDyVmU6EjM5dSqV2sw",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 359.6606750488281
+        },
+        {
+            "pano_id": "VvHCI_y3z3yr0HRdv707YQ",
+            "road_name": "Huetamo",
+            "yaw_deg": 226.7336120605469
+        },
+        {
+            "pano_id": "DkbRkAad_e_m1UGEbdlQag",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 57.17375183105469
+        },
+        {
+            "pano_id": "_jw2IyFCw1exRSc0IiSTFA",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 126.2148742675781
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "TUFkJGjrnmDWr9JZvNn4ww",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "Ivtweg5MT3XPDXGi_m28dQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "KY9NvIEzlBTLXCckitnsCQ",
+            "date": "2017-07"
+        }
+    ]
+}
