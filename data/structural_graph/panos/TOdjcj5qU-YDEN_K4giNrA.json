@@ -1,0 +1,37 @@
+{
+    "pano_id": "TOdjcj5qU-YDEN_K4giNrA",
+    "latitude": 32.5739524127428,
+    "longitude": -116.6314662867018,
+    "date": "2009-09",
+    "road_name": "Pdte. Adolfo de La Huerta",
+    "adjacent_links": [
+        {
+            "pano_id": "ciO_ymQufkwQwjz5Z3I2Bw",
+            "road_name": "Pdte. Adolfo de La Huerta",
+            "yaw_deg": 268.087646484375
+        },
+        {
+            "pano_id": "l1KwzN170F0fhdL9Ktm9oQ",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 83.96275329589844
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "DHCGQiYIC6np2YyuGZy-lA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "LIn6m4ze6HldSHrPWq3caw",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "uQHnmv5pmagUl_LKPuz9Pg",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "onaBM6VpWk0ZFxyr6U344g",
+            "date": "2015-12"
+        }
+    ]
+}

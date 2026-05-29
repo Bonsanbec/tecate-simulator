@@ -1,0 +1,37 @@
+{
+    "pano_id": "z8DlB0FoaWZsbMKoXHN6Mw",
+    "latitude": 32.573450743099,
+    "longitude": -116.6329218968491,
+    "date": "2009-09",
+    "road_name": "Presidente Venustiano Carranza",
+    "adjacent_links": [
+        {
+            "pano_id": "7tAiQSl5wwLtYXdZQyOiRA",
+            "road_name": "Presidente Venustiano Carranza",
+            "yaw_deg": 174.3688201904297
+        },
+        {
+            "pano_id": "jZExjWJt8Z91feYIhibywA",
+            "road_name": "Presidente Venustiano Carranza",
+            "yaw_deg": 354.3957214355469
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "jpgPr0WjovzB_WaHH0q4uA",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "Hi9eyUdUH6_dTKO4zxIUNQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "p1044zCf8VHpETIjA3S0IQ",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "Hf4dfp2hPhygf3sQjFihhg",
+            "date": "2017-07"
+        }
+    ]
+}

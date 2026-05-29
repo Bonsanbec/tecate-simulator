@@ -1,0 +1,47 @@
+{
+    "pano_id": "BPqc9UJRI3YT7z3e0sX-dA",
+    "latitude": 32.57380645901623,
+    "longitude": -116.6329694903474,
+    "date": "2009-09",
+    "road_name": "Callejon Reforma",
+    "adjacent_links": [
+        {
+            "pano_id": "-ekRIPKINqjx7s5oE4nYTg",
+            "road_name": "Presidente Venustiano Carranza",
+            "yaw_deg": 174.3718719482422
+        },
+        {
+            "pano_id": "HW5o-mlpRCvysMIV6B1Xxw",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 73.8940200805664
+        },
+        {
+            "pano_id": "zJrW_x-Rz3RbygA3OCvC2w",
+            "road_name": "Presidente Venustiano Carranza",
+            "yaw_deg": 354.4305725097656
+        },
+        {
+            "pano_id": "Mlr8mDUGv9bxhmakFbOGZQ",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 270.8139343261719
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "8UDGX0pg-b63WI1hA2Gi3g",
+            "date": "2015-12"
+        },
+        {
+            "pano_id": "2ekEa_yARxA-B3EPJXK8Fw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "_MIpafcXZQOBp_-CAgLVTg",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "3qraOeaTFHi_YaVKaYgKXA",
+            "date": "2017-07"
+        }
+    ]
+}

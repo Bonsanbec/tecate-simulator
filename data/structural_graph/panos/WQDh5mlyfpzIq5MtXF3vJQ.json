@@ -1,0 +1,33 @@
+{
+    "pano_id": "WQDh5mlyfpzIq5MtXF3vJQ",
+    "latitude": 32.57428933200875,
+    "longitude": -116.6273318853429,
+    "date": "2009-09",
+    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+    "adjacent_links": [
+        {
+            "pano_id": "Qd8r_O5hs8bcTKLvHP-jAQ",
+            "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+            "yaw_deg": 101.631217956543
+        },
+        {
+            "pano_id": "S68_CZEmCGG8gJHAxvO7Mg",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 264.8551940917969
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "6yGQImSQ2C7YAb7XbMk5Yw",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "e7a2AeTCgg43ZdJAGuaKxA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "LvRPDs2h-UvEuAGZmfccXA",
+            "date": "2022-09"
+        }
+    ]
+}

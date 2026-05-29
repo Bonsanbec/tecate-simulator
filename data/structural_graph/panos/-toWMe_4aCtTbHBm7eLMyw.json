@@ -1,0 +1,37 @@
+{
+    "pano_id": "-toWMe_4aCtTbHBm7eLMyw",
+    "latitude": 32.57403888155284,
+    "longitude": -116.6303547121027,
+    "date": "2009-09",
+    "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "0vhEX2UmxBDSi0x3XaenUw",
+            "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+            "yaw_deg": 92.22809600830078
+        },
+        {
+            "pano_id": "ANovFN_MEvIUEl7OaxPTfA",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 264.1200561523438
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "7uz-wjjYokmYLU9z40OMpw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "7SKaR9ek-t5oyaSNQHtS5w",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "MrSM3AOOp-vmbYivG4_r0g",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "-8Yb5NkgjCAeslR-lBV5-g",
+            "date": "2015-12"
+        }
+    ]
+}

@@ -1,0 +1,49 @@
+{
+    "pano_id": "CoysGtcuLAsGkwezliMLxA",
+    "latitude": 32.57316443891618,
+    "longitude": -116.6328863591643,
+    "date": "2009-09",
+    "road_name": "Tijuana - Tecate",
+    "adjacent_links": [
+        {
+            "pano_id": "I1EmcTasXeyeuH8-5L5j1g",
+            "road_name": "Tijuana - Tecate",
+            "yaw_deg": 184.7413940429688
+        },
+        {
+            "pano_id": "nJ8-KN9GDzgHAmWDI3qy9A",
+            "road_name": "Presidente Venustiano Carranza",
+            "yaw_deg": 354.3681945800781
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "TGC_9Hwi8coaGDJeCOZneQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "O0t89x7TOWr7U8BRJ7cyiQ",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "kZ7vtuNObrka_SLXY34ySA",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "jIhlX-iabBF3DL-HSTIuEw",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "qlD0rBZqoCf7bs5DzoWPXg",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "KvooDgwhYdwbT3t5bSXVbA",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "FXHL06DGsarfD5vmkR54Dg",
+            "date": "2022-06"
+        }
+    ]
+}

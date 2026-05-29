@@ -1528,6 +1528,1729 @@
                     "date": "2009-02"
                 }
             ]
+        },
+        "fZA2ZgKYVXph6sW4VrYy4g": {
+            "pano_id": "fZA2ZgKYVXph6sW4VrYy4g",
+            "latitude": 32.57308066944314,
+            "longitude": -116.6327057916515,
+            "closest_intersection": "7372864458",
+            "distance_meters": 9.708652301720983,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "Ncpcx8fXgcrhTy9ssXdTdg",
+                    "road_name": "Tijuana - Tecate",
+                    "yaw_deg": 83.85315704345703
+                },
+                {
+                    "pano_id": "5-O0ika5V_8JCoxTqh_hqQ",
+                    "road_name": "Tijuana - Tecate",
+                    "yaw_deg": 263.8931579589844
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "sUuRaPeF_XibzHuZH656xg",
+                    "date": "2017-09"
+                },
+                {
+                    "pano_id": "hvfAC7hXc6_czh4bJuNUHQ",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "PsuRt5x1QpdBz8htcylfdQ",
+                    "date": "2022-10"
+                },
+                {
+                    "pano_id": "wjvyNJOkPGhj4Xz2l3ezZA",
+                    "date": "2022-06"
+                },
+                {
+                    "pano_id": "JaeE_aB5iX05keRqyToaHg",
+                    "date": "2021-09"
+                },
+                {
+                    "pano_id": "3teXSZOTzqr1oKUL_R3VQA",
+                    "date": "2020-03"
+                },
+                {
+                    "pano_id": "FMwh8JyZ-EMN4iss59wDkg",
+                    "date": "2019-09"
+                },
+                {
+                    "pano_id": "eiRa_YCXDnlVR59xsZyEtw",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "2H8STjt31J-4z6RRnBLHhg",
+                    "date": "2009-02"
+                }
+            ]
+        },
+        "Ncpcx8fXgcrhTy9ssXdTdg": {
+            "pano_id": "Ncpcx8fXgcrhTy9ssXdTdg",
+            "latitude": 32.57309045761941,
+            "longitude": -116.6326057462112,
+            "closest_intersection": "7372864458",
+            "distance_meters": 2.1543847191571994,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "fZA2ZgKYVXph6sW4VrYy4g",
+                    "road_name": "Tijuana - Tecate",
+                    "yaw_deg": 263.8531494140625
+                },
+                {
+                    "pano_id": "KSsxldSv6IZ7K05iFWMaVQ",
+                    "road_name": "Tijuana - Tecate",
+                    "yaw_deg": 83.87316131591797
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "5CZAepH--1FDFqSUZJ3fng",
+                    "date": "2021-09"
+                },
+                {
+                    "pano_id": "F_-7aE9Byte3WYHvzvqzXw",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "8UKca3R92WF5JfNht7jP0A",
+                    "date": "2022-10"
+                },
+                {
+                    "pano_id": "gfqMgSgd0yRzzj5ahQKsSw",
+                    "date": "2022-05"
+                },
+                {
+                    "pano_id": "ocM-LouuyqaBuWUaYwwWfA",
+                    "date": "2020-03"
+                },
+                {
+                    "pano_id": "1BmjIgLpQjmwzXjw5KP2KA",
+                    "date": "2019-09"
+                },
+                {
+                    "pano_id": "l4yagZtiIkcsMQ6CY0alWw",
+                    "date": "2017-09"
+                },
+                {
+                    "pano_id": "9A9SN4S_SrRsyOxKVD6RAQ",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "xqwadoWdpBmmLVYnNPJyHA",
+                    "date": "2009-02"
+                }
+            ]
+        },
+        "CoysGtcuLAsGkwezliMLxA": {
+            "pano_id": "CoysGtcuLAsGkwezliMLxA",
+            "latitude": 32.57316443891618,
+            "longitude": -116.6328863591643,
+            "closest_intersection": "618391936",
+            "distance_meters": 8.520378186553868,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "I1EmcTasXeyeuH8-5L5j1g",
+                    "road_name": "Tijuana - Tecate",
+                    "yaw_deg": 184.7413940429688
+                },
+                {
+                    "pano_id": "nJ8-KN9GDzgHAmWDI3qy9A",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 354.3681945800781
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "TGC_9Hwi8coaGDJeCOZneQ",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "O0t89x7TOWr7U8BRJ7cyiQ",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "kZ7vtuNObrka_SLXY34ySA",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "jIhlX-iabBF3DL-HSTIuEw",
+                    "date": "2017-07"
+                },
+                {
+                    "pano_id": "qlD0rBZqoCf7bs5DzoWPXg",
+                    "date": "2022-05"
+                },
+                {
+                    "pano_id": "KvooDgwhYdwbT3t5bSXVbA",
+                    "date": "2021-09"
+                },
+                {
+                    "pano_id": "FXHL06DGsarfD5vmkR54Dg",
+                    "date": "2022-06"
+                }
+            ]
+        },
+        "nJ8-KN9GDzgHAmWDI3qy9A": {
+            "pano_id": "nJ8-KN9GDzgHAmWDI3qy9A",
+            "latitude": 32.57326580201757,
+            "longitude": -116.6328991347377,
+            "closest_intersection": "7372864460",
+            "distance_meters": 2.4182302026682843,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "CoysGtcuLAsGkwezliMLxA",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 174.3681793212891
+                },
+                {
+                    "pano_id": "7tAiQSl5wwLtYXdZQyOiRA",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 354.3542175292969
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "XpHCsm-OBDioP5HOPM1MWg",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "7H5fj-Ame0A6XC4T52P4Mg",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "kwMdIywPWAitxqYltOZRYQ",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "msLoCjY2TXizYvGlBcLmHw",
+                    "date": "2017-07"
+                }
+            ]
+        },
+        "7tAiQSl5wwLtYXdZQyOiRA": {
+            "pano_id": "7tAiQSl5wwLtYXdZQyOiRA",
+            "latitude": 32.57337544923602,
+            "longitude": -116.6329128099986,
+            "closest_intersection": "7372864460",
+            "distance_meters": 9.854884949751183,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "nJ8-KN9GDzgHAmWDI3qy9A",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 174.3542175292969
+                },
+                {
+                    "pano_id": "z8DlB0FoaWZsbMKoXHN6Mw",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 354.3688049316406
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "PAqP6LlOficOT5z5aDnTmA",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "lZ5MbWzGoG3tdahJjLfvzQ",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "zHNe2rztO_Uz5EgmdjTJFA",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "dkWDBD5Z66Z9OnRCp9cmjg",
+                    "date": "2017-07"
+                }
+            ]
+        },
+        "CEbt72J8brTeubm-1df0yg": {
+            "pano_id": "CEbt72J8brTeubm-1df0yg",
+            "latitude": 32.57286347070147,
+            "longitude": -116.6201652188524,
+            "closest_intersection": "2000413140",
+            "distance_meters": 13.585194839350038,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "vUN6pr-64CEevlm7VzKfVA",
+                    "road_name": "Av. Miguel Hidalgo",
+                    "yaw_deg": 263.0010986328125
+                },
+                {
+                    "pano_id": "YVBwxQOw1cANcRRjIk2kpg",
+                    "road_name": "Av. Miguel Hidalgo",
+                    "yaw_deg": 83.0333023071289
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "tNXrnu9qkBEIbWHPBiS8fA",
+                    "date": "2017-10"
+                },
+                {
+                    "pano_id": "Neo-DWy0MqsoMs2pmm55VQ",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "z6Xd19kXSC6A-J5UBL0Lmw",
+                    "date": "2022-05"
+                },
+                {
+                    "pano_id": "1zlJkL4-vGXuFVuOBDK8BQ",
+                    "date": "2022-10"
+                }
+            ]
+        },
+        "z8DlB0FoaWZsbMKoXHN6Mw": {
+            "pano_id": "z8DlB0FoaWZsbMKoXHN6Mw",
+            "latitude": 32.573450743099,
+            "longitude": -116.6329218968491,
+            "closest_intersection": "8801830550",
+            "distance_meters": 5.735488514735158,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "7tAiQSl5wwLtYXdZQyOiRA",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 174.3688201904297
+                },
+                {
+                    "pano_id": "jZExjWJt8Z91feYIhibywA",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 354.3957214355469
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "jpgPr0WjovzB_WaHH0q4uA",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "Hi9eyUdUH6_dTKO4zxIUNQ",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "p1044zCf8VHpETIjA3S0IQ",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "Hf4dfp2hPhygf3sQjFihhg",
+                    "date": "2017-07"
+                }
+            ]
+        },
+        "Xx4d33dQUnK55kqTLbzuCw": {
+            "pano_id": "Xx4d33dQUnK55kqTLbzuCw",
+            "latitude": 32.5716234184283,
+            "longitude": -116.6327266644357,
+            "closest_intersection": "618391930",
+            "distance_meters": 4.90869421602713,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "WUf0eDvj8aVN6aIqMvy8Ng",
+                    "road_name": "Av. Miguel Hidalgo",
+                    "yaw_deg": 263.3026428222656
+                },
+                {
+                    "pano_id": "eqYuo8telOTf2bjXhtHmmQ",
+                    "road_name": "Dr. Arturo Guerra",
+                    "yaw_deg": 170.2765197753906
+                },
+                {
+                    "pano_id": "fTq8iGyzgkrByMxJ8vQ9FA",
+                    "road_name": "Av. Miguel Hidalgo",
+                    "yaw_deg": 84.32442474365234
+                },
+                {
+                    "pano_id": "z0dihWJ1idl42PooIZq9IQ",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 358.5701904296875
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "CaUWAWyRpSIC-ojU2rkE0w",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "HPPzlHtqUA4QuxGSZ_7fmQ",
+                    "date": "2021-08"
+                },
+                {
+                    "pano_id": "gpQH3FHAIhIvL0pEHm_WZA",
+                    "date": "2016-02"
+                }
+            ]
+        },
+        "eqYuo8telOTf2bjXhtHmmQ": {
+            "pano_id": "eqYuo8telOTf2bjXhtHmmQ",
+            "latitude": 32.57154858807689,
+            "longitude": -116.6326683645855,
+            "closest_intersection": "618391930",
+            "distance_meters": 11.010780718184009,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "Xx4d33dQUnK55kqTLbzuCw",
+                    "road_name": "Av. Miguel Hidalgo",
+                    "yaw_deg": 350.2765197753906
+                },
+                {
+                    "pano_id": "Bare_2KygPh8ulc-k3YpoA",
+                    "road_name": "Dr. Arturo Guerra",
+                    "yaw_deg": 174.1641235351562
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "eO3w0zheDfH3p4FC4nZ7ZQ",
+                    "date": "2017-07"
+                },
+                {
+                    "pano_id": "ra-voGFYMUGb2PWLozKIuw",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "Lum2N4i0eUnYbXO42x-ClQ",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "h3NVn5EsGrjquXESS-Ykrw",
+                    "date": "2016-02"
+                }
+            ]
+        },
+        "jZExjWJt8Z91feYIhibywA": {
+            "pano_id": "jZExjWJt8Z91feYIhibywA",
+            "latitude": 32.57360284864904,
+            "longitude": -116.6329407902995,
+            "closest_intersection": "8801830550",
+            "distance_meters": 11.289363521273348,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "z8DlB0FoaWZsbMKoXHN6Mw",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 174.3957366943359
+                },
+                {
+                    "pano_id": "Vy4NO309MdLXvhE5X2BVDA",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 354.3671875
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "xmKbstCFlP2q5xPPmIkzGQ",
+                    "date": "2017-07"
+                },
+                {
+                    "pano_id": "RMJrtZYb_xa01c6dv_hCIQ",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "V_uO6YwX7MnaUl3FQN637A",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "P69-VgZpsCRd0ffgoWrEMQ",
+                    "date": "2015-12"
+                }
+            ]
+        },
+        "ZxQXW8a__IqCgzJmfdqBQQ": {
+            "pano_id": "ZxQXW8a__IqCgzJmfdqBQQ",
+            "latitude": 32.57238537318497,
+            "longitude": -116.6329029134283,
+            "closest_intersection": "618391935",
+            "distance_meters": 11.229682861811405,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "ebnxHQVRKWv-DM7iYk1faw",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 56.26436614990234
+                },
+                {
+                    "pano_id": "UpuzXGgAe8FeCkDRpD4y9Q",
+                    "road_name": "Libertad",
+                    "yaw_deg": 264.7554931640625
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "7NV30dtD4dwlHJRtm0BMeA",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "knuV-EcNI9pyfZKb07bPfQ",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "L-TRcuLQ5dwJArMyf4BWxA",
+                    "date": "2015-12"
+                }
+            ]
+        },
+        "jXj0aqeB8MKJAGbcKbUzJQ": {
+            "pano_id": "jXj0aqeB8MKJAGbcKbUzJQ",
+            "latitude": 32.56923863966473,
+            "longitude": -116.6315799180184,
+            "closest_intersection": "7166689792",
+            "distance_meters": 4.322644813692094,
+            "date": "2008-12",
+            "adjacent_links": [
+                {
+                    "pano_id": "DW1J8iNopEqhVG8dzf4zdg",
+                    "road_name": "Blvd. Defensores de Baja California",
+                    "yaw_deg": 68.73076629638672
+                },
+                {
+                    "pano_id": "1wpUS0IE1Rt8SJi7aKV3ug",
+                    "road_name": "Blvd. Defensores de Baja California",
+                    "yaw_deg": 248.7411193847656
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "eNnFWP5uXaXM2SR3wiE5Xw",
+                    "date": "2021-09"
+                },
+                {
+                    "pano_id": "ZgfOzCWxOFYgnpa_VbKfiQ",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "4tUYNCMxy7u5VlEQUd7gcA",
+                    "date": "2022-10"
+                },
+                {
+                    "pano_id": "45TlcoYtuzBny9rY8AIlAA",
+                    "date": "2017-11"
+                },
+                {
+                    "pano_id": "Pq-ObJRjDc5twREVJQEEZA",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "EtmpAzcmLu3D7ohZ8t7JTA",
+                    "date": "2009-09"
+                }
+            ]
+        },
+        "Vy4NO309MdLXvhE5X2BVDA": {
+            "pano_id": "Vy4NO309MdLXvhE5X2BVDA",
+            "latitude": 32.57368187503367,
+            "longitude": -116.632952126369,
+            "closest_intersection": "618391938",
+            "distance_meters": 13.318231741313001,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "jZExjWJt8Z91feYIhibywA",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 174.3672027587891
+                },
+                {
+                    "pano_id": "-ekRIPKINqjx7s5oE4nYTg",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 354.3969421386719
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "N54129ZcT1g59At1dLlRNQ",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "QOQnn0N7HmVRrJmktoVDoA",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "Q7d5HDbF4lbcoohGFxroXA",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "W4cTDshcasejBDweHQGPAA",
+                    "date": "2017-07"
+                }
+            ]
+        },
+        "-ekRIPKINqjx7s5oE4nYTg": {
+            "pano_id": "-ekRIPKINqjx7s5oE4nYTg",
+            "latitude": 32.57372274872903,
+            "longitude": -116.6329579743412,
+            "closest_intersection": "618391938",
+            "distance_meters": 8.7364453632116,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "BPqc9UJRI3YT7z3e0sX-dA",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 354.3718566894531
+                },
+                {
+                    "pano_id": "Vy4NO309MdLXvhE5X2BVDA",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 174.3969421386719
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "3Vn1sGW8ETZU7SmXlXBhHA",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "1692iYLKF47dt2-6m7mPuQ",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "qBA46hyFen2Qm0lCWAnC4w",
+                    "date": "2015-12"
+                },
+                {
+                    "pano_id": "3qraOeaTFHi_YaVKaYgKXA",
+                    "date": "2017-07"
+                }
+            ]
+        },
+        "yvxOSYAAVuHI1t9aTVMzOA": {
+            "pano_id": "yvxOSYAAVuHI1t9aTVMzOA",
+            "latitude": 32.573029833735,
+            "longitude": -116.6329834355104,
+            "closest_intersection": "618391936",
+            "distance_meters": 12.088220420030108,
+            "date": "2009-02",
+            "adjacent_links": [
+                {
+                    "pano_id": "g-odoYptDAJ5Luabl_qo4A",
+                    "road_name": "Tijuana - Tecate",
+                    "yaw_deg": 265.6889953613281
+                },
+                {
+                    "pano_id": "vrHhPQu36THTLX_qDIjfQg",
+                    "road_name": "Tijuana - Tecate",
+                    "yaw_deg": 85.68412017822266
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "dhp16B0XZJn4QdonzyUKaA",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "eLwCdcZhipvPWuzKn_jSXw",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "qEo78PRMLJaw5MzHnaNhzw",
+                    "date": "2022-10"
+                },
+                {
+                    "pano_id": "jKG0YmoyM28Lr0dLB3qz_g",
+                    "date": "2022-05"
+                },
+                {
+                    "pano_id": "0MR3jGXpKOd0U2m92sALnA",
+                    "date": "2021-09"
+                },
+                {
+                    "pano_id": "uU-V1EkEa6cBnbeY4tFeWA",
+                    "date": "2020-03"
+                },
+                {
+                    "pano_id": "K_MnD98orO5Hp6AdMX2X8g",
+                    "date": "2019-09"
+                },
+                {
+                    "pano_id": "Vy-WT2bFm9bz9xZgMpt4vA",
+                    "date": "2017-09"
+                },
+                {
+                    "pano_id": "miNJohN9bW18lMw68tRbnA",
+                    "date": "2009-09"
+                }
+            ]
+        },
+        "BPqc9UJRI3YT7z3e0sX-dA": {
+            "pano_id": "BPqc9UJRI3YT7z3e0sX-dA",
+            "latitude": 32.57380645901623,
+            "longitude": -116.6329694903474,
+            "closest_intersection": "618391938",
+            "distance_meters": 0.6794406784992801,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "-ekRIPKINqjx7s5oE4nYTg",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 174.3718719482422
+                },
+                {
+                    "pano_id": "HW5o-mlpRCvysMIV6B1Xxw",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 73.8940200805664
+                },
+                {
+                    "pano_id": "zJrW_x-Rz3RbygA3OCvC2w",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 354.4305725097656
+                },
+                {
+                    "pano_id": "Mlr8mDUGv9bxhmakFbOGZQ",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 270.8139343261719
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "8UDGX0pg-b63WI1hA2Gi3g",
+                    "date": "2015-12"
+                },
+                {
+                    "pano_id": "2ekEa_yARxA-B3EPJXK8Fw",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "_MIpafcXZQOBp_-CAgLVTg",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "3qraOeaTFHi_YaVKaYgKXA",
+                    "date": "2017-07"
+                }
+            ]
+        },
+        "HW5o-mlpRCvysMIV6B1Xxw": {
+            "pano_id": "HW5o-mlpRCvysMIV6B1Xxw",
+            "latitude": 32.5738276833217,
+            "longitude": -116.6329008441454,
+            "closest_intersection": "618391938",
+            "distance_meters": 6.842830147017389,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "Q17nxYmCNEPmo9l9eLDIYw",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 84.5562515258789
+                },
+                {
+                    "pano_id": "BPqc9UJRI3YT7z3e0sX-dA",
+                    "road_name": "Presidente Venustiano Carranza",
+                    "yaw_deg": 253.8940124511719
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "rmkwm7YC20rG7LjAIpO8eg",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "RWpe0-k0bEVXdmnh-u7YSw",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "fAeORzi0qWX07oEc4ehYxw",
+                    "date": "2015-12"
+                },
+                {
+                    "pano_id": "31NMkzL-xn7NaSlwsusnEg",
+                    "date": "2017-07"
+                }
+            ]
+        },
+        "ciO_ymQufkwQwjz5Z3I2Bw": {
+            "pano_id": "ciO_ymQufkwQwjz5Z3I2Bw",
+            "latitude": 32.57393495181676,
+            "longitude": -116.631639837597,
+            "closest_intersection": "618391937",
+            "distance_meters": 6.205190047740449,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "1ni3hhnIb16EmH5WCnvQVQ",
+                    "road_name": "Pdte. Adolfo de La Huerta",
+                    "yaw_deg": 174.7973022460938
+                },
+                {
+                    "pano_id": "AtZV9oa_QmM99-oP8hyplQ",
+                    "road_name": "Pdte. Adolfo de La Huerta",
+                    "yaw_deg": 355.2667236328125
+                },
+                {
+                    "pano_id": "9x96diioIiifLfGG7ecNGQ",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 260.9866638183594
+                },
+                {
+                    "pano_id": "TOdjcj5qU-YDEN_K4giNrA",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 88.087646484375
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "mRKrCn9-SFFfa_boaT-f8A",
+                    "date": "2015-12"
+                },
+                {
+                    "pano_id": "XP9rqKPMXYqwkff5QF4vEQ",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "-YKnHElkpDaq0hYqWeq6ng",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "3PnDZTlRCa2HiVo7XhHYJA",
+                    "date": "2017-10"
+                }
+            ]
+        },
+        "TOdjcj5qU-YDEN_K4giNrA": {
+            "pano_id": "TOdjcj5qU-YDEN_K4giNrA",
+            "latitude": 32.5739524127428,
+            "longitude": -116.6314662867018,
+            "closest_intersection": "618391937",
+            "distance_meters": 11.068842820562264,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "ciO_ymQufkwQwjz5Z3I2Bw",
+                    "road_name": "Pdte. Adolfo de La Huerta",
+                    "yaw_deg": 268.087646484375
+                },
+                {
+                    "pano_id": "l1KwzN170F0fhdL9Ktm9oQ",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 83.96275329589844
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "DHCGQiYIC6np2YyuGZy-lA",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "LIn6m4ze6HldSHrPWq3caw",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "uQHnmv5pmagUl_LKPuz9Pg",
+                    "date": "2017-07"
+                },
+                {
+                    "pano_id": "onaBM6VpWk0ZFxyr6U344g",
+                    "date": "2015-12"
+                }
+            ]
+        },
+        "l1KwzN170F0fhdL9Ktm9oQ": {
+            "pano_id": "l1KwzN170F0fhdL9Ktm9oQ",
+            "latitude": 32.57395428200589,
+            "longitude": -116.6314446940461,
+            "closest_intersection": "618391937",
+            "distance_meters": 13.050155544051046,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "eAYRt1jiwwlC8Z6islwjZg",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 84.16549682617188
+                },
+                {
+                    "pano_id": "TOdjcj5qU-YDEN_K4giNrA",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 263.9627380371094
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "G7ha7yynIdIRezaCBELmog",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "UR3oKU6ZWsa3-3kwVJsnzQ",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "eV9EswC-dPG61EPknXdD1A",
+                    "date": "2017-07"
+                },
+                {
+                    "pano_id": "b-WXMa4YOg5HrpUFmT9X3g",
+                    "date": "2015-12"
+                }
+            ]
+        },
+        "-toWMe_4aCtTbHBm7eLMyw": {
+            "pano_id": "-toWMe_4aCtTbHBm7eLMyw",
+            "latitude": 32.57403888155284,
+            "longitude": -116.6303547121027,
+            "closest_intersection": "618391953",
+            "distance_meters": 12.422804401847891,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "0vhEX2UmxBDSi0x3XaenUw",
+                    "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+                    "yaw_deg": 92.22809600830078
+                },
+                {
+                    "pano_id": "ANovFN_MEvIUEl7OaxPTfA",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 264.1200561523438
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "7uz-wjjYokmYLU9z40OMpw",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "7SKaR9ek-t5oyaSNQHtS5w",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "MrSM3AOOp-vmbYivG4_r0g",
+                    "date": "2017-07"
+                },
+                {
+                    "pano_id": "-8Yb5NkgjCAeslR-lBV5-g",
+                    "date": "2015-12"
+                }
+            ]
+        },
+        "0vhEX2UmxBDSi0x3XaenUw": {
+            "pano_id": "0vhEX2UmxBDSi0x3XaenUw",
+            "latitude": 32.57403320782681,
+            "longitude": -116.6302110302281,
+            "closest_intersection": "618391953",
+            "distance_meters": 1.3329102346106716,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "PL3-iPGwXG2gY7lAa3TGgg",
+                    "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+                    "yaw_deg": 355.6522827148438
+                },
+                {
+                    "pano_id": "HMY9Hlll_-A_eaL8w2yd_Q",
+                    "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+                    "yaw_deg": 174.7317047119141
+                },
+                {
+                    "pano_id": "-toWMe_4aCtTbHBm7eLMyw",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 272.2280883789062
+                },
+                {
+                    "pano_id": "h98Htj7MieuEr5G7QH2-DA",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 75.44412231445312
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "_eDFdnAX13XeFzPm0xGdEA",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "GACN7HKJd5qDp-20gyYrFQ",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "DK-zI_Yo6PwADhuQ_p80wA",
+                    "date": "2021-09"
+                }
+            ]
+        },
+        "h98Htj7MieuEr5G7QH2-DA": {
+            "pano_id": "h98Htj7MieuEr5G7QH2-DA",
+            "latitude": 32.57406124476355,
+            "longitude": -116.6300965884944,
+            "closest_intersection": "618391953",
+            "distance_meters": 12.016895979012798,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "Lfq6zXIyzeIcIHaSVjjShQ",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 84.33614349365234
+                },
+                {
+                    "pano_id": "0vhEX2UmxBDSi0x3XaenUw",
+                    "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+                    "yaw_deg": 255.4441223144531
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "qVfV6Z4PwfDIHsF-PhLWYA",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "o7Rz80scUSVYIwZzVolIJQ",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "umT6UWYkPnZKbWVhhBgGbg",
+                    "date": "2015-12"
+                }
+            ]
+        },
+        "81bTBN9IEt59IFsyQdcVBA": {
+            "pano_id": "81bTBN9IEt59IFsyQdcVBA",
+            "latitude": 32.57415537607197,
+            "longitude": -116.6289590057234,
+            "closest_intersection": "618391952",
+            "distance_meters": 9.184486039914411,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "shs4PljLmfPYpes0G_62hg",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 264.3287658691406
+                },
+                {
+                    "pano_id": "VJZ4gbBuKjMxYvWb21P-xw",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 84.31917572021484
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "Q5LmBp-plAVxAfHFQCMcFg",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "bZutv9QraObl10f-GPz9TQ",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "aNcQcL1xgWJlO5UQoKiR5A",
+                    "date": "2015-12"
+                }
+            ]
+        },
+        "VJZ4gbBuKjMxYvWb21P-xw": {
+            "pano_id": "VJZ4gbBuKjMxYvWb21P-xw",
+            "latitude": 32.5741629934726,
+            "longitude": -116.6288681356097,
+            "closest_intersection": "618391952",
+            "distance_meters": 1.0636949990424989,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "6eOkzVMjKiSMZLbrUQx1NQ",
+                    "road_name": "Pdte. El\u00edas Calles",
+                    "yaw_deg": 172.8324890136719
+                },
+                {
+                    "pano_id": "81bTBN9IEt59IFsyQdcVBA",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 264.3191833496094
+                },
+                {
+                    "pano_id": "SDsD6ElVHSiIsAsuRsJgPA",
+                    "road_name": "Pdte. El\u00edas Calles",
+                    "yaw_deg": 356.3418273925781
+                },
+                {
+                    "pano_id": "F6XPPpQ_Dx8X9Cbl-VEOKA",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 84.06407928466797
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "mGt1flMAGqWUp2qpu84cig",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "StF-XXfWfQv-QgRhCcscqw",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "brQgc_HLNgiJP0L4U60Xew",
+                    "date": "2017-09"
+                },
+                {
+                    "pano_id": "Ht9b8dcDnqrE90pKrQuymA",
+                    "date": "2015-12"
+                }
+            ]
+        },
+        "F6XPPpQ_Dx8X9Cbl-VEOKA": {
+            "pano_id": "F6XPPpQ_Dx8X9Cbl-VEOKA",
+            "latitude": 32.57417648923747,
+            "longitude": -116.6287141061851,
+            "closest_intersection": "618391952",
+            "distance_meters": 13.985950768601793,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "hL141VAXGY7b0rJQ5wBiIA",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 84.01296997070312
+                },
+                {
+                    "pano_id": "VJZ4gbBuKjMxYvWb21P-xw",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 264.0640869140625
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "auiUiizkqVhwdINrNP_Pzg",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "MyuLAWXCsFbgMT_RvfYEbg",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "O4eHQlqnI78KkE58CfMfvA",
+                    "date": "2015-12"
+                }
+            ]
+        },
+        "S68_CZEmCGG8gJHAxvO7Mg": {
+            "pano_id": "S68_CZEmCGG8gJHAxvO7Mg",
+            "latitude": 32.57428140080928,
+            "longitude": -116.627413579031,
+            "closest_intersection": "337277331",
+            "distance_meters": 14.031928929133475,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "WQDh5mlyfpzIq5MtXF3vJQ",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 84.85518646240234
+                },
+                {
+                    "pano_id": "uTjRCmzYvQdR4z5G3oYRwA",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 264.8775024414062
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "8c1MUt2MPguFZ43MA-P5Kg",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "Brltpktupi-ANosthhPZJw",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "SEZVToku3alsa92rTkBl_A",
+                    "date": "2015-12"
+                }
+            ]
+        },
+        "WQDh5mlyfpzIq5MtXF3vJQ": {
+            "pano_id": "WQDh5mlyfpzIq5MtXF3vJQ",
+            "latitude": 32.57428933200875,
+            "longitude": -116.6273318853429,
+            "closest_intersection": "337277331",
+            "distance_meters": 6.326871351326245,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "Qd8r_O5hs8bcTKLvHP-jAQ",
+                    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+                    "yaw_deg": 101.631217956543
+                },
+                {
+                    "pano_id": "S68_CZEmCGG8gJHAxvO7Mg",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 264.8551940917969
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "6yGQImSQ2C7YAb7XbMk5Yw",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "e7a2AeTCgg43ZdJAGuaKxA",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "LvRPDs2h-UvEuAGZmfccXA",
+                    "date": "2022-09"
+                }
+            ]
+        },
+        "Qd8r_O5hs8bcTKLvHP-jAQ": {
+            "pano_id": "Qd8r_O5hs8bcTKLvHP-jAQ",
+            "latitude": 32.57426000463484,
+            "longitude": -116.6271971086873,
+            "closest_intersection": "4691398451",
+            "distance_meters": 4.490555790122263,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "4-WUF6gAPBcUnnPjHAZ9cg",
+                    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+                    "yaw_deg": 354.3057861328125
+                },
+                {
+                    "pano_id": "6xvGGCsxg69LQ9mPvjVRag",
+                    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+                    "yaw_deg": 174.8464508056641
+                },
+                {
+                    "pano_id": "WQDh5mlyfpzIq5MtXF3vJQ",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 281.6312255859375
+                },
+                {
+                    "pano_id": "_IOoeTkOirLvwHFVHGzQ4Q",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 62.44918441772461
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "ONKNe_-BB8WfurrNcJzZpQ",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "kz43-GOolT5myBg9EuqN6g",
+                    "date": "2022-10"
+                },
+                {
+                    "pano_id": "uFY4DUTvjufpNhdeQZEAzw",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "XWkz2b7n8CrXr2bVjupPHQ",
+                    "date": "2017-10"
+                }
+            ]
+        },
+        "6xvGGCsxg69LQ9mPvjVRag": {
+            "pano_id": "6xvGGCsxg69LQ9mPvjVRag",
+            "latitude": 32.57417177886595,
+            "longitude": -116.6271871218958,
+            "closest_intersection": "4691398451",
+            "distance_meters": 14.05265945974337,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "Qd8r_O5hs8bcTKLvHP-jAQ",
+                    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+                    "yaw_deg": 354.8464660644531
+                },
+                {
+                    "pano_id": "Qp0jCxDNYyo8H29xjO1buA",
+                    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+                    "yaw_deg": 174.8751525878906
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "fDpWALOsOOO5h2kHqeQZZw",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "yDCuVdZbOw8osczIv8jrWQ",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "ancrTmpj8CGwXdKyXDOkjw",
+                    "date": "2016-02"
+                }
+            ]
+        },
+        "PrEbeatItmtZ2ymfflTl0w": {
+            "pano_id": "PrEbeatItmtZ2ymfflTl0w",
+            "latitude": 32.57360285520237,
+            "longitude": -116.6271768651907,
+            "closest_intersection": "10105915834",
+            "distance_meters": 9.030504396884341,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "PMnVVDnVb4z7YtAKWVsALg",
+                    "road_name": "Av. Benito Ju\u00e1rez",
+                    "yaw_deg": 84.88005828857422
+                },
+                {
+                    "pano_id": "m6eWt4yPai2T0m9b4W4znw",
+                    "road_name": "Tecate - Tijuana",
+                    "yaw_deg": 264.4144592285156
+                },
+                {
+                    "pano_id": "NMwyXMgDo3P_G-_Ki0FQwQ",
+                    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+                    "yaw_deg": 11.94215965270996
+                },
+                {
+                    "pano_id": "o2n_8DSE2jb27t91OTjB_A",
+                    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+                    "yaw_deg": 174.82666015625
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "aNGj8-qOWUNuMxPPGtCdag",
+                    "date": "2009-02"
+                },
+                {
+                    "pano_id": "P8nfNVyYB_aREbwnULLidg",
+                    "date": "2017-09"
+                },
+                {
+                    "pano_id": "TQpP6v17ABBx-W-klsx8KA",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "3qnw3_ock5tHH9j-qDjgPw",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "3YXTnPnZyRpUni2ABuLmdw",
+                    "date": "2022-05"
+                },
+                {
+                    "pano_id": "5YshTT9ud5WpEhBpMzTqsg",
+                    "date": "2021-09"
+                },
+                {
+                    "pano_id": "uKHyXl3xB4Zm1Dm6zmiZVg",
+                    "date": "2020-03"
+                },
+                {
+                    "pano_id": "v3D0y49sv7HKaeLPDe4wMQ",
+                    "date": "2019-09"
+                },
+                {
+                    "pano_id": "WVoL4ZWuHjys3rgl8YavtA",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "GBm4_u7CYit7EJQfTE5VYw",
+                    "date": "2017-10"
+                }
+            ]
+        },
+        "m6eWt4yPai2T0m9b4W4znw": {
+            "pano_id": "m6eWt4yPai2T0m9b4W4znw",
+            "latitude": 32.57356261252259,
+            "longitude": -116.6272294982781,
+            "closest_intersection": "10105915834",
+            "distance_meters": 2.463207000994061,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "PrEbeatItmtZ2ymfflTl0w",
+                    "road_name": "M\u00e9xico 2D",
+                    "yaw_deg": 84.41447448730469
+                },
+                {
+                    "pano_id": "gYe7aPaK0oH5byvz_zqG9g",
+                    "road_name": "Tecate - Tijuana",
+                    "yaw_deg": 264.1088256835938
+                },
+                {
+                    "pano_id": "o2n_8DSE2jb27t91OTjB_A",
+                    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+                    "yaw_deg": 160.2158050537109
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "6YHwyy5708xBC58VZE5t7g",
+                    "date": "2019-09"
+                },
+                {
+                    "pano_id": "m2rMp0oNcmmtFg3KSqoSXw",
+                    "date": "2021-09"
+                },
+                {
+                    "pano_id": "5kMai8_NRtWbbkk0pfFFhQ",
+                    "date": "2022-10"
+                },
+                {
+                    "pano_id": "KOtqa7YT3LfDSFIuAB6K0w",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "dZO_a1q6L9AC4kT47eZsYQ",
+                    "date": "2022-05"
+                },
+                {
+                    "pano_id": "mif6v1HnYqLFihamGAcMuA",
+                    "date": "2020-02"
+                },
+                {
+                    "pano_id": "RAuCfUafvQTCBTF3XrNXsw",
+                    "date": "2017-10"
+                },
+                {
+                    "pano_id": "7fuin09wmXqPN8skrYguIQ",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "jCGZyZTu0qmivh-MdNyxJA",
+                    "date": "2009-02"
+                }
+            ]
+        },
+        "gYe7aPaK0oH5byvz_zqG9g": {
+            "pano_id": "gYe7aPaK0oH5byvz_zqG9g",
+            "latitude": 32.57354202400879,
+            "longitude": -116.6273404325914,
+            "closest_intersection": "8810728320",
+            "distance_meters": 8.13120715118624,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "m6eWt4yPai2T0m9b4W4znw",
+                    "road_name": "Tecate - Tijuana",
+                    "yaw_deg": 84.10884094238281
+                },
+                {
+                    "pano_id": "JulI2TPdju-Gp4k7WYd76A",
+                    "road_name": "Tecate - Tijuana",
+                    "yaw_deg": 264.1306762695312
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "xB3bx-WBbz5e4GxAuGHGWw",
+                    "date": "2009-02"
+                },
+                {
+                    "pano_id": "4LBNCMzejW2u7d3lVr7c9Q",
+                    "date": "2017-10"
+                },
+                {
+                    "pano_id": "1QZsWcwmP048iDy1GVbeyQ",
+                    "date": "2022-05"
+                },
+                {
+                    "pano_id": "_N3-E8m3HLumM1CxxL8heg",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "uBkqf_SzIrPXTXI-rHbOpA",
+                    "date": "2022-09"
+                },
+                {
+                    "pano_id": "bWusFT2sQI5Nd5yexFtq1Q",
+                    "date": "2021-09"
+                },
+                {
+                    "pano_id": "LrVGgT2an2iGY45IvxGTcg",
+                    "date": "2020-03"
+                },
+                {
+                    "pano_id": "ZOitHAXj8IBi7X1-jk3ajQ",
+                    "date": "2019-09"
+                },
+                {
+                    "pano_id": "5WHSQIwcORQhq1Ed55zcMg",
+                    "date": "2016-02"
+                }
+            ]
+        },
+        "JulI2TPdju-Gp4k7WYd76A": {
+            "pano_id": "JulI2TPdju-Gp4k7WYd76A",
+            "latitude": 32.57352409002908,
+            "longitude": -116.6275301814247,
+            "closest_intersection": "7247333366",
+            "distance_meters": 9.164516404270362,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "gYe7aPaK0oH5byvz_zqG9g",
+                    "road_name": "Tecate - Tijuana",
+                    "yaw_deg": 84.13067626953125
+                },
+                {
+                    "pano_id": "TTONtJP2p0o9_3ou8Lhu5g",
+                    "road_name": "M\u00e9xico 2D",
+                    "yaw_deg": 264.1417541503906
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "CeYwhzaEeFAO299jURXLfg",
+                    "date": "2017-10"
+                },
+                {
+                    "pano_id": "fAt-_CQnsTUBO_xtXuBTfw",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "VEqYAYSMECBFmPvx_wmUKw",
+                    "date": "2022-10"
+                },
+                {
+                    "pano_id": "ztWrXTTpCynkBGUqn7mr7g",
+                    "date": "2022-06"
+                },
+                {
+                    "pano_id": "k7vaI1c7zwMquicuf6adCg",
+                    "date": "2021-09"
+                },
+                {
+                    "pano_id": "ATeV992mgk0voRk3EKfE_g",
+                    "date": "2020-03"
+                },
+                {
+                    "pano_id": "GfWp7mIWzVAs36BUD-bs7w",
+                    "date": "2019-09"
+                },
+                {
+                    "pano_id": "z-Zvp1xj_6Hrtcn5whtmtA",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "olBrWFLgVn6Hwr6EfxzCSg",
+                    "date": "2009-02"
+                }
+            ]
+        },
+        "TTONtJP2p0o9_3ou8Lhu5g": {
+            "pano_id": "TTONtJP2p0o9_3ou8Lhu5g",
+            "latitude": 32.57351569004868,
+            "longitude": -116.6276135844888,
+            "closest_intersection": "7247333366",
+            "distance_meters": 1.2911059174524808,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "JulI2TPdju-Gp4k7WYd76A",
+                    "road_name": "Tecate - Tijuana",
+                    "yaw_deg": 84.1417465209961
+                },
+                {
+                    "pano_id": "q4IdD3Ibzo7sZMJp6TKEAA",
+                    "road_name": "M\u00e9xico 2D",
+                    "yaw_deg": 264.2598266601562
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "ZOL6RwTcMQkApIKOFhWQAQ",
+                    "date": "2017-10"
+                },
+                {
+                    "pano_id": "Xj2uTmTwKe4seIEG3O8rRQ",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "2YptnIvZPYoZs-wt2sIGjA",
+                    "date": "2022-10"
+                },
+                {
+                    "pano_id": "xwbGVPxadExwiQOhaOsidw",
+                    "date": "2022-05"
+                },
+                {
+                    "pano_id": "tP3eYQvOtE5wvYFoFycjDA",
+                    "date": "2021-09"
+                },
+                {
+                    "pano_id": "oG9g8pZgTsO2x9Eyrd0AHg",
+                    "date": "2020-03"
+                },
+                {
+                    "pano_id": "poS7_b6Sw_0DvgqCdN_X1Q",
+                    "date": "2019-09"
+                },
+                {
+                    "pano_id": "mkxB3tOo38PzQawpugziIg",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "ZVQn3kWHlWDPhzK-qiAWBw",
+                    "date": "2009-02"
+                }
+            ]
+        },
+        "q4IdD3Ibzo7sZMJp6TKEAA": {
+            "pano_id": "q4IdD3Ibzo7sZMJp6TKEAA",
+            "latitude": 32.57350769146939,
+            "longitude": -116.6277089536507,
+            "closest_intersection": "7247333366",
+            "distance_meters": 7.711560771227516,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "TTONtJP2p0o9_3ou8Lhu5g",
+                    "road_name": "M\u00e9xico 2D",
+                    "yaw_deg": 84.25983428955078
+                },
+                {
+                    "pano_id": "xguAzHRslVSe097Io6VlZw",
+                    "road_name": "M\u00e9xico 2D",
+                    "yaw_deg": 264.2781982421875
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "EgWWBLQq4ZHNnC9zNyEs1g",
+                    "date": "2017-10"
+                },
+                {
+                    "pano_id": "7NnmMQqNGIfloLGwxy0leg",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "DamhdH9z_oUwdd2gaH_s3w",
+                    "date": "2022-10"
+                },
+                {
+                    "pano_id": "B3z9BOb770XbbddmMpkZSA",
+                    "date": "2022-06"
+                },
+                {
+                    "pano_id": "NM6MQDe_o6-k_GJqMB07XA",
+                    "date": "2021-09"
+                },
+                {
+                    "pano_id": "wQI8YGNHf80YGsTUAAP5gA",
+                    "date": "2020-03"
+                },
+                {
+                    "pano_id": "Mq-g8uCf_pDUNLOgzmu9PA",
+                    "date": "2019-09"
+                },
+                {
+                    "pano_id": "uRNqbr2O60Vh0wkRqu6WFg",
+                    "date": "2016-02"
+                },
+                {
+                    "pano_id": "HYFZf0dusbFhsfweHv6Low",
+                    "date": "2009-02"
+                }
+            ]
+        },
+        "_IOoeTkOirLvwHFVHGzQ4Q": {
+            "pano_id": "_IOoeTkOirLvwHFVHGzQ4Q",
+            "latitude": 32.57430428109478,
+            "longitude": -116.6270897731491,
+            "closest_intersection": "4691398451",
+            "distance_meters": 8.559318538197846,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "Qd8r_O5hs8bcTKLvHP-jAQ",
+                    "road_name": "Pdte. L\u00e1zaro C\u00e1rdenas",
+                    "yaw_deg": 242.4491882324219
+                },
+                {
+                    "pano_id": "4qypUoRDp88si2TmLP6tTA",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 84.0052719116211
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "GP1WK4WUKDDuOLqMDDZPHw",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "OXKd4mDJryWaE4wkBv5Zpg",
+                    "date": "2017-10"
+                },
+                {
+                    "pano_id": "BaDTXZNEbB8kSj2Ht5m-Jw",
+                    "date": "2015-12"
+                }
+            ]
+        },
+        "9m3J3LrZfQI9ztDlRBBoxA": {
+            "pano_id": "9m3J3LrZfQI9ztDlRBBoxA",
+            "latitude": 32.57437828825641,
+            "longitude": -116.6262471919053,
+            "closest_intersection": "337277332",
+            "distance_meters": 14.3765789957361,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "yTTA0Wgj4yoYLD5yXAmJTw",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 83.94227600097656
+                },
+                {
+                    "pano_id": "pUkDwspu7N-HPO3noS-uCw",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 263.9871215820312
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "SeeC0JBaO7KnQLYcQTMZsg",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "WUGHtqLsrgcwFi0jTRHEgg",
+                    "date": "2017-10"
+                },
+                {
+                    "pano_id": "8n3QQjGzySio3ZLqltxcIA",
+                    "date": "2015-12"
+                }
+            ]
+        },
+        "yTTA0Wgj4yoYLD5yXAmJTw": {
+            "pano_id": "yTTA0Wgj4yoYLD5yXAmJTw",
+            "latitude": 32.57441134907651,
+            "longitude": -116.6261363470277,
+            "closest_intersection": "337277332",
+            "distance_meters": 4.69763867429696,
+            "date": "2009-09",
+            "adjacent_links": [
+                {
+                    "pano_id": "CvtL044ixc8AsMrND47JcQ",
+                    "road_name": "Pdte. Pascual Ortiz Rubio",
+                    "yaw_deg": 150.8041687011719
+                },
+                {
+                    "pano_id": "9m3J3LrZfQI9ztDlRBBoxA",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 263.9422607421875
+                },
+                {
+                    "pano_id": "3_72-s7S0QPcv8oUlEmuqw",
+                    "road_name": "Callejon Reforma",
+                    "yaw_deg": 86.51809692382812
+                },
+                {
+                    "pano_id": "1ALaBgYYzG-qRPZMDyVE-w",
+                    "road_name": "Pdte. Pascual Ortiz Rubio",
+                    "yaw_deg": 30.91060447692871
+                }
+            ],
+            "timeline": [
+                {
+                    "pano_id": "qOYMrKGNMUQwgzQVDjt0Iw",
+                    "date": "2015-12"
+                },
+                {
+                    "pano_id": "1R62YNVqeaQTOLuyIr-6hQ",
+                    "date": "2025-08"
+                },
+                {
+                    "pano_id": "XtS6R3HVWpZWJdAXV41DTg",
+                    "date": "2017-10"
+                }
+            ]
         }
     },
     "edge_to_pano_index": {
@@ -1789,7 +3512,9 @@
             "pP8wR1hoLU5IJf_wtmzCfQ",
             "Ue6pQ2BWILAPULm5a-p7VQ"
         ],
-        "e_242": [],
+        "e_242": [
+            "7xG2mbIw40mCDDY2L_glag"
+        ],
         "e_243": [],
         "e_244": [],
         "e_273": [],
@@ -1847,7 +3572,15 @@
         "e_281": [],
         "e_282": [],
         "e_413": [],
-        "e_414": [],
+        "e_414": [
+            "4qypUoRDp88si2TmLP6tTA",
+            "vuw9TdPEDo7KCwDhv41Y8g",
+            "ar3ionQGDJpN2uqwo0TsDg",
+            "wtdjtXaB6Qp4CE-QJuV3Zg",
+            "vhSRNerOnomo5Yoo6CjMug",
+            "zJeje4thnABYbFVK5inisQ",
+            "pUkDwspu7N-HPO3noS-uCw"
+        ],
         "e_283": [],
         "e_319": [],
         "e_284": [],
@@ -2034,15 +3767,60 @@
         "e_1215": [],
         "e_412": [],
         "e_426": [],
-        "e_415": [],
-        "e_416": [],
-        "e_417": [],
+        "e_415": [
+            "Qp0jCxDNYyo8H29xjO1buA",
+            "vco7VfQw5yzTnjZhKaMisQ"
+        ],
+        "e_416": [
+            "hL141VAXGY7b0rJQ5wBiIA",
+            "jNDR8LCVZRXdNmqzDVdbsQ",
+            "Dud9IcSb3aec6zphP3OZhA",
+            "mf0Ms5-Ec0W703LmWuazKA",
+            "Kk-_zns99jhm6KgEGxiNXw",
+            "rHfpd-xyqYK9Zz_2clV89g",
+            "q2lYfvR7614IS7BOr-igSQ",
+            "uTjRCmzYvQdR4z5G3oYRwA"
+        ],
+        "e_417": [
+            "Lfq6zXIyzeIcIHaSVjjShQ",
+            "4YJ785W7Rh-7JJxXZeZj5w",
+            "soIPSbVW9SI2EDsOOTwJtA",
+            "A_90u-e_K8rCciJJkOpxrA",
+            "CyCXxH8XMxM1fI2G2GURmQ",
+            "tvDW455qUhSPGmm9xZps_A",
+            "oxS9aS-Ni0YAMnkAYq0zTA",
+            "IWLYJLbBMQ57-iqOkbIKVg",
+            "GMtmNSTwWvltT13-cSm3BA",
+            "shs4PljLmfPYpes0G_62hg"
+        ],
         "e_567": [],
         "e_568": [],
-        "e_418": [],
+        "e_418": [
+            "eAYRt1jiwwlC8Z6islwjZg",
+            "XKJP-9p6pGenSWEy58HbPQ",
+            "LM0pPqUMQ6VBWTFzA3bIPw",
+            "UqVfqDL6-0foZFk79ODsQQ",
+            "RJtgP9qVZPt2WTVVmHkI_g",
+            "FaNgvEG-GcUH4I7U55EpYg",
+            "v5k-rpEOuRdhvykGRy_uTQ",
+            "-wPBt3GiAwbUlka5rEe6fA",
+            "ANovFN_MEvIUEl7OaxPTfA"
+        ],
         "e_574": [],
         "e_575": [],
-        "e_419": [],
+        "e_419": [
+            "Q17nxYmCNEPmo9l9eLDIYw",
+            "pgcxNhGn7eJOHD_V6FFoIQ",
+            "j_VCiEzq5CH1oxE-TiFKxQ",
+            "EODK9KoxGiwMzMq92xG3gg",
+            "UPmkPkOCwHSBBWolch33Sg",
+            "pA1frlOyhVS3GK8CpCu98g",
+            "ls0PcZMYUQ0Xk3ELcGwYjw",
+            "ddnGsGIMYyZh87lJhQixIA",
+            "k9DL8r8sRGRP08fzS4kdpQ",
+            "ia2BwHvuBKFh8B3xWqwfVA",
+            "9x96diioIiifLfGG7ecNGQ"
+        ],
         "e_580": [],
         "e_581": [],
         "e_420": [],
@@ -2522,7 +4300,9 @@
         "e_754": [],
         "e_755": [],
         "e_756": [],
-        "e_757": [],
+        "e_757": [
+            "unMohL07vyQTIfHxxfhMnA"
+        ],
         "e_1695": [],
         "e_758": [],
         "e_1794": [],
@@ -2669,7 +4449,14 @@
         "e_885": [],
         "e_886": [],
         "e_887": [],
-        "e_888": [],
+        "e_888": [
+            "Bare_2KygPh8ulc-k3YpoA",
+            "Fzxki1XZdjKas-kYeh5Efg",
+            "WC-rN4ugGbjZBghlpdFEbA",
+            "1lT_vRwYRnqI1zNuJkUohA",
+            "-grPZoY6vcF7IoZ5ETgSBg",
+            "oyc46k4241RMZlP7pv5FyA"
+        ],
         "e_889": [
             "KYAdFB14gnnn65eGSIRF2A",
             "qEDbvzntkqvmCy_Kxp-BiA",
@@ -3038,7 +4825,12 @@
         "e_1202": [],
         "e_1203": [],
         "e_1628": [],
-        "e_1206": [],
+        "e_1206": [
+            "dLpIP7mhA_uWXcQGSH2--Q",
+            "_l92ACH31BpVmPwDWU5RqQ",
+            "NMwyXMgDo3P_G-_Ki0FQwQ",
+            "iC5pdw4_s0duwq6JUPlyQw"
+        ],
         "e_1207": [],
         "e_1208": [],
         "e_1658": [],
