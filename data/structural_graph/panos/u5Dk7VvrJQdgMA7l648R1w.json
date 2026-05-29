@@ -1,0 +1,29 @@
+{
+    "pano_id": "u5Dk7VvrJQdgMA7l648R1w",
+    "latitude": 32.57134185759788,
+    "longitude": -116.6157765201902,
+    "date": "2009-09",
+    "road_name": "Xicot\u00e9ncatl",
+    "adjacent_links": [
+        {
+            "pano_id": "JhN0NhVoyAf7wCpCQWF9Mw",
+            "road_name": "Xicot\u00e9ncatl",
+            "yaw_deg": 82.2291259765625
+        },
+        {
+            "pano_id": "s36UUiSYFWIWypRULifebQ",
+            "road_name": "Xicot\u00e9ncatl",
+            "yaw_deg": 262.1768188476562
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "iqhkFT0SQSg1j0TpTN-Ffg",
+            "date": "2025-09"
+        },
+        {
+            "pano_id": "TpUy9myQlRRaI9R9gvlunA",
+            "date": "2022-10"
+        }
+    ]
+}

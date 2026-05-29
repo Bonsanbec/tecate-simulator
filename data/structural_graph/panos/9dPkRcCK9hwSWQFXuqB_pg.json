@@ -1,0 +1,39 @@
+{
+    "pano_id": "9dPkRcCK9hwSWQFXuqB_pg",
+    "latitude": 32.56631425213893,
+    "longitude": -116.6180783549583,
+    "date": "2009-09",
+    "road_name": "C. Gral. Mariano Arista",
+    "adjacent_links": [
+        {
+            "pano_id": "SwWiW6SDk4vKO15dOcBMOQ",
+            "road_name": "Cuenca D\u00edaz",
+            "yaw_deg": 176.3486938476562
+        },
+        {
+            "pano_id": "qbKZptH-69xD2bmM-tTN8A",
+            "road_name": "C. Gral. Mariano Arista",
+            "yaw_deg": 45.74111938476562
+        },
+        {
+            "pano_id": "8xhAT2ZmQ10I54zlmO9nzQ",
+            "road_name": "C. Gral. Mariano Arista",
+            "yaw_deg": 297.6791687011719
+        },
+        {
+            "pano_id": "FJvURHXb7xJ_BiyCGFAF2g",
+            "road_name": "Cuenca D\u00edaz",
+            "yaw_deg": 357.2716674804688
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "4PXIX_CF19CGBpxRIQoZjQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "6q1gP8nadlvZjTyMqncD5Q",
+            "date": "2022-09"
+        }
+    ]
+}

@@ -1,0 +1,42 @@
+{
+    "pano_id": "DZp47xNARys8W9v2hupTLQ",
+    "latitude": 32.56456003291961,
+    "longitude": -116.6198075723773,
+    "date": "2009-09",
+    "road_name": "Av. Juan Mart\u00ednez el Pipila",
+    "adjacent_links": [
+        {
+            "pano_id": "LTovxrz7yPPIVGfpM7ET4Q",
+            "road_name": "Av. Juan Mart\u00ednez el Pipila",
+            "yaw_deg": 82.17001342773438
+        },
+        {
+            "pano_id": "CBkpyHJ2shcuN_kaSeaq5g",
+            "road_name": "C. Gertrudis Bocanegra",
+            "yaw_deg": 153.4627075195312
+        },
+        {
+            "pano_id": "yHO1aW9BpywPEZVCv-60pw",
+            "road_name": "Av. Juan Mart\u00ednez el Pipila",
+            "yaw_deg": 261.547119140625
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "sQfLTVXVj1OQUnJkhu1hjg",
+            "date": "2017-07"
+        },
+        {
+            "pano_id": "efGW3rYsBRybCtOUJ4pZFQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "hhH4x_fQAJ1u2C5rwO5nbw",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "gOS3kKH96KCntgSnUr0XLQ",
+            "date": "2016-02"
+        }
+    ]
+}

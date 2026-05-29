@@ -1,0 +1,29 @@
+{
+    "pano_id": "cNCGbSlbHJ8Pf-LtncDV4Q",
+    "latitude": 32.56421994096434,
+    "longitude": -116.620228920354,
+    "date": "2009-09",
+    "road_name": "C. Josefina Rend\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "LFyWflnApLgDCfYw61nABA",
+            "road_name": "C. Josefina Rend\u00f3n",
+            "yaw_deg": 351.4835815429688
+        },
+        {
+            "pano_id": "o26T8PF3-uOqchxicOSkWA",
+            "road_name": "C. Josefina Rend\u00f3n",
+            "yaw_deg": 171.4043884277344
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "1cXXpA4JlgzhkH4V2BcqbA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "YyKGnHF2tNin45Pon7q0HQ",
+            "date": "2022-09"
+        }
+    ]
+}
