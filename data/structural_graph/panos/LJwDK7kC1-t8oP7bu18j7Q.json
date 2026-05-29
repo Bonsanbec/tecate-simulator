@@ -1,0 +1,29 @@
+{
+    "pano_id": "LJwDK7kC1-t8oP7bu18j7Q",
+    "latitude": 32.56773878190874,
+    "longitude": -116.6224761863071,
+    "date": "2009-09",
+    "road_name": "Gral. Emilio Portes Gil",
+    "adjacent_links": [
+        {
+            "pano_id": "UGtb18qcyWj3VzovVADbUA",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 355.0699768066406
+        },
+        {
+            "pano_id": "yEXEsR9tQeTYWChiKv6aFQ",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 104.0180435180664
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "COwwIc19XGDvsYsWW2m4MA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "ZIGX3gMPqzSk8kL6kmDa7g",
+            "date": "2022-09"
+        }
+    ]
+}

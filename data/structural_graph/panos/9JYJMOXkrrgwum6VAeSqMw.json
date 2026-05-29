@@ -1,0 +1,25 @@
+{
+    "pano_id": "9JYJMOXkrrgwum6VAeSqMw",
+    "latitude": 32.56629336238267,
+    "longitude": -116.6261139441198,
+    "date": "2009-09",
+    "road_name": "Calle Jos\u00e9 Mar\u00eda Morelos",
+    "adjacent_links": [
+        {
+            "pano_id": "IXy89HkMChi2ZIIWlI6rlQ",
+            "road_name": "Calle Jos\u00e9 Mar\u00eda Morelos",
+            "yaw_deg": 302.2022094726562
+        },
+        {
+            "pano_id": "GEkBAz779vhSAE6ymLJRcw",
+            "road_name": "Gral. S\u00e1nchez Taboada",
+            "yaw_deg": 88.22151184082031
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "eIViC6kCdm8uEXaJSYN2yg",
+            "date": "2022-10"
+        }
+    ]
+}

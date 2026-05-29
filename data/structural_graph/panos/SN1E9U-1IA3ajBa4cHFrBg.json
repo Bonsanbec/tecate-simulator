@@ -1,0 +1,29 @@
+{
+    "pano_id": "SN1E9U-1IA3ajBa4cHFrBg",
+    "latitude": 32.56695159705225,
+    "longitude": -116.6237988750416,
+    "date": "2009-09",
+    "road_name": "Gral. Porfirio D\u00edaz",
+    "adjacent_links": [
+        {
+            "pano_id": "dLhMm0rLHaxgMBAAUPjoWA",
+            "road_name": "Gral. Porfirio D\u00edaz",
+            "yaw_deg": 353.6532287597656
+        },
+        {
+            "pano_id": "SVRvWGAc6985nKPqF_Mgzg",
+            "road_name": "Pdte. Abelardo L. Rodr\u00edguez",
+            "yaw_deg": 180.8672485351562
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "DqkhVIqPreD2dDuhVmqO4Q",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "203rW0mPOf_G85AGq46mzQ",
+            "date": "2022-10"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "pano_id": "o4c1O0mFL5DJUZuA8DGKNg",
+    "latitude": 32.56655030879335,
+    "longitude": -116.6282010938758,
+    "date": "2009-09",
+    "road_name": "Esteban Cant\u00fa",
+    "adjacent_links": [
+        {
+            "pano_id": "FtKXJKu5ul4s8SCvWdDybQ",
+            "road_name": "5 de Mayo",
+            "yaw_deg": 264.8103942871094
+        },
+        {
+            "pano_id": "yxWVqBCd3w1jZzaQRP9oEQ",
+            "road_name": "Esteban Cant\u00fa",
+            "yaw_deg": 100.2583923339844
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "AsF6lFIuKWUJenVEnCo5yw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "WO5i6D-oB63085SIFqlYTQ",
+            "date": "2022-10"
+        }
+    ]
+}
