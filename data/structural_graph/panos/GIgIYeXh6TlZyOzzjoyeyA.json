@@ -1,0 +1,29 @@
+{
+    "pano_id": "GIgIYeXh6TlZyOzzjoyeyA",
+    "latitude": 32.56465043531217,
+    "longitude": -116.6293772776871,
+    "date": "2009-09",
+    "road_name": "C. Campeche",
+    "adjacent_links": [
+        {
+            "pano_id": "-ifkfTyDmQxI3l066LcXvw",
+            "road_name": "C. Campeche",
+            "yaw_deg": 122.1167068481445
+        },
+        {
+            "pano_id": "RyRhAdm8xTZMRtgINoJASA",
+            "road_name": "Zacatecas",
+            "yaw_deg": 298.0749816894531
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "fbeikvc9NTN9t0LA6tS7rA",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "h7gP7z9SARHHDu6pwnh3qQ",
+            "date": "2025-08"
+        }
+    ]
+}

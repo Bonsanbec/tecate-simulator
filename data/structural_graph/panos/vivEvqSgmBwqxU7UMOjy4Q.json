@@ -1,0 +1,29 @@
+{
+    "pano_id": "vivEvqSgmBwqxU7UMOjy4Q",
+    "latitude": 32.56413013142453,
+    "longitude": -116.6257536078856,
+    "date": "2009-09",
+    "road_name": "Av Nuevo Le\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "3yw4-XUWdLvzf-4O003uOw",
+            "road_name": "Av Nuevo Le\u00f3n",
+            "yaw_deg": 171.8943328857422
+        },
+        {
+            "pano_id": "dz4hfWXgknDFZE5CbGyxNA",
+            "road_name": "Blvrd Universidad",
+            "yaw_deg": 5.761112689971924
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "SQB3zDZ8HWbd2k1Du48PtQ",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "2ZqhYof_7-4xuatN-INcNg",
+            "date": "2025-09"
+        }
+    ]
+}

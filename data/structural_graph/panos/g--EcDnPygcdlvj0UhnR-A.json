@@ -1,0 +1,29 @@
+{
+    "pano_id": "g--EcDnPygcdlvj0UhnR-A",
+    "latitude": 32.57074956258727,
+    "longitude": -116.6178472997771,
+    "date": "2009-09",
+    "road_name": "Tenoch",
+    "adjacent_links": [
+        {
+            "pano_id": "DCtczNk2HyHVLsvt0Hw2wA",
+            "road_name": "Tenoch",
+            "yaw_deg": 263.5439453125
+        },
+        {
+            "pano_id": "alVB4VRGlNGE3K0H-e4mcQ",
+            "road_name": "Tenoch",
+            "yaw_deg": 83.53588104248047
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "0Q9cgD9_3_G3CfRNR64gVw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "AHIch9xpOEV-uNU1xdJMAQ",
+            "date": "2022-09"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "pano_id": "-JfoKCKToghKN1idsLsn-A",
+    "latitude": 32.56533427304426,
+    "longitude": -116.6220753563822,
+    "date": "2009-09",
+    "road_name": "Calle Gral. Manuel Gonz\u00e1lez Pedroza",
+    "adjacent_links": [
+        {
+            "pano_id": "Jb26xK7VDyA15WbSH7J8fw",
+            "road_name": "Calle Gral. Manuel Gonz\u00e1lez Pedroza",
+            "yaw_deg": 170.9583435058594
+        },
+        {
+            "pano_id": "8rrdscedkB4NgZztMSmRqg",
+            "road_name": "Calle Gral. Manuel Gonz\u00e1lez Pedroza",
+            "yaw_deg": 350.9851684570312
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "dpIalPRs03qyZDfrD9pjAQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "Y7o2m_PWjFfgNWFEhX7J6A",
+            "date": "2022-09"
+        }
+    ]
+}

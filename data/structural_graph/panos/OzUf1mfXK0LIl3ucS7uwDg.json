@@ -1,0 +1,29 @@
+{
+    "pano_id": "OzUf1mfXK0LIl3ucS7uwDg",
+    "latitude": 32.56980449638682,
+    "longitude": -116.6350052051364,
+    "date": "2009-09",
+    "road_name": "C. F",
+    "adjacent_links": [
+        {
+            "pano_id": "a-L4_8LJ_N6GtE0LCAFVjA",
+            "road_name": "C. F",
+            "yaw_deg": 264.1406860351562
+        },
+        {
+            "pano_id": "HrMbDO38-yAhaPTpAMloLg",
+            "road_name": "C. F",
+            "yaw_deg": 84.23670196533203
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "eEcfZ12_GvPlhJuam-lehw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "Iy9BJwNFdnCGgwCa6IA5VQ",
+            "date": "2022-09"
+        }
+    ]
+}
