@@ -73,7 +73,7 @@ def run_pipeline(args):
         seed_lat = 32.573229
         seed_lon = -116.626536
         scraper = GoogleStreetViewScraper(headless=args.headless, G=G)
-        discovered_nodes = scraper.crawl_priority_network(seed_lat, seed_lon, max_nodes=25)
+        discovered_nodes = scraper.crawl_priority_network(seed_lat, seed_lon)
     else:
         print("[Acquisition] Skipping active Playwright crawling. Proceeding to migrate cache.")
         
