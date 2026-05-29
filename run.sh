@@ -1,7 +1,7 @@
 while true; do
     echo "===== STARTING CRAWLER ====="
 
-    PYTHONPATH=. ./venv/bin/python src/main.py --headless
+    PYTHONPATH=. ./venv/bin/python src/main.py --headless --harvest-only
 
     echo "===== CRAWLER FINISHED ====="
 
