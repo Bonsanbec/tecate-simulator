@@ -1,0 +1,33 @@
+{
+    "pano_id": "c9qBk0RAusfkQ9y4eh3Gkw",
+    "latitude": 32.57612192715037,
+    "longitude": -116.6291343579486,
+    "date": "2009-09",
+    "road_name": "M\u00e9xico",
+    "adjacent_links": [
+        {
+            "pano_id": "REpQ7OOgSoUhdgY1jgB_fg",
+            "road_name": "M\u00e9xico",
+            "yaw_deg": 264.484375
+        },
+        {
+            "pano_id": "LkEqZe8jylBnjmw-UqsPaw",
+            "road_name": "M\u00e9xico",
+            "yaw_deg": 84.68010711669922
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "ng1vBbB1ZdKV4nbQu7gzKg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "cdppr2hjeC7tN0idQM4KFQ",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "7koD5AxzWbtCapnZnUxiCw",
+            "date": "2016-02"
+        }
+    ]
+}

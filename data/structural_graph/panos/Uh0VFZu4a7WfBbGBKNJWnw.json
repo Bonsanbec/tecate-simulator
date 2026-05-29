@@ -1,0 +1,29 @@
+{
+    "pano_id": "Uh0VFZu4a7WfBbGBKNJWnw",
+    "latitude": 32.57545352311428,
+    "longitude": -116.6230281697905,
+    "date": "2009-09",
+    "road_name": "Av Revoluci\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "TeoHF6sXEhhvXGZ7PnBEnw",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 188.3955535888672
+        },
+        {
+            "pano_id": "f3MyO2Lfxyobt_-TRnM3mw",
+            "road_name": "R\u00edo Bravo",
+            "yaw_deg": 4.242437839508057
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "bYlvhSk05mFaM_W27ZEj3g",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "NIjFvExroptys9hZy3E4GA",
+            "date": "2022-10"
+        }
+    ]
+}

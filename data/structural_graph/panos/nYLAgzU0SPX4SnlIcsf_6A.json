@@ -1,0 +1,67 @@
+{
+    "pano_id": "nYLAgzU0SPX4SnlIcsf_6A",
+    "latitude": 32.57331180333293,
+    "longitude": -116.6301740525988,
+    "date": "2009-09",
+    "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "rpxZWs-tzfrkgiZZP5SXNw",
+            "road_name": "Tecate - Tijuana",
+            "yaw_deg": 84.86578369140625
+        },
+        {
+            "pano_id": "VMvIbRz8AuwGNY0OZ9P9mQ",
+            "road_name": "Tijuana - Tecate",
+            "yaw_deg": 265.0338439941406
+        },
+        {
+            "pano_id": "nY_ASM3EhHfKFfGDk9rdmg",
+            "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+            "yaw_deg": 168.1803131103516
+        },
+        {
+            "pano_id": "7kj-AnQ2XZyaSldMQI7D0Q",
+            "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+            "yaw_deg": 10.79613208770752
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "gRFlXoZtDDojDUgkhbh-ww",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "3ngHehkTL9meUbf_AXGmng",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "YpTen2IDFKwenFUghgnVSg",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "PNbe95Mpk6zA9xYAnQ_ztQ",
+            "date": "2022-06"
+        },
+        {
+            "pano_id": "blZOweBPeNOyMXscrvD9nw",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "lpW80LSmeVOLL5UtFHWx-g",
+            "date": "2020-03"
+        },
+        {
+            "pano_id": "0LotILueEHrMLooSBH70jw",
+            "date": "2019-09"
+        },
+        {
+            "pano_id": "0H0dOHSb6VPCGYDkKVPCQQ",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "18ey8ZMetUuDT_Bt3Z9x3Q",
+            "date": "2009-02"
+        }
+    ]
+}

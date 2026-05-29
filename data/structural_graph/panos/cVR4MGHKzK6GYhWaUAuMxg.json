@@ -1,0 +1,37 @@
+{
+    "pano_id": "cVR4MGHKzK6GYhWaUAuMxg",
+    "latitude": 32.57419707715391,
+    "longitude": -116.6302320831822,
+    "date": "2009-09",
+    "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "_TUXtyaugHUWxO0LMeblPQ",
+            "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+            "yaw_deg": 355.8991088867188
+        },
+        {
+            "pano_id": "PL3-iPGwXG2gY7lAa3TGgg",
+            "road_name": "Pdte. \u00c1lvaro Obreg\u00f3n",
+            "yaw_deg": 175.8672637939453
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "dLCcBIS50J5hZ9CEL3iNuw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "g_tpMRDEgFquzHK-VdlIdg",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "yjI4UMFXvLdd-vWWMWsgVA",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "frj6Mf3ZkHQb8XWZmkavJw",
+            "date": "2017-07"
+        }
+    ]
+}

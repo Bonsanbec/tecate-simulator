@@ -1,0 +1,43 @@
+{
+    "pano_id": "g77ofuCTy_iFFRJi0inbCQ",
+    "latitude": 32.57535478014504,
+    "longitude": -116.6235707947857,
+    "date": "2009-09",
+    "road_name": "Gral. Emilio Portes Gil",
+    "adjacent_links": [
+        {
+            "pano_id": "l5r-6RH6j_RhgdwuaZ3Hzg",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 131.4553833007812
+        },
+        {
+            "pano_id": "IEAd9cC4D8ENVrHeqcS2gg",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 32.53399276733398
+        },
+        {
+            "pano_id": "AQ06IGZd36Oe9_NWRfJbkA",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 94.02436828613281
+        },
+        {
+            "pano_id": "3-A8ig5gQaSTRTmFUsFFCg",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 264.3064270019531
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "8dfDd-aqNKGn9N530wgsdQ",
+            "date": "2021-09"
+        },
+        {
+            "pano_id": "8gaViPO6r9YlI7-VGMnaxw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "itZMe-f9hErCjdKWEQlhhQ",
+            "date": "2022-10"
+        }
+    ]
+}

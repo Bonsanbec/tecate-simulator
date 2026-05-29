@@ -1,0 +1,33 @@
+{
+    "pano_id": "kPOjSM64Yj6DiY3rF1IQKA",
+    "latitude": 32.57578703311111,
+    "longitude": -116.623549561267,
+    "date": "2009-09",
+    "road_name": "Gral. Emilio Portes Gil",
+    "adjacent_links": [
+        {
+            "pano_id": "Dr3CtjuxSPMo-tbTJjA8pg",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 174.4510040283203
+        },
+        {
+            "pano_id": "kmOIFKMr39PW3q2mw7CHSQ",
+            "road_name": "Gral. Emilio Portes Gil",
+            "yaw_deg": 354.5401000976562
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "OVZBh6VpieMlw4cR0zny3Q",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "-MHuFDI5O5AdX3YqYka-xw",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "STVTKTwWXq4D2o9BXv4JnA",
+            "date": "2016-02"
+        }
+    ]
+}

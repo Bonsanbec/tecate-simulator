@@ -1,0 +1,29 @@
+{
+    "pano_id": "L9pqph03xJGAWTswfmOwvw",
+    "latitude": 32.57534632080286,
+    "longitude": -116.6237076429668,
+    "date": "2009-08",
+    "road_name": "Cjon. Francisco I. Madero",
+    "adjacent_links": [
+        {
+            "pano_id": "sBMZwDC-4YTTxeW7Rq5ztQ",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 264.3591003417969
+        },
+        {
+            "pano_id": "q9tKEbkXKbnVZI_hx5DlYA",
+            "road_name": "Cjon. Francisco I. Madero",
+            "yaw_deg": 345.5101928710938
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "X9C7ZAc--zLfYJbWchToZg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "1uNJ6uo2j98HlBJpSbW4dQ",
+            "date": "2022-10"
+        }
+    ]
+}

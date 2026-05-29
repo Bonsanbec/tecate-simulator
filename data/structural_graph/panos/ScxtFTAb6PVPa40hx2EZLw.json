@@ -1,0 +1,33 @@
+{
+    "pano_id": "ScxtFTAb6PVPa40hx2EZLw",
+    "latitude": 32.57483707323703,
+    "longitude": -116.6299619034554,
+    "date": "2009-09",
+    "road_name": "Av Revoluci\u00f3n",
+    "adjacent_links": [
+        {
+            "pano_id": "_R4UvERGMvc0RVMeLzC8dA",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 84.53691101074219
+        },
+        {
+            "pano_id": "wrd6DbbyANOb0a3BCqgZyw",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 263.7583618164062
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "88iOFu9_ri835z03INqNAw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "dux80JLraJuYWeEKwFi4TA",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "pe8QhSvifpuwb3fa8QY1KQ",
+            "date": "2016-02"
+        }
+    ]
+}
