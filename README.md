@@ -48,9 +48,6 @@ tecate-simulator/
 │           ├── metadata.json     # Node coordinates, capture date, connectivity links
 │           ├── panorama.png      # Seamless stitched horizontal panorama (2560x640)
 │           └── tiles/            # Raw intercepted tile files (tile_z3_x_y.png)
-├── export/                       # Compiled 3D assets and scene databases
-│   ├── textures/                 # Stitched block texture atlases (.png)
-│   └── reconstruction_export.json# Self-contained 3D reconstruction JSON
 ├── src/                          # Modular source code package
 │   ├── __init__.py
 │   ├── main.py                   # Master orchestration CLI entrypoint
@@ -66,12 +63,6 @@ tecate-simulator/
 │   │   └── aligner.py
 │   ├── temporal_filter/          # Visual degradation analyzer and Graph Diffusion MRF Solver
 │   │   └── classifier.py
-│   ├── sfm/                      # ORB/SIFT descriptors, Essential RANSAC, & Triangulation
-│   │   └── sfm_lite.py
-│   ├── block_modeling/           # Planar cycle basis manzana builders
-│   │   └── block_builder.py
-│   └── texturing/                # Facade projection, perspective crops, & atlas stitchers
-│       └── texture_generator.py
 ├── tests/                        # Consolidation test suite
 │   └── test_reconstruction.py
 ├── blender_script.py             # Headless / GUI Blender import automate script (bpy)
@@ -108,13 +99,7 @@ pip install -r requirements.txt
 
 The master CLI orchestrates the scraping and reconstruction steps:
 
-### Option A: Simulated/Procedural Cache Mode (100% Offline, Recommended for instant testing)
-Generates high-fidelity simulated Street View panoramas, structures their connections, and writes simulated nodes to cache. Downstream modules load their assets *strictly and exclusively* from this cache:
-```bash
-PYTHONPATH=. ./venv/bin/python src/main.py --mode simulated
-```
-
-### Option B: Real Web Scraping Mode
+### MUST USE: Real Web Scraping Mode
 Launches Playwright Chromium session, intercepts unauthenticated background network traffic to trace tile coordinates, stitches them, crawler connected streets BFS-wise near Tecate plaza, and caches everything locally:
 ```bash
 PYTHONPATH=. ./venv/bin/python src/main.py --mode real
@@ -128,25 +113,6 @@ Validate the entire codebase's mathematical consistency, including unauthenticat
 
 ---
 
-## 5. Blender 3D Scene Assembly
-
-The exported intermediate format (`export/reconstruction_export.json`) is fully self-contained. To automatically build the 3D model, materials, and textures, run `blender_script.py` inside Blender:
-
-```bash
-# 1. Run headlessly (Fastest, saves tecate_reconstruction.blend directly)
-blender --background --python blender_script.py -- --import export/reconstruction_export.json
-
-# 2. Run in standard GUI mode (Builds the city inside the interactive window)
-blender --python blender_script.py -- --import export/reconstruction_export.json
-```
-
-**Inside Blender**:
-1. Open the generated `tecate_reconstruction.blend` file.
-2. Toggle the viewport shading mode to **Material Preview** or **Rendered** (Eevee/Cycles).
-3. The road network wireframe, the SIFT-extracted sparse 3D point cloud with points colored in vertex RGB, and the fully textured extruded 3D block facades mapped to their texture atlases are fully visible and editable!
-
----
-
-## 7. Data Assumptions, Limitations, & Failure Mitigations
+## n. Data Assumptions, Limitations, & Failure Mitigations
 
 For detailed reverse-engineering principles, legal limits, IP rate throttling, CAPTCHAs, and a detailed step-by-step troubleshooting runbook on how to adjust Playwright selectors if Google modifies frontend web classes, please refer to the dedicated file **[`scraper_legal_limits.md`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/scraper_legal_limits.md)**.
