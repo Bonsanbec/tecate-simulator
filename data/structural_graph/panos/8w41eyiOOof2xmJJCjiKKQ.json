@@ -1,0 +1,39 @@
+{
+    "pano_id": "8w41eyiOOof2xmJJCjiKKQ",
+    "latitude": 32.57018746262567,
+    "longitude": -116.6372401787957,
+    "date": "2009-09",
+    "road_name": "C. Teziutl\u00e1n",
+    "adjacent_links": [
+        {
+            "pano_id": "ft3_Lmi8bymYoXVuTury4w",
+            "road_name": "C. Teziutl\u00e1n",
+            "yaw_deg": 191.8431396484375
+        },
+        {
+            "pano_id": "tiTyNF7zoWrCi6kbUKJkDg",
+            "road_name": "C. E",
+            "yaw_deg": 262.7750854492188
+        },
+        {
+            "pano_id": "74djDsaQqPqvwoHVHOiRdg",
+            "road_name": "C. Teziutl\u00e1n",
+            "yaw_deg": 315.1775207519531
+        },
+        {
+            "pano_id": "zDpzG60YdsK8Rxm2L4VjwQ",
+            "road_name": "C. E",
+            "yaw_deg": 82.54653930664062
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "2ZKLZCcIySvkXv1vxkFUhg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "ejnE2aU2efOGZU4aU1FTbw",
+            "date": "2022-09"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "pano_id": "7VtAMFifaC6nRMzxBt-hPw",
+    "latitude": 32.56720048624998,
+    "longitude": -116.616993707197,
+    "date": "2009-09",
+    "road_name": "Ignacio Zaragoza",
+    "adjacent_links": [
+        {
+            "pano_id": "d8DMOjEZlI5ADci2vZ8zJw",
+            "road_name": "Ignacio Zaragoza",
+            "yaw_deg": 105.4830627441406
+        },
+        {
+            "pano_id": "8-zoaQCRdQLyeG2rxj50Ag",
+            "road_name": "Nicol\u00e1s Bravo",
+            "yaw_deg": 267.705078125
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "CJOvRJDjCsoBbWz1XrEJ5Q",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "l-5zsTSL2scDxMtSz0BQ9A",
+            "date": "2022-09"
+        }
+    ]
+}

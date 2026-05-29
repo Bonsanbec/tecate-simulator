@@ -1,0 +1,29 @@
+{
+    "pano_id": "ogAlwZHtFWOh7Tw7msXTXQ",
+    "latitude": 32.56327928998076,
+    "longitude": -116.6317042556248,
+    "date": "2009-09",
+    "road_name": "Quer\u00e9taro",
+    "adjacent_links": [
+        {
+            "pano_id": "uhPeLIz_yKysJ-j5GkKipA",
+            "road_name": "Quer\u00e9taro",
+            "yaw_deg": 81.44462585449219
+        },
+        {
+            "pano_id": "vWL4nnsulH96x7gNwPObNg",
+            "road_name": "Quer\u00e9taro",
+            "yaw_deg": 261.4700927734375
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "lRj9OjgGRLzXKvhuzVnEZw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "MgQdrS0VBc65sS3oJf6aMQ",
+            "date": "2023-07"
+        }
+    ]
+}

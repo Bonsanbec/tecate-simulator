@@ -1,0 +1,29 @@
+{
+    "pano_id": "e64eKQk-IKh_yfsYoXkUHA",
+    "latitude": 32.5657534697857,
+    "longitude": -116.6181383680841,
+    "date": "2009-09",
+    "road_name": "Juan \u00c1lvarez",
+    "adjacent_links": [
+        {
+            "pano_id": "kUgg1vfZllwIHOtbjmaOzg",
+            "road_name": "Juan \u00c1lvarez",
+            "yaw_deg": 269.4743957519531
+        },
+        {
+            "pano_id": "huju0-FCF6iVa-ru9b8mJw",
+            "road_name": "Juan \u00c1lvarez",
+            "yaw_deg": 89.41028594970703
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "eQrhj9knZ085sMu5b3rvqw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "WuG-4ZDVlkDcl1pHmvh8ng",
+            "date": "2022-09"
+        }
+    ]
+}

@@ -1,0 +1,37 @@
+{
+    "pano_id": "S4NvoGSqoiq7TykDAkpHbA",
+    "latitude": 32.56490943651133,
+    "longitude": -116.6341854153601,
+    "date": "2009-09",
+    "road_name": "Encinos",
+    "adjacent_links": [
+        {
+            "pano_id": "z9AA_Y7Y3MAh_v_HOqyfFQ",
+            "road_name": "Encinos",
+            "yaw_deg": 52.78922653198242
+        },
+        {
+            "pano_id": "DTOVEOpUkFnOnoTyok0gOA",
+            "road_name": "Encinos",
+            "yaw_deg": 232.8024444580078
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "Eji0Jg02aIo32Q4zMl7-Fw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "ku0WnArPHcZ0ub7yZTowSQ",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "gRj3IfjpiU-s9DwUDEQeVA",
+            "date": "2017-08"
+        },
+        {
+            "pano_id": "BaAm9_YfNQTsffpHsDiZKQ",
+            "date": "2016-02"
+        }
+    ]
+}

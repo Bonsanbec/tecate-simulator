@@ -1,0 +1,33 @@
+{
+    "pano_id": "MX5HyfwoP7GdQBrXA4215w",
+    "latitude": 32.56471903863262,
+    "longitude": -116.6192205810653,
+    "date": "2009-09",
+    "road_name": "Av. Juan Mart\u00ednez el Pipila",
+    "adjacent_links": [
+        {
+            "pano_id": "8NuTVsVevwtzvqWYZIQcgw",
+            "road_name": "Gral. Abraham A.",
+            "yaw_deg": 14.04147624969482
+        },
+        {
+            "pano_id": "z-fNosCb1l3y6qYXbFLD6w",
+            "road_name": "Av. Juan Mart\u00ednez el Pipila",
+            "yaw_deg": 211.0088653564453
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "06mbtSEnE1LhWRf0kFkwzQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "LPOVfASLxxN6EBT-KsdXjQ",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "xILaW-e34UR_6QX6vElJzw",
+            "date": "2016-02"
+        }
+    ]
+}
