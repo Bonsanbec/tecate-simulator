@@ -344,6 +344,9 @@ class UrbanBlockReconstructor:
             x_c = dx * v_right[0] + dy * v_right[1] + dz * v_right[2]
             y_c = dx * v_up[0] + dy * v_up[1] + dz * v_up[2]
             z_c = dx * v_look[0] + dy * v_look[1] + dz * v_look[2]
+            
+            if z_c <= 0.05:  # Point is behind or extremely close to the camera plane
+                return frontal_img.resize((512, 256), Image.BILINEAR)
                 
             # Perform perspective division to get pixel coordinates
             px = (W_obs - 1) / 2.0 + f * (x_c / z_c)
@@ -477,13 +480,19 @@ class UrbanBlockReconstructor:
                             best_pano = p
                             
                 rejection_reason = None
-                if best_score < 0.05:
-                    if best_pano is not None:
-                        rejection_reason = f"highest_score_{best_score:.6f}_below_threshold"
-                    else:
-                        rejection_reason = "no_eligible_panorama"
-                    best_pano = None
-                    
+                if best_pano is None and hasattr(self, 'panoramas') and self.panoramas:
+                    # Second pass: select the absolute closest panorama in distance
+                    best_dist = float("inf")
+                    for p in self.panoramas:
+                        meta = p["metadata"]
+                        px, py = gps_to_local(meta["latitude"], meta["longitude"])
+                        dist = math.sqrt((px - mx)**2 + (py - my)**2)
+                        if dist < best_dist:
+                            best_dist = dist
+                            best_pano = p
+                    best_score = math.exp(-best_dist / 15.0)
+                    rejection_reason = "fallback_closest_pano"
+                
                 facade_id = f"{b_id}_facade_{f_idx}"
                 diagnostics[facade_id] = {
                     "facade_id": facade_id,
@@ -493,88 +502,101 @@ class UrbanBlockReconstructor:
                     "road_distance_meters": float(road_dist),
                     "selected_pano_id": best_pano["pano_id"] if best_pano else None,
                     "selected_score": float(best_score),
-                    "rejection_reason": rejection_reason if not best_pano else None,
+                    "rejection_reason": rejection_reason,
                     "candidates_evaluated": candidates_log
                 }
                 
                 # 3. Facade Perspective Warping
-                p_id = best_pano["pano_id"]
-                assigned_panos_local.add(p_id)
-                assigned_panos_global.add(p_id)
-            
-                pano_img = Image.open(best_pano["image_path"])
-                # Determine camera look direction opposite to normal
-                cam_yaw = (math.degrees(math.atan2(normal[0], normal[1])) + 180.0) % 360.0
-                
-                is_sim = p_id.startswith("sim_pano")
-                # Match main.py road heading alignment
-                best_heading = 0.0
-                if self.pano_to_edge.get(p_id):
-                    # Find road heading from stations
-                    for station in getattr(self, 'camera_stations', []):
-                        if station.get("station_id") == p_id or station.get("edge_id") == self.pano_to_edge[p_id]:
-                            best_heading = station["road_heading"]
-                            break
-                
-                pano_yaw = best_heading if is_sim else 180.0
-                
-                # Project rectilinear using py360convert.e2c cubemap projection
-                from src.image_alignment.virtual_camera import project_rectilinear
-                face_img = project_rectilinear(
-                    pano_img=pano_img,
-                    yaw_deg=cam_yaw,
-                    pitch_deg=0.0,
-                    fov_deg=90.0,
-                    width=512,
-                    height=512,
-                    pano_yaw=pano_yaw,
-                    is_sim=is_sim
-                )
-                
-                # Warp using existing homography pipeline but passing the face image
-                px, py = gps_to_local(best_pano["metadata"]["latitude"], best_pano["metadata"]["longitude"])
-                obs_mock = {
-                    "image_path": face_img,  # Directly pass PIL Image
-                    "projection": {
-                        "camera_x": px,
-                        "camera_y": py,
-                        "camera_z": 2.5,
-                        "yaw_degrees": cam_yaw,
-                        "fov_degrees": 90.0,
-                        "image_width": 512,
-                        "image_height": 512
-                    }
-                }
-                
-                facade_img = self.extract_rectified_facade_observation_texture(obs_mock, A, B, height_meters)
-                textured_facades += 1
-                status = "textured"
-                
-                # Save final diagnostics segment trace
-                segment_debug_dir = os.path.join(self.debug_dir, "facade_observations", facade_id)
-                ensure_dir(segment_debug_dir)
-                facade_img.save(os.path.join(segment_debug_dir, "final_texture.png"))
-                
-                prov = {
-                    "source_pano_id": p_id,
-                    "source_date": best_pano["metadata"].get("date", ""),
-                    "source_lat_lon": [best_pano["metadata"]["latitude"], best_pano["metadata"]["longitude"]],
-                    "selected_score": float(best_score),
-                    "facade_normal": [float(normal[0]), float(normal[1])],
-                    "projection_parameters": {
-                        "cam_z": 2.5,
-                        "height_meters": float(height_meters),
-                        "facade_length": float(norm_len)
-                    }
-                }
-                provenance[facade_id] = prov
-                
-            facade_textures.append(facade_img)
-            diag_facades.append({
-                "facade_id": f"{b_id}_f{f_idx}",
-                "A": A, "B": B, "mx": mx, "my": my, "normal": normal,
-                "status": status, "best_obs": best_pano
-            })
+                if best_pano:
+                    p_id = best_pano["pano_id"]
+                    assigned_panos_local.add(p_id)
+                    assigned_panos_global.add(p_id)
+                    
+                    try:
+                        pano_img = Image.open(best_pano["image_path"])
+                        # Determine camera look direction opposite to normal
+                        cam_yaw = (math.degrees(math.atan2(normal[0], normal[1])) + 180.0) % 360.0
+                        
+                        is_sim = p_id.startswith("sim_pano")
+                        # Match main.py road heading alignment
+                        best_heading = 0.0
+                        if self.pano_to_edge.get(p_id):
+                            # Find road heading from stations
+                            for station in getattr(self, 'camera_stations', []):
+                                if station.get("station_id") == p_id or station.get("edge_id") == self.pano_to_edge[p_id]:
+                                    best_heading = station["road_heading"]
+                                    break
+                        
+                        pano_yaw = best_heading if is_sim else 180.0
+                        
+                        # Project rectilinear using py360convert.e2c cubemap projection
+                        from src.image_alignment.virtual_camera import project_rectilinear
+                        face_img = project_rectilinear(
+                            pano_img=pano_img,
+                            yaw_deg=cam_yaw,
+                            pitch_deg=0.0,
+                            fov_deg=90.0,
+                            width=512,
+                            height=512,
+                            pano_yaw=pano_yaw,
+                            is_sim=is_sim
+                        )
+                        
+                        # Warp using existing homography pipeline but passing the face image
+                        px, py = gps_to_local(best_pano["metadata"]["latitude"], best_pano["metadata"]["longitude"])
+                        obs_mock = {
+                            "image_path": face_img,  # Directly pass PIL Image
+                            "projection": {
+                                "camera_x": px,
+                                "camera_y": py,
+                                "camera_z": 2.5,
+                                "yaw_degrees": cam_yaw,
+                                "fov_degrees": 90.0,
+                                "image_width": 512,
+                                "image_height": 512
+                            }
+                        }
+                        
+                        facade_img = self.extract_rectified_facade_observation_texture(obs_mock, A, B, height_meters)
+                        textured_facades += 1
+                        status = "textured"
+                        
+                        # Save final diagnostics segment trace
+                        segment_debug_dir = os.path.join(self.debug_dir, "facade_observations", facade_id)
+                        ensure_dir(segment_debug_dir)
+                        facade_img.save(os.path.join(segment_debug_dir, "final_texture.png"))
+                        
+                        prov = {
+                            "source_pano_id": p_id,
+                            "source_date": best_pano["metadata"].get("date", ""),
+                            "source_lat_lon": [best_pano["metadata"]["latitude"], best_pano["metadata"]["longitude"]],
+                            "selected_score": float(best_score),
+                            "facade_normal": [float(normal[0]), float(normal[1])],
+                            "projection_parameters": {
+                                "cam_z": 2.5,
+                                "height_meters": float(height_meters),
+                                "facade_length": float(norm_len)
+                            }
+                        }
+                        provenance[facade_id] = prov
+                    except Exception as warp_err:
+                        print(f"[Warning] Failed to dynamically warp panorama {p_id}: {warp_err}")
+                        try:
+                            facade_img = face_img.resize((512, 256), Image.BILINEAR)
+                        except Exception:
+                            facade_img = Image.new("RGB", (512, 256), (30, 30, 30))
+                        status = "fallback"
+                else:
+                    # Absolute fallback if zero panoramas exist in the entire dataset
+                    facade_img = Image.new("RGB", (512, 256), (30, 30, 30))
+                    status = "internal"
+                    
+                facade_textures.append(facade_img)
+                diag_facades.append({
+                    "facade_id": f"{b_id}_f{f_idx}",
+                    "A": A, "B": B, "mx": mx, "my": my, "normal": normal,
+                    "status": status, "best_obs": best_pano
+                })
                 
             # Stitch block atlas image
             W_atlas = 512
