@@ -10,6 +10,7 @@ from io import BytesIO
 from enum import Enum
 from decimal import Decimal
 from datetime import datetime, timezone
+from src.core_io.coords import gps_to_local
 
 # Bounding Box Limits for Tecate, Mexico
 BBOX_SW_LAT = 32.521704
@@ -386,13 +387,34 @@ class GoogleStreetViewScraper:
     extracts the oldest captures, enforces Parque Hidalgo spatial priority queues,
     checks bounding boxes, and persists crash-resilient states locally.
     """
-    def __init__(self, cache_dir: str = "data/raw_scraped", headless: bool = True, log: bool = False):
-        self.cache_dir = cache_dir
+    def __init__(self, headless: bool = True, log: bool = False, G = None):
         self.headless = headless
         self.log = log
-        self.state_file = "data/scraper_state.json"
-        os.makedirs(cache_dir, exist_ok=True)
-        os.makedirs("data", exist_ok=True)
+        self.state_file = "data/structural_graph/traversal_state.json"
+        self.G = G
+        
+        os.makedirs("data/structural_graph", exist_ok=True)
+        
+        # Build intersections and camera stations cache from Graph G
+        self.intersections = {}
+        self.camera_stations = []
+        if G is not None:
+            for node_id, nd_data in G.nodes(data=True):
+                deg = G.degree(node_id)
+                if deg >= 2:
+                    x_c, y_c = gps_to_local(nd_data["lat"], nd_data["lon"])
+                    self.intersections[node_id] = {
+                        "node_id": node_id,
+                        "latitude": nd_data["lat"],
+                        "longitude": nd_data["lon"],
+                        "x": x_c,
+                        "y": y_c,
+                        "degree": deg,
+                        "street_name": nd_data.get("name", "")
+                    }
+            from src.gis_graph.graph_builder import TecateGraphBuilder
+            builder = TecateGraphBuilder(cache_dir="data")
+            self.camera_stations = builder.normalize_and_sample_edges(G, interval_meters=10)
         
         # Persistent Playwright browser session variables
         self.playwright = None
@@ -487,10 +509,14 @@ class GoogleStreetViewScraper:
 
     def load_state(self):
         """Loads persistent crawler memory from disk, ensuring resilience against crashes."""
-        if os.path.exists(self.state_file):
-            print(f"[Scraper Memory] Resuming crawl from existing state file: {self.state_file}")
+        state_file = self.state_file
+        if not os.path.exists(state_file) and os.path.exists("data/scraper_state.json"):
+            state_file = "data/scraper_state.json"
+            
+        if os.path.exists(state_file):
+            print(f"[Scraper Memory] Resuming crawl from existing state file: {state_file}")
             try:
-                with open(self.state_file, "r", encoding="utf-8") as f:
+                with open(state_file, "r", encoding="utf-8") as f:
                     state = json.load(f)
                 self.visited_panos = set(state.get("visited_panos", []))
                 self.crawl_queue = state.get("crawl_queue", [])
@@ -941,7 +967,8 @@ class GoogleStreetViewScraper:
         panorama = Image.new("RGB", (cols * tile_w, rows * tile_h))
         downloaded = 0
         
-        tile_dir = os.path.join(self.cache_dir, pano_id, "tiles")
+        import shutil
+        tile_dir = f"data/structural_graph/panos/{pano_id}/tiles"
         os.makedirs(tile_dir, exist_ok=True)
         
         for y in range(rows):
@@ -983,9 +1010,20 @@ class GoogleStreetViewScraper:
             # Crop horizontal facade band (aspect ratio 4:1)
             facade_strip = panorama.crop((0, 680, cols * tile_w, 1704))
             resized = facade_strip.resize((2560, 640), Image.Resampling.BILINEAR)
+            shutil.rmtree(tile_dir, ignore_errors=True)
+            try:
+                os.rmdir(os.path.dirname(tile_dir))
+            except:
+                pass
             return resized
             
         # In real mode, synthetic fallbacks are strictly prohibited
+        shutil.rmtree(tile_dir, ignore_errors=True)
+        try:
+            os.rmdir(os.path.dirname(tile_dir))
+        except:
+            pass
+            
         if not allow_synthetic:
             print(f"[Crawler Warning] Incomplete authentic tiles captured for node {pano_id}. Synthetic fallback is prohibited.")
             return None
@@ -1081,7 +1119,7 @@ class GoogleStreetViewScraper:
                 
                 if pano_id in self.visited_panos:
                     # Load metadata directly from local cache to represent incremental memory
-                    meta_path = os.path.join(self.cache_dir, pano_id, "metadata.json")
+                    meta_path = os.path.join("data/structural_graph/panos", f"{pano_id}.json")
                     if os.path.exists(meta_path):
                         with open(meta_path, "r", encoding="utf-8") as f:
                             meta = json.load(f)
@@ -1089,10 +1127,6 @@ class GoogleStreetViewScraper:
                         crawled_count += 1
                     continue
                     
-                node_dir = os.path.join(self.cache_dir, pano_id)
-                metadata_path = os.path.join(node_dir, "metadata.json")
-                panorama_path = os.path.join(node_dir, "panorama.png")
-                
                 # Fetch public metadata
                 meta = self.fetch_public_metadata(pano_id=pano_id)
                 if not meta:
@@ -1101,6 +1135,89 @@ class GoogleStreetViewScraper:
                         "reason": "network_timeout"
                     }
                     self.save_state()
+                    continue
+                    
+                lat = meta["latitude"]
+                lon = meta["longitude"]
+                
+                # Check distance to intersections (degree >= 2)
+                is_intersection = False
+                closest_inter_id = None
+                min_dist = float("inf")
+                
+                if self.intersections:
+                    nx_loc, ny_loc = gps_to_local(lat, lon)
+                    for inter_id, inter in self.intersections.items():
+                        dist = math.sqrt((inter["x"] - nx_loc)**2 + (inter["y"] - ny_loc)**2)
+                        if dist < min_dist:
+                            min_dist = dist
+                            closest_inter_id = inter_id
+                            
+                    if min_dist < 15.0:
+                        is_intersection = True
+                        
+                if is_intersection:
+                    print(f"[Intersection Bypass] Node {pano_id} is within {min_dist:.2f}m of intersection {closest_inter_id}. Registering metadata and bypassing imagery download.")
+                    
+                    # 1. Save metadata to structural graph panos directory
+                    pano_meta_dir = "data/structural_graph/panos"
+                    os.makedirs(pano_meta_dir, exist_ok=True)
+                    with open(os.path.join(pano_meta_dir, f"{pano_id}.json"), "w", encoding="utf-8") as f:
+                        json.dump(meta, f, indent=4)
+                        
+                    # 2. Register node metadata under data/structural_graph/adjacency.json
+                    adj_path = "data/structural_graph/adjacency.json"
+                    os.makedirs(os.path.dirname(adj_path), exist_ok=True)
+                    
+                    adjacency_data = {"intersection_panos": {}, "edge_to_pano_index": {}}
+                    if os.path.exists(adj_path):
+                        try:
+                            with open(adj_path, "r", encoding="utf-8") as f:
+                                adjacency_data = json.load(f)
+                        except Exception:
+                            pass
+                            
+                    if "intersection_panos" not in adjacency_data:
+                        adjacency_data["intersection_panos"] = {}
+                        
+                    adjacency_data["intersection_panos"][pano_id] = {
+                        "pano_id": pano_id,
+                        "latitude": lat,
+                        "longitude": lon,
+                        "closest_intersection": closest_inter_id,
+                        "distance_meters": min_dist,
+                        "date": meta.get("date", ""),
+                        "adjacent_links": meta.get("adjacent_links", []),
+                        "timeline": meta.get("timeline", [])
+                    }
+                    
+                    try:
+                        with open(adj_path, "w", encoding="utf-8") as f:
+                            json.dump(adjacency_data, f, indent=4)
+                    except Exception as save_err:
+                        print(f"[Warning] Failed to save adjacency.json: {save_err}")
+                        
+                    # 3. Add to visited and queue links
+                    self.visited_panos.add(pano_id)
+                    crawled_nodes.append(meta)
+                    crawled_count += 1
+                    
+                    for link in meta.get("adjacent_links", []):
+                        link_id = link["pano_id"]
+                        link_meta = self.fetch_public_metadata(pano_id=link_id)
+                        if link_meta:
+                            l_lat = link_meta["latitude"]
+                            l_lon = link_meta["longitude"]
+                            if self.is_within_bbox(l_lat, l_lon):
+                                self.queue_node(link_id, l_lat, l_lon)
+                                self.road_graph.append({
+                                    "u": pano_id,
+                                    "v": link_id,
+                                    "yaw": link["yaw_deg"]
+                                })
+                                
+                    self.save_state()
+                    time.sleep(0.4)
                     continue
                     
                 # 3. Enforce Oldest Timeline Variant Selection
@@ -1130,20 +1247,85 @@ class GoogleStreetViewScraper:
                         meta["historical_pano_id"] = oldest_pano_id
                         download_target_id = oldest_pano_id
                         
-                # 4. Download and stitch authentic tiles (prohibiting synthetic fallbacks)
-                print(f"[Crawler] Crawling Node: {pano_id} (Tile Target: {download_target_id})")
-                pano_img = self.download_and_stitch_tiles(download_target_id, zoom=3, allow_synthetic=False)
+                # 4. Download and stitch authentic tiles with Idempotent Caching
+                pano_img_path = os.path.join("data/structural_graph/panos", f"{pano_id}.png")
+                pano_img = None
+                
+                # Ensure the destination directory exists
+                os.makedirs(os.path.dirname(pano_img_path), exist_ok=True)
+                
+                if os.path.exists(pano_img_path):
+                    print(f"[Idempotency Cache] Loading panorama {pano_id} directly from consolidated cache to prevent rate limit.")
+                    try:
+                        pano_img = Image.open(pano_img_path)
+                    except Exception as img_load_err:
+                        print(f"[Warning] Failed to load cached panorama: {img_load_err}. Re-downloading...")
+                
+                if not pano_img:
+                    print(f"[Crawler] Crawling Longitudinal Node: {pano_id} (Tile Target: {download_target_id})")
+                    pano_img = self.download_and_stitch_tiles(download_target_id, zoom=3, allow_synthetic=False)
+                    if pano_img:
+                        try:
+                            pano_img.save(pano_img_path)
+                            print(f"[Idempotency Cache] Successfully cached panorama to: {pano_img_path}")
+                        except Exception as img_save_err:
+                            print(f"[Warning] Failed to save panorama to cache: {img_save_err}")
                 
                 if pano_img:
-                    os.makedirs(node_dir, exist_ok=True)
-                    pano_img.save(panorama_path)
-                    
-                    # Store raw metadata before preprocessing
-                    with open(metadata_path, "w", encoding="utf-8") as f:
+                    # 1. Save metadata to structural graph panos directory
+                    pano_meta_dir = "data/structural_graph/panos"
+                    os.makedirs(pano_meta_dir, exist_ok=True)
+                    with open(os.path.join(pano_meta_dir, f"{pano_id}.json"), "w", encoding="utf-8") as f:
                         json.dump(meta, f, indent=4)
-                        
+                    best_edge = None
+                    if self.G is not None:
+                        min_edge_dist = float("inf")
+                        for u, v, data in self.G.edges(data=True):
+                            ux, uy = self.G.nodes[u]["x"], self.G.nodes[u]["y"]
+                            vx, vy = self.G.nodes[v]["x"], self.G.nodes[v]["y"]
+                            
+                            # Perpendicular distance to segment
+                            dx = vx - ux
+                            dy = vy - uy
+                            seg_len_sq = dx*dx + dy*dy
+                            if seg_len_sq < 1e-5:
+                                dist = math.sqrt((nx_loc - ux)**2 + (ny_loc - uy)**2)
+                            else:
+                                t = ((nx_loc - ux) * dx + (ny_loc - uy) * dy) / seg_len_sq
+                                t = max(0.0, min(1.0, t))
+                                proj_x = ux + t * dx
+                                proj_y = uy + t * dy
+                                dist = math.sqrt((nx_loc - proj_x)**2 + (ny_loc - proj_y)**2)
+                                
+                            if dist < min_edge_dist:
+                                min_edge_dist = dist
+                                best_edge = data["id"]
+                                
+                    if best_edge:
+                        adj_path = "data/structural_graph/adjacency.json"
+                        adjacency_data = {"intersection_panos": {}, "edge_to_pano_index": {}}
+                        if os.path.exists(adj_path):
+                            try:
+                                with open(adj_path, "r", encoding="utf-8") as f:
+                                    adjacency_data = json.load(f)
+                            except Exception:
+                                pass
+                                
+                        if "edge_to_pano_index" not in adjacency_data:
+                            adjacency_data["edge_to_pano_index"] = {}
+                        if best_edge not in adjacency_data["edge_to_pano_index"]:
+                            adjacency_data["edge_to_pano_index"][best_edge] = []
+                        if pano_id not in adjacency_data["edge_to_pano_index"][best_edge]:
+                            adjacency_data["edge_to_pano_index"][best_edge].append(pano_id)
+                            
+                        try:
+                            with open(adj_path, "w", encoding="utf-8") as f:
+                                json.dump(adjacency_data, f, indent=4)
+                        except Exception as save_err:
+                            print(f"[Warning] Failed to save adjacency.json: {save_err}")
+                            
+                    # 4. Mark as visited
                     self.visited_panos.add(pano_id)
-                    meta["image_path"] = os.path.abspath(panorama_path)
                     crawled_nodes.append(meta)
                     crawled_count += 1
                     
@@ -1151,7 +1333,6 @@ class GoogleStreetViewScraper:
                     for link in meta.get("adjacent_links", []):
                         link_id = link["pano_id"]
                         
-                        # Fetch coordinate of adjacent link to inspect bounding box and sort priority
                         link_meta = self.fetch_public_metadata(pano_id=link_id)
                         if link_meta:
                             l_lat = link_meta["latitude"]
@@ -1159,8 +1340,6 @@ class GoogleStreetViewScraper:
                             
                             if self.is_within_bbox(l_lat, l_lon):
                                 self.queue_node(link_id, l_lat, l_lon)
-                                
-                                # Record graph connectivity edge
                                 self.road_graph.append({
                                     "u": pano_id,
                                     "v": link_id,

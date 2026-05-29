@@ -7,7 +7,7 @@ sys.path.append(os.getcwd())
 
 from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
 
-scraper = GoogleStreetViewScraper(cache_dir="data/raw_scraped")
+scraper = GoogleStreetViewScraper()
 lat, lon = 32.573229, -116.626536
 pano_id = "zpVIs8QgJa887h8HqCBIXw"
 
