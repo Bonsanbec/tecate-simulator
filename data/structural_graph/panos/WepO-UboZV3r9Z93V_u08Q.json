@@ -1,0 +1,33 @@
+{
+    "pano_id": "WepO-UboZV3r9Z93V_u08Q",
+    "latitude": 32.57424898678419,
+    "longitude": -116.6202516837394,
+    "date": "2009-09",
+    "road_name": "R\u00edo Colorado",
+    "adjacent_links": [
+        {
+            "pano_id": "-dgSvCneElM2dvd4a4K43Q",
+            "road_name": "R\u00edo Casas Grandes",
+            "yaw_deg": 88.51412200927734
+        },
+        {
+            "pano_id": "h3lw9oLtrYb8rXFoVD7FmQ",
+            "road_name": "R\u00edo Colorado",
+            "yaw_deg": 200.8545074462891
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "KNQociyH1rTC8Hj26GCiew",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "XEBpRSqNy_73DcnbEr9VGQ",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "jsxXUSaZUBdukqM_k2ZFyg",
+            "date": "2017-07"
+        }
+    ]
+}

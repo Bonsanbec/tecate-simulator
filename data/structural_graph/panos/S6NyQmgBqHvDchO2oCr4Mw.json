@@ -1,0 +1,29 @@
+{
+    "pano_id": "S6NyQmgBqHvDchO2oCr4Mw",
+    "latitude": 32.57429963439245,
+    "longitude": -116.619313614431,
+    "date": "2009-09",
+    "road_name": "R\u00edo Casas Grandes",
+    "adjacent_links": [
+        {
+            "pano_id": "uvaiA1vMsFwKqqyWEQy2mQ",
+            "road_name": "R\u00edo Casas Grandes",
+            "yaw_deg": 82.13409423828125
+        },
+        {
+            "pano_id": "IX5-MFod8qjWfK0Ybx4bUQ",
+            "road_name": "R\u00edo Casas Grandes",
+            "yaw_deg": 262.96435546875
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "zCCMOSj9HUes1ju7iQyJ6w",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "FJZTGD4a0iXTtGvJe4E-fw",
+            "date": "2017-07"
+        }
+    ]
+}

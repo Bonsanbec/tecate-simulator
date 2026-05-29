@@ -1,0 +1,55 @@
+{
+    "pano_id": "7rbBGuGbXUBKKPxUYgb75A",
+    "latitude": 32.56891638378023,
+    "longitude": -116.6326961649789,
+    "date": "2009-09",
+    "road_name": "Dr. Arturo Guerra",
+    "adjacent_links": [
+        {
+            "pano_id": "xkvTb4AbjbnbsHyevcNe2w",
+            "road_name": "Blvd. Defensores de Baja California",
+            "yaw_deg": 75.54074096679688
+        },
+        {
+            "pano_id": "xE2uk6ybLS-pzoZyMkK3ug",
+            "road_name": "Dr. Arturo Guerra",
+            "yaw_deg": 32.37823104858398
+        },
+        {
+            "pano_id": "tG8z_u6ZC38cehqvMHXXfQ",
+            "road_name": "Blvd. Defensores de Baja California",
+            "yaw_deg": 255.2820281982422
+        },
+        {
+            "pano_id": "dfDJD_Zfv4Dy7Q1yF-I3GA",
+            "road_name": "Blvd. Defensores de Baja California",
+            "yaw_deg": 76.88206481933594
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "UlYo6aN2XeXDW9FjkPvL8Q",
+            "date": "2016-02"
+        },
+        {
+            "pano_id": "cwyRHg4Nq_d6rWHvkIg5uQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "HvrLzaltIGdAYl-cVqm5-Q",
+            "date": "2022-05"
+        },
+        {
+            "pano_id": "3dniIwPu1fKVpaOh8CNGUA",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "C0-FUfQX-aSCKfcmyjceOw",
+            "date": "2021-08"
+        },
+        {
+            "pano_id": "mIeUehtteouNDnZvhIXFHw",
+            "date": "2008-12"
+        }
+    ]
+}

@@ -1,0 +1,42 @@
+{
+    "pano_id": "d7z-rUZwaiBqy74vgJywjg",
+    "latitude": 32.5743468973438,
+    "longitude": -116.6191258381498,
+    "date": "2009-09",
+    "road_name": "R\u00edo Casas Grandes",
+    "adjacent_links": [
+        {
+            "pano_id": "DqoWUSkkKP5El1zGDXDIMg",
+            "road_name": "R\u00edo Lerma",
+            "yaw_deg": 353.7020568847656
+        },
+        {
+            "pano_id": "SfIAE7mXF4VekEoN616atw",
+            "road_name": "R\u00edo Lerma",
+            "yaw_deg": 170.9601745605469
+        },
+        {
+            "pano_id": "uvaiA1vMsFwKqqyWEQy2mQ",
+            "road_name": "R\u00edo Casas Grandes",
+            "yaw_deg": 240.2590026855469
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "k04Bp7rV1hdLmA0Mv5pSpw",
+            "date": "2017-10"
+        },
+        {
+            "pano_id": "YHbGH3bYIaHmvYkAZ9Wymw",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "MsUBHOpF_yKwKjBY3jJYkA",
+            "date": "2022-10"
+        },
+        {
+            "pano_id": "bOmFacDYW_EjmJLdnr6VHw",
+            "date": "2021-09"
+        }
+    ]
+}

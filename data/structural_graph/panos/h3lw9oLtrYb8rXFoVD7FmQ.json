@@ -1,0 +1,29 @@
+{
+    "pano_id": "h3lw9oLtrYb8rXFoVD7FmQ",
+    "latitude": 32.57415402983825,
+    "longitude": -116.6202910023087,
+    "date": "2009-09",
+    "road_name": "R\u00edo Colorado",
+    "adjacent_links": [
+        {
+            "pano_id": "WepO-UboZV3r9Z93V_u08Q",
+            "road_name": "R\u00edo Colorado",
+            "yaw_deg": 20.85451507568359
+        },
+        {
+            "pano_id": "s4NzDY_8U3W7sOjH2MJqaQ",
+            "road_name": "R\u00edo Colorado",
+            "yaw_deg": 200.8598785400391
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "dVe7bZ4cUCu_m8jp6d50ig",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "NGVYNIm_YOPRY_Mt2MWKPg",
+            "date": "2017-07"
+        }
+    ]
+}
