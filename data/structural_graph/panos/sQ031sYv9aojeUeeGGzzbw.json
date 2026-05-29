@@ -1,0 +1,33 @@
+{
+    "pano_id": "sQ031sYv9aojeUeeGGzzbw",
+    "latitude": 32.57412956027994,
+    "longitude": -116.6382595936633,
+    "date": "2009-09",
+    "road_name": "Esteban Cant\u00fa",
+    "adjacent_links": [
+        {
+            "pano_id": "QwYiRsKp0AWZ8rFvG0lA7g",
+            "road_name": "Esteban Cant\u00fa",
+            "yaw_deg": 159.0228729248047
+        },
+        {
+            "pano_id": "pIgBV5eJv1cMo-WnYFugUQ",
+            "road_name": "Av Revoluci\u00f3n",
+            "yaw_deg": 264.2911376953125
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "tYLp7oUvmV0Suj9G2QdkdA",
+            "date": "2022-09"
+        },
+        {
+            "pano_id": "kajj8h8RxTP-ZD--2KQQfA",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "XzCY6r7Dd86DZpmjUcrc7g",
+            "date": "2015-12"
+        }
+    ]
+}

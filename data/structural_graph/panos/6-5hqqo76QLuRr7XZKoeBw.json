@@ -1,0 +1,25 @@
+{
+    "pano_id": "6-5hqqo76QLuRr7XZKoeBw",
+    "latitude": 32.56407105388894,
+    "longitude": -116.619145182623,
+    "date": "2009-09",
+    "road_name": "Narciso Mendoza",
+    "adjacent_links": [
+        {
+            "pano_id": "E8M_g2NW_JubPtqwUFrwFw",
+            "road_name": "Narciso Mendoza",
+            "yaw_deg": 351.6310424804688
+        },
+        {
+            "pano_id": "EyTyAvjgGS7U90QVYJ-tYQ",
+            "road_name": "Narciso Mendoza",
+            "yaw_deg": 171.5979919433594
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "0n5AZtmFywBb5Ugw2wp9WA",
+            "date": "2022-09"
+        }
+    ]
+}

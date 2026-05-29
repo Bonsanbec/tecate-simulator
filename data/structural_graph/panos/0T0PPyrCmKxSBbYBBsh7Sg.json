@@ -1,0 +1,29 @@
+{
+    "pano_id": "0T0PPyrCmKxSBbYBBsh7Sg",
+    "latitude": 32.57338119769037,
+    "longitude": -116.6382479879599,
+    "date": "2009-09",
+    "road_name": "Callejon Reforma",
+    "adjacent_links": [
+        {
+            "pano_id": "ii7g75TSxw9m35OigqVs-w",
+            "road_name": "Esteban Cant\u00fa",
+            "yaw_deg": 53.38397598266602
+        },
+        {
+            "pano_id": "7f5Itu5LfpeWx6rUpHXSkQ",
+            "road_name": "Callejon Reforma",
+            "yaw_deg": 265.2184143066406
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "KHqUqC6GaQUATNpDLUkwWg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "TTLZQf-qSIzMrlEyJJ25xQ",
+            "date": "2022-09"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "pano_id": "KdZWDPT09OoA6t0EWatvjw",
+    "latitude": 32.56265410299043,
+    "longitude": -116.6315749697041,
+    "date": "2009-09",
+    "road_name": "Dr. Arturo Guerra",
+    "adjacent_links": [
+        {
+            "pano_id": "urncguokrjWq8pvzqSQBiQ",
+            "road_name": "Dr. Arturo Guerra",
+            "yaw_deg": 41.07222747802734
+        },
+        {
+            "pano_id": "09MJr8iMjCPAiWPRRtvXKg",
+            "road_name": "Guanajuato",
+            "yaw_deg": 261.0875244140625
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "XfR0fFriD8w6B-PCHJKR5g",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "Bn4rbBLKTw38f56FkhCpNg",
+            "date": "2022-09"
+        }
+    ]
+}

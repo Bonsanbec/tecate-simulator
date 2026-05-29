@@ -1,0 +1,29 @@
+{
+    "pano_id": "RZS7ffUKYNfZ5M0MK55Yjw",
+    "latitude": 32.56638252855662,
+    "longitude": -116.6169546579814,
+    "date": "2009-09",
+    "road_name": "Ignacio Zaragoza",
+    "adjacent_links": [
+        {
+            "pano_id": "PSXsgtwq85BOa3a0plaKTQ",
+            "road_name": "C. Gral. Mariano Arista",
+            "yaw_deg": 271.1935119628906
+        },
+        {
+            "pano_id": "HfRUeweqaBok0xHXOpfOeg",
+            "road_name": "Ignacio Zaragoza",
+            "yaw_deg": 91.8000259399414
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "iKrvE87PlwprNL4RM0CVHQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "hxSx45nxqvgmc_lA4eHg0w",
+            "date": "2022-09"
+        }
+    ]
+}

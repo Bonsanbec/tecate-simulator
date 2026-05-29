@@ -1,0 +1,29 @@
+{
+    "pano_id": "EihdJSXu6fzaQMhqunRJsQ",
+    "latitude": 32.5720018925889,
+    "longitude": -116.6148447306911,
+    "date": "2009-09",
+    "road_name": "Xochimilco",
+    "adjacent_links": [
+        {
+            "pano_id": "Y-IhRfiBCTRBRmMIHREh2g",
+            "road_name": "Xochimilco",
+            "yaw_deg": 83.60401916503906
+        },
+        {
+            "pano_id": "2eWBv31XcmnkXwa3dPZz_A",
+            "road_name": "Xochimilco",
+            "yaw_deg": 263.6146240234375
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "mnG8zpA2DZdrMer2x4II0g",
+            "date": "2025-09"
+        },
+        {
+            "pano_id": "Zi2d8Ki1ZwbwB_V2dwydCw",
+            "date": "2022-10"
+        }
+    ]
+}

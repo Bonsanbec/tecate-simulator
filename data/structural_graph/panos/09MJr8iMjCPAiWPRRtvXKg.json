@@ -1,0 +1,29 @@
+{
+    "pano_id": "09MJr8iMjCPAiWPRRtvXKg",
+    "latitude": 32.56264863692846,
+    "longitude": -116.6317257582864,
+    "date": "2009-09",
+    "road_name": "Guanajuato",
+    "adjacent_links": [
+        {
+            "pano_id": "KdZWDPT09OoA6t0EWatvjw",
+            "road_name": "Guanajuato",
+            "yaw_deg": 81.08753967285156
+        },
+        {
+            "pano_id": "CmKcFUP1NOzxXbLOTJQ1XQ",
+            "road_name": "Guanajuato",
+            "yaw_deg": 261.0928649902344
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "su5MyvIrjx-aD9TfpbaCtg",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "ULm9JIUhgFKs810M6rESaw",
+            "date": "2022-09"
+        }
+    ]
+}

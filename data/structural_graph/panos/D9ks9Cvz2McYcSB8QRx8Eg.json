@@ -1,0 +1,29 @@
+{
+    "pano_id": "D9ks9Cvz2McYcSB8QRx8Eg",
+    "latitude": 32.56664141286308,
+    "longitude": -116.6167386275218,
+    "date": "2009-09",
+    "road_name": "Ignacio Zaragoza",
+    "adjacent_links": [
+        {
+            "pano_id": "2qNFQ_W6T8hsk-pTXGRSfw",
+            "road_name": "Ignacio Zaragoza",
+            "yaw_deg": 174.0378570556641
+        },
+        {
+            "pano_id": "8pXi8sw1qSd39WhU0V2o-Q",
+            "road_name": "Ignacio Zaragoza",
+            "yaw_deg": 350.3447265625
+        }
+    ],
+    "timeline": [
+        {
+            "pano_id": "flSgvuJo2GxuP69_jKebSQ",
+            "date": "2025-08"
+        },
+        {
+            "pano_id": "RsTIE2xefPYluwl2yWw4Kg",
+            "date": "2022-09"
+        }
+    ]
+}
