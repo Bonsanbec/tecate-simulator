@@ -16,10 +16,6 @@ def run_pipeline(args):
     print("=" * 60)
     print("      TECATE 2009 HISTORICAL URBAN RECONSTRUCTION PIPELINE")
     print("=" * 60)
-    print(f"Mode: {args.mode.upper()}")
-    print(f"Sampling Interval: {args.interval} meters")
-    print(f"Feature Extractor: {args.feature_type}")
-    print(f"Output File: {args.output}")
     print("-" * 60)
 
     # Make sure output directories exist
@@ -31,7 +27,7 @@ def run_pipeline(args):
     builder = TecateGraphBuilder(cache_dir="data")
     osm_data = builder.fetch_osm_tecate()
     G = builder.build_networkx_graph(osm_data)
-    camera_stations = builder.normalize_and_sample_edges(G, interval_meters=args.interval)
+    camera_stations = builder.normalize_and_sample_edges(G, interval_meters=10)
     
     print(f"[GIS] Loaded road graph: {G.number_of_nodes()} intersections, {G.number_of_edges()} road segments.")
     print(f"[GIS] Placed {len(camera_stations)} virtual camera stations along segments.")
@@ -41,7 +37,7 @@ def run_pipeline(args):
     pano_registry = {}  # Map station_id -> panorama details
     discovered_nodes = []
     
-    if args.mode == "real":
+    if True:
         print("[Acquisition] Running Chromium Playwright scraper and public graph crawler...")
         # Start crawler seed exactly at Parque Hidalgo
         seed_lat = 32.573229
@@ -124,44 +120,6 @@ def run_pipeline(args):
                 }
                 raw_panos.append(pano_data)
                 pano_registry[station["station_id"]] = pano_data
-    else:
-        # SIMULATED MODE
-        print("[Acquisition] Running procedural generator and writing simulated data to local cache...")
-        generator = ProceduralStreetViewGenerator(seed=42)
-        
-        # Generates, structures timelines/adjacent links, and writes simulated nodes to cache
-        discovered_nodes = generator.generate_and_cache_simulated_dataset(camera_stations, G, cache_dir=cache_dir)
-        
-        # Load nodes strictly and exclusively from the local cache folder footprint!
-        for station in camera_stations:
-            for node in discovered_nodes:
-                if math.isclose(node["latitude"], station["latitude"], abs_tol=1e-5) and \
-                   math.isclose(node["longitude"], station["longitude"], abs_tol=1e-5):
-                    image_path = os.path.join(cache_dir, node["pano_id"], "panorama.png")
-                    pano_img = Image.open(image_path)
-                    
-                    # Check year
-                    init_prob = 0.90 if node["date"].startswith("2009") else 0.05
-                    
-                     # Establish simulated pano metadata structure
-                    pano_data = {
-                        "latitude": station["latitude"],
-                        "longitude": station["longitude"],
-                        "pano_id": node["pano_id"],
-                        "date": node["date"],
-                        "temporal_probability": init_prob,
-                        "image": pano_img,
-                        "station_id": station["station_id"],
-                        "edge_id": station["edge_id"],
-                        "dist_along": station["dist_along"],
-                        "adjacent_links": node.get("adjacent_links", []),
-                        "timeline": node.get("timeline", [])
-                    }
-                    raw_panos.append(pano_data)
-                    pano_registry[station["station_id"]] = pano_data
-                    break
-                     
-        print(f"[Acquisition] Local cache consumption complete. Loaded {len(raw_panos)} nodes exclusively from '{cache_dir}/'.")
 
     # 3. IMAGE ANCHORING & ALIGNMENT
     aligner = ImageAligner()
@@ -235,16 +193,6 @@ def run_pipeline(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tecate 2009 Historical Urban Reconstruction Pipeline CLI")
-    parser.add_argument("--mode", type=str, choices=["simulated", "real"], default="simulated",
-                        help="Execution mode: 'simulated' (procedural dataset) or 'real' (scrapes Google Street View)")
-    parser.add_argument("--api-key", type=str, default="",
-                        help="Google Street View API Developer Key (required in 'real' mode)")
-    parser.add_argument("--interval", type=float, default=10.0,
-                        help="Interpolated distance interval between camera positions in meters (default: 10.0)")
-    parser.add_argument("--feature-type", type=str, choices=["ORB", "SIFT"], default="ORB",
-                        help="Classical CV feature extractor (default: 'ORB')")
-    parser.add_argument("--output", type=str, default="export/reconstruction_export.json",
-                        help="Output JSON file destination (default: export/reconstruction_export.json)")
     parser.add_argument("--headless", action="store_true", default=False,
                         help="Run Playwright Chromium browser in headless mode (default: False to support WebGL on Mac)")
     
