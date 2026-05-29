@@ -132,7 +132,7 @@ class UrbanBlockReconstructor:
         print(f"[Reconstruction] Detected {len(blocks)} valid urban blocks (manzanas) from planar road network.")
         return blocks
 
-    def segment_long_polygon_edges(self, poly: list[tuple[float, float]], max_length: float = 10.0) -> list[tuple[float, float]]:
+    def segment_long_polygon_edges(self, poly: list[tuple[float, float]], max_length: float = 20.0) -> list[tuple[float, float]]:
         """
         Spatially segments polygon edges longer than max_length.
         Inserts intermediate collinear vertices so they are processed as independent facade quads,
@@ -260,10 +260,10 @@ class UrbanBlockReconstructor:
         # Vector from facade center to camera
         v_facade_to_cam = np.array([dx / dist, dy / dist])
         
-        # Alignment dot product: must be positive (facing camera, with perpendicularity restriction cos(theta) >= 0.40)
+        # Alignment dot product: must be positive (facing camera)
         alignment = np.dot(v_facade_to_cam, normal)
         
-        if alignment < 0.40:
+        if alignment <= 0.05:
             return 0.0
             
         # Relaxed distance decay (45m characteristic scale) to prevent strict local match errors
@@ -309,12 +309,10 @@ class UrbanBlockReconstructor:
             
         return img
 
-    def extract_rectified_facade_texture(self, pano_id: str, A: tuple[float, float], B: tuple[float, float], height_meters: float, facade_id: str = None) -> Image.Image:
+    def extract_rectified_facade_texture(self, pano_id: str, A: tuple[float, float], B: tuple[float, float], height_meters: float) -> Image.Image:
         """
         Invokes a virtual perspective camera projection on the flat facade quad A-B,
         reprojecting and flattening spherical/equirectangular coordinates into a planar texture.
-        If facade_id is provided, applies Semantic Edge & Color Profiling (SECP) to segment
-        and isolate building facades, rejecting sky, road, cars, and foliage.
         """
         pano_meta = None
         for p in self.accepted_panos:
@@ -389,220 +387,8 @@ class UrbanBlockReconstructor:
         # Sample pixels
         np_pano = np.array(pano_img)
         np_facade = np_pano[row_img, col_img]
-        raw_proj = Image.fromarray(np_facade)
         
-        if facade_id:
-            try:
-                return self.process_facade_cv(raw_proj, pano_img, cam_x, cam_y, cam_orientation_yaw, A, B, facade_id)
-            except Exception as e:
-                print(f"[Warning] SECP Facade Extraction failed for {facade_id}: {e}. Falling back to raw projection.")
-                
-        return raw_proj
-
-    def process_facade_cv(self, raw_proj: Image.Image, pano_img: Image.Image, 
-                          cam_x: float, cam_y: float, cam_orientation_yaw: float, 
-                          A: tuple[float, float], B: tuple[float, float], facade_id: str) -> Image.Image:
-        """
-        Applies Semantic Edge & Color Profiling (SECP) to segment and isolate the dominant 
-        vertical facade from a raw perspective projection. Rejects sky, asphalt road, vehicles,
-        and green foliage, replacing foreground/background clutter with local average wall colors.
-        Generates a 5-panel horizontal debug image for the pipeline's inspectability.
-        """
-        import cv2
-        
-        # Convert raw_proj to numpy array (RGB)
-        np_img = np.array(raw_proj)
-        H_tex, W_tex = np_img.shape[:2]
-        
-        # 1. Color space conversions
-        hsv = cv2.cvtColor(np_img, cv2.COLOR_RGB2HSV)
-        gray = cv2.cvtColor(np_img, cv2.COLOR_RGB2GRAY)
-        
-        # 2. Semantic feature masking
-        # Blue/bright sky detection in the top 65% of the image
-        sky_mask = np.zeros((H_tex, W_tex), dtype=bool)
-        top_sky_limit = int(0.65 * H_tex)
-        for y in range(top_sky_limit):
-            for x in range(W_tex):
-                h, s, v = hsv[y, x]
-                is_blue_sky = (90 <= h <= 145) and (s >= 30) and (v >= 90)
-                is_bright_sky = (s < 40) and (v >= 180)
-                if is_blue_sky or is_bright_sky:
-                    sky_mask[y, x] = True
-                    
-        # Asphalt/road gray detection in the bottom 50% of the image
-        road_mask = np.zeros((H_tex, W_tex), dtype=bool)
-        bottom_road_limit = int(0.50 * H_tex)
-        for y in range(bottom_road_limit, H_tex):
-            for x in range(W_tex):
-                h, s, v = hsv[y, x]
-                is_road_gray = (s < 55) and (45 <= v <= 165)
-                if is_road_gray:
-                    road_mask[y, x] = True
-                    
-        # Foliage (green trees/bushes) detection
-        foliage_mask = (hsv[:, :, 0] >= 30) & (hsv[:, :, 0] <= 85) & (hsv[:, :, 1] >= 40) & (hsv[:, :, 2] >= 40)
-        
-        # Vehicles (high saturation or extreme highlights/shadows in the lower portion)
-        car_mask = np.zeros((H_tex, W_tex), dtype=bool)
-        for y in range(int(0.50 * H_tex), int(0.95 * H_tex)):
-            for x in range(W_tex):
-                h, s, v = hsv[y, x]
-                if s > 70 or (s < 20 and (v > 230 or v < 30)):
-                    car_mask[y, x] = True
-                    
-        # 3. Vertical profile analysis for roofline and base/sidewalk detection
-        # Calculate horizontal gradient density (Sobel X to get vertical lines/edges of facade structures)
-        sobel_x = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
-        abs_sobel_x = np.absolute(sobel_x)
-        row_edges = np.sum(abs_sobel_x, axis=1)
-        max_edge = np.max(row_edges) if np.max(row_edges) > 0 else 1.0
-        row_edges_norm = row_edges / max_edge
-        
-        row_sky_pct = np.mean(sky_mask, axis=1)
-        row_road_pct = np.mean(road_mask, axis=1)
-        
-        # Facade score combines edge density and avoidance of sky/road
-        row_scores = row_edges_norm * (1.0 - row_sky_pct) * (1.0 - row_road_pct)
-        
-        # Smooth scores with a 5-pixel moving average
-        smoothed_scores = np.convolve(row_scores, np.ones(5)/5, mode='same')
-        
-        # Find roofline (y_top): transition from sky to building structure
-        y_top = 0
-        for y in range(int(0.55 * H_tex)):
-            if smoothed_scores[y] > 0.10 and row_sky_pct[y] < 0.15:
-                y_top = y
-                break
-                
-        # Find baseline/ground (y_bottom): transition from facade to road/sidewalk
-        y_bottom = H_tex - 1
-        for y in range(H_tex - 1, int(0.45 * H_tex), -1):
-            if smoothed_scores[y] > 0.10 and row_road_pct[y] < 0.20:
-                y_bottom = y
-                break
-                
-        # Safe fallback if detection is too small or invalid
-        if y_bottom - y_top < int(0.35 * H_tex):
-            y_top = int(0.12 * H_tex)
-            y_bottom = int(0.85 * H_tex)
-            
-        # 4. Crop and clean the facade band
-        facade_band = np_img[y_top:y_bottom, :]
-        facade_hsv = hsv[y_top:y_bottom, :]
-        
-        # Mask of invalid pixels (foliage, cars, sky, road remnants) inside the cropped facade band
-        invalid_mask = np.zeros(facade_band.shape[:2], dtype=bool)
-        invalid_mask[foliage_mask[y_top:y_bottom, :]] = True
-        invalid_mask[car_mask[y_top:y_bottom, :]] = True
-        invalid_mask[road_mask[y_top:y_bottom, :]] = True
-        invalid_mask[sky_mask[y_top:y_bottom, :]] = True
-        
-        # Compute local average color of valid facade pixels
-        valid_pixels = facade_band[~invalid_mask]
-        if len(valid_pixels) > 0:
-            avg_color = np.mean(valid_pixels, axis=0).astype(np.uint8)
-        else:
-            avg_color = np.array([125, 115, 105], dtype=np.uint8) # Default historical warm stucco gray
-            
-        # Inpaint/replace invalid pixels with local average color
-        clean_facade_band = facade_band.copy()
-        clean_facade_band[invalid_mask] = avg_color
-        
-        # Resize clean facade back to original standard texture size (512x256)
-        rectified_facade_np = cv2.resize(clean_facade_band, (W_tex, H_tex), interpolation=cv2.INTER_LINEAR)
-        rectified_facade_img = Image.fromarray(rectified_facade_np)
-        
-        # 5. Compile 5-Panel Visual Debug Preview Image
-        # Panel 1: Original panorama view (cropped context window centered at the facade direction)
-        W_pano, H_pano = pano_img.size
-        mx = (A[0] + B[0]) / 2.0
-        my = (A[1] + B[1]) / 2.0
-        dx = mx - cam_x
-        dy = my - cam_y
-        heading_rad = math.atan2(dx, dy)
-        heading_deg = (math.degrees(heading_rad) + 360.0) % 360.0
-        rel_heading = (heading_deg - cam_orientation_yaw) % 360.0
-        
-        center_col = int((rel_heading / 360.0) * W_pano)
-        crop_w = int(H_pano / 2)
-        crop_h = int(H_pano / 2)
-        
-        left = center_col - crop_w // 2
-        right = center_col + crop_w // 2
-        
-        # Handle equirectangular wrap-around
-        if left < 0:
-            part2 = pano_img.crop((left + W_pano, int(H_pano * 0.25), W_pano, int(H_pano * 0.75)))
-            part1 = pano_img.crop((0, int(H_pano * 0.25), right, int(H_pano * 0.75)))
-            pano_crop = Image.new("RGB", (crop_w, crop_h))
-            pano_crop.paste(part2, (0, 0))
-            pano_crop.paste(part1, (part2.size[0], 0))
-        elif right > W_pano:
-            part1 = pano_img.crop((left, int(H_pano * 0.25), W_pano, int(H_pano * 0.75)))
-            part2 = pano_img.crop((0, int(H_pano * 0.25), right - W_pano, int(H_pano * 0.75)))
-            pano_crop = Image.new("RGB", (crop_w, crop_h))
-            pano_crop.paste(part1, (0, 0))
-            pano_crop.paste(part2, (part1.size[0], 0))
-        else:
-            pano_crop = pano_img.crop((left, int(H_pano * 0.25), right, int(H_pano * 0.75)))
-            
-        pano_crop_resized = pano_crop.resize((256, 256), Image.Resampling.BILINEAR)
-        
-        # Panel 2: Raw unsegmented perspective projection resized to 256x256
-        raw_proj_resized = raw_proj.resize((256, 256), Image.Resampling.BILINEAR)
-        
-        # Panel 3: Color-coded semantic mask
-        mask_viz = np_img.copy() # Start with background
-        
-        # Apply color overlays using NumPy vectorized blending
-        mask_viz[sky_mask] = (0.3 * mask_viz[sky_mask] + 0.7 * np.array([0, 120, 255])).astype(np.uint8)
-        mask_viz[road_mask] = (0.3 * mask_viz[road_mask] + 0.7 * np.array([80, 80, 80])).astype(np.uint8)
-        mask_viz[foliage_mask] = (0.3 * mask_viz[foliage_mask] + 0.7 * np.array([0, 200, 80])).astype(np.uint8)
-        mask_viz[car_mask] = (0.3 * mask_viz[car_mask] + 0.7 * np.array([255, 40, 40])).astype(np.uint8)
-        
-        # Highlight facade band
-        mask_viz[y_top:y_bottom, :] = (0.6 * mask_viz[y_top:y_bottom, :] + 0.4 * np.array([255, 180, 0])).astype(np.uint8)
-        
-        # Draw white dividing lines for roof/ground lines
-        cv2.line(mask_viz, (0, y_top), (W_tex - 1, y_top), (255, 255, 255), 2)
-        cv2.line(mask_viz, (0, y_bottom), (W_tex - 1, y_bottom), (255, 255, 255), 2)
-        
-        mask_viz_resized = Image.fromarray(mask_viz).resize((256, 256), Image.Resampling.NEAREST)
-        
-        # Panel 4: Rectified isolated facade texture resized to 256x256
-        rectified_resized = rectified_facade_img.resize((256, 256), Image.Resampling.BILINEAR)
-        
-        # Panel 5: Warped 3D wall quad preview
-        src_pts = np.float32([[0, 0], [0, H_tex - 1], [W_tex - 1, H_tex - 1], [W_tex - 1, 0]])
-        dst_pts = np.float32([[30, 40], [30, 216], [226, 176], [226, 80]])
-        H_mat = cv2.getPerspectiveTransform(src_pts, dst_pts)
-        warp_preview = cv2.warpPerspective(rectified_facade_np, H_mat, (256, 256), borderValue=(20, 22, 28))
-        # Draw quad border
-        cv2.polylines(warp_preview, [np.int32(dst_pts)], isClosed=True, color=(0, 235, 235), thickness=2)
-        warp_preview_img = Image.fromarray(warp_preview)
-        
-        # Assemble composite image (1280 x 286 px)
-        composite = Image.new("RGB", (1280, 286), (15, 17, 22))
-        draw = ImageDraw.Draw(composite)
-        
-        panels = [pano_crop_resized, raw_proj_resized, mask_viz_resized, rectified_resized, warp_preview_img]
-        titles = ["1. Pano Context", "2. Raw Perspective", "3. Semantic Mask", "4. Rectified Facade", "5. 3D Wall Preview"]
-        
-        for idx, (panel, title) in enumerate(zip(panels, titles)):
-            composite.paste(panel, (idx * 256, 30))
-            # Draw titles
-            draw.text((idx * 256 + 10, 8), title.upper(), fill=(0, 235, 235))
-            if idx > 0:
-                # Draw border lines
-                draw.line([idx * 256, 0, idx * 256, 286], fill=(40, 50, 70), width=2)
-                
-        # Save to export/debug/facade_detection/
-        facade_debug_dir = os.path.join(self.export_dir, "debug", "facade_detection")
-        os.makedirs(facade_debug_dir, exist_ok=True)
-        composite.save(os.path.join(facade_debug_dir, f"{facade_id}.png"))
-        
-        return rectified_facade_img
+        return Image.fromarray(np_facade)
 
     def reconstruct_blocks_and_texture(self) -> tuple[list[dict], dict]:
         """
@@ -726,7 +512,7 @@ class UrbanBlockReconstructor:
                 
                 # 3. Facade Rectified Reprojection
                 if best_pano_id:
-                    facade_img = self.extract_rectified_facade_texture(best_pano_id, A, B, height_meters, facade_id=facade_id)
+                    facade_img = self.extract_rectified_facade_texture(best_pano_id, A, B, height_meters)
                     textured_facades += 1
                     status = "textured"
                     
