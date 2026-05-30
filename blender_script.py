@@ -119,35 +119,61 @@ def build_block_meshes(blocks_data: list):
                 for loop_idx, loop_corner in enumerate(face.loop_indices):
                     uv_layer.data[loop_corner].uv = uvs[loop_idx % len(uvs)]
                     
-        # 5. Set up Material Shader and Bind Stitched Texture Atlas
-        atlas_path = bl.get("texture_atlas_path")
-        if atlas_path and os.path.exists(atlas_path):
-            mat = bpy.data.materials.new(name=f"{b_id}_Material")
-            mat.use_nodes = True
-            nodes = mat.node_tree.nodes
-            links = mat.node_tree.links
+        # 5. Set up Material Shader and Bind Stitched Textures per face
+        facade_tex_dict = bl.get("facade_textures", {})
+        loaded_materials = {}
+        
+        for f_idx in range(num_verts):
+            face = mesh.polygons[f_idx]
+            surface_id = f"{b_id}_facade_{f_idx}"
+            tex_path = facade_tex_dict.get(surface_id)
             
-            bsdf = nodes.get("Principled BSDF")
-            node_tex = nodes.new(type='ShaderNodeTexImage')
+            if not tex_path or not os.path.exists(tex_path):
+                tex_path = os.path.abspath("export/textures/stucco_facade.png")
+                
+            if tex_path not in loaded_materials:
+                mat_name = f"{b_id}_mat_{os.path.basename(tex_path).replace('.', '_')}"
+                mat = bpy.data.materials.new(name=mat_name)
+                mat.use_nodes = True
+                nodes = mat.node_tree.nodes
+                links = mat.node_tree.links
+                
+                bsdf = nodes.get("Principled BSDF")
+                node_tex = nodes.new(type='ShaderNodeTexImage')
+                
+                try:
+                    img = bpy.data.images.load(tex_path)
+                    node_tex.image = img
+                except Exception as e:
+                    print(f"[Warning] Failed to load texture {tex_path}: {e}")
+                    
+                if bsdf:
+                    links.new(node_tex.outputs['Color'], bsdf.inputs['Base Color'])
+                    
+                obj.data.materials.append(mat)
+                loaded_materials[tex_path] = len(obj.data.materials) - 1
+                
+            face.material_index = loaded_materials[tex_path]
             
-            try:
-                img = bpy.data.images.load(atlas_path)
-                node_tex.image = img
-            except Exception as e:
-                print(f"[Warning] Failed to load texture atlas {atlas_path}: {e}")
-                
-            if bsdf:
-                links.new(node_tex.outputs['Color'], bsdf.inputs['Base Color'])
-                
-            obj.data.materials.append(mat)
-        else:
-            mat = bpy.data.materials.new(name=f"{b_id}_Material_Fallback")
+        # Assign stucco fallback material to the roof
+        stucco_path = os.path.abspath("export/textures/stucco_facade.png")
+        if stucco_path not in loaded_materials:
+            mat = bpy.data.materials.new(name=f"{b_id}_roof_mat")
             mat.use_nodes = True
             bsdf = mat.node_tree.nodes.get("Principled BSDF")
+            node_tex = mat.node_tree.nodes.new(type='ShaderNodeTexImage')
+            try:
+                img = bpy.data.images.load(stucco_path)
+                node_tex.image = img
+            except:
+                pass
             if bsdf:
-                # Debug NO_DATA fallback color
-                bsdf.inputs['Base Color'].default_value = (0.8, 0.3, 0.1, 1.0)
+                mat.node_tree.links.new(node_tex.outputs['Color'], bsdf.inputs['Base Color'])
             obj.data.materials.append(mat)
+            loaded_materials[stucco_path] = len(obj.data.materials) - 1
+            
+        roof_face = mesh.polygons[num_verts]
+        roof_face.material_index = loaded_materials[stucco_path]
 
 def setup_lighting_and_camera():
     """Sets up standard illumination and a convenient top-down camera views."""

@@ -1,0 +1,586 @@
+{
+    "total_blocks": 170,
+    "total_facades": 19932,
+    "textured_facades": 34,
+    "coverage_percentage": 0.1705799719044752,
+    "provenance": {
+        "block_19_middle_facade_0": {
+            "source_pano_id": "8Llkfbl-1T2ckzP9pNHwfQ",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57350025451721,
+                -116.6278243862713
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 1.0
+            }
+        },
+        "block_19_middle_facade_1": {
+            "source_pano_id": "8Llkfbl-1T2ckzP9pNHwfQ",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57350025451721,
+                -116.6278243862713
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_2": {
+            "source_pano_id": "8Llkfbl-1T2ckzP9pNHwfQ",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57350025451721,
+                -116.6278243862713
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_3": {
+            "source_pano_id": "HYFZf0dusbFhsfweHv6Low",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57350627243833,
+                -116.6277327959349
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_4": {
+            "source_pano_id": "HYFZf0dusbFhsfweHv6Low",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57350627243833,
+                -116.6277327959349
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_5": {
+            "source_pano_id": "z61ozuaV4OPf4Hp2thHEfw",
+            "source_date": "2021-09",
+            "source_lat_lon": [
+                32.57343772855237,
+                -116.6276211420465
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_6": {
+            "source_pano_id": "z61ozuaV4OPf4Hp2thHEfw",
+            "source_date": "2021-09",
+            "source_lat_lon": [
+                32.57343772855237,
+                -116.6276211420465
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_7": {
+            "source_pano_id": "olBrWFLgVn6Hwr6EfxzCSg",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57351718400381,
+                -116.627538008898
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_8": {
+            "source_pano_id": "olBrWFLgVn6Hwr6EfxzCSg",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57351718400381,
+                -116.627538008898
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_9": {
+            "source_pano_id": "xB3bx-WBbz5e4GxAuGHGWw",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57352795647704,
+                -116.6274079108576
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_10": {
+            "source_pano_id": "xB3bx-WBbz5e4GxAuGHGWw",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57352795647704,
+                -116.6274079108576
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_11": {
+            "source_pano_id": "jCGZyZTu0qmivh-MdNyxJA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57354049604806,
+                -116.6272239200711
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_12": {
+            "source_pano_id": "jCGZyZTu0qmivh-MdNyxJA",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57354049604806,
+                -116.6272239200711
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_13": {
+            "source_pano_id": "CSKVzJ_OensUcnXKvHQj_g",
+            "source_date": "2009-08",
+            "source_lat_lon": [
+                32.57345954962631,
+                -116.6271667884273
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_14": {
+            "source_pano_id": "CSKVzJ_OensUcnXKvHQj_g",
+            "source_date": "2009-08",
+            "source_lat_lon": [
+                32.57345954962631,
+                -116.6271667884273
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_15": {
+            "source_pano_id": "CSKVzJ_OensUcnXKvHQj_g",
+            "source_date": "2009-08",
+            "source_lat_lon": [
+                32.57345954962631,
+                -116.6271667884273
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_16": {
+            "source_pano_id": "aNGj8-qOWUNuMxPPGtCdag",
+            "source_date": "2009-02",
+            "source_lat_lon": [
+                32.57355048677701,
+                -116.6270898631202
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 1.0
+            }
+        },
+        "block_19_middle_facade_37": {
+            "source_pano_id": "_IOoeTkOirLvwHFVHGzQ4Q",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57430428109478,
+                -116.6270897731491
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 1.0
+            }
+        },
+        "block_19_middle_facade_38": {
+            "source_pano_id": "PVgpf-utJQLsVXt-Bk1JTA",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57443620585438,
+                -116.6272150129339
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_39": {
+            "source_pano_id": "PVgpf-utJQLsVXt-Bk1JTA",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57443620585438,
+                -116.6272150129339
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_40": {
+            "source_pano_id": "PVgpf-utJQLsVXt-Bk1JTA",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57443620585438,
+                -116.6272150129339
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_41": {
+            "source_pano_id": "PVgpf-utJQLsVXt-Bk1JTA",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57443620585438,
+                -116.6272150129339
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_42": {
+            "source_pano_id": "K_JnND_7eBSyc5nst5IOWQ",
+            "source_date": "2009-08",
+            "source_lat_lon": [
+                32.57438051109544,
+                -116.6272707949996
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_43": {
+            "source_pano_id": "K_JnND_7eBSyc5nst5IOWQ",
+            "source_date": "2009-08",
+            "source_lat_lon": [
+                32.57438051109544,
+                -116.6272707949996
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_44": {
+            "source_pano_id": "vodgtc5EGQEE9jzzjP2eFg",
+            "source_date": "2009-08",
+            "source_lat_lon": [
+                32.57443103921231,
+                -116.6272761032922
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_45": {
+            "source_pano_id": "S68_CZEmCGG8gJHAxvO7Mg",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57428140080928,
+                -116.627413579031
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_46": {
+            "source_pano_id": "uTjRCmzYvQdR4z5G3oYRwA",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57427104688319,
+                -116.627535849595
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_47": {
+            "source_pano_id": "uTjRCmzYvQdR4z5G3oYRwA",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57427104688319,
+                -116.627535849595
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_48": {
+            "source_pano_id": "q2lYfvR7614IS7BOr-igSQ",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57426244036411,
+                -116.6276448043981
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_49": {
+            "source_pano_id": "q2lYfvR7614IS7BOr-igSQ",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.57426244036411,
+                -116.6276448043981
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_50": {
+            "source_pano_id": "rHfpd-xyqYK9Zz_2clV89g",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.5742532491124,
+                -116.6277545688866
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_51": {
+            "source_pano_id": "rHfpd-xyqYK9Zz_2clV89g",
+            "source_date": "2009-09",
+            "source_lat_lon": [
+                32.5742532491124,
+                -116.6277545688866
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_52": {
+            "source_pano_id": "Z_5tmwA3uMuJuNp-DoSLxg",
+            "source_date": "2009-08",
+            "source_lat_lon": [
+                32.57424559797006,
+                -116.627848408485
+            ],
+            "facade_normal": [
+                0.0,
+                1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 5.0
+            }
+        },
+        "block_19_middle_facade_53": {
+            "source_pano_id": "Z_5tmwA3uMuJuNp-DoSLxg",
+            "source_date": "2009-08",
+            "source_lat_lon": [
+                32.57424559797006,
+                -116.627848408485
+            ],
+            "facade_normal": [
+                0.0,
+                -1.0
+            ],
+            "projection_parameters": {
+                "cam_z": 2.5,
+                "height_meters": 9.0,
+                "facade_length": 1.0
+            }
+        }
+    }
+}

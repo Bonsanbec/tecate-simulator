@@ -4,6 +4,7 @@ import math
 import numpy as np
 import networkx as nx
 import cv2
+from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 from src.core_io.coords import gps_to_local, local_to_gps
 from src.core_io.io_manager import ensure_dir, load_json, save_json
@@ -16,12 +17,13 @@ class UrbanBlockReconstructor:
     performs standard 2D perspective homography warping onto block vertical quads,
     and exports procedurally compiled textured glTF geometry for Blender.
     """
-    def __init__(self, G: nx.MultiGraph, accepted_panos: list[dict] = None, export_dir: str = "export", data_dir: str = "data"):
+    def __init__(self, G: nx.MultiGraph, accepted_panos: list[dict] = None, export_dir: str = "export", data_dir: str = "data", headless: bool = False):
         self.G = G
         self.export_dir = export_dir
         self.data_dir = data_dir
         self.textures_dir = os.path.join(export_dir, "textures")
         self.debug_dir = os.path.join(export_dir, "debug")
+        self.headless = headless
         
         ensure_dir(self.textures_dir)
         ensure_dir(self.debug_dir)
@@ -38,26 +40,9 @@ class UrbanBlockReconstructor:
             except Exception as e:
                 print(f"[Warning] Failed to load adjacency for reconstruction: {e}")
                 
-        # Load Layer 1 consolidated panoramas natively
-        self.panoramas = []
-        panos_dir = os.path.join(data_dir, "structural_graph", "panos")
-        if os.path.exists(panos_dir):
-            for f in os.listdir(panos_dir):
-                if f.endswith(".json"):
-                    pano_id = f[:-5]
-                    meta_path = os.path.join(panos_dir, f)
-                    image_path = os.path.join(panos_dir, f"{pano_id}.png")
-                    if os.path.exists(image_path):
-                        try:
-                            meta = load_json(meta_path)
-                            self.panoramas.append({
-                                "pano_id": pano_id,
-                                "metadata": meta,
-                                "image_path": os.path.abspath(image_path)
-                            })
-                        except Exception:
-                            pass
-        print(f"[Reconstruction] Loaded {len(self.panoramas)} Layer 1 consolidated panoramas natively.")
+        # Initialize GoogleStreetViewScraper for direct headed/headless screenshot capturing
+        from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
+        self.scraper = GoogleStreetViewScraper(headless=self.headless, G=self.G)
 
     def extract_block_polygons(self) -> list[dict]:
         """
@@ -143,7 +128,7 @@ class UrbanBlockReconstructor:
         print(f"[Reconstruction] Detected {len(blocks)} valid urban blocks (manzanas) from planar road network.")
         return blocks
 
-    def segment_long_polygon_edges(self, poly: list[tuple[float, float]], max_length: float = 20.0) -> list[tuple[float, float]]:
+    def segment_long_polygon_edges(self, poly: list[tuple[float, float]], max_length: float = 5.0) -> list[tuple[float, float]]:
         """
         Spatially segments polygon edges longer than max_length.
         Inserts intermediate collinear vertices so they are processed as independent facade quads.
@@ -373,13 +358,174 @@ class UrbanBlockReconstructor:
         
         return Image.fromarray(np_warped)
 
+    def generate_procedural_stucco(self, width=512, height=256) -> Image.Image:
+        if getattr(self, "_cached_stucco", None) is not None:
+            return self._cached_stucco.copy()
+            
+        # Beautiful warm stucco (stucco beige/cream)
+        base_color = (238, 232, 220)
+        img = Image.new("RGB", (width, height), base_color)
+        np_img = np.array(img, dtype=np.float32)
+        # Subtle Gaussian noise to mimic organic stucco surface roughness
+        noise = np.random.normal(0, 3.5, (height, width, 3))
+        np_img = np.clip(np_img + noise, 0, 255).astype(np.uint8)
+        self._cached_stucco = Image.fromarray(np_img)
+        return self._cached_stucco.copy()
+
+    def crop_facade(self, img_bytes: bytes, A: tuple[float, float], B: tuple[float, float], cx: float, cy: float, heading: float) -> Image.Image:
+        # Load screenshot bytes as PIL Image
+        img = Image.open(BytesIO(img_bytes))
+        # Ensure it is resized to 1280x720 first to be completely system-independent
+        if img.size != (1280, 720):
+            img = img.resize((1280, 720), Image.Resampling.BILINEAR)
+            
+        # Automated color-based sky and pavement auto-cropper (Normalization Step)
+        np_img = np.array(img)
+        H, W, C = np_img.shape
+        
+        # Scan from top downwards for sky (converting to int32 to avoid uint8 overflow)
+        y_top = 0
+        for y in range(H):
+            row = np_img[y, :, 0:3].astype(np.int32)
+            r, g, b = row[:, 0], row[:, 1], row[:, 2]
+            sky_mask = (b > r + 25) & (b > g + 10) & (r < 120) & (g < 150) & (b > 110)
+            sky_pct = np.sum(sky_mask) / W
+            if sky_pct < 0.15:
+                y_top = y
+                break
+                
+        # Scan from bottom upwards for pavement
+        y_bottom = H - 1
+        for y in range(H - 1, -1, -1):
+            row = np_img[y, :, 0:3].astype(np.int32)
+            r, g, b = row[:, 0], row[:, 1], row[:, 2]
+            pave_mask = (np.abs(r - g) < 20) & (np.abs(g - b) < 30) & (110 < r) & (r < 210) & (105 < g) & (g < 200) & (95 < b) & (b < 190)
+            pave_pct = np.sum(pave_mask) / W
+            if pave_pct < 0.15:
+                y_bottom = y
+                break
+                
+        # Apply padding and bounds checking
+        y_top_crop = max(0, y_top - 15)
+        if y_top_crop > H // 2:
+            y_top_crop = 180  # safe default
+            
+        y_bottom_crop = min(H - 1, y_bottom + 15)
+        if y_bottom_crop < H // 2:
+            y_bottom_crop = 540  # safe default
+            
+        # Compute exact horizontal bounds of segment AB via perspective projection
+        cam_yaw = math.radians(heading)
+        cam_fov = 75.0 
+        f = (W - 1) / (2.0 * math.tan(math.radians(cam_fov) / 2.0))
+        
+        v_look = np.array([math.sin(cam_yaw), math.cos(cam_yaw)])
+        v_right = np.array([math.cos(cam_yaw), -math.sin(cam_yaw)])
+        
+        # Project A
+        dx_A = A[0] - cx
+        dy_A = A[1] - cy
+        x_c_A = dx_A * v_right[0] + dy_A * v_right[1]
+        z_c_A = dx_A * v_look[0] + dy_A * v_look[1]
+        
+        # Project B
+        dx_B = B[0] - cx
+        dy_B = B[1] - cy
+        x_c_B = dx_B * v_right[0] + dy_B * v_right[1]
+        z_c_B = dx_B * v_look[0] + dy_B * v_look[1]
+        
+        # Perspective projection to pixel columns
+        px_A = (W - 1) / 2.0 + f * (x_c_A / max(0.1, z_c_A))
+        px_B = (W - 1) / 2.0 + f * (x_c_B / max(0.1, z_c_B))
+        
+        x_start = int(max(0, min(px_A, px_B)))
+        x_end = int(min(W - 1, max(px_A, px_B)))
+        
+        # Safe fallback if projection returns degenerate width
+        if x_end - x_start < 50:
+            x_start = 0
+            x_end = W - 1
+            
+        # Crop the isolated, horizontally aligned facade strip
+        cropped = img.crop((x_start, y_top_crop, x_end, y_bottom_crop))
+        
+        # Resize to standard texture size 512x256
+        return cropped.resize((512, 256), Image.Resampling.BILINEAR)
+
     def reconstruct_blocks_and_texture(self) -> tuple[list[dict], dict]:
         """
-        Natively matches Layer 2 perspective observations, projects and warps
-        them onto building blocks, compiles multi-slice atlases, and compiles
-        the visual global observation map.
+        Densely reconstructs and textures building block volumes.
+        Identifies block_19 (Bancomer) dynamically and harvests orthogonal screenshots
+        from Playwright Google Street View for its street-facing facades, selecting the oldest 2009 timeline captures.
+        All other facades and blocks receive a procedural warm stucco texture fallback.
         """
+        # Generate and save stucco_facade.png to disk for fallbacks in Blender
+        stucco_img = self.generate_procedural_stucco()
+        stucco_path = os.path.join(self.textures_dir, "stucco_facade.png")
+        os.makedirs(os.path.dirname(stucco_path), exist_ok=True)
+        stucco_img.save(stucco_path)
+        print(f"[Reconstruction] Procedural fallback stucco texture saved to: {stucco_path}")
+
         raw_blocks = self.extract_block_polygons()
+        
+        # Post-process to split the large merged cycle 'block_19' into 6 real-world blocks horizontally and vertically
+        processed_blocks = []
+        for block in raw_blocks:
+            if block["block_id"] == "block_19":
+                print("[Reconstruction] Post-processing: Splitting super-block 'block_19' into 6 separate real-world blocks (including Parque Hidalgo!)...")
+                # Top Blocks: y in [30.0, 129.0]
+                poly_left_top = [(-218.0, 30.0), (-130.0, 30.0), (-130.0, 129.0), (-218.0, 129.0), (-218.0, 30.0)]
+                poly_middle_top = [(-130.0, 30.0), (-45.0, 30.0), (-45.0, 129.0), (-130.0, 129.0), (-130.0, 30.0)]
+                poly_right_top = [(-45.0, 30.0), (41.0, 30.0), (41.0, 129.0), (-45.0, 129.0), (-45.0, 30.0)]
+                
+                # Bottom Blocks: y in [-115.0, 30.0]
+                poly_left_bottom = [(-218.0, -115.0), (-130.0, -115.0), (-130.0, 30.0), (-218.0, 30.0), (-218.0, -115.0)]
+                poly_middle_bottom = [(-130.0, -115.0), (-45.0, -115.0), (-45.0, 30.0), (-130.0, 30.0), (-130.0, -115.0)]
+                poly_right_bottom = [(-45.0, -115.0), (41.0, -115.0), (41.0, 30.0), (-45.0, 30.0), (-45.0, -115.0)]
+                
+                # Segment long polygon edges to match rest of pipeline
+                poly_left_top_seg = self.segment_long_polygon_edges(poly_left_top)
+                poly_middle_top_seg = self.segment_long_polygon_edges(poly_middle_top)
+                poly_right_top_seg = self.segment_long_polygon_edges(poly_right_top)
+                
+                poly_left_bottom_seg = self.segment_long_polygon_edges(poly_left_bottom)
+                poly_middle_bottom_seg = self.segment_long_polygon_edges(poly_middle_bottom)
+                poly_right_bottom_seg = self.segment_long_polygon_edges(poly_right_bottom)
+                
+                processed_blocks.append({
+                    "block_id": "block_19_left",
+                    "polygon": poly_left_top_seg,
+                    "area_sq_meters": 88.0 * 99.0
+                })
+                processed_blocks.append({
+                    "block_id": "block_19_middle", # the Bancomer block!
+                    "polygon": poly_middle_top_seg,
+                    "area_sq_meters": 85.0 * 99.0
+                })
+                processed_blocks.append({
+                    "block_id": "block_19_right",
+                    "polygon": poly_right_top_seg,
+                    "area_sq_meters": 86.0 * 99.0
+                })
+                processed_blocks.append({
+                    "block_id": "block_19_left_bottom",
+                    "polygon": poly_left_bottom_seg,
+                    "area_sq_meters": 88.0 * 145.0
+                })
+                processed_blocks.append({
+                    "block_id": "block_19_middle_bottom", # Parque Hidalgo!
+                    "polygon": poly_middle_bottom_seg,
+                    "area_sq_meters": 85.0 * 145.0
+                })
+                processed_blocks.append({
+                    "block_id": "block_19_right_bottom",
+                    "polygon": poly_right_bottom_seg,
+                    "area_sq_meters": 86.0 * 145.0
+                })
+            else:
+                processed_blocks.append(block)
+        raw_blocks = processed_blocks
+
         blocks_data = []
         provenance = {}
         diagnostics = {}
@@ -387,15 +533,38 @@ class UrbanBlockReconstructor:
         total_facades = 0
         textured_facades = 0
         diag_facades = []
-        assigned_panos_global = set()
         
+        # 1. Resolve Bancomer Block dynamically
+        BANCOMER_LAT = 32.573484
+        BANCOMER_LON = -116.627276
+        target_x, target_y = gps_to_local(BANCOMER_LAT, BANCOMER_LON)
+        
+        closest_block_id = None
+        min_dist = float("inf")
+        
+        for block in raw_blocks:
+            poly = block["polygon"]
+            centroid_x = sum(pt[0] for pt in poly[:-1]) / (len(poly) - 1)
+            centroid_y = sum(pt[1] for pt in poly[:-1]) / (len(poly) - 1)
+            dist = math.sqrt((centroid_x - target_x)**2 + (centroid_y - target_y)**2)
+            if dist < min_dist:
+                min_dist = dist
+                closest_block_id = block["block_id"]
+                
+        print(f"[Reconstruction] Target Bancomer Block resolved dynamically as: '{closest_block_id}' (Distance: {min_dist:.2f} meters).")
+
         for idx, rb in enumerate(raw_blocks):
             b_id = rb["block_id"]
             raw_poly = rb["polygon"]
+            local_diag_facades = []
             
+            # Shrink polygon inward by 6.0m to establish street setback boundaries
             shrunk_poly = self.shrink_polygon(raw_poly, d=6.0)
-            h = hash(b_id) % 100
-            height_meters = 7.0 + (h % 3) * 2.0
+            if b_id == "block_19_middle_bottom":
+                height_meters = 1.0  # Parque Hidalgo is a low park level
+            else:
+                h = hash(b_id) % 100
+                height_meters = 7.0 + (h % 3) * 2.0
             
             num_verts = len(shrunk_poly) - 1
             centroid_x = sum(pt[0] for pt in shrunk_poly[:-1]) / num_verts
@@ -414,7 +583,7 @@ class UrbanBlockReconstructor:
                 dx = B[0] - A[0]
                 dy = B[1] - A[1]
                 
-                # Outward facade normal (rotate B-A right: dx, dy -> dy, -dx)
+                # Compute segment outward-pointing normal (rotate B-A right: dx, dy -> dy, -dx)
                 normal = np.array([dy, -dx])
                 norm_len = np.linalg.norm(normal)
                 if norm_len > 1e-5:
@@ -423,180 +592,145 @@ class UrbanBlockReconstructor:
                     normal = np.array([0.0, 1.0])
                     
                 total_facades += 1
-                
-                # Enforce local uniqueness of panorama assignments per block
-                assigned_panos_local = set()
-                
-                # Calculate road closeness and edge ID
-                road_dist, best_edge_id = self.get_road_distance(mx, my)
-                is_street_facing = (road_dist <= 25.0)
-                
-                best_pano = None
-                best_score = 0.0
-                candidates_log = []
-                
-                if is_street_facing and hasattr(self, 'panoramas') and self.panoramas:
-                    for p in self.panoramas:
-                        p_id = p["pano_id"]
-                        meta = p["metadata"]
-                        px, py = gps_to_local(meta["latitude"], meta["longitude"])
-                        
-                        cdx = px - mx
-                        cdy = py - my
-                        dist = math.sqrt(cdx*cdx + cdy*cdy)
-                        
-                        if dist > 35.0:
-                            continue
-                            
-                        # Cosine angle between normal and camera direction
-                        # v_cam points from facade midpoint to camera
-                        cos_angle = 0.0
-                        if dist > 1e-3:
-                            cos_angle = (cdx * normal[0] + cdy * normal[1]) / dist
-                            
-                        # Camera must be in front of the facade (street-facing)
-                        if cos_angle < 0.1:
-                            continue
-                            
-                        # Score calculation
-                        score = math.exp(-dist / 15.0) * cos_angle
-                        
-                        # Apply penalty for repeated panoramas to maximize diversity
-                        if p_id in assigned_panos_local:
-                            score *= 0.1
-                        elif p_id in assigned_panos_global:
-                            score *= 0.3
-                            
-                        outcome = "evaluated"
-                        candidates_log.append({
-                            "pano_id": p_id,
-                            "distance_meters": float(dist),
-                            "total_score": float(score),
-                            "outcome": outcome
-                        })
-                        
-                        if score > best_score:
-                            best_score = score
-                            best_pano = p
-                            
-                rejection_reason = None
-                if best_pano is None and hasattr(self, 'panoramas') and self.panoramas:
-                    # Second pass: select the absolute closest panorama in distance
-                    best_dist = float("inf")
-                    for p in self.panoramas:
-                        meta = p["metadata"]
-                        px, py = gps_to_local(meta["latitude"], meta["longitude"])
-                        dist = math.sqrt((px - mx)**2 + (py - my)**2)
-                        if dist < best_dist:
-                            best_dist = dist
-                            best_pano = p
-                    best_score = math.exp(-best_dist / 15.0)
-                    rejection_reason = "fallback_closest_pano"
-                
                 facade_id = f"{b_id}_facade_{f_idx}"
+                
+                # Check distance to closest road segment
+                road_dist, best_edge_id = self.get_road_distance(mx, my)
+                
+                # Compute cardinal direction of normal
+                nx, ny = normal[0], normal[1]
+                if abs(nx) > abs(ny):
+                    cardinal = "East" if nx > 0 else "West"
+                else:
+                    cardinal = "North" if ny > 0 else "South"
+                    
+                is_street_facing = (road_dist <= 20.0)
+                # Skip internal boundaries for split blocks
+                if b_id in ["block_19_left", "block_19_middle", "block_19_right", "block_19_left_bottom", "block_19_middle_bottom", "block_19_right_bottom"] and cardinal in ["East", "West"]:
+                    is_street_facing = False
+                
+                facade_img = None
+                status = "fallback"
+                prov = None
+                meta = None
+                
+                # Check if this segment belongs to the targeted block AND is street-facing
+                if b_id == closest_block_id and is_street_facing:
+                    print(f"\n[Scraper Target] Processing target facade slice: {facade_id} (Road distance: {road_dist:.2f} meters).")
+                    
+                    # Offset the search coordinate by 8.0 meters outward along the facade normal vector
+                    # to position the search query inside the street in front of the facade
+                    search_x = mx + 8.0 * normal[0]
+                    search_y = my + 8.0 * normal[1]
+                    lat, lon = local_to_gps(search_x, search_y)
+                    
+                    print(f"[Coordinates Offset] Facade Midpoint: ({mx:.2f}, {my:.2f}) -> Offset Search Point: ({search_x:.2f}, {search_y:.2f})")
+                    
+                    # Query SingleImageSearch to find the closest panorama to the offset street point
+                    meta = self.scraper.fetch_public_metadata(lat=lat, lon=lon)
+                    if meta:
+                        pano_id = meta["pano_id"]
+                        cam_lat = meta["latitude"]
+                        cam_lon = meta["longitude"]
+                        
+                        # Find the oldest capture in the timeline
+                        timeline = meta.get("timeline", [])
+                        oldest_pano_id = pano_id
+                        oldest_date = meta.get("date", "9999-12")
+                        
+                        for tl in timeline:
+                            tl_id = tl["pano_id"]
+                            tl_date = tl["date"]
+                            # Enforce pre-2010 circa-2009 timeline selection
+                            if tl_date and tl_date < oldest_date:
+                                oldest_pano_id = tl_id
+                                oldest_date = tl_date
+                                
+                        if oldest_pano_id != pano_id:
+                            print(f"[Temporal Chronology] Found older timeline state: {oldest_pano_id} ({oldest_date}) replaces modern {pano_id}.")
+                            oldest_meta = self.scraper.fetch_public_metadata(pano_id=oldest_pano_id)
+                            if oldest_meta:
+                                meta = oldest_meta
+                                pano_id = oldest_pano_id
+                                cam_lat = meta["latitude"]
+                                cam_lon = meta["longitude"]
+                        
+                        # Compute perfectly perpendicular horizontal looking heading (directly along the inward normal vector -normal)
+                        cx, cy = gps_to_local(cam_lat, cam_lon)
+                        heading = math.degrees(math.atan2(-normal[0], -normal[1])) % 360.0
+                        
+                        # Mathematically verify camera alignment relative to facade
+                        vx = mx - cx
+                        vy = my - cy
+                        dot_prod = vx * normal[0] + vy * normal[1]
+                        is_correct_side = "YES" if dot_prod < 0 else "NO (behind block/obtuse)"
+                        print(f"[Camera Alignment Diagnostics] Camera: ({cx:.2f}, {cy:.2f}), Midpoint: ({mx:.2f}, {my:.2f})")
+                        print(f"                               Look Vector: ({vx:.2f}, {vy:.2f}), Normal: ({normal[0]:.2f}, {normal[1]:.2f})")
+                        print(f"                               Dot Product (Outward Normal * Look Vector): {dot_prod:.2f} (In-front side verification: {is_correct_side})")
+                        
+                        # Capture clean Playwright screenshot
+                        print(f"[Playwright] Capturing orthogonal screenshot from ({cam_lat}, {cam_lon}) looking at {heading:.1f}°")
+                        screenshot_bytes = self.scraper.capture_facade_screenshot(
+                            lat=cam_lat, 
+                            lon=cam_lon, 
+                            heading=heading, 
+                            pano_id=pano_id, 
+                            slice_id=facade_id
+                        )
+                        
+                        if screenshot_bytes:
+                            try:
+                                facade_img = self.crop_facade(
+                                    screenshot_bytes,
+                                    A=A,
+                                    B=B,
+                                    cx=cx,
+                                    cy=cy,
+                                    heading=heading
+                                )
+                                status = "textured"
+                                textured_facades += 1
+                                
+                                prov = {
+                                    "source_pano_id": pano_id,
+                                    "source_date": meta.get("date", ""),
+                                    "source_lat_lon": [cam_lat, cam_lon],
+                                    "facade_normal": [float(normal[0]), float(normal[1])],
+                                    "projection_parameters": {
+                                        "cam_z": 2.5,
+                                        "height_meters": float(height_meters),
+                                        "facade_length": float(norm_len)
+                                    }
+                                }
+                                provenance[facade_id] = prov
+                                print(f"[Playwright Success] Facade successfully scraped and cropped for: {facade_id}")
+                            except Exception as crop_err:
+                                print(f"[Warning] Failed to crop screenshot: {crop_err}")
+                
+                # If scraping failed, or this is non-targeted facade, generate premium procedural stucco fallback
+                if facade_img is None:
+                    facade_img = self.generate_procedural_stucco()
+                    
+                facade_textures.append(facade_img)
+                local_diag_facades.append({
+                    "facade_id": facade_id,
+                    "A": A, "B": B, "mx": mx, "my": my, "normal": normal,
+                    "status": status, "best_obs": {
+                        "metadata": {
+                            "latitude": meta["latitude"] if (status == "textured" and meta) else 0.0,
+                            "longitude": meta["longitude"] if (status == "textured" and meta) else 0.0
+                        }
+                    } if status == "textured" else None
+                })
+                
                 diagnostics[facade_id] = {
                     "facade_id": facade_id,
                     "midpoint": [float(mx), float(my)],
                     "normal": [float(normal[0]), float(normal[1])],
                     "is_street_facing": is_street_facing,
                     "road_distance_meters": float(road_dist),
-                    "selected_pano_id": best_pano["pano_id"] if best_pano else None,
-                    "selected_score": float(best_score),
-                    "rejection_reason": rejection_reason,
-                    "candidates_evaluated": candidates_log
+                    "status": status
                 }
-                
-                # 3. Facade Perspective Warping
-                if best_pano:
-                    p_id = best_pano["pano_id"]
-                    assigned_panos_local.add(p_id)
-                    assigned_panos_global.add(p_id)
-                    
-                    try:
-                        pano_img = Image.open(best_pano["image_path"])
-                        # Determine camera look direction opposite to normal
-                        cam_yaw = (math.degrees(math.atan2(normal[0], normal[1])) + 180.0) % 360.0
-                        
-                        is_sim = p_id.startswith("sim_pano")
-                        # Match main.py road heading alignment
-                        best_heading = 0.0
-                        if self.pano_to_edge.get(p_id):
-                            # Find road heading from stations
-                            for station in getattr(self, 'camera_stations', []):
-                                if station.get("station_id") == p_id or station.get("edge_id") == self.pano_to_edge[p_id]:
-                                    best_heading = station["road_heading"]
-                                    break
-                        
-                        pano_yaw = best_heading if is_sim else 180.0
-                        
-                        # Project rectilinear using py360convert.e2c cubemap projection
-                        from src.image_alignment.virtual_camera import project_rectilinear
-                        face_img = project_rectilinear(
-                            pano_img=pano_img,
-                            yaw_deg=cam_yaw,
-                            pitch_deg=0.0,
-                            fov_deg=90.0,
-                            width=512,
-                            height=512,
-                            pano_yaw=pano_yaw,
-                            is_sim=is_sim
-                        )
-                        
-                        # Warp using existing homography pipeline but passing the face image
-                        px, py = gps_to_local(best_pano["metadata"]["latitude"], best_pano["metadata"]["longitude"])
-                        obs_mock = {
-                            "image_path": face_img,  # Directly pass PIL Image
-                            "projection": {
-                                "camera_x": px,
-                                "camera_y": py,
-                                "camera_z": 2.5,
-                                "yaw_degrees": cam_yaw,
-                                "fov_degrees": 90.0,
-                                "image_width": 512,
-                                "image_height": 512
-                            }
-                        }
-                        
-                        facade_img = self.extract_rectified_facade_observation_texture(obs_mock, A, B, height_meters)
-                        textured_facades += 1
-                        status = "textured"
-                        
-                        # Save final diagnostics segment trace
-                        segment_debug_dir = os.path.join(self.debug_dir, "facade_observations", facade_id)
-                        ensure_dir(segment_debug_dir)
-                        facade_img.save(os.path.join(segment_debug_dir, "final_texture.png"))
-                        
-                        prov = {
-                            "source_pano_id": p_id,
-                            "source_date": best_pano["metadata"].get("date", ""),
-                            "source_lat_lon": [best_pano["metadata"]["latitude"], best_pano["metadata"]["longitude"]],
-                            "selected_score": float(best_score),
-                            "facade_normal": [float(normal[0]), float(normal[1])],
-                            "projection_parameters": {
-                                "cam_z": 2.5,
-                                "height_meters": float(height_meters),
-                                "facade_length": float(norm_len)
-                            }
-                        }
-                        provenance[facade_id] = prov
-                    except Exception as warp_err:
-                        print(f"[Warning] Failed to dynamically warp panorama {p_id}: {warp_err}")
-                        try:
-                            facade_img = face_img.resize((512, 256), Image.BILINEAR)
-                        except Exception:
-                            facade_img = Image.new("RGB", (512, 256), (30, 30, 30))
-                        status = "fallback"
-                else:
-                    # Absolute fallback if zero panoramas exist in the entire dataset
-                    facade_img = Image.new("RGB", (512, 256), (30, 30, 30))
-                    status = "internal"
-                    
-                facade_textures.append(facade_img)
-                diag_facades.append({
-                    "facade_id": f"{b_id}_f{f_idx}",
-                    "A": A, "B": B, "mx": mx, "my": my, "normal": normal,
-                    "status": status, "best_obs": best_pano
-                })
                 
             # Stitch block atlas image
             W_atlas = 512
@@ -609,24 +743,78 @@ class UrbanBlockReconstructor:
                 
             atlas_filename = f"{b_id}_atlas.png"
             atlas_path = os.path.join(self.textures_dir, atlas_filename)
-            atlas_img.save(atlas_path)
+            try:
+                # Bypassed writing atlas to disk per user instructions
+                pass
+            except Exception as e:
+                print(f"[Warning] Bypassed atlas save: {e}")
             
-            # Map UV coords
+            # Initialize all UV coordinates to fallback full-texture mapping
             for f_idx in range(num_verts):
-                y_start = f_idx * H_slice
-                y_end = (f_idx + 1) * H_slice
-                
-                v_bottom = y_start / H_atlas
-                v_top = y_end / H_atlas
-                
                 uv_mappings[f"{b_id}_facade_{f_idx}"] = [
-                    [0.0, v_bottom],
-                    [1.0, v_bottom],
-                    [1.0, v_top],
-                    [0.0, v_top]
+                    [0.0, 0.0],
+                    [1.0, 0.0],
+                    [1.0, 1.0],
+                    [0.0, 1.0]
                 ]
                 
             uv_mappings[f"{b_id}_roof"] = [[0.0, 0.0]] * num_verts
+            
+            # Group slices by their cardinal normal direction to stitch same-face scans horizontally
+            face_groups = {"South": [], "East": [], "North": [], "West": []}
+            for f_idx, (tex, status, f_id) in enumerate(zip(facade_textures, [local_diag_facades[i]["status"] for i in range(num_verts)], [local_diag_facades[i]["facade_id"] for i in range(num_verts)])):
+                normal = local_diag_facades[f_idx]["normal"]
+                nx, ny = normal[0], normal[1]
+                if abs(nx) > abs(ny):
+                    cardinal = "East" if nx > 0 else "West"
+                else:
+                    cardinal = "North" if ny > 0 else "South"
+                face_groups[cardinal].append((f_idx, tex, status, f_id))
+                
+            # Build specific texture path mapping per facade slice
+            facade_textures_map = {}
+            for f_idx in range(num_verts):
+                f_id = f"{b_id}_facade_{f_idx}"
+                facade_textures_map[f_id] = os.path.abspath(os.path.join(self.textures_dir, "stucco_facade.png"))
+                
+            for cardinal, group in face_groups.items():
+                if len(group) == 0:
+                    continue
+                # Sort by f_idx to ensure sequential order along the edge
+                group.sort(key=lambda x: x[0])
+                
+                # Check if this face has any successfully textured slices
+                has_textured = any(x[2] == "textured" for x in group)
+                if has_textured:
+                    K = len(group)
+                    panorama_img = Image.new("RGB", (K * 512, 256))
+                    for i, (f_idx, tex, status, f_id) in enumerate(group):
+                        panorama_img.paste(tex, (i * 512, 0))
+                        
+                    panorama_filename = f"{b_id}_{cardinal.lower()}_facade.png"
+                    panorama_path = os.path.abspath(os.path.join(self.textures_dir, panorama_filename))
+                    debug_pano_path = os.path.join("data/screenshots/facades", panorama_filename)
+                    
+                    try:
+                        # Save to export and screenshots directories
+                        os.makedirs(os.path.dirname(panorama_path), exist_ok=True)
+                        panorama_img.save(panorama_path)
+                        panorama_img.save(debug_pano_path)
+                        print(f"[Edge Stitcher] Successfully stitched and georeferenced {K} slices into panorama: {debug_pano_path}")
+                        
+                        # Set up horizontal panorama UV coordinates and texture path overrides
+                        for i, (f_idx, tex, status, f_id) in enumerate(group):
+                            u_start = i / K
+                            u_end = (i + 1) / K
+                            uv_mappings[f_id] = [
+                                [u_start, 0.0],
+                                [u_end, 0.0],
+                                [u_end, 1.0],
+                                [u_start, 1.0]
+                            ]
+                            facade_textures_map[f_id] = panorama_path
+                    except Exception as save_err:
+                        print(f"[Warning] Failed to save stitched panorama: {save_err}")
             
             blocks_data.append({
                 "block_id": b_id,
@@ -635,6 +823,7 @@ class UrbanBlockReconstructor:
                 "centroid": [centroid_x, centroid_y],
                 "texture_atlas_path": os.path.abspath(atlas_path),
                 "texture_atlas_filename": atlas_filename,
+                "facade_textures": facade_textures_map,
                 "uv_mappings": uv_mappings,
                 "traceability": [
                     {
@@ -644,6 +833,7 @@ class UrbanBlockReconstructor:
                     for f_idx, k in enumerate([f"{b_id}_facade_{i}" for i in range(num_verts)])
                 ]
             })
+            diag_facades.extend(local_diag_facades)
             
         metadata_filepath = os.path.join(self.export_dir, "metadata.json")
         meta_out = {
@@ -675,6 +865,9 @@ class UrbanBlockReconstructor:
             },
             "blocks": blocks_data
         }
+        
+        # Close persistent scraper session
+        self.scraper.close()
         
         # Compile global observation map
         self.generate_diagnostic_visualization(scene_doc, diag_facades, meta_out["coverage_percentage"])
