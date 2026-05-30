@@ -17,17 +17,63 @@ class UrbanBlockReconstructor:
     performs standard 2D perspective homography warping onto block vertical quads,
     and exports procedurally compiled textured glTF geometry for Blender.
     """
-    def __init__(self, G: nx.MultiGraph, accepted_panos: list[dict] = None, export_dir: str = "export", data_dir: str = "data", headless: bool = False):
+    def __init__(self, G: nx.MultiGraph, accepted_panos: list[dict] = None, export_dir: str = "export", data_dir: str = "data", headless: bool = False, radius: float = None, reprocess: bool = False):
         self.G = G
         self.export_dir = export_dir
         self.data_dir = data_dir
         self.textures_dir = os.path.join(export_dir, "textures")
         self.debug_dir = os.path.join(export_dir, "debug")
         self.headless = headless
+        self.radius = radius
+        self.reprocess = reprocess
         
         ensure_dir(self.textures_dir)
         ensure_dir(self.debug_dir)
         
+        # Load stitching cache to enable fast incremental reconstruction
+        self.stitching_cache_path = os.path.join(data_dir, "stitching_cache.json")
+        self.stitching_cache = {}
+        if os.path.exists(self.stitching_cache_path):
+            try:
+                self.stitching_cache = load_json(self.stitching_cache_path)
+            except Exception as e:
+                print(f"[Warning] Failed to load stitching cache: {e}")
+                
+        # Load metadata cache to enable fast offline runs for cached screenshots
+        self.metadata_cache_path = os.path.join(data_dir, "facade_metadata_cache.json")
+        self.metadata_cache = {}
+        if os.path.exists(self.metadata_cache_path):
+            try:
+                self.metadata_cache = load_json(self.metadata_cache_path)
+            except Exception as e:
+                print(f"[Warning] Failed to load metadata cache: {e}")
+                
+        # Bootstrap metadata cache from export/metadata.json if empty/missing
+        if not self.metadata_cache:
+            export_meta_path = os.path.join(export_dir, "metadata.json")
+            if os.path.exists(export_meta_path):
+                print(f"[Metadata Cache Bootstrap] Bootstrapping metadata cache from {export_meta_path}...")
+                try:
+                    export_meta = load_json(export_meta_path)
+                    prov = export_meta.get("provenance", {})
+                    bootstrapped = 0
+                    for facade_id, data in prov.items():
+                        normal = data.get("facade_normal", [0.0, 1.0])
+                        heading = math.degrees(math.atan2(-normal[0], -normal[1])) % 360.0
+                        self.metadata_cache[facade_id] = {
+                            "pano_id": data.get("source_pano_id"),
+                            "latitude": data.get("source_lat_lon", [0.0, 0.0])[0],
+                            "longitude": data.get("source_lat_lon", [0.0, 0.0])[1],
+                            "heading": heading,
+                            "date": data.get("source_date", "")
+                        }
+                        bootstrapped += 1
+                    if bootstrapped > 0:
+                        save_json(self.metadata_cache, self.metadata_cache_path)
+                        print(f"[Metadata Cache Bootstrap] Successfully bootstrapped {bootstrapped} entries and saved to {self.metadata_cache_path}.")
+                except Exception as e:
+                    print(f"[Warning] Failed to bootstrap metadata cache: {e}")
+                
         # Load Layer 1 adjacency mapping to know which panos belong to which road edges
         self.pano_to_edge = {}
         adj_path = os.path.join(data_dir, "structural_graph", "adjacency.json")
@@ -671,9 +717,65 @@ class UrbanBlockReconstructor:
                 prov = None
                 meta = None
                 
+                # Check if the panorama for this cardinally-grouped face is already stitched and cached on disk
+                cache_key = f"{b_id}_{cardinal.lower()}"
+                panorama_filename = f"{b_id}_{cardinal.lower()}_facade.png"
+                panorama_path = os.path.abspath(os.path.join(self.textures_dir, panorama_filename))
+                is_pano_cached = (not self.reprocess and cache_key in self.stitching_cache and os.path.exists(panorama_path))
+                
+                if is_pano_cached:
+                    status = "textured"
+                    facade_img = self.generate_procedural_stucco()  # simple fast placeholder, overridden by stitched panorama
+                    
+                    cached_entry = self.metadata_cache.get(facade_id, {})
+                    meta = {
+                        "latitude": cached_entry.get("latitude", 0.0),
+                        "longitude": cached_entry.get("longitude", 0.0),
+                        "pano_id": cached_entry.get("pano_id", ""),
+                        "date": cached_entry.get("date", "")
+                    }
+                    prov = {
+                        "source_pano_id": meta["pano_id"],
+                        "source_date": meta["date"],
+                        "source_lat_lon": [meta["latitude"], meta["longitude"]],
+                        "facade_normal": [float(normal[0]), float(normal[1])],
+                        "projection_parameters": {
+                            "cam_z": 2.5,
+                            "height_meters": float(height_meters),
+                            "facade_length": float(norm_len)
+                        }
+                    }
+                    provenance[facade_id] = prov
+                    textured_facades += 1
+                    
+                    # Early escape for already cached panoramas
+                    facade_textures.append(facade_img)
+                    local_diag_facades.append({
+                        "facade_id": facade_id,
+                        "A": A, "B": B, "mx": mx, "my": my, "normal": normal,
+                        "status": status, "best_obs": {
+                            "metadata": {
+                                "latitude": meta["latitude"],
+                                "longitude": meta["longitude"]
+                            }
+                        }
+                    })
+                    diagnostics[facade_id] = {
+                        "facade_id": facade_id,
+                        "midpoint": [float(mx), float(my)],
+                        "normal": [float(normal[0]), float(normal[1])],
+                        "is_street_facing": is_street_facing,
+                        "road_distance_meters": float(road_dist),
+                        "status": status
+                    }
+                    continue
+                
                 # Check if this segment belongs to a block within the safety radius AND is street-facing
                 dist_to_center = math.sqrt(centroid_x**2 + centroid_y**2)
-                is_within_radius = (dist_to_center <= 350.0)
+                if self.radius is not None and self.radius >= 0:
+                    is_within_radius = (dist_to_center <= self.radius)
+                else:
+                    is_within_radius = True
                 
                 if is_within_radius and is_street_facing:
                     print(f"\n[Scraper Target] Processing target facade slice: {facade_id} (Road distance: {road_dist:.2f} meters, Distance to center: {dist_to_center:.1f} meters).")
@@ -686,98 +788,140 @@ class UrbanBlockReconstructor:
                     
                     print(f"[Coordinates Offset] Facade Midpoint: ({mx:.2f}, {my:.2f}) -> Offset Search Point: ({search_x:.2f}, {search_y:.2f})")
                     
-                    # Query SingleImageSearch to find the closest panorama to the offset street point
-                    meta = self.scraper.fetch_public_metadata(lat=lat, lon=lon)
-                    if meta:
-                        pano_id = meta["pano_id"]
-                        cam_lat = meta["latitude"]
-                        cam_lon = meta["longitude"]
-                        
-                        # Find the oldest capture in the timeline
-                        timeline = meta.get("timeline", [])
-                        oldest_pano_id = pano_id
-                        oldest_date = meta.get("date", "9999-12")
-                        
-                        for tl in timeline:
-                            tl_id = tl["pano_id"]
-                            tl_date = tl["date"]
-                            # Enforce pre-2010 circa-2009 timeline selection
-                            if tl_date and tl_date < oldest_date:
-                                oldest_pano_id = tl_id
-                                oldest_date = tl_date
-                                
-                        if oldest_pano_id != pano_id:
-                            print(f"[Temporal Chronology] Found older timeline state: {oldest_pano_id} ({oldest_date}) replaces modern {pano_id}.")
-                            oldest_meta = self.scraper.fetch_public_metadata(pano_id=oldest_pano_id)
-                            if oldest_meta:
-                                meta = oldest_meta
-                                pano_id = oldest_pano_id
-                                cam_lat = meta["latitude"]
-                                cam_lon = meta["longitude"]
-                        
-                        # Compute perfectly perpendicular horizontal looking heading (directly along the inward normal vector -normal)
-                        cx, cy = gps_to_local(cam_lat, cam_lon)
-                        heading = math.degrees(math.atan2(-normal[0], -normal[1])) % 360.0
-                        
-                        # Mathematically verify camera alignment relative to facade
-                        vx = mx - cx
-                        vy = my - cy
-                        dot_prod = vx * normal[0] + vy * normal[1]
-                        is_correct_side = "YES" if dot_prod < 0 else "NO (behind block/obtuse)"
-                        print(f"[Camera Alignment Diagnostics] Camera: ({cx:.2f}, {cy:.2f}), Midpoint: ({mx:.2f}, {my:.2f})")
-                        print(f"                               Look Vector: ({vx:.2f}, {vy:.2f}), Normal: ({normal[0]:.2f}, {normal[1]:.2f})")
-                        print(f"                               Dot Product (Outward Normal * Look Vector): {dot_prod:.2f} (In-front side verification: {is_correct_side})")
-                        
-                        # Optimization: check if screenshot is already cached on disk
-                        cached_shot_path = f"data/screenshots/facades/{facade_id}.png"
-                        screenshot_bytes = None
-                        if os.path.exists(cached_shot_path):
-                            print(f"[Cache Hit] Loading cached screenshot for {facade_id} from {cached_shot_path}")
-                            try:
-                                with open(cached_shot_path, "rb") as f_img:
-                                    screenshot_bytes = f_img.read()
-                            except Exception as cache_err:
-                                print(f"[Warning] Failed to read cached file: {cache_err}")
-                                
-                        if not screenshot_bytes:
-                            # Capture clean Playwright screenshot
-                            print(f"[Playwright] Capturing orthogonal screenshot from ({cam_lat}, {cam_lon}) looking at {heading:.1f}°")
-                            screenshot_bytes = self.scraper.capture_facade_screenshot(
-                                lat=cam_lat, 
-                                lon=cam_lon, 
-                                heading=heading, 
-                                pano_id=pano_id, 
-                                slice_id=facade_id
-                            )
-                        
-                        if screenshot_bytes:
-                            try:
-                                facade_img = self.crop_facade(
-                                    screenshot_bytes,
-                                    A=A,
-                                    B=B,
-                                    cx=cx,
-                                    cy=cy,
-                                    heading=heading
+                    cached_shot_path = f"data/screenshots/facades/{facade_id}.png"
+                    screenshot_bytes = None
+                    meta = None
+                    pano_id = None
+                    cam_lat = None
+                    cam_lon = None
+                    cx, cy = 0.0, 0.0
+                    heading = 0.0
+                    
+                    # 1. Try to load from metadata_cache if screenshot exists on disk
+                    if os.path.exists(cached_shot_path) and facade_id in self.metadata_cache:
+                        print(f"[Offline Cache Hit] Found cached metadata and screenshot for {facade_id}. Bypassing network queries completely.")
+                        try:
+                            with open(cached_shot_path, "rb") as f_img:
+                                screenshot_bytes = f_img.read()
+                            
+                            cached_entry = self.metadata_cache[facade_id]
+                            pano_id = cached_entry.get("pano_id")
+                            cam_lat = cached_entry.get("latitude")
+                            cam_lon = cached_entry.get("longitude")
+                            heading = cached_entry.get("heading")
+                            cx, cy = gps_to_local(cam_lat, cam_lon)
+                            
+                            meta = {
+                                "pano_id": pano_id,
+                                "latitude": cam_lat,
+                                "longitude": cam_lon,
+                                "heading": heading,
+                                "date": cached_entry.get("date", "")
+                            }
+                        except Exception as cache_err:
+                            print(f"[Warning] Failed to read cached file or metadata: {cache_err}")
+                            screenshot_bytes = None
+                            
+                    # 2. If not cached, perform live scraper & network lookup
+                    if not screenshot_bytes:
+                        meta = self.scraper.fetch_public_metadata(lat=lat, lon=lon)
+                        if meta:
+                            pano_id = meta["pano_id"]
+                            cam_lat = meta["latitude"]
+                            cam_lon = meta["longitude"]
+                            
+                            # Find the oldest capture in the timeline
+                            timeline = meta.get("timeline", [])
+                            oldest_pano_id = pano_id
+                            oldest_date = meta.get("date", "9999-12")
+                            
+                            for tl in timeline:
+                                tl_id = tl["pano_id"]
+                                tl_date = tl["date"]
+                                # Enforce pre-2010 circa-2009 timeline selection
+                                if tl_date and tl_date < oldest_date:
+                                    oldest_pano_id = tl_id
+                                    oldest_date = tl_date
+                                    
+                            if oldest_pano_id != pano_id:
+                                print(f"[Temporal Chronology] Found older timeline state: {oldest_pano_id} ({oldest_date}) replaces modern {pano_id}.")
+                                oldest_meta = self.scraper.fetch_public_metadata(pano_id=oldest_pano_id)
+                                if oldest_meta:
+                                    meta = oldest_meta
+                                    pano_id = oldest_pano_id
+                                    cam_lat = meta["latitude"]
+                                    cam_lon = meta["longitude"]
+                            
+                            # Compute perfectly perpendicular horizontal looking heading (directly along the inward normal vector -normal)
+                            cx, cy = gps_to_local(cam_lat, cam_lon)
+                            heading = math.degrees(math.atan2(-normal[0], -normal[1])) % 360.0
+                            
+                            # Mathematically verify camera alignment relative to facade
+                            vx = mx - cx
+                            vy = my - cy
+                            dot_prod = vx * normal[0] + vy * normal[1]
+                            is_correct_side = "YES" if dot_prod < 0 else "NO (behind block/obtuse)"
+                            print(f"[Camera Alignment Diagnostics] Camera: ({cx:.2f}, {cy:.2f}), Midpoint: ({mx:.2f}, {my:.2f})")
+                            print(f"                               Look Vector: ({vx:.2f}, {vy:.2f}), Normal: ({normal[0]:.2f}, {normal[1]:.2f})")
+                            print(f"                               Dot Product (Outward Normal * Look Vector): {dot_prod:.2f} (In-front side verification: {is_correct_side})")
+                            
+                            # Check again if screenshot is on disk
+                            if os.path.exists(cached_shot_path):
+                                print(f"[Cache Hit] Loading cached screenshot for {facade_id} from {cached_shot_path}")
+                                try:
+                                    with open(cached_shot_path, "rb") as f_img:
+                                        screenshot_bytes = f_img.read()
+                                except Exception as cache_err:
+                                    print(f"[Warning] Failed to read cached file: {cache_err}")
+                                    
+                            if not screenshot_bytes:
+                                # Capture clean Playwright screenshot
+                                print(f"[Playwright] Capturing orthogonal screenshot from ({cam_lat}, {cam_lon}) looking at {heading:.1f}°")
+                                screenshot_bytes = self.scraper.capture_facade_screenshot(
+                                    lat=cam_lat, 
+                                    lon=cam_lon, 
+                                    heading=heading, 
+                                    pano_id=pano_id, 
+                                    slice_id=facade_id
                                 )
-                                status = "textured"
-                                textured_facades += 1
                                 
-                                prov = {
-                                    "source_pano_id": pano_id,
-                                    "source_date": meta.get("date", ""),
-                                    "source_lat_lon": [cam_lat, cam_lon],
-                                    "facade_normal": [float(normal[0]), float(normal[1])],
-                                    "projection_parameters": {
-                                        "cam_z": 2.5,
-                                        "height_meters": float(height_meters),
-                                        "facade_length": float(norm_len)
-                                    }
+                            # Update self.metadata_cache
+                            self.metadata_cache[facade_id] = {
+                                "pano_id": pano_id,
+                                "latitude": cam_lat,
+                                "longitude": cam_lon,
+                                "heading": heading,
+                                "date": meta.get("date", "")
+                            }
+                            
+                    if screenshot_bytes:
+                        try:
+                            facade_img = self.crop_facade(
+                                screenshot_bytes,
+                                A=A,
+                                B=B,
+                                cx=cx,
+                                cy=cy,
+                                heading=heading
+                            )
+                            status = "textured"
+                            textured_facades += 1
+                            
+                            prov = {
+                                "source_pano_id": pano_id,
+                                "source_date": meta.get("date", ""),
+                                "source_lat_lon": [cam_lat, cam_lon],
+                                "facade_normal": [float(normal[0]), float(normal[1])],
+                                "projection_parameters": {
+                                    "cam_z": 2.5,
+                                    "height_meters": float(height_meters),
+                                    "facade_length": float(norm_len)
                                 }
-                                provenance[facade_id] = prov
-                                print(f"[Playwright Success] Facade successfully scraped and cropped for: {facade_id}")
-                            except Exception as crop_err:
-                                print(f"[Warning] Failed to crop screenshot: {crop_err}")
+                            }
+                            provenance[facade_id] = prov
+                            print(f"[Success] Facade successfully resolved and cropped for: {facade_id}")
+                        except Exception as crop_err:
+                            print(f"[Warning] Failed to crop screenshot: {crop_err}")
                 
                 # If scraping failed, or this is non-targeted facade, generate premium procedural stucco fallback
                 if facade_img is None:
@@ -859,18 +1003,33 @@ class UrbanBlockReconstructor:
                 has_textured = any(x[2] == "textured" for x in group)
                 if has_textured:
                     try:
-                        # Stitch adjacent slices using template matching and linear blending (similarity merging)
-                        panorama_img, offsets = self.stitch_facades_with_similarity(group)
-                        W_final = panorama_img.width
-                        
                         panorama_filename = f"{b_id}_{cardinal.lower()}_facade.png"
                         panorama_path = os.path.abspath(os.path.join(self.textures_dir, panorama_filename))
                         debug_pano_path = os.path.join("data/screenshots/facades", panorama_filename)
                         
-                        os.makedirs(os.path.dirname(panorama_path), exist_ok=True)
-                        panorama_img.save(panorama_path)
-                        panorama_img.save(debug_pano_path)
-                        print(f"[Edge Stitcher] Successfully stitched and similarity-merged {len(group)} slices into panorama: {debug_pano_path}")
+                        cache_key = f"{b_id}_{cardinal.lower()}"
+                        
+                        # Incremental Processing: check if pre-stitched panorama exists and we are NOT reprocessing
+                        if not self.reprocess and cache_key in self.stitching_cache and os.path.exists(panorama_path):
+                            cached_info = self.stitching_cache[cache_key]
+                            offsets = cached_info["offsets"]
+                            W_final = cached_info["width"]
+                            print(f"[Incremental Edge Stitcher] Using pre-stitched cached panorama for {b_id} {cardinal} (offsets loaded).")
+                        else:
+                            # Stitch adjacent slices using template matching and linear blending (similarity merging)
+                            panorama_img, offsets = self.stitch_facades_with_similarity(group)
+                            W_final = panorama_img.width
+                            
+                            os.makedirs(os.path.dirname(panorama_path), exist_ok=True)
+                            panorama_img.save(panorama_path)
+                            panorama_img.save(debug_pano_path)
+                            print(f"[Edge Stitcher] Successfully stitched and similarity-merged {len(group)} slices into panorama: {debug_pano_path}")
+                            
+                            # Save to stitching cache
+                            self.stitching_cache[cache_key] = {
+                                "offsets": offsets,
+                                "width": W_final
+                            }
                         
                         # Set up horizontal panorama UV coordinates and texture path overrides
                         for i, (f_idx, tex, status, f_id) in enumerate(group):
@@ -922,6 +1081,7 @@ class UrbanBlockReconstructor:
                 "texture_atlas_filename": atlas_filename,
                 "facade_textures": facade_textures_map,
                 "uv_mappings": uv_mappings,
+                "roof_color": self.calculate_predominant_roof_color(facade_textures_map),
                 "traceability": [
                     {
                         "facade_idx": f_idx,
@@ -966,15 +1126,58 @@ class UrbanBlockReconstructor:
         # Close persistent scraper session
         self.scraper.close()
         
+        # Save stitching cache back to disk (Incremental processing)
+        save_json(self.stitching_cache, self.stitching_cache_path)
+        print(f"[Reconstruction] Stitching cache successfully updated at: {self.stitching_cache_path}")
+        
+        # Save metadata cache back to disk (Incremental processing)
+        save_json(self.metadata_cache, self.metadata_cache_path)
+        print(f"[Reconstruction] Metadata cache successfully updated at: {self.metadata_cache_path}")
+        
         # Compile global observation map
         self.generate_diagnostic_visualization(scene_doc, diag_facades, meta_out["coverage_percentage"])
         
         return blocks_data, scene_doc
 
+    def calculate_predominant_roof_color(self, facade_textures: dict) -> list[float]:
+        """
+        Computes the predominant (average) color of all custom storefront textures in the block.
+        Falls back to the stucco cream color if no custom textures exist.
+        Returns a list of 3 normalized floats [R, G, B] in [0.0, 1.0].
+        """
+        stucco_abs = os.path.abspath(os.path.join(self.textures_dir, "stucco_facade.png"))
+        unique_paths = set(p for p in facade_textures.values() if p and p != stucco_abs and os.path.exists(p))
+        
+        if not unique_paths:
+            # Fallback to warm cream stucco base color
+            return [238 / 255.0, 232 / 255.0, 220 / 255.0]
+            
+        r_sum, g_sum, b_sum = 0.0, 0.0, 0.0
+        count = 0
+        
+        for path in unique_paths:
+            try:
+                with Image.open(path) as img:
+                    # Resize to 1x1 to average the pixels quickly
+                    tiny = img.resize((1, 1), Image.Resampling.BILINEAR)
+                    r, g, b = tiny.getpixel((0, 0))[:3]
+                    r_sum += r
+                    g_sum += g
+                    b_sum += b
+                    count += 1
+            except Exception as e:
+                print(f"[Warning] Failed to calculate predominant color for {path}: {e}")
+                
+        if count > 0:
+            return [r_sum / count / 255.0, g_sum / count / 255.0, b_sum / count / 255.0]
+            
+        return [238 / 255.0, 232 / 255.0, 220 / 255.0]
+
     def generate_diagnostic_visualization(self, scene_doc: dict, diag_facades: list[dict], coverage_pct: float):
         """
-        Compiles a premium visual diagnostic map (global_observation_map.png) to export/debug/
-        mapping road network, block polygons, normal arrows, and assignment lines.
+        Compiles a premium light visual diagnostic map (global_observation_map.png) to export/debug/
+        mapping the entire road network, block polygons filled with their dynamic roof colors,
+        and green highlighted textured facade edges.
         """
         width, height = 1920, 1080
         margin = 80
@@ -1000,105 +1203,76 @@ class UrbanBlockReconstructor:
             py = height - margin - int(((y - ymin) / dy) * (height - 2 * margin))
             return px, py
             
-        canvas = Image.new("RGB", (width, height), (15, 17, 22))
+        # Clean light mode background
+        canvas = Image.new("RGB", (width, height), (245, 246, 248))
         draw = ImageDraw.Draw(canvas, "RGBA")
         
-        center_px, center_py = to_pix(0, 0)
-        draw.ellipse([center_px - 800, center_py - 800, center_px + 800, center_py + 800], fill=(28, 52, 94, 30))
-        
+        # 1. Draw entire road network skeleton (bounding box streets)
         node_map = {n["id"]: (n["x"], n["y"]) for n in scene_doc["road_graph"]["nodes"]}
         for ed in scene_doc["road_graph"]["edges"]:
             p1 = node_map.get(ed["u"])
             p2 = node_map.get(ed["v"])
             if p1 and p2:
-                draw.line([to_pix(*p1), to_pix(*p2)], fill=(60, 65, 75, 120), width=2)
+                draw.line([to_pix(*p1), to_pix(*p2)], fill=(200, 204, 208, 255), width=2)
                 
+        # Create block ID mapping to quickly look up roof colors
+        block_colors = {}
+        for bl in scene_doc["blocks"]:
+            roof_color = bl.get("roof_color", [238/255.0, 232/255.0, 220/255.0])
+            rgb = tuple(int(c * 255) for c in roof_color)
+            block_colors[bl["block_id"]] = rgb
+            
+        # 2. Draw block polygons colored by their roof color
         for bl in scene_doc["blocks"]:
             poly = bl["polygon"]
             pixel_poly = [to_pix(pt[0], pt[1]) for pt in poly]
-            draw.polygon(pixel_poly, fill=(40, 50, 70, 40), outline=(80, 110, 150, 80))
+            rgb = block_colors.get(bl["block_id"], (238, 232, 220))
+            draw.polygon(pixel_poly, fill=(rgb[0], rgb[1], rgb[2], 180), outline=(160, 165, 175, 255))
             
+        # 3. Draw facades (highlight textured ones in green)
         for f in diag_facades:
             p_a = to_pix(*f["A"])
             p_b = to_pix(*f["B"])
-            p_m = to_pix(f["mx"], f["my"])
             
             if f["status"] == "textured":
-                col = (40, 255, 120, 255)
-                width_line = 3
-            elif f["status"] == "no_data":
-                col = (255, 100, 0, 255)
-                width_line = 3
+                col = (46, 204, 113, 255)  # Premium emerald green
+                width_line = 4
             else:
-                col = (130, 135, 145, 120)
+                col = (200, 200, 200, 100)  # Subtle gray
                 width_line = 1
                 
             draw.line([p_a, p_b], fill=col, width=width_line)
             
-            norm_end_x = f["mx"] + f["normal"][0] * 6.0
-            norm_end_y = f["my"] + f["normal"][1] * 6.0
-            p_norm = to_pix(norm_end_x, norm_end_y)
-            draw.line([p_m, p_norm], fill=(0, 235, 235, 180), width=2)
-            
-            arrow_angle = math.atan2(f["normal"][1], f["normal"][0])
-            a1_x = norm_end_x + 1.8 * math.cos(arrow_angle + 3.0 * math.pi / 4.0)
-            a1_y = norm_end_y + 1.8 * math.sin(arrow_angle + 3.0 * math.pi / 4.0)
-            a2_x = norm_end_x + 1.8 * math.cos(arrow_angle - 3.0 * math.pi / 4.0)
-            a2_y = norm_end_y + 1.8 * math.sin(arrow_angle - 3.0 * math.pi / 4.0)
-            draw.line([p_norm, to_pix(a1_x, a1_y)], fill=(0, 235, 235, 180), width=1)
-            draw.line([p_norm, to_pix(a2_x, a2_y)], fill=(0, 235, 235, 180), width=1)
-            
-            best_obs = f["best_obs"]
-            if best_obs:
-                meta = best_obs["metadata"]
-                px, py = gps_to_local(meta["latitude"], meta["longitude"])
-                p_cam = to_pix(px, py)
-                draw.line([p_m, p_cam], fill=(0, 235, 235, 100), width=2)
-                
-            try:
-                draw.text((p_m[0] + 5, p_m[1] - 5), f["facade_id"], fill=(255, 235, 120, 220))
-            except Exception:
-                pass
-                
-        # Draw all active panorama camera positions
-        if hasattr(self, 'panoramas') and self.panoramas:
-            for p in self.panoramas:
-                meta = p["metadata"]
-                px, py = gps_to_local(meta["latitude"], meta["longitude"])
-                p_cam = to_pix(px, py)
-                draw.ellipse([p_cam[0] - 6, p_cam[1] - 6, p_cam[0] + 6, p_cam[1] + 6], fill=(0, 235, 235), outline=(255, 255, 255))
-            
-        # Draw HUD dashboard
-        draw.rectangle([50, 50, 550, 280], fill=(20, 25, 35, 230), outline=(80, 110, 150, 120), width=2)
-        draw.text((70, 70), "TECATE RECONSTRUCTION DIAGNOSTICS", fill=(255, 255, 255, 255))
-        draw.text((70, 95), "Decoupled 2D Homography Perspective Warp", fill=(80, 180, 255, 255))
-        draw.text((70, 120), "-" * 48, fill=(80, 110, 150, 100))
+        # Draw HUD dashboard in a clean modern light container
+        draw.rectangle([50, 50, 550, 280], fill=(255, 255, 255, 240), outline=(200, 204, 208, 255), width=2)
+        
+        draw.text((70, 70), "TECATE RECONSTRUCTION COVERAGE MAP", fill=(44, 62, 80, 255))
+        draw.text((70, 95), "Natural Cycles & Roof Color Mapping", fill=(52, 152, 219, 255))
+        draw.text((70, 120), "-" * 48, fill=(200, 204, 208, 100))
         
         legend = [
-            ("Textured street facade (Layer 2 Obs)", (40, 255, 120), "line"),
-            ("Untextured street facade (Missing NO_DATA)", (255, 100, 0), "line"),
-            ("Internal/Courtyard boundaries (No texture)", (130, 135, 145), "line"),
-            ("Active Frontal Camera observation position", (0, 235, 235), "circle"),
-            ("Warp assignment projection link", (0, 235, 235, 80), "dash")
+            ("Textured Facade Slice (NCC Blended)", (46, 204, 113), "line"),
+            ("Untextured Stucco Fallback Facade", (200, 200, 200), "line"),
+            ("Urban Block (Colored by Roof Tint)", (180, 190, 200), "rect"),
+            ("Road network segment", (200, 204, 208), "line")
         ]
         ly = 135
         for name, col_leg, geom in legend:
             if geom == "line":
                 draw.line([70, ly + 8, 90, ly + 8], fill=col_leg, width=3)
-            elif geom == "circle":
-                draw.ellipse([72, ly + 2, 84, ly + 14], fill=col_leg, outline=(255, 255, 255))
-            elif geom == "dash":
-                draw.line([70, ly + 8, 90, ly + 8], fill=col_leg, width=1)
+            elif geom == "rect":
+                draw.rectangle([70, ly + 2, 90, ly + 14], fill=(col_leg[0], col_leg[1], col_leg[2], 180), outline=(160, 165, 175))
                 
-            draw.text((105, ly), name, fill=(210, 220, 235, 255))
+            draw.text((105, ly), name, fill=(44, 62, 80, 255))
             ly += 22
             
-        draw.rectangle([50, height - 200, 450, height - 50], fill=(20, 25, 35, 230), outline=(80, 110, 150, 120), width=2)
-        draw.text((70, height - 180), "COVERAGE METRICS", fill=(255, 255, 255, 255))
-        draw.text((70, height - 150), f"Total Blocks: {len(scene_doc['blocks'])}", fill=(160, 180, 210, 255))
-        draw.text((70, height - 125), f"Historical Texturing Coverage: {coverage_pct:.1f}%", fill=(0, 235, 235, 255))
-        draw.text((70, height - 100), f"Layer 1 Panoramas: {len(getattr(self, 'panoramas', []))} nodes", fill=(160, 180, 210, 255))
+        # Coverage metrics container
+        draw.rectangle([50, height - 200, 450, height - 50], fill=(255, 255, 255, 240), outline=(200, 204, 208, 255), width=2)
+        draw.text((70, height - 180), "COVERAGE METRICS", fill=(44, 62, 80, 255))
+        draw.text((70, height - 150), f"Total Natural Blocks: {len(scene_doc['blocks'])}", fill=(127, 140, 141, 255))
+        draw.text((70, height - 125), f"Historical Texturing: {coverage_pct:.1f}%", fill=(46, 204, 113, 255))
+        draw.text((70, height - 100), f"Center Radius: {'Unlimited' if self.radius is None or self.radius < 0 else f'{self.radius}m'}", fill=(127, 140, 141, 255))
         
         debug_filepath = os.path.join(self.debug_dir, "global_observation_map.png")
         canvas.save(debug_filepath)
-        print(f"[Reconstruction] Premium diagnostic map saved to: {debug_filepath}")
+        print(f"[Reconstruction] Premium light diagnostic map saved to: {debug_filepath}")

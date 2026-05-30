@@ -60,7 +60,13 @@ def run_pipeline(args):
 
     # 2. RUN URBAN BLOCK RECONSTRUCTION
     print("[Reconstruction] Running dense orthogonal block prism reconstruction...")
-    reconstructor = UrbanBlockReconstructor(G, export_dir="export", headless=args.headless)
+    reconstructor = UrbanBlockReconstructor(
+        G, 
+        export_dir="export", 
+        headless=args.headless,
+        radius=args.radius if args.radius >= 0 else None,
+        reprocess=args.reprocess
+    )
     blocks_data, scene_doc = reconstructor.reconstruct_blocks_and_texture()
     
     export_filepath = "export/reconstruction_export.json"
@@ -85,6 +91,10 @@ if __name__ == "__main__":
                         help="Bypass Playwright browser crawling and load directly from cached structural_graph nodes")
     parser.add_argument("--harvest-only", action="store_true", default=False,
                         help="Harvest data mode: performs scraping/crawling but skips all processing, filtering, and 3D reconstruction.")
+    parser.add_argument("--reprocess", action="store_true", default=False,
+                        help="Reprocess cached screenshots (crop, align, stitch) without redownloading them.")
+    parser.add_argument("--radius", type=float, default=-1,
+                        help="Safety radius centered at (0, 0) in meters. Set to -1 to process the whole city of Tecate.")
     
     args = parser.parse_args()
     run_pipeline(args)
