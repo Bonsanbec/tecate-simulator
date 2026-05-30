@@ -8,9 +8,7 @@ from PIL import Image
 from src.core_io.coords import gps_to_local, local_to_gps
 from src.core_io.io_manager import ensure_dir, load_json
 from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
-from src.data_acquisition.sv_procedural import ProceduralStreetViewGenerator
 from src.gis_graph.graph_builder import TecateGraphBuilder
-from src.image_alignment.aligner import ImageAligner
 from src.temporal_filter.classifier import TemporalVisualClassifier, TemporalMRFSolver
 from src.reconstruction.prism_generator import UrbanBlockReconstructor
 
@@ -84,14 +82,6 @@ def run_pipeline(args):
         print("[Harvest Mode] Skipping all downstream filtering, homography mapping, and Blender 3D reconstruction.")
         print("="*60 + "\n")
         return
-
-    # 3. RUN LAYER 1 & LAYER 2 ARCHIVAL DATA MIGRATION
-    # Idempotent, deterministic migration. Will transiently stitch new crawler nodes
-    # and extract Layer 2 frontal observations, deprecating persistent raw panoramas.
-    from src.core_io.migration import ArchivalDataMigrator
-    migrator = ArchivalDataMigrator(raw_cache_dir="data/raw_scraped", data_dir="data")
-    # Cap processing to prevent time limits
-    migrator.run_migration(max_observations_to_process=120)
 
     # Load migrated Layer 1 structures
     intersections = load_json("data/structural_graph/intersections.json")
