@@ -371,6 +371,119 @@ class UrbanBlockReconstructor:
         np_img = np.clip(np_img + noise, 0, 255).astype(np.uint8)
         self._cached_stucco = Image.fromarray(np_img)
         return self._cached_stucco.copy()
+    def find_horizontal_overlap_offset(self, img1: Image.Image, img2: Image.Image) -> int:
+        """
+        Finds the optimal horizontal starting offset of img2 relative to img1.
+        Both images are assumed to be PIL Images of size 512x256.
+        Uses coarse-to-fine Normalized Cross-Correlation (NCC) template matching on grayscale conversions.
+        """
+        gray1 = cv2.cvtColor(np.array(img1), cv2.COLOR_RGB2GRAY)
+        gray2 = cv2.cvtColor(np.array(img2), cv2.COLOR_RGB2GRAY)
+        
+        best_s = 350  # Default fallback shift (around 30% overlap)
+        best_score = -1.0
+        
+        # 1. Coarse search with step of 5
+        for s in range(100, 460, 5):
+            w_overlap = 512 - s
+            strip1 = gray1[:, s:512]
+            strip2 = gray2[:, 0:w_overlap]
+            
+            score = cv2.matchTemplate(strip1, strip2, cv2.TM_CCOEFF_NORMED)[0, 0]
+            if score > best_score:
+                best_score = score
+                best_s = s
+                
+        # 2. Fine search with step of 1 around best coarse shift
+        coarse_best = best_s
+        for s in range(max(100, coarse_best - 4), min(460, coarse_best + 5)):
+            w_overlap = 512 - s
+            strip1 = gray1[:, s:512]
+            strip2 = gray2[:, 0:w_overlap]
+            
+            score = cv2.matchTemplate(strip1, strip2, cv2.TM_CCOEFF_NORMED)[0, 0]
+            if score > best_score:
+                best_score = score
+                best_s = s
+                
+        # If the match score is too low, fall back to a reasonable default overlap (e.g. 350)
+        if best_score < 0.35:
+            return 350
+            
+        return best_s
+
+    def stitch_facades_with_similarity(self, group: list) -> tuple[Image.Image, list[int]]:
+        """
+        Stitches a list of sequential facade images using template matching overlaps and linear blending.
+        Each item in the group is: (f_idx, tex_img, status, f_id).
+        Returns the final stitched Image and a list of horizontal starting coordinates (offsets) for each image.
+        """
+        N = len(group)
+        if N == 1:
+            return group[0][1], [0]
+            
+        # Calculate shifts between adjacent images
+        shifts = []
+        for i in range(N - 1):
+            img1 = group[i][1]
+            img2 = group[i+1][1]
+            status1 = group[i][2]
+            status2 = group[i+1][2]
+            
+            if status1 == "textured" and status2 == "textured":
+                s = self.find_horizontal_overlap_offset(img1, img2)
+            else:
+                s = 512  # If either is stucco fallback, do not overlap-blend
+            shifts.append(s)
+            
+        # Compute absolute horizontal positions (offsets)
+        offsets = [0]
+        curr = 0
+        for s in shifts:
+            curr += s
+            offsets.append(curr)
+            
+        W_final = offsets[-1] + 512
+        H_final = 256
+        
+        # Build the final image by pasting and blending
+        accum = np.zeros((H_final, W_final, 3), dtype=np.float32)
+        weight = np.zeros((H_final, W_final), dtype=np.float32)
+        
+        for i, (f_idx, img, status, f_id) in enumerate(group):
+            img_np = np.array(img, dtype=np.float32)
+            x_start = offsets[i]
+            x_end = x_start + 512
+            
+            # Determine the overlap regions to apply a linear ramp blend
+            mask = np.ones((H_final, 512), dtype=np.float32)
+            
+            # Left overlap blending ramp
+            if i > 0:
+                left_overlap = 512 - shifts[i-1]
+                if left_overlap > 0:
+                    for col in range(left_overlap):
+                        mask[:, col] = col / float(left_overlap)
+                        
+            # Right overlap blending ramp
+            if i < N - 1:
+                right_overlap = 512 - shifts[i]
+                if right_overlap > 0:
+                    for col in range(right_overlap):
+                        mask[:, 512 - right_overlap + col] = 1.0 - (col / float(right_overlap))
+                        
+            # Add to accumulators
+            for c in range(3):
+                accum[:, x_start:x_end, c] += img_np[:, :, c] * mask
+            weight[:, x_start:x_end] += mask
+            
+        # Normalize by weights to get blended image
+        weight = np.maximum(weight, 1e-5)
+        for c in range(3):
+            accum[:, :, c] /= weight
+            
+        final_np = np.clip(accum, 0, 255).astype(np.uint8)
+        return Image.fromarray(final_np), offsets
 
     def crop_facade(self, img_bytes: bytes, A: tuple[float, float], B: tuple[float, float], cx: float, cy: float, heading: float) -> Image.Image:
         # Load screenshot bytes as PIL Image
@@ -614,9 +727,12 @@ class UrbanBlockReconstructor:
                 prov = None
                 meta = None
                 
-                # Check if this segment belongs to the targeted block AND is street-facing
-                if b_id == closest_block_id and is_street_facing:
-                    print(f"\n[Scraper Target] Processing target facade slice: {facade_id} (Road distance: {road_dist:.2f} meters).")
+                # Check if this segment belongs to a block within the safety radius AND is street-facing
+                dist_to_center = math.sqrt(centroid_x**2 + centroid_y**2)
+                is_within_radius = (dist_to_center <= 350.0)
+                
+                if is_within_radius and is_street_facing:
+                    print(f"\n[Scraper Target] Processing target facade slice: {facade_id} (Road distance: {road_dist:.2f} meters, Distance to center: {dist_to_center:.1f} meters).")
                     
                     # Offset the search coordinate by 8.0 meters outward along the facade normal vector
                     # to position the search query inside the street in front of the facade
@@ -668,15 +784,27 @@ class UrbanBlockReconstructor:
                         print(f"                               Look Vector: ({vx:.2f}, {vy:.2f}), Normal: ({normal[0]:.2f}, {normal[1]:.2f})")
                         print(f"                               Dot Product (Outward Normal * Look Vector): {dot_prod:.2f} (In-front side verification: {is_correct_side})")
                         
-                        # Capture clean Playwright screenshot
-                        print(f"[Playwright] Capturing orthogonal screenshot from ({cam_lat}, {cam_lon}) looking at {heading:.1f}°")
-                        screenshot_bytes = self.scraper.capture_facade_screenshot(
-                            lat=cam_lat, 
-                            lon=cam_lon, 
-                            heading=heading, 
-                            pano_id=pano_id, 
-                            slice_id=facade_id
-                        )
+                        # Optimization: check if screenshot is already cached on disk
+                        cached_shot_path = f"data/screenshots/facades/{facade_id}.png"
+                        screenshot_bytes = None
+                        if os.path.exists(cached_shot_path):
+                            print(f"[Cache Hit] Loading cached screenshot for {facade_id} from {cached_shot_path}")
+                            try:
+                                with open(cached_shot_path, "rb") as f_img:
+                                    screenshot_bytes = f_img.read()
+                            except Exception as cache_err:
+                                print(f"[Warning] Failed to read cached file: {cache_err}")
+                                
+                        if not screenshot_bytes:
+                            # Capture clean Playwright screenshot
+                            print(f"[Playwright] Capturing orthogonal screenshot from ({cam_lat}, {cam_lon}) looking at {heading:.1f}°")
+                            screenshot_bytes = self.scraper.capture_facade_screenshot(
+                                lat=cam_lat, 
+                                lon=cam_lon, 
+                                heading=heading, 
+                                pano_id=pano_id, 
+                                slice_id=facade_id
+                            )
                         
                         if screenshot_bytes:
                             try:
@@ -786,26 +914,24 @@ class UrbanBlockReconstructor:
                 # Check if this face has any successfully textured slices
                 has_textured = any(x[2] == "textured" for x in group)
                 if has_textured:
-                    K = len(group)
-                    panorama_img = Image.new("RGB", (K * 512, 256))
-                    for i, (f_idx, tex, status, f_id) in enumerate(group):
-                        panorama_img.paste(tex, (i * 512, 0))
-                        
-                    panorama_filename = f"{b_id}_{cardinal.lower()}_facade.png"
-                    panorama_path = os.path.abspath(os.path.join(self.textures_dir, panorama_filename))
-                    debug_pano_path = os.path.join("data/screenshots/facades", panorama_filename)
-                    
                     try:
-                        # Save to export and screenshots directories
+                        # Stitch adjacent slices using template matching and linear blending (similarity merging)
+                        panorama_img, offsets = self.stitch_facades_with_similarity(group)
+                        W_final = panorama_img.width
+                        
+                        panorama_filename = f"{b_id}_{cardinal.lower()}_facade.png"
+                        panorama_path = os.path.abspath(os.path.join(self.textures_dir, panorama_filename))
+                        debug_pano_path = os.path.join("data/screenshots/facades", panorama_filename)
+                        
                         os.makedirs(os.path.dirname(panorama_path), exist_ok=True)
                         panorama_img.save(panorama_path)
                         panorama_img.save(debug_pano_path)
-                        print(f"[Edge Stitcher] Successfully stitched and georeferenced {K} slices into panorama: {debug_pano_path}")
+                        print(f"[Edge Stitcher] Successfully stitched and similarity-merged {len(group)} slices into panorama: {debug_pano_path}")
                         
                         # Set up horizontal panorama UV coordinates and texture path overrides
                         for i, (f_idx, tex, status, f_id) in enumerate(group):
-                            u_start = i / K
-                            u_end = (i + 1) / K
+                            u_start = offsets[i] / W_final
+                            u_end = (offsets[i] + 512) / W_final
                             uv_mappings[f_id] = [
                                 [u_start, 0.0],
                                 [u_end, 0.0],
@@ -813,8 +939,35 @@ class UrbanBlockReconstructor:
                                 [u_start, 1.0]
                             ]
                             facade_textures_map[f_id] = panorama_path
-                    except Exception as save_err:
-                        print(f"[Warning] Failed to save stitched panorama: {save_err}")
+                    except Exception as stitch_err:
+                        print(f"[Warning] Failed similarity stitching, falling back to basic concatenation: {stitch_err}")
+                        K = len(group)
+                        panorama_img = Image.new("RGB", (K * 512, 256))
+                        for i, (f_idx, tex, status, f_id) in enumerate(group):
+                            panorama_img.paste(tex, (i * 512, 0))
+                            
+                        panorama_filename = f"{b_id}_{cardinal.lower()}_facade.png"
+                        panorama_path = os.path.abspath(os.path.join(self.textures_dir, panorama_filename))
+                        debug_pano_path = os.path.join("data/screenshots/facades", panorama_filename)
+                        
+                        try:
+                            os.makedirs(os.path.dirname(panorama_path), exist_ok=True)
+                            panorama_img.save(panorama_path)
+                            panorama_img.save(debug_pano_path)
+                            print(f"[Edge Stitcher Fallback] Successfully stitched and georeferenced {K} slices into panorama: {debug_pano_path}")
+                            
+                            for i, (f_idx, tex, status, f_id) in enumerate(group):
+                                u_start = i / K
+                                u_end = (i + 1) / K
+                                uv_mappings[f_id] = [
+                                    [u_start, 0.0],
+                                    [u_end, 0.0],
+                                    [u_end, 1.0],
+                                    [u_start, 1.0]
+                                ]
+                                facade_textures_map[f_id] = panorama_path
+                        except Exception as fallback_err:
+                            print(f"[Warning] Failed fallback stitching: {fallback_err}")
             
             blocks_data.append({
                 "block_id": b_id,
