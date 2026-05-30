@@ -3861,7 +3861,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.474848097903166,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_1_facade_5": {
         "facade_id": "block_1_facade_5",
@@ -3875,7 +3875,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.53059331429528,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_1_facade_6": {
         "facade_id": "block_1_facade_6",
@@ -51447,7 +51447,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.88638690157564,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_10_facade_90": {
         "facade_id": "block_10_facade_90",
@@ -51461,7 +51461,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.083711436233028,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_10_facade_91": {
         "facade_id": "block_10_facade_91",
@@ -51475,7 +51475,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.766367832478966,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_10_facade_92": {
         "facade_id": "block_10_facade_92",
@@ -51489,7 +51489,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.169801924587492,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_10_facade_93": {
         "facade_id": "block_10_facade_93",
@@ -60785,7 +60785,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.633054835455212,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_14_facade_5": {
         "facade_id": "block_14_facade_5",
@@ -60799,7 +60799,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.43632778332454,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_14_facade_6": {
         "facade_id": "block_14_facade_6",
@@ -60813,7 +60813,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 23.495064024312285,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_14_facade_7": {
         "facade_id": "block_14_facade_7",
@@ -61317,7 +61317,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.26088142026935,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_14_facade_43": {
         "facade_id": "block_14_facade_43",
@@ -61331,7 +61331,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.126917615014722,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_14_facade_44": {
         "facade_id": "block_14_facade_44",
@@ -61345,7 +61345,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.369362715341442,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_14_facade_45": {
         "facade_id": "block_14_facade_45",
@@ -61359,7 +61359,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.50055244433248,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_14_facade_46": {
         "facade_id": "block_14_facade_46",
@@ -61373,7 +61373,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.634517467954836,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_14_facade_47": {
         "facade_id": "block_14_facade_47",
@@ -62661,7 +62661,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.16116257066786,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_15_facade_61": {
         "facade_id": "block_15_facade_61",
@@ -62675,7 +62675,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.102835748837396,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_15_facade_62": {
         "facade_id": "block_15_facade_62",
@@ -62689,7 +62689,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.04451171166014,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_15_facade_63": {
         "facade_id": "block_15_facade_63",
@@ -62703,7 +62703,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.98618934297462,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_15_facade_64": {
         "facade_id": "block_15_facade_64",
@@ -62717,7 +62717,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.188166149537146,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_15_facade_65": {
         "facade_id": "block_15_facade_65",
@@ -62731,7 +62731,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.24482758881357,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_15_facade_66": {
         "facade_id": "block_15_facade_66",
@@ -62745,7 +62745,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.30149221493342,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_15_facade_67": {
         "facade_id": "block_15_facade_67",
@@ -63669,7 +63669,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.889804025544567,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_15_facade_133": {
         "facade_id": "block_15_facade_133",
@@ -63683,7 +63683,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.656874333019758,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_15_facade_134": {
         "facade_id": "block_15_facade_134",
@@ -63697,7 +63697,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.656874333019772,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_15_facade_135": {
         "facade_id": "block_15_facade_135",
@@ -63711,7 +63711,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.889804025544585,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_15_facade_136": {
         "facade_id": "block_15_facade_136",
@@ -63865,7 +63865,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.197608461347457,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_16_facade_5": {
         "facade_id": "block_16_facade_5",
@@ -63879,7 +63879,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.917442553089103,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_16_facade_6": {
         "facade_id": "block_16_facade_6",
@@ -63893,7 +63893,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.96999092959831,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_16_facade_7": {
         "facade_id": "block_16_facade_7",
@@ -63907,7 +63907,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 23.23810138520715,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_16_facade_8": {
         "facade_id": "block_16_facade_8",
@@ -64425,7 +64425,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.252834642408892,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_16_facade_45": {
         "facade_id": "block_16_facade_45",
@@ -64439,7 +64439,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.98410040698735,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_16_facade_46": {
         "facade_id": "block_16_facade_46",
@@ -64453,7 +64453,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.752724576351238,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_16_facade_47": {
         "facade_id": "block_16_facade_47",
@@ -64467,7 +64467,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.548655136015974,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_16_facade_48": {
         "facade_id": "block_16_facade_48",
@@ -64481,7 +64481,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.803350616335127,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_16_facade_49": {
         "facade_id": "block_16_facade_49",
@@ -64495,7 +64495,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.878765681180504,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_16_facade_50": {
         "facade_id": "block_16_facade_50",
@@ -64509,7 +64509,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.956387905823274,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_16_facade_51": {
         "facade_id": "block_16_facade_51",
@@ -65797,7 +65797,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.59414209822587,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_60": {
         "facade_id": "block_17_facade_60",
@@ -65811,7 +65811,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.40331055781182,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_61": {
         "facade_id": "block_17_facade_61",
@@ -65825,7 +65825,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.212482332072376,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_62": {
         "facade_id": "block_17_facade_62",
@@ -65839,7 +65839,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.021656093402896,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_63": {
         "facade_id": "block_17_facade_63",
@@ -65853,7 +65853,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 40.78225421198889,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_64": {
         "facade_id": "block_17_facade_64",
@@ -65867,7 +65867,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 35.97246324014149,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_65": {
         "facade_id": "block_17_facade_65",
@@ -65881,7 +65881,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.1637507548786,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_66": {
         "facade_id": "block_17_facade_66",
@@ -65895,7 +65895,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.35670706400713,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_67": {
         "facade_id": "block_17_facade_67",
@@ -65909,7 +65909,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.552448816790942,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_68": {
         "facade_id": "block_17_facade_68",
@@ -66791,7 +66791,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.566350125125172,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_131": {
         "facade_id": "block_17_facade_131",
@@ -66805,7 +66805,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.348960154191754,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_132": {
         "facade_id": "block_17_facade_132",
@@ -66819,7 +66819,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.13157448384813,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_133": {
         "facade_id": "block_17_facade_133",
@@ -66833,7 +66833,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 35.914191395993925,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_134": {
         "facade_id": "block_17_facade_134",
@@ -66847,7 +66847,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.516674721481788,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_135": {
         "facade_id": "block_17_facade_135",
@@ -66861,7 +66861,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.858978096923572,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_136": {
         "facade_id": "block_17_facade_136",
@@ -66875,7 +66875,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.244654118172512,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_17_facade_137": {
         "facade_id": "block_17_facade_137",
@@ -67029,7 +67029,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.56057441205054,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_5": {
         "facade_id": "block_18_facade_5",
@@ -67043,7 +67043,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.128612907849778,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_6": {
         "facade_id": "block_18_facade_6",
@@ -67057,7 +67057,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 30.743053675597125,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_7": {
         "facade_id": "block_18_facade_7",
@@ -67071,7 +67071,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 35.38574825285941,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_8": {
         "facade_id": "block_18_facade_8",
@@ -67085,7 +67085,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.032194672512677,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_9": {
         "facade_id": "block_18_facade_9",
@@ -67099,7 +67099,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.24817833385124,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_10": {
         "facade_id": "block_18_facade_10",
@@ -67113,7 +67113,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.4641669663312,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_11": {
         "facade_id": "block_18_facade_11",
@@ -67617,7 +67617,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.421197583812454,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_47": {
         "facade_id": "block_18_facade_47",
@@ -67631,7 +67631,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.16617694204876,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_48": {
         "facade_id": "block_18_facade_48",
@@ -67645,7 +67645,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 30.91331326142923,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_49": {
         "facade_id": "block_18_facade_49",
@@ -67659,7 +67659,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 35.661745176514934,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_50": {
         "facade_id": "block_18_facade_50",
@@ -67673,7 +67673,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 40.41101597917203,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_51": {
         "facade_id": "block_18_facade_51",
@@ -67687,7 +67687,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 35.786015526124785,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_52": {
         "facade_id": "block_18_facade_52",
@@ -67701,7 +67701,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.03716500857934,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_53": {
         "facade_id": "block_18_facade_53",
@@ -67715,7 +67715,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.288316845368822,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_54": {
         "facade_id": "block_18_facade_54",
@@ -67729,7 +67729,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.539472593687307,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_18_facade_55": {
         "facade_id": "block_18_facade_55",
@@ -69003,7 +69003,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.98743345267732,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_59": {
         "facade_id": "block_19_facade_59",
@@ -69017,7 +69017,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.66859420931068,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_60": {
         "facade_id": "block_19_facade_60",
@@ -69031,7 +69031,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.39547263535614,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_61": {
         "facade_id": "block_19_facade_61",
@@ -69045,7 +69045,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.1501394814109,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_62": {
         "facade_id": "block_19_facade_62",
@@ -69059,7 +69059,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 40.92291002220004,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_63": {
         "facade_id": "block_19_facade_63",
@@ -69073,7 +69073,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.056093693324065,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_64": {
         "facade_id": "block_19_facade_64",
@@ -69087,7 +69087,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.176723715070146,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_65": {
         "facade_id": "block_19_facade_65",
@@ -69101,7 +69101,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.297476108412134,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_66": {
         "facade_id": "block_19_facade_66",
@@ -69115,7 +69115,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.41843450445978,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_67": {
         "facade_id": "block_19_facade_67",
@@ -69269,7 +69269,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 23.077158896219114,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_78": {
         "facade_id": "block_19_facade_78",
@@ -69283,7 +69283,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.888487555607814,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_79": {
         "facade_id": "block_19_facade_79",
@@ -69297,7 +69297,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.74175787340731,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_80": {
         "facade_id": "block_19_facade_80",
@@ -69311,7 +69311,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.4517720633808,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_81": {
         "facade_id": "block_19_facade_81",
@@ -69325,7 +69325,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.474952477627895,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_82": {
         "facade_id": "block_19_facade_82",
@@ -69339,7 +69339,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.498137740902934,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_83": {
         "facade_id": "block_19_facade_83",
@@ -69955,7 +69955,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.328005055873334,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_127": {
         "facade_id": "block_19_facade_127",
@@ -69969,7 +69969,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.075713159987387,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_128": {
         "facade_id": "block_19_facade_128",
@@ -69983,7 +69983,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.868267341059884,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_129": {
         "facade_id": "block_19_facade_129",
@@ -69997,7 +69997,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.986814318610104,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_130": {
         "facade_id": "block_19_facade_130",
@@ -70011,7 +70011,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.057038928818802,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_131": {
         "facade_id": "block_19_facade_131",
@@ -70025,7 +70025,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.129048913844944,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_132": {
         "facade_id": "block_19_facade_132",
@@ -70515,7 +70515,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 24.124809664725426,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_167": {
         "facade_id": "block_19_facade_167",
@@ -70529,7 +70529,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 29.124097389301873,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_168": {
         "facade_id": "block_19_facade_168",
@@ -70543,7 +70543,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 34.04196385096375,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_169": {
         "facade_id": "block_19_facade_169",
@@ -70557,7 +70557,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 37.933731140113466,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_170": {
         "facade_id": "block_19_facade_170",
@@ -70571,7 +70571,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 33.0118890999093,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_171": {
         "facade_id": "block_19_facade_171",
@@ -70585,7 +70585,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 28.11556492158431,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_172": {
         "facade_id": "block_19_facade_172",
@@ -70599,7 +70599,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 23.260878421842733,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_173": {
         "facade_id": "block_19_facade_173",
@@ -70725,7 +70725,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 23.12942386895115,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_182": {
         "facade_id": "block_19_facade_182",
@@ -70739,7 +70739,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.953091233386083,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_183": {
         "facade_id": "block_19_facade_183",
@@ -70753,7 +70753,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.81861335725329,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_184": {
         "facade_id": "block_19_facade_184",
@@ -70767,7 +70767,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.81861335725329,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_185": {
         "facade_id": "block_19_facade_185",
@@ -70781,7 +70781,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.95309123338608,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_186": {
         "facade_id": "block_19_facade_186",
@@ -70795,7 +70795,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 23.12942386895115,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_187": {
         "facade_id": "block_19_facade_187",
@@ -70977,7 +70977,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.73784546636483,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_200": {
         "facade_id": "block_19_facade_200",
@@ -70991,7 +70991,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.468986685262823,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_201": {
         "facade_id": "block_19_facade_201",
@@ -71005,7 +71005,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.242642031796585,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_202": {
         "facade_id": "block_19_facade_202",
@@ -71019,7 +71019,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.78089708948467,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_203": {
         "facade_id": "block_19_facade_203",
@@ -71033,7 +71033,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.884089412328183,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_204": {
         "facade_id": "block_19_facade_204",
@@ -71047,7 +71047,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.98728425528876,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_205": {
         "facade_id": "block_19_facade_205",
@@ -71061,7 +71061,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.090483294272218,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_19_facade_206": {
         "facade_id": "block_19_facade_206",
@@ -71243,7 +71243,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.479274015762034,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_9": {
         "facade_id": "block_20_facade_9",
@@ -71257,7 +71257,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.259927779259062,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_10": {
         "facade_id": "block_20_facade_10",
@@ -71271,7 +71271,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.08509907868097,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_11": {
         "facade_id": "block_20_facade_11",
@@ -71285,7 +71285,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 33.08862777284858,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_12": {
         "facade_id": "block_20_facade_12",
@@ -71299,7 +71299,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 28.256693369142763,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_13": {
         "facade_id": "block_20_facade_13",
@@ -71313,7 +71313,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 23.464650465309017,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_14": {
         "facade_id": "block_20_facade_14",
@@ -71439,7 +71439,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.611354653617642,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_23": {
         "facade_id": "block_20_facade_23",
@@ -71453,7 +71453,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.42306296022243,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_24": {
         "facade_id": "block_20_facade_24",
@@ -71467,7 +71467,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.279037959481,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_25": {
         "facade_id": "block_20_facade_25",
@@ -71481,7 +71481,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 37.16193062368467,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_26": {
         "facade_id": "block_20_facade_26",
@@ -71495,7 +71495,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 33.87447854669279,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_27": {
         "facade_id": "block_20_facade_27",
@@ -71509,7 +71509,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 28.963191737266328,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_28": {
         "facade_id": "block_20_facade_28",
@@ -71523,7 +71523,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 24.086011699527358,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_29": {
         "facade_id": "block_20_facade_29",
@@ -72125,7 +72125,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.638296304608787,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_72": {
         "facade_id": "block_20_facade_72",
@@ -72139,7 +72139,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.63829630460878,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_73": {
         "facade_id": "block_20_facade_73",
@@ -72349,7 +72349,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 23.141405143338005,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_88": {
         "facade_id": "block_20_facade_88",
@@ -72363,7 +72363,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.967900576006766,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_89": {
         "facade_id": "block_20_facade_89",
@@ -72377,7 +72377,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.836230894774545,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_90": {
         "facade_id": "block_20_facade_90",
@@ -72391,7 +72391,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.96790057600677,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_91": {
         "facade_id": "block_20_facade_91",
@@ -72405,7 +72405,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 23.141405143338005,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_92": {
         "facade_id": "block_20_facade_92",
@@ -72531,7 +72531,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.151619338650317,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_101": {
         "facade_id": "block_20_facade_101",
@@ -72545,7 +72545,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.74387040843135,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_102": {
         "facade_id": "block_20_facade_102",
@@ -72559,7 +72559,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.379659694476807,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_103": {
         "facade_id": "block_20_facade_103",
@@ -72573,7 +72573,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.04219129962934,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_104": {
         "facade_id": "block_20_facade_104",
@@ -72587,7 +72587,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 40.186431572785125,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_105": {
         "facade_id": "block_20_facade_105",
@@ -72601,7 +72601,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 35.4282760068682,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_106": {
         "facade_id": "block_20_facade_106",
@@ -72615,7 +72615,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 30.670979399447905,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_107": {
         "facade_id": "block_20_facade_107",
@@ -72629,7 +72629,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 25.915014799565792,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_108": {
         "facade_id": "block_20_facade_108",
@@ -72643,7 +72643,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.16128032610275,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_109": {
         "facade_id": "block_20_facade_109",
@@ -73147,7 +73147,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.88755851321697,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_145": {
         "facade_id": "block_20_facade_145",
@@ -73161,7 +73161,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.554457953619977,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_146": {
         "facade_id": "block_20_facade_146",
@@ -73175,7 +73175,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.267415751652976,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_147": {
         "facade_id": "block_20_facade_147",
@@ -73189,7 +73189,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.0083513840599,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_148": {
         "facade_id": "block_20_facade_148",
@@ -73203,7 +73203,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.45189082912941,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_149": {
         "facade_id": "block_20_facade_149",
@@ -73217,7 +73217,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.718552696926945,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_150": {
         "facade_id": "block_20_facade_150",
@@ -73231,7 +73231,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 23.02599831861962,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_20_facade_151": {
         "facade_id": "block_20_facade_151",
@@ -89121,7 +89121,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.116995485609618,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_34_facade_7": {
         "facade_id": "block_34_facade_7",
@@ -89135,7 +89135,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.8684604343341,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_34_facade_8": {
         "facade_id": "block_34_facade_8",
@@ -89149,7 +89149,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.665965419292206,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_34_facade_9": {
         "facade_id": "block_34_facade_9",
@@ -89163,7 +89163,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.662533863674817,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_34_facade_10": {
         "facade_id": "block_34_facade_10",
@@ -89177,7 +89177,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.660863133548215,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_34_facade_11": {
         "facade_id": "block_34_facade_11",
@@ -89639,7 +89639,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.248501658670715,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_34_facade_44": {
         "facade_id": "block_34_facade_44",
@@ -89653,7 +89653,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.174974560726668,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_34_facade_45": {
         "facade_id": "block_34_facade_45",
@@ -89667,7 +89667,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.101451183928056,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_34_facade_46": {
         "facade_id": "block_34_facade_46",
@@ -89681,7 +89681,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.736279561614055,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_34_facade_47": {
         "facade_id": "block_34_facade_47",
@@ -89695,7 +89695,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.809715038886594,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_34_facade_48": {
         "facade_id": "block_34_facade_48",
@@ -89709,7 +89709,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.88425169504236,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_34_facade_49": {
         "facade_id": "block_34_facade_49",
@@ -89723,7 +89723,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.96063047980914,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_34_facade_50": {
         "facade_id": "block_34_facade_50",
@@ -90549,7 +90549,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.095574462532795,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_29": {
         "facade_id": "block_35_facade_29",
@@ -90563,7 +90563,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 25.594861167321156,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_30": {
         "facade_id": "block_35_facade_30",
@@ -90577,7 +90577,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 30.142198133662493,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_31": {
         "facade_id": "block_35_facade_31",
@@ -90591,7 +90591,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 34.71871011958585,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_32": {
         "facade_id": "block_35_facade_32",
@@ -90605,7 +90605,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 39.31420977574189,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_33": {
         "facade_id": "block_35_facade_33",
@@ -90619,7 +90619,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 35.74428200425616,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_34": {
         "facade_id": "block_35_facade_34",
@@ -90633,7 +90633,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 30.997844191352375,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_35": {
         "facade_id": "block_35_facade_35",
@@ -90647,7 +90647,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.251595325320732,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_36": {
         "facade_id": "block_35_facade_36",
@@ -90661,7 +90661,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.505660506920467,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_37": {
         "facade_id": "block_35_facade_37",
@@ -91151,7 +91151,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 20.758977796747136,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_72": {
         "facade_id": "block_35_facade_72",
@@ -91165,7 +91165,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 25.2123581797132,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_73": {
         "facade_id": "block_35_facade_73",
@@ -91179,7 +91179,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 29.715115274245417,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_74": {
         "facade_id": "block_35_facade_74",
@@ -91193,7 +91193,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 34.24777907404312,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_75": {
         "facade_id": "block_35_facade_75",
@@ -91207,7 +91207,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 35.92335072921418,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_76": {
         "facade_id": "block_35_facade_76",
@@ -91221,7 +91221,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.277135743172444,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_77": {
         "facade_id": "block_35_facade_77",
@@ -91235,7 +91235,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.65774371058351,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_78": {
         "facade_id": "block_35_facade_78",
@@ -91249,7 +91249,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.082014535388012,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_35_facade_79": {
         "facade_id": "block_35_facade_79",
@@ -118199,7 +118199,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.580402098227346,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_18": {
         "facade_id": "block_55_facade_18",
@@ -118213,7 +118213,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.180783446594425,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_19": {
         "facade_id": "block_55_facade_19",
@@ -118227,7 +118227,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 30.787441636251433,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_20": {
         "facade_id": "block_55_facade_20",
@@ -118241,7 +118241,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 35.42212825273931,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_21": {
         "facade_id": "block_55_facade_21",
@@ -118255,7 +118255,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 40.075120015057244,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_22": {
         "facade_id": "block_55_facade_22",
@@ -118269,7 +118269,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.319259644578,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_23": {
         "facade_id": "block_55_facade_23",
@@ -118283,7 +118283,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.683726390118256,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_24": {
         "facade_id": "block_55_facade_24",
@@ -118297,7 +118297,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.073796929832643,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_25": {
         "facade_id": "block_55_facade_25",
@@ -118311,7 +118311,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.50521068179744,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_26": {
         "facade_id": "block_55_facade_26",
@@ -118437,7 +118437,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.51168242660356,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_35": {
         "facade_id": "block_55_facade_35",
@@ -118451,7 +118451,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.297195148764906,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_36": {
         "facade_id": "block_55_facade_36",
@@ -118465,7 +118465,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.12712473708209,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_37": {
         "facade_id": "block_55_facade_37",
@@ -118479,7 +118479,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 28.270364501608817,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_38": {
         "facade_id": "block_55_facade_38",
@@ -118493,7 +118493,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 23.473946318494335,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_39": {
         "facade_id": "block_55_facade_39",
@@ -118703,7 +118703,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.199056959472447,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_54": {
         "facade_id": "block_55_facade_54",
@@ -118717,7 +118717,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.923819448448597,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_55": {
         "facade_id": "block_55_facade_55",
@@ -119305,7 +119305,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.526876570937592,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_97": {
         "facade_id": "block_55_facade_97",
@@ -119319,7 +119319,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.1054987994965,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_98": {
         "facade_id": "block_55_facade_98",
@@ -119333,7 +119333,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.298233891445793,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_99": {
         "facade_id": "block_55_facade_99",
@@ -119347,7 +119347,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.7015524677178,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_100": {
         "facade_id": "block_55_facade_100",
@@ -119641,7 +119641,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.30877128850461,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_121": {
         "facade_id": "block_55_facade_121",
@@ -119655,7 +119655,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 25.825919271512735,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_122": {
         "facade_id": "block_55_facade_122",
@@ -119669,7 +119669,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 30.390132957277384,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_123": {
         "facade_id": "block_55_facade_123",
@@ -119683,7 +119683,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 34.9308787064088,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_124": {
         "facade_id": "block_55_facade_124",
@@ -119697,7 +119697,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 39.4528549311545,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_125": {
         "facade_id": "block_55_facade_125",
@@ -119711,7 +119711,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 44.05140980195431,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_126": {
         "facade_id": "block_55_facade_126",
@@ -119725,7 +119725,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 48.707970621506185,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_127": {
         "facade_id": "block_55_facade_127",
@@ -119739,7 +119739,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 53.36870919047418,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_128": {
         "facade_id": "block_55_facade_128",
@@ -119753,7 +119753,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 58.03261894241371,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_129": {
         "facade_id": "block_55_facade_129",
@@ -119767,7 +119767,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 54.687466949878576,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_130": {
         "facade_id": "block_55_facade_130",
@@ -119781,7 +119781,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 50.06002275499675,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_131": {
         "facade_id": "block_55_facade_131",
@@ -119795,7 +119795,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 45.438858694294225,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_132": {
         "facade_id": "block_55_facade_132",
@@ -119809,7 +119809,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 40.68236181875056,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_133": {
         "facade_id": "block_55_facade_133",
@@ -119823,7 +119823,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 35.92035711159676,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_134": {
         "facade_id": "block_55_facade_134",
@@ -119837,7 +119837,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.158354161609477,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_135": {
         "facade_id": "block_55_facade_135",
@@ -119851,7 +119851,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.396353919787355,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_136": {
         "facade_id": "block_55_facade_136",
@@ -119865,7 +119865,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.634358174436404,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_55_facade_137": {
         "facade_id": "block_55_facade_137",
@@ -120173,7 +120173,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.599869732391575,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_5": {
         "facade_id": "block_56_facade_5",
@@ -120187,7 +120187,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.188769882229717,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_6": {
         "facade_id": "block_56_facade_6",
@@ -120201,7 +120201,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 30.824168756742687,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_7": {
         "facade_id": "block_56_facade_7",
@@ -120215,7 +120215,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 35.48785013572382,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_8": {
         "facade_id": "block_56_facade_8",
@@ -120229,7 +120229,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 40.16996453917665,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_9": {
         "facade_id": "block_56_facade_9",
@@ -120243,7 +120243,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.1239874473827,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_10": {
         "facade_id": "block_56_facade_10",
@@ -120257,7 +120257,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.31636059216515,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_11": {
         "facade_id": "block_56_facade_11",
@@ -120271,7 +120271,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.508735435990655,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_12": {
         "facade_id": "block_56_facade_12",
@@ -120285,7 +120285,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.70111310806804,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_13": {
         "facade_id": "block_56_facade_13",
@@ -120775,7 +120775,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.020218485057775,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_48": {
         "facade_id": "block_56_facade_48",
@@ -120789,7 +120789,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.90868944744739,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_49": {
         "facade_id": "block_56_facade_49",
@@ -120803,7 +120803,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.798334587820904,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_50": {
         "facade_id": "block_56_facade_50",
@@ -120817,7 +120817,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.688684447240746,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_51": {
         "facade_id": "block_56_facade_51",
@@ -120831,7 +120831,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 41.56338168434228,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_52": {
         "facade_id": "block_56_facade_52",
@@ -120845,7 +120845,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.667818449282066,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_53": {
         "facade_id": "block_56_facade_53",
@@ -120859,7 +120859,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.772982206894184,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_54": {
         "facade_id": "block_56_facade_54",
@@ -120873,7 +120873,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.879270126040122,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_55": {
         "facade_id": "block_56_facade_55",
@@ -120887,7 +120887,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.987432828699372,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_56_facade_56": {
         "facade_id": "block_56_facade_56",
@@ -121377,7 +121377,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.13711202029754,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_5": {
         "facade_id": "block_57_facade_5",
@@ -121391,7 +121391,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.86497891403372,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_6": {
         "facade_id": "block_57_facade_6",
@@ -121405,7 +121405,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.63843085096141,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_7": {
         "facade_id": "block_57_facade_7",
@@ -121419,7 +121419,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.43982808671265,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_8": {
         "facade_id": "block_57_facade_8",
@@ -121433,7 +121433,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 40.52977658605756,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_9": {
         "facade_id": "block_57_facade_9",
@@ -121447,7 +121447,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 35.786252552515215,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_10": {
         "facade_id": "block_57_facade_10",
@@ -121461,7 +121461,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.043006817126457,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_11": {
         "facade_id": "block_57_facade_11",
@@ -121475,7 +121475,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.29976185513666,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_12": {
         "facade_id": "block_57_facade_12",
@@ -121489,7 +121489,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.556518177076416,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_13": {
         "facade_id": "block_57_facade_13",
@@ -122007,7 +122007,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 21.42719252131966,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_50": {
         "facade_id": "block_57_facade_50",
@@ -122021,7 +122021,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.136370980128017,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_51": {
         "facade_id": "block_57_facade_51",
@@ -122035,7 +122035,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 30.859282436978283,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_52": {
         "facade_id": "block_57_facade_52",
@@ -122049,7 +122049,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 35.6114703483475,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_53": {
         "facade_id": "block_57_facade_53",
@@ -122063,7 +122063,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 40.382600356452876,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_54": {
         "facade_id": "block_57_facade_54",
@@ -122077,7 +122077,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.77862473708954,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_55": {
         "facade_id": "block_57_facade_55",
@@ -122091,7 +122091,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.87495213055729,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_56": {
         "facade_id": "block_57_facade_56",
@@ -122105,7 +122105,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.97128220849742,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_57": {
         "facade_id": "block_57_facade_57",
@@ -122119,7 +122119,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.067616760468965,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_57_facade_58": {
         "facade_id": "block_57_facade_58",
@@ -180079,7 +180079,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.59530218469816,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_96_facade_35": {
         "facade_id": "block_96_facade_35",
@@ -180093,7 +180093,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.564916372628275,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_96_facade_36": {
         "facade_id": "block_96_facade_36",
@@ -180107,7 +180107,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.534542118382475,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_96_facade_37": {
         "facade_id": "block_96_facade_37",
@@ -180121,7 +180121,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.6260268937555,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_96_facade_38": {
         "facade_id": "block_96_facade_38",
@@ -180135,7 +180135,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.791209428737453,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_96_facade_39": {
         "facade_id": "block_96_facade_39",
@@ -180149,7 +180149,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.998465101940763,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_96_facade_40": {
         "facade_id": "block_96_facade_40",
@@ -180765,7 +180765,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.25398947834575,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_96_facade_84": {
         "facade_id": "block_96_facade_84",
@@ -180779,7 +180779,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.233584766384766,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_96_facade_85": {
         "facade_id": "block_96_facade_85",
@@ -180793,7 +180793,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.213185044130604,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_96_facade_86": {
         "facade_id": "block_96_facade_86",
@@ -180807,7 +180807,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.76525521710633,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_96_facade_87": {
         "facade_id": "block_96_facade_87",
@@ -180821,7 +180821,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.908238893224272,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_96_facade_88": {
         "facade_id": "block_96_facade_88",
@@ -180835,7 +180835,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 23.09313762471249,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_96_facade_89": {
         "facade_id": "block_96_facade_89",
@@ -181045,7 +181045,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.01971244554634,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_7": {
         "facade_id": "block_97_facade_7",
@@ -181059,7 +181059,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.744087908776095,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_8": {
         "facade_id": "block_97_facade_8",
@@ -181073,7 +181073,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.51464173902463,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_9": {
         "facade_id": "block_97_facade_9",
@@ -181087,7 +181087,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.51468372020316,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_10": {
         "facade_id": "block_97_facade_10",
@@ -181101,7 +181101,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.53265858541162,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_11": {
         "facade_id": "block_97_facade_11",
@@ -181115,7 +181115,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.550639058814834,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_12": {
         "facade_id": "block_97_facade_12",
@@ -181619,7 +181619,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.654234822255727,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_48": {
         "facade_id": "block_97_facade_48",
@@ -181633,7 +181633,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.587075934836164,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_49": {
         "facade_id": "block_97_facade_49",
@@ -181647,7 +181647,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.515667361256796,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_50": {
         "facade_id": "block_97_facade_50",
@@ -181661,7 +181661,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 37.35876285506276,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_51": {
         "facade_id": "block_97_facade_51",
@@ -181675,7 +181675,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 36.878086380058036,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_52": {
         "facade_id": "block_97_facade_52",
@@ -181689,7 +181689,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.942107088308386,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_53": {
         "facade_id": "block_97_facade_53",
@@ -181703,7 +181703,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 27.006129806006957,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_54": {
         "facade_id": "block_97_facade_54",
@@ -181717,7 +181717,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.070155881389507,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_97_facade_55": {
         "facade_id": "block_97_facade_55",
@@ -187219,7 +187219,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 22.097401921714553,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_99_facade_79": {
         "facade_id": "block_99_facade_79",
@@ -187233,7 +187233,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 26.829376215970775,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_99_facade_80": {
         "facade_id": "block_99_facade_80",
@@ -187247,7 +187247,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 31.607212524837237,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_99_facade_81": {
         "facade_id": "block_99_facade_81",
@@ -187261,7 +187261,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 32.99027615059822,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_99_facade_82": {
         "facade_id": "block_99_facade_82",
@@ -187275,7 +187275,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 28.202627436104436,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_99_facade_83": {
         "facade_id": "block_99_facade_83",
@@ -187289,7 +187289,7 @@
         ],
         "is_street_facing": false,
         "road_distance_meters": 23.454365175231914,
-        "status": "fallback"
+        "status": "textured"
     },
     "block_99_facade_84": {
         "facade_id": "block_99_facade_84",

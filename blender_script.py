@@ -155,25 +155,18 @@ def build_block_meshes(blocks_data: list):
                 
             face.material_index = loaded_materials[tex_path]
             
-        # Assign stucco fallback material to the roof
-        stucco_path = os.path.abspath("export/textures/stucco_facade.png")
-        if stucco_path not in loaded_materials:
-            mat = bpy.data.materials.new(name=f"{b_id}_roof_mat")
-            mat.use_nodes = True
-            bsdf = mat.node_tree.nodes.get("Principled BSDF")
-            node_tex = mat.node_tree.nodes.new(type='ShaderNodeTexImage')
-            try:
-                img = bpy.data.images.load(stucco_path)
-                node_tex.image = img
-            except:
-                pass
-            if bsdf:
-                mat.node_tree.links.new(node_tex.outputs['Color'], bsdf.inputs['Base Color'])
-            obj.data.materials.append(mat)
-            loaded_materials[stucco_path] = len(obj.data.materials) - 1
+        # 6. Assign dynamic predominant roof color material to the roof
+        roof_color = bl.get("roof_color", [238 / 255.0, 232 / 255.0, 220 / 255.0])
+        roof_mat_name = f"{b_id}_roof_material"
+        mat = bpy.data.materials.new(name=roof_mat_name)
+        mat.use_nodes = True
+        bsdf = mat.node_tree.nodes.get("Principled BSDF")
+        if bsdf:
+            bsdf.inputs['Base Color'].default_value = (roof_color[0], roof_color[1], roof_color[2], 1.0)
             
+        obj.data.materials.append(mat)
         roof_face = mesh.polygons[num_verts]
-        roof_face.material_index = loaded_materials[stucco_path]
+        roof_face.material_index = len(obj.data.materials) - 1
 
 def setup_lighting_and_camera():
     """Sets up standard illumination and a convenient top-down camera views."""

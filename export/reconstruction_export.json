@@ -16629,7 +16629,7 @@
                     -145.48894326942374
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 228.28370538748044,
                 -326.9729919180057
@@ -22875,6 +22875,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -24502,7 +24507,7 @@
                     -119.01220918071141
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 193.91897498767298,
                 -121.39149364865997
@@ -27574,6 +27579,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.515686274509804,
+                0.5137254901960784,
+                0.5078431372549019
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -27593,11 +27603,11 @@
                 },
                 {
                     "facade_idx": 4,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 5,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 6,
@@ -28473,7 +28483,7 @@
                     -160.46795482055543
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 157.94063533857607,
                 -174.44092046923285
@@ -30533,6 +30543,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.5411764705882353,
+                0.5568627450980392,
+                0.5784313725490197
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -32272,7 +32287,7 @@
                     -128.90755616898602
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 681.7187092824502,
                 -132.92010622605244
@@ -40174,6 +40189,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -42381,7 +42401,7 @@
                     -114.1300026148773
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 536.7324035579218,
                 -70.73740886294759
@@ -47132,6 +47152,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -57619,7 +57644,7 @@
                     -89.12057680385105
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 11.911046918456138,
                 -390.8000583484668
@@ -113131,6 +113156,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -122978,7 +123008,7 @@
                     -48.907443192986406
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 737.7057642157617,
                 -15.787419355589332
@@ -124049,6 +124079,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -124743,6 +124778,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.503921568627451,
+                0.5166666666666667,
+                0.5274509803921569
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -125014,7 +125054,7 @@
                     -191.406777930881
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 68.11003373347194,
                 -155.8571377788223
@@ -126108,6 +126148,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.4980392156862745,
+                0.48823529411764705,
+                0.49411764705882355
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -126383,7 +126428,7 @@
                     -205.1751417018101
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 74.08142130887184,
                 -207.82556603354325
@@ -126833,6 +126878,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.49019607843137253,
+                0.503921568627451,
+                0.515686274509804
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -127656,7 +127706,7 @@
                     -200.89041714181857
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 -62.852279347777134,
                 -198.15816015913586
@@ -131901,6 +131951,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.4872549019607843,
+                0.492156862745098,
+                0.4950980392156863
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -132260,19 +132315,19 @@
                 },
                 {
                     "facade_idx": 89,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 90,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 91,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 92,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 93,
@@ -132732,7 +132787,7 @@
                     -215.59851760751553
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 60.26549352850488,
                 -216.6580020313118
@@ -133228,6 +133283,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.4764705882352941,
+                0.47941176470588237,
+                0.47941176470588237
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -135179,7 +135239,7 @@
                     -234.6748425552513
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 -174.38735697536953,
                 -481.09262997011973
@@ -145864,6 +145924,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -149985,6 +150050,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -150640,7 +150710,7 @@
                     341.4743550145216
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 89.47117505895908,
                 320.153179546824
@@ -152447,6 +152517,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.5794117647058824,
+                0.5794117647058824,
+                0.5647058823529412
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -152466,15 +152541,15 @@
                 },
                 {
                     "facade_idx": 4,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 5,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 6,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 7,
@@ -152618,23 +152693,23 @@
                 },
                 {
                     "facade_idx": 42,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 43,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 44,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 45,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 46,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 47,
@@ -153338,7 +153413,7 @@
                     275.5873501392689
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -97.22081262701954,
                 233.6497133183208
@@ -156617,6 +156692,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.6029411764705882,
+                0.6,
+                0.5745098039215686
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -156860,31 +156940,31 @@
                 },
                 {
                     "facade_idx": 60,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 61,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 62,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 63,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 64,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 65,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 66,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 67,
@@ -157148,19 +157228,19 @@
                 },
                 {
                     "facade_idx": 132,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 133,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 134,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 135,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 136,
@@ -157528,7 +157608,7 @@
                     277.067876082976
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 94.19425786427426,
                 252.54645385664384
@@ -159450,6 +159530,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.5852941176470589,
+                0.5852941176470589,
+                0.5715686274509804
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -159469,19 +159554,19 @@
                 },
                 {
                     "facade_idx": 4,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 5,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 6,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 7,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 8,
@@ -159629,31 +159714,31 @@
                 },
                 {
                     "facade_idx": 44,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 45,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 46,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 47,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 48,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 49,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 50,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 51,
@@ -160365,7 +160450,7 @@
                     203.19325954500277
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 -91.53717440395364,
                 156.67784997712909
@@ -163667,6 +163752,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.638235294117647,
+                0.6372549019607843,
+                0.6196078431372549
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -163906,39 +163996,39 @@
                 },
                 {
                     "facade_idx": 59,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 60,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 61,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 62,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 63,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 64,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 65,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 66,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 67,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 68,
@@ -164190,31 +164280,31 @@
                 },
                 {
                     "facade_idx": 130,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 131,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 132,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 133,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 134,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 135,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 136,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 137,
@@ -166612,6 +166702,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.6333333333333333,
+                0.6372549019607843,
+                0.6166666666666667
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -166631,31 +166726,31 @@
                 },
                 {
                     "facade_idx": 4,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 5,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 6,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 7,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 8,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 9,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 10,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 11,
@@ -166799,39 +166894,39 @@
                 },
                 {
                     "facade_idx": 46,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 47,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 48,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 49,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 50,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 51,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 52,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 53,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 54,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 55,
@@ -167811,7 +167906,7 @@
                     122.49687180959455
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -65.18772672498415,
                 10.385699434375354
@@ -172654,6 +172749,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.5941176470588235,
+                0.5970588235294118,
+                0.5843137254901961
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -172889,39 +172989,39 @@
                 },
                 {
                     "facade_idx": 58,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 59,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 60,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 61,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 62,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 63,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 64,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 65,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 66,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 67,
@@ -172965,27 +173065,27 @@
                 },
                 {
                     "facade_idx": 77,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 78,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 79,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 80,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 81,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 82,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 83,
@@ -173161,27 +173261,27 @@
                 },
                 {
                     "facade_idx": 126,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 127,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 128,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 129,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 130,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 131,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 132,
@@ -173321,31 +173421,31 @@
                 },
                 {
                     "facade_idx": 166,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 167,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 168,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 169,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 170,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 171,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 172,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 173,
@@ -173381,27 +173481,27 @@
                 },
                 {
                     "facade_idx": 181,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 182,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 183,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 184,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 185,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 186,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 187,
@@ -173453,31 +173553,31 @@
                 },
                 {
                     "facade_idx": 199,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 200,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 201,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 202,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 203,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 204,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 205,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 206,
@@ -177703,6 +177803,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.6058823529411764,
+                0.6009803921568627,
+                0.5833333333333334
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -177738,27 +177843,27 @@
                 },
                 {
                     "facade_idx": 8,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 9,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 10,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 11,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 12,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 13,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 14,
@@ -177794,31 +177899,31 @@
                 },
                 {
                     "facade_idx": 22,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 23,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 24,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 25,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 26,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 27,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 28,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 29,
@@ -177990,11 +178095,11 @@
                 },
                 {
                     "facade_idx": 71,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 72,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 73,
@@ -178054,23 +178159,23 @@
                 },
                 {
                     "facade_idx": 87,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 88,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 89,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 90,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 91,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 92,
@@ -178106,39 +178211,39 @@
                 },
                 {
                     "facade_idx": 100,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 101,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 102,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 103,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 104,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 105,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 106,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 107,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 108,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 109,
@@ -178282,31 +178387,31 @@
                 },
                 {
                     "facade_idx": 144,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 145,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 146,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 147,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 148,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 149,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 150,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 151,
@@ -178406,7 +178511,7 @@
                     -112.14935652927798
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 72.98876455565458,
                 -111.37543836127213
@@ -178833,6 +178938,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.5058823529411764,
+                0.5215686274509804,
+                0.5343137254901961
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -179820,7 +179930,7 @@
                     -989.6888697936565
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -17.335880034049286,
                 -889.4705537413636
@@ -185031,6 +185141,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -186050,7 +186165,7 @@
                     -1005.1286700624969
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 67.3295260556727,
                 -1009.9913118134845
@@ -186661,6 +186776,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -187192,7 +187312,7 @@
                     -993.3984697820777
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 94.69443227017084,
                 -921.5435265382434
@@ -189597,6 +189717,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -190620,7 +190745,7 @@
                     -1012.427524049019
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 -61.404914635472274,
                 -958.0736599232208
@@ -194060,6 +194185,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -194951,7 +195081,7 @@
                     -817.2839297195914
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 -461.4182329450123,
                 -848.8767649876223
@@ -196597,6 +196727,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -197484,7 +197619,7 @@
                     -803.3645128355937
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 -352.1871318103087,
                 -820.9464253226728
@@ -200901,6 +201036,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -201748,7 +201888,7 @@
                     -804.0923114150199
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 -567.2299838422241,
                 -811.3084059829548
@@ -203164,6 +203304,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -203923,7 +204068,7 @@
                     -813.0436734107733
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 -325.7064542071858,
                 -876.7157344222051
@@ -206834,6 +206979,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -210251,6 +210401,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -210766,7 +210921,7 @@
                     -1051.385707337598
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 82.13607328646995,
                 -1044.3229136989717
@@ -211216,6 +211371,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -211964,6 +212124,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -212251,7 +212416,7 @@
                     -1066.7410409890656
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 118.34205277942505,
                 -1057.143283657754
@@ -213299,6 +213464,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -213810,7 +213980,7 @@
                     240.24892303968068
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 220.37110242979006,
                 263.97099320683213
@@ -215663,6 +215833,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.6166666666666667,
+                0.6245098039215686,
+                0.615686274509804
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -215690,23 +215865,23 @@
                 },
                 {
                     "facade_idx": 6,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 7,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 8,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 9,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 10,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 11,
@@ -215838,31 +216013,31 @@
                 },
                 {
                     "facade_idx": 43,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 44,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 45,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 46,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 47,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 48,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 49,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 50,
@@ -216342,7 +216517,7 @@
                     228.42644452332573
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 230.32948630533718,
                 188.89542413724965
@@ -218356,6 +218531,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.6401960784313725,
+                0.6431372549019608,
+                0.6333333333333333
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -218471,39 +218651,39 @@
                 },
                 {
                     "facade_idx": 28,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 29,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 30,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 31,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 32,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 33,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 34,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 35,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 36,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 37,
@@ -218643,35 +218823,35 @@
                 },
                 {
                     "facade_idx": 71,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 72,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 73,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 74,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 75,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 76,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 77,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 78,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 79,
@@ -220996,6 +221176,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -224029,6 +224214,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -226744,6 +226934,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -230105,6 +230300,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -232517,6 +232717,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -233672,7 +233877,7 @@
                     -483.4001640453421
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 461.16761787699465,
                 -321.9373416241077
@@ -238607,6 +238812,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -239842,7 +240052,7 @@
                     250.70867177322387
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 -866.8511372995935,
                 228.0273605947036
@@ -241971,6 +242181,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -242750,7 +242965,7 @@
                     265.25970810466976
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 -706.8738071964352,
                 243.47989121182826
@@ -245063,6 +245278,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -245802,7 +246022,7 @@
                     281.33976384154215
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 -558.6618443658601,
                 257.9320382147159
@@ -247701,6 +247921,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -248372,7 +248597,7 @@
                     293.83964671465344
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 -429.76431170760736,
                 271.3540908759947
@@ -250294,6 +250519,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -252810,6 +253040,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -255881,6 +256116,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -256700,7 +256940,7 @@
                     -48.531643927009306
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 -1004.652502690277,
                 -14.039148283484618
@@ -259036,6 +259276,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -259847,7 +260092,7 @@
                     -51.472677146965005
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 -838.7419906754818,
                 -78.33797473601463
@@ -262137,6 +262382,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -262940,7 +263190,7 @@
                     -38.310471149451985
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 -844.6546219938164,
                 1.0666113723960189
@@ -265230,6 +265480,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -268620,6 +268875,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -269511,7 +269771,7 @@
                     -20.95712994658058
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -684.3879764444227,
                 14.587469254364995
@@ -272054,6 +272314,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -272857,7 +273122,7 @@
                     -88.92533571834127
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -527.8251928236607,
                 -49.591508833885094
@@ -274894,6 +275159,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -277673,6 +277943,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -282211,6 +282486,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.5901960784313726,
+                0.5843137254901961,
+                0.5647058823529412
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -282282,39 +282562,39 @@
                 },
                 {
                     "facade_idx": 17,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 18,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 19,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 20,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 21,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 22,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 23,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 24,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 25,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 26,
@@ -282350,23 +282630,23 @@
                 },
                 {
                     "facade_idx": 34,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 35,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 36,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 37,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 38,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 39,
@@ -282426,11 +282706,11 @@
                 },
                 {
                     "facade_idx": 53,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 54,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 55,
@@ -282598,19 +282878,19 @@
                 },
                 {
                     "facade_idx": 96,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 97,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 98,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 99,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 100,
@@ -282694,71 +282974,71 @@
                 },
                 {
                     "facade_idx": 120,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 121,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 122,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 123,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 124,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 125,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 126,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 127,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 128,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 129,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 130,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 131,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 132,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 133,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 134,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 135,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 136,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 137,
@@ -285173,6 +285453,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.6480392156862745,
+                0.6480392156862745,
+                0.634313725490196
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -285192,39 +285477,39 @@
                 },
                 {
                     "facade_idx": 4,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 5,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 6,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 7,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 8,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 9,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 10,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 11,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 12,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 13,
@@ -285364,39 +285649,39 @@
                 },
                 {
                     "facade_idx": 47,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 48,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 49,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 50,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 51,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 52,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 53,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 54,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 55,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 56,
@@ -285880,7 +286165,7 @@
                     84.96897894131034
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 -277.5356418939497,
                 54.83270497612411
@@ -287917,6 +288202,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.638235294117647,
+                0.638235294117647,
+                0.6245098039215686
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -287936,39 +288226,39 @@
                 },
                 {
                     "facade_idx": 4,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 5,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 6,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 7,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 8,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 9,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 10,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 11,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 12,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 13,
@@ -288116,39 +288406,39 @@
                 },
                 {
                     "facade_idx": 49,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 50,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 51,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 52,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 53,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 54,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 55,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 56,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 57,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 58,
@@ -288620,7 +288910,7 @@
                     95.66119066504561
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 -413.3677838413831,
                 123.86423441984682
@@ -290588,6 +290878,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -291287,7 +291582,7 @@
                     71.33274513430152
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 -405.5404573963776,
                 42.345635501857146
@@ -293301,6 +293596,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -294004,7 +294304,7 @@
                     82.03272464114013
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -543.2272102181763,
                 109.62682718245968
@@ -295995,6 +296295,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -296762,7 +297067,7 @@
                     69.15193212193489
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 -691.7086637734544,
                 96.51576759351549
@@ -299144,6 +299449,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -299947,7 +300257,7 @@
                     55.17607809648512
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 -853.6597866292948,
                 80.53865159047304
@@ -302145,6 +302455,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -302936,7 +303251,7 @@
                     106.29518874085687
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 -1012.342316883951,
                 65.11711597995907
@@ -305249,6 +305564,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -308130,6 +308450,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -309185,7 +309510,7 @@
                     227.68967219828966
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 547.3237788585022,
                 172.9778074064786
@@ -313108,6 +313433,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -313939,7 +314269,7 @@
                     173.38796783981627
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 395.53032780438014,
                 185.9899904788912
@@ -314757,6 +315087,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -317810,6 +318145,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -318573,7 +318913,7 @@
                     -1072.4735195753613
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -411.47711555215903,
                 -1094.6110887589948
@@ -320449,6 +320789,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -320840,7 +321185,7 @@
                     -646.2005608856714
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 110.63588146209592,
                 -644.0099560883866
@@ -321175,6 +321520,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -321566,7 +321916,7 @@
                     -658.5738779538206
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 110.15392784056223,
                 -742.4251855921694
@@ -323442,6 +323792,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -324113,7 +324468,7 @@
                     -693.978763077804
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 187.10204379656943,
                 -664.1910764272084
@@ -326058,6 +326413,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -326729,7 +327089,7 @@
                     -665.9754412408189
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 65.61810547941074,
                 -714.263610754432
@@ -328605,6 +328965,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -329344,7 +329709,7 @@
                     -677.8538689815797
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -62.39630788808531,
                 -703.3717762628352
@@ -331680,6 +332045,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -333674,6 +334044,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -334117,7 +334492,7 @@
                     -695.1710045180081
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 -179.01264467446822,
                 -716.213079607989
@@ -335280,6 +335655,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -339743,6 +340123,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -341146,7 +341531,7 @@
                     -707.5869868206395
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 -335.8865768765315,
                 -767.1234016460014
@@ -345552,6 +345937,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -347311,7 +347701,7 @@
                     -727.5303854561367
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 -661.9096703487986,
                 -653.9145283491351
@@ -352982,6 +353372,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -354433,7 +354828,7 @@
                     -732.3591410058658
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 -3.719142272455235,
                 -827.6753599513919
@@ -357068,6 +357463,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -357931,7 +358331,7 @@
                     -888.3735238319986
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -85.9414357325541,
                 -806.531451388201
@@ -360221,6 +360621,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -360860,7 +361265,7 @@
                     -837.0790338738973
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 -164.3715726275425,
                 -791.6387340511359
@@ -362207,6 +362612,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -365919,6 +366329,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -366966,7 +367381,7 @@
                     -471.5568511978561
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 -1030.9948417238961,
                 -469.8377127249417
@@ -369992,6 +370407,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -371747,7 +372167,7 @@
                     -615.5983678866976
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -1187.7660139658585,
                 -676.3849562461021
@@ -378775,6 +379195,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -380358,7 +380783,7 @@
                     -368.6970197184624
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 -813.5421744763946,
                 -351.44848257273264
@@ -382395,6 +382820,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -383118,7 +383548,7 @@
                     -394.1770044942541
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -808.5708563845731,
                 -414.15813008710563
@@ -385201,6 +385631,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -390958,6 +391393,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -392341,7 +392781,7 @@
                     -389.3188545078292
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 -941.9225946200768,
                 -449.7359276123173
@@ -395666,6 +396106,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -396621,7 +397066,7 @@
                     -459.02622882396344
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 -810.2309669673333,
                 -481.0302098773682
@@ -398750,6 +399195,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -401302,6 +401752,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -402057,7 +402512,7 @@
                     -221.1989469675842
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 -988.8893443889631,
                 -177.92833228595285
@@ -404508,6 +404963,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -405211,7 +405671,7 @@
                     -334.6600208532361
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 -953.4378423497817,
                 -313.93119191025596
@@ -406765,6 +407225,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -407416,7 +407881,7 @@
                     -262.976476108852
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 -823.0220634106356,
                 -240.51280308419567
@@ -409568,6 +410033,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -410275,7 +410745,7 @@
                     -291.5899562359651
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -817.0992092354096,
                 -299.30372396560585
@@ -412151,6 +412621,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -412874,7 +413349,7 @@
                     149.16239855772562
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 -1019.0305182906519,
                 141.16031157958608
@@ -415118,6 +415593,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -415905,7 +416385,7 @@
                     -126.42106592605606
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -122.56297980306688,
                 -85.12739596956106
@@ -418149,6 +418629,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.5784313725490197,
+                0.5656862745098039,
+                0.5558823529411765
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -418288,27 +418773,27 @@
                 },
                 {
                     "facade_idx": 34,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 35,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 36,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 37,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 38,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 39,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 40,
@@ -418484,27 +418969,27 @@
                 },
                 {
                     "facade_idx": 83,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 84,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 85,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 86,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 87,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 88,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 89,
@@ -418908,7 +419393,7 @@
                     -129.9175456797686
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 -259.82610539203097,
                 -101.88732087968634
@@ -420991,6 +421476,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.6068627450980392,
+                0.6078431372549019,
+                0.5941176470588235
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -421018,27 +421508,27 @@
                 },
                 {
                     "facade_idx": 6,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 7,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 8,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 9,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 10,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 11,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 12,
@@ -421182,35 +421672,35 @@
                 },
                 {
                     "facade_idx": 47,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 48,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 49,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 50,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 51,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 52,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 53,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 54,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 55,
@@ -422478,7 +422968,7 @@
                     -139.22453285304607
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 -372.13252840637335,
                 -282.6329661196756
@@ -428908,6 +429398,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -430387,7 +430882,7 @@
                     14.009197798806841
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 -270.23707374556705,
                 -22.59448253147477
@@ -432424,6 +432919,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.5411764705882353,
+                0.5490196078431373,
+                0.5509803921568628
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -432739,27 +433239,27 @@
                 },
                 {
                     "facade_idx": 78,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 79,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 80,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 81,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 82,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 83,
-                    "source": "fallback"
+                    "source": "image"
                 },
                 {
                     "facade_idx": 84,
@@ -433115,7 +433615,7 @@
                     189.5940731251745
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 -293.74531085428896,
                 214.9710639448125
@@ -435014,6 +435514,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -435693,7 +436198,7 @@
                     -74.6899837880699
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 -392.23667080568976,
                 -114.3757384203605
@@ -437661,6 +438166,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -438360,7 +438870,7 @@
                     -31.431070560812962
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 -398.01483592276344,
                 -36.801858676864484
@@ -440374,6 +440884,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -441065,7 +441580,7 @@
                     238.6998029766091
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 -422.2508845951579,
                 201.04428939357055
@@ -442987,6 +443502,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -443658,7 +444178,7 @@
                     222.68620751627986
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 -550.7152241188344,
                 186.49031726213246
@@ -445557,6 +446077,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -448204,6 +448729,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -448923,7 +449453,7 @@
                     193.53129601595975
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 -860.3789654440027,
                 156.39941618670423
@@ -451052,6 +451582,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -454144,6 +454679,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -454959,7 +455499,7 @@
                     -117.77361777119688
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 -830.9962490179266,
                 -161.391503181513
@@ -457295,6 +457835,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -458138,7 +458683,7 @@
                     -155.73635617782963
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 -668.8889897998699,
                 -144.41617319592356
@@ -460612,6 +461157,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -461683,7 +462233,7 @@
                     -491.26507023169205
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 -717.2281534985501,
                 -512.8794816558723
@@ -465330,6 +465880,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -466053,7 +466608,7 @@
                     -487.87446666359176
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 -554.7516126143166,
                 -489.3109605397782
@@ -466526,6 +467081,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -470896,6 +471456,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -472067,7 +472632,7 @@
                     -401.8577794731457
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 87.67828245333652,
                 -365.89106985677375
@@ -475116,6 +475681,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -475899,7 +476469,7 @@
                     -518.1589543565669
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 103.78035482529786,
                 -571.9295495746092
@@ -477315,6 +477885,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -478158,7 +478733,7 @@
                     -1031.3760542235684
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 218.50658532291416,
                 -996.6800338764353
@@ -481552,6 +482127,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -482879,7 +483459,7 @@
                     -936.9330469721123
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 202.7342869461598,
                 -833.0600495700097
@@ -487078,6 +487658,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -488161,7 +488746,7 @@
                     -628.5953655669978
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 181.3262634101488,
                 -591.9183249510739
@@ -490152,6 +490737,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -490819,7 +491409,7 @@
                     -554.9322242733665
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 172.4276775320141,
                 -530.4018829687026
@@ -492626,6 +493216,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -493345,7 +493940,7 @@
                     -504.5075630621327
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 167.97850777856019,
                 -459.16614907395734
@@ -495635,6 +496230,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -496274,7 +496874,7 @@
                     -791.4045007963732
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 -689.6865140235763,
                 -799.809238881518
@@ -497621,6 +498221,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -499875,6 +500480,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -500618,7 +501228,7 @@
                     -968.1856958768789
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 -703.1820715604209,
                 -910.1630403521946
@@ -503138,6 +503748,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -503625,7 +504240,7 @@
                     -815.5766604280194
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 -633.3915360767253,
                 -816.444871109658
@@ -503868,6 +504483,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -504553,6 +505173,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -505068,7 +505693,7 @@
                     -428.0116533327653
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 -326.8137427939848,
                 -443.2331780508815
@@ -507450,6 +508075,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -508169,7 +508799,7 @@
                     -372.92702276407226
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 -220.10359092860753,
                 -404.6383703380584
@@ -509884,6 +510514,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -510283,7 +510918,7 @@
                     -459.7692042620151
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 -539.7422507442205,
                 -461.90274424782655
@@ -510825,6 +511460,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -511012,7 +511652,7 @@
                     -458.8494532636919
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 -559.0024691630166,
                 -466.0635611601187
@@ -511508,6 +512148,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -511959,7 +512604,7 @@
                     -487.2217101986724
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 510.22134244297587,
                 -550.2609553940172
@@ -514019,6 +514664,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -518638,6 +519288,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -521990,6 +522645,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -523189,7 +523849,7 @@
                     -460.2772990332384
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 894.2784858820619,
                 -490.1599490635795
@@ -527733,6 +528393,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -532055,6 +532720,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -533062,7 +533732,7 @@
                     -367.7551296443227
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 843.4195735027075,
                 -355.1426766413532
@@ -535812,6 +536482,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -536959,7 +537634,7 @@
                     -348.6550318299232
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 673.1848805622122,
                 -292.3225125864812
@@ -540767,6 +541442,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -544043,6 +544723,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -544694,7 +545379,7 @@
                     -273.6668719020586
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 794.8518540111615,
                 -229.44925589113487
@@ -546179,6 +546864,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -546706,7 +547396,7 @@
                     -268.65750111436085
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 843.068770644951,
                 -223.29244218225088
@@ -548214,6 +548904,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -548729,7 +549424,7 @@
                     -260.92857818716726
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 887.0630060735187,
                 -231.1657086761901
@@ -550145,6 +550840,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -552681,6 +553381,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -553292,7 +553997,7 @@
                     -560.7794820120182
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 742.53253085399,
                 -528.055725528938
@@ -554823,6 +555528,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -555418,7 +556128,7 @@
                     -674.810186366878
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 742.7697249804521,
                 -623.9300918898491
@@ -557271,6 +557981,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -557874,7 +558589,7 @@
                     -687.2473472315305
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 659.463485711055,
                 -723.9844836353277
@@ -559451,6 +560166,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -561691,6 +562411,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -562338,7 +563063,7 @@
                     -771.6991507063269
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 11.0,
             "centroid": [
                 624.6286535823119,
                 -796.4691564353615
@@ -564352,6 +565077,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -564979,7 +565709,7 @@
                     -823.4018185098504
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 747.4559983972091,
                 -798.4609548139014
@@ -566533,6 +567263,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -567196,7 +567931,7 @@
                     -835.0316562018503
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 623.9737722847982,
                 -867.95498116294
@@ -569417,6 +570152,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -572498,6 +573238,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -573257,7 +574002,7 @@
                     -912.3730099126702
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 613.6575524414486,
                 -936.2106449055852
@@ -575294,6 +576039,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -577830,6 +578580,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -578445,7 +579200,7 @@
                     -980.2100844195356
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 569.1368365114997,
                 -1029.853358080482
@@ -580091,6 +580846,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -581098,7 +581858,7 @@
                     -890.7294822125705
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 485.99388229436164,
                 -770.3879770684088
@@ -585205,6 +585965,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -588236,6 +589001,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -590179,7 +590949,7 @@
                     -572.0207060999132
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 1080.7718582603284,
                 -735.5124966983084
@@ -599346,6 +600116,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -601285,7 +602060,7 @@
                     -561.4481254502497
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 837.201708219978,
                 -526.0313224318334
@@ -603230,6 +604005,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -606074,6 +606854,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -606885,7 +607670,7 @@
                     -957.1873008500003
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 827.6139655436133,
                 -945.4024149620643
@@ -609382,6 +610167,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -610181,7 +610971,7 @@
                     -757.1671885684511
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 9.0,
             "centroid": [
                 854.3862520687197,
                 -719.399305268562
@@ -612241,6 +613031,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -612728,7 +613523,7 @@
                     -482.5554021619236
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 9.0,
             "centroid": [
                 871.5371129761019,
                 -491.0960450727481
@@ -613431,6 +614226,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -615708,6 +616508,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -616527,7 +617332,7 @@
                     -745.6496762735786
                 ]
             ],
-            "height_meters": 7.0,
+            "height_meters": 11.0,
             "centroid": [
                 324.0123473855842,
                 -857.1207490334239
@@ -619369,6 +620174,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -620412,7 +621222,7 @@
                     -741.2347583803441
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 384.0940310639013,
                 -867.4758936584158
@@ -623530,6 +624340,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -624329,7 +625144,7 @@
                     -534.5386078024221
                 ]
             ],
-            "height_meters": 11.0,
+            "height_meters": 7.0,
             "centroid": [
                 -197.16718452039666,
                 -568.0179648538993
@@ -625768,6 +626583,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
@@ -626307,7 +627127,7 @@
                     -468.03066126699247
                 ]
             ],
-            "height_meters": 9.0,
+            "height_meters": 7.0,
             "centroid": [
                 1070.5513436245153,
                 -511.75277425808724
@@ -627930,6 +628750,11 @@
                     ]
                 ]
             },
+            "roof_color": [
+                0.9333333333333333,
+                0.9098039215686274,
+                0.8627450980392157
+            ],
             "traceability": [
                 {
                     "facade_idx": 0,
