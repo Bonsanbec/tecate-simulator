@@ -151,8 +151,14 @@ def build_block_meshes(blocks_data: list):
                     links.new(node_tex.outputs['Color'], bsdf.inputs['Base Color'])
                     if 'Alpha' in node_tex.outputs and 'Alpha' in bsdf.inputs:
                         links.new(node_tex.outputs['Alpha'], bsdf.inputs['Alpha'])
-                    mat.blend_method = 'BLEND'
-                    mat.shadow_method = 'NONE'
+                    try:
+                        mat.blend_method = 'BLEND'
+                    except AttributeError:
+                        pass
+                    try:
+                        mat.shadow_method = 'NONE'
+                    except AttributeError:
+                        pass
                     
                 obj.data.materials.append(mat)
                 loaded_materials[tex_path] = len(obj.data.materials) - 1
