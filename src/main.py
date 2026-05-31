@@ -3,31 +3,152 @@ import os
 import math
 import json
 import subprocess
+import sys
+import shutil
+import glob
 from PIL import Image
 
 from src.core_io.io_manager import ensure_dir
 from src.gis_graph.graph_builder import TecateGraphBuilder
 from src.reconstruction.prism_generator import UrbanBlockReconstructor
 
+def is_wsl():
+    """Detects if Python is running under Windows Subsystem for Linux (WSL)."""
+    if sys.platform.startswith("linux"):
+        try:
+            with open("/proc/version", "r") as f:
+                content = f.read().lower()
+                return "microsoft" in content or "wsl" in content
+        except Exception:
+            pass
+    return False
+
+def get_windows_path(wsl_path):
+    """Converts a WSL path to a Windows path using the wslpath utility."""
+    try:
+        res = subprocess.run(["wslpath", "-w", wsl_path], capture_output=True, text=True, check=True)
+        return res.stdout.strip()
+    except Exception:
+        return wsl_path
+
+def translate_paths_to_windows(source_json_path, dest_json_path):
+    """
+    Reads the exported JSON, translates all WSL absolute paths
+    to Windows absolute paths (UNC or drive-letter based),
+    and writes them to the destination JSON file.
+    """
+    if not os.path.exists(source_json_path):
+        return False
+        
+    try:
+        repo_dir = os.path.abspath(".")
+        windows_repo_dir = get_windows_path(repo_dir)
+        if windows_repo_dir == repo_dir:
+            # Conversion failed, do not translate
+            return False
+            
+        def to_win_path(path):
+            if not path:
+                return path
+            # If it's already a Windows path, return as is
+            if ":" in path or path.startswith("\\\\"):
+                return path
+            try:
+                rel = os.path.relpath(path, repo_dir)
+                win_path = os.path.join(windows_repo_dir, rel).replace("/", "\\")
+                return win_path
+            except Exception:
+                return path
+                
+        with open(source_json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            
+        if "blocks" in data:
+            for block in data["blocks"]:
+                if "texture_atlas_path" in block:
+                    block["texture_atlas_path"] = to_win_path(block["texture_atlas_path"])
+                if "facade_textures" in block:
+                    new_textures = {}
+                    for k, v in block["facade_textures"].items():
+                        new_textures[k] = to_win_path(v)
+                    block["facade_textures"] = new_textures
+                    
+        with open(dest_json_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+            
+        return True
+    except Exception as e:
+        print(f"[Warning] Error translating paths for Windows Blender: {e}")
+        return False
+
 def run_blender_export():
     """Locates and runs the Blender background script to compile geometry.glb."""
     blender_path = "blender"
+    is_running_wsl = is_wsl()
     
-    # Common macOS paths for Blender
-    mac_paths = [
-        "/Applications/Blender.app/Contents/MacOS/Blender",
-        "/Applications/Blender.app/Contents/MacOS/blender",
-        os.path.expanduser("~/Applications/Blender.app/Contents/MacOS/Blender")
-    ]
-    for path in mac_paths:
-        if os.path.exists(path):
-            blender_path = path
-            break
-            
+    if is_running_wsl:
+        # Check if blender.exe is available in PATH (WSL can run .exe files directly)
+        blender_path = shutil.which("blender.exe")
+        if not blender_path:
+            # Look in standard Windows program files directories mounted in WSL
+            win_paths = sorted(
+                glob.glob("/mnt/c/Program Files/Blender Foundation/Blender */blender.exe"),
+                reverse=True
+            )
+            if win_paths:
+                blender_path = win_paths[0]
+            else:
+                blender_path = "blender.exe"  # Last resort fallback
+    else:
+        # Common macOS paths for Blender
+        mac_paths = [
+            "/Applications/Blender.app/Contents/MacOS/Blender",
+            "/Applications/Blender.app/Contents/MacOS/blender",
+            os.path.expanduser("~/Applications/Blender.app/Contents/MacOS/Blender")
+        ]
+        for path in mac_paths:
+            if os.path.exists(path):
+                blender_path = path
+                break
+                
     print(f"[Blender Compiler] Compiling geometry.glb using Blender: '{blender_path}'")
+    
+    python_script = "blender_script.py"
+    import_json = "export/reconstruction_export.json"
+    
+    if is_running_wsl:
+        # Translate JSON paths for Windows Blender
+        win_import_json = "export/reconstruction_export_win.json"
+        if translate_paths_to_windows(import_json, win_import_json):
+            import_json = win_import_json
+            
+        # Convert script and JSON paths to Windows paths
+        win_python_script = get_windows_path(os.path.abspath(python_script))
+        win_import_json_path = get_windows_path(os.path.abspath(import_json))
+        
+        cmd = [
+            blender_path,
+            "--background",
+            "--python",
+            win_python_script,
+            "--",
+            "--import",
+            win_import_json_path
+        ]
+    else:
+        cmd = [
+            blender_path,
+            "--background",
+            "--python",
+            python_script,
+            "--",
+            "--import",
+            import_json
+        ]
+        
     try:
         res = subprocess.run(
-            [blender_path, "--background", "--python", "blender_script.py", "--", "--import", "export/reconstruction_export.json"],
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
@@ -41,6 +162,7 @@ def run_blender_export():
     except Exception as e:
         print(f"[Warning] Failed to automatically run Blender compiler: {e}")
         print("Please run manually: blender --background --python blender_script.py -- --import export/reconstruction_export.json")
+
 
 def run_pipeline(args):
     print("=" * 60)
