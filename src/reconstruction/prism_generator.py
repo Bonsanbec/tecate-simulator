@@ -734,7 +734,8 @@ class UrbanBlockReconstructor:
         A: tuple[float, float], 
         B: tuple[float, float], 
         height_meters: float,
-        width: int = 512
+        width: int = 512,
+        height: int = 512
     ) -> Image.Image:
         """
         Projects 3D wall vertices into the flat perspective camera space of the
@@ -783,7 +784,7 @@ class UrbanBlockReconstructor:
             z_c = dx * v_look[0] + dy * v_look[1] + dz * v_look[2]
             
             if z_c <= 0.05:  # Point is behind or extremely close to the camera plane
-                return frontal_img.resize((width, 256), Image.BILINEAR)
+                return frontal_img.resize((width, height), Image.Resampling.BILINEAR)
                 
             # Perform perspective division to get pixel coordinates
             px = (W_obs - 1) / 2.0 + f * (x_c / z_c)
@@ -791,10 +792,10 @@ class UrbanBlockReconstructor:
             
             img_pts.append([px, py])
             
-        # Target coordinate mapping in standard widthx256 facade texture slice
+        # Target coordinate mapping in standard widthxheight facade texture slice
         target_pts = np.float32([
-            [0, 255],            # Bottom-Left
-            [width - 1, 255],    # Bottom-Right
+            [0, height - 1],            # Bottom-Left
+            [width - 1, height - 1],    # Bottom-Right
             [width - 1, 0],      # Top-Right
             [0, 0]               # Top-Left
         ])
@@ -806,18 +807,18 @@ class UrbanBlockReconstructor:
         
         # Warp perspective to straighten texture slice (Border is transparent)
         np_frontal = np.array(frontal_img)
-        np_warped = cv2.warpPerspective(np_frontal, M, (width, 256), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+        np_warped = cv2.warpPerspective(np_frontal, M, (width, height), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
         
         return Image.fromarray(np_warped, "RGBA")
 
-    def generate_transparent_fallback(self, width=512, height=256) -> Image.Image:
-        if getattr(self, "_cached_transparent", None) is not None:
-            return self._cached_transparent.copy()
-            
-        # Fully transparent RGBA fallback image
-        img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-        self._cached_transparent = img
-        return self._cached_transparent.copy()
+    def generate_transparent_fallback(self, width=512, height=512) -> Image.Image:
+        # Cache per (width, height) to avoid redundant image creation
+        cache_key = (width, height)
+        if not hasattr(self, "_cached_transparent_dict"):
+            self._cached_transparent_dict = {}
+        if cache_key not in self._cached_transparent_dict:
+            self._cached_transparent_dict[cache_key] = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        return self._cached_transparent_dict[cache_key].copy()
     def find_horizontal_overlap_offset(self, img1: Image.Image, img2: Image.Image) -> int:
         """
         Finds the optimal horizontal starting offset of img2 relative to img1.
@@ -1610,12 +1611,16 @@ class UrbanBlockReconstructor:
                         block_solved_heights.append(h_val)
                         
             if block_solved_heights:
-                height_meters = float(np.median(block_solved_heights))
+                height_meters = float(np.median(block_solved_heights)) * 2.0
             else:
                 if self.blocks_cache and b_id in self.blocks_cache:
-                    height_meters = self.blocks_cache[b_id].get("height_meters", 4.0)
+                    h_cached = self.blocks_cache[b_id].get("height_meters", 4.0)
+                    if h_cached < 6.5:
+                        height_meters = h_cached * 2.0
+                    else:
+                        height_meters = h_cached
                 else:
-                    height_meters = 4.0
+                    height_meters = 8.0
 
             if self.harvest_only:
                 # In harvest-only mode, we don't process geometry, UV mappings, similarity stitching, or Blender texturing
@@ -1743,61 +1748,110 @@ class UrbanBlockReconstructor:
                             f_img.write(screenshot_bytes)
                             
                 # Projection & warping
+                # Determine virtual_tex_path first to perform the incremental check!
+                normal = group[0]["normal"]
+                nx, ny = normal[0], normal[1]
+                if abs(nx) > abs(ny):
+                    cardinal = "East" if nx > 0 else "West"
+                else:
+                    cardinal = "North" if ny > 0 else "South"
+                    
+                virtual_tex_filename = f"{b_id}_virtual_{cardinal.lower()}_{group_idx}.png"
+                virtual_tex_path = os.path.abspath(os.path.join(self.textures_dir, virtual_tex_filename))
+                
+                # Projection & warping
                 status = "fallback"
                 warped_img = None
-                if os.path.exists(pano_screenshot_path):
-                    try:
-                        p_data = self.panoramas_cache[p_id]
-                        cx_pano, cy_pano = gps_to_local(p_data["latitude"], p_data["longitude"])
-                        
-                        # Apply sky masking using the unified block-level height_meters!
-                        masked_img = self.mask_sky_in_panorama(
-                            image_path=pano_screenshot_path,
-                            cx=cx_pano,
-                            cy=cy_pano,
-                            heading=heading_val,
-                            height_meters=height_meters,
-                            group_segments=group
-                        )
-                        
-                        obs = {
-                            "image_path": masked_img,
-                            "projection": {
-                                "camera_x": cx_pano,
-                                "camera_y": cy_pano,
-                                "camera_z": 2.5,
-                                "yaw_degrees": heading_val,
-                                "fov_degrees": 75.0,
-                                "image_width": 1280,
-                                "image_height": 720
-                            }
-                        }
-                        
-                        # Project and warp exactly ONCE for the entire virtual facade length (width = K * 512)
-                        warped_img = self.extract_rectified_facade_observation_texture(
-                            obs,
-                            A=A_combined,
-                            B=B_combined,
-                            height_meters=height_meters,
-                            width=K * 512
-                        )
-                        status = "textured"
-                        textured_facades += 1
-                        
-                        # Save virtual facade texture file to disk
-                        normal = group[0]["normal"]
-                        nx, ny = normal[0], normal[1]
-                        if abs(nx) > abs(ny):
-                            cardinal = "East" if nx > 0 else "West"
-                        else:
-                            cardinal = "North" if ny > 0 else "South"
+                
+                if os.path.exists(virtual_tex_path):
+                    # Cache Hit! Skip sky masking, homography warping, and blurring completely!
+                    status = "textured"
+                    warped_img = True
+                    textured_facades += 1
+                    print(f"[Incremental] Found existing virtual facade texture: {virtual_tex_filename}. Skipping sky masking, warping, and blurring.")
+                else:
+                    # Not on disk! We must generate it
+                    if os.path.exists(pano_screenshot_path):
+                        try:
+                            p_data = self.panoramas_cache[p_id]
+                            cx_pano, cy_pano = gps_to_local(p_data["latitude"], p_data["longitude"])
                             
-                        virtual_tex_filename = f"{b_id}_virtual_{cardinal.lower()}_{group_idx}.png"
-                        virtual_tex_path = os.path.abspath(os.path.join(self.textures_dir, virtual_tex_filename))
-                        warped_img.save(virtual_tex_path)
-                        print(f"[Virtual Facade] Successfully warped and saved {K}-segment virtual facade to: {virtual_tex_filename} with height {height_meters:.2f}m")
-                    except Exception as warp_err:
-                        print(f"[Warning] Failed unified warping for group: {warp_err}")
+                            # Apply sky masking using the original block-level height (height_meters / 2.0)!
+                            masked_img = self.mask_sky_in_panorama(
+                                image_path=pano_screenshot_path,
+                                cx=cx_pano,
+                                cy=cy_pano,
+                                heading=heading_val,
+                                height_meters=height_meters / 2.0, # Original height
+                                group_segments=group
+                            )
+                            
+                            obs = {
+                                "image_path": masked_img,
+                                "projection": {
+                                    "camera_x": cx_pano,
+                                    "camera_y": cy_pano,
+                                    "camera_z": 2.5,
+                                    "yaw_degrees": heading_val,
+                                    "fov_degrees": 75.0,
+                                    "image_width": 1280,
+                                    "image_height": 720
+                                }
+                            }
+                            
+                            # Calculate midpoint and direction vector for double-width virtual wall
+                            midpoint = [
+                                (A_combined[0] + B_combined[0]) / 2.0,
+                                (A_combined[1] + B_combined[1]) / 2.0
+                            ]
+                            vec = [
+                                B_combined[0] - A_combined[0],
+                                B_combined[1] - A_combined[1]
+                            ]
+                            A_virtual = [
+                                midpoint[0] - vec[0],
+                                midpoint[1] - vec[1]
+                            ]
+                            B_virtual = [
+                                midpoint[0] + vec[0],
+                                midpoint[1] + vec[1]
+                            ]
+                            
+                            # Project and warp exactly ONCE for the entire double-width virtual facade length (width = K * 512 * 2, height = 512)
+                            warped_img = self.extract_rectified_facade_observation_texture(
+                                obs,
+                                A=A_virtual,
+                                B=B_virtual,
+                                height_meters=height_meters / 2.0, # Original height
+                                width=K * 512 * 2,
+                                height=512
+                            )
+                            
+                            # Apply Gaussian blur on the left and right quarters of the warped virtual texture to blend overlap boundaries
+                            np_warped = np.array(warped_img)
+                            h_img, w_img, c_img = np_warped.shape
+                            quarter = w_img // 4
+                            if quarter > 0:
+                                # Left quarter
+                                left_roi = np_warped[:, :quarter]
+                                blurred_left = cv2.GaussianBlur(left_roi, (25, 25), 0)
+                                np_warped[:, :quarter] = blurred_left
+                                
+                                # Right quarter
+                                right_roi = np_warped[:, -quarter:]
+                                blurred_right = cv2.GaussianBlur(right_roi, (25, 25), 0)
+                                np_warped[:, -quarter:] = blurred_right
+                                
+                                warped_img = Image.fromarray(np_warped, "RGBA")
+                                
+                            status = "textured"
+                            textured_facades += 1
+                            
+                            # Save virtual facade texture file to disk
+                            warped_img.save(virtual_tex_path)
+                            print(f"[Virtual Facade] Successfully warped, blurred, and saved {K}-segment virtual facade to: {virtual_tex_filename} with height {height_meters:.2f}m (storefront {height_meters/2.0:.2f}m)")
+                        except Exception as warp_err:
+                            print(f"[Warning] Failed unified warping for group: {warp_err}")
                         
                 # Map individual segments in the group
                 L_lengths = [seg["norm_len"] for seg in group]
@@ -1811,16 +1865,16 @@ class UrbanBlockReconstructor:
                     total_facades += 1
                     
                     if status == "textured" and warped_img is not None:
-                        # Set UV sub-region
-                        u_start = cum_L / L_total
+                        # Set UV sub-region mapping to the middle quarter [0.375, 0.625]
+                        u_seg_start = 0.375 + 0.25 * (cum_L / L_total)
                         cum_L += L_lengths[i]
-                        u_end = cum_L / L_total
+                        u_seg_end = 0.375 + 0.25 * (cum_L / L_total)
                         
                         uv_mappings[f_id] = [
-                            [u_start, 0.0],
-                            [u_end, 0.0],
-                            [u_end, 1.0],
-                            [u_start, 1.0]
+                            [u_seg_start, 0.0],
+                            [u_seg_end, 0.0],
+                            [u_seg_end, 1.0],
+                            [u_seg_start, 1.0]
                         ]
                         facade_textures_map[f_id] = virtual_tex_path
                         
