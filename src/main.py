@@ -66,10 +66,15 @@ def run_pipeline(args):
         headless=args.headless,
         radius=args.radius if args.radius >= 0 else None,
         reprocess=args.reprocess,
-        skip_scraper=args.skip_scraper
+        skip_scraper=args.skip_scraper,
+        harvest_only=args.harvest_only
     )
     blocks_data, scene_doc = reconstructor.reconstruct_blocks_and_texture()
     
+    if args.harvest_only:
+        print("[Harvest Mode] Scraping and caching complete. Skipped scene document export and Blender compilation as requested.")
+        return
+        
     export_filepath = "export/reconstruction_export.json"
     with open(export_filepath, "w", encoding="utf-8") as f:
         json.dump(scene_doc, f, indent=4)

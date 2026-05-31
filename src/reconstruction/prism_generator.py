@@ -17,7 +17,7 @@ class UrbanBlockReconstructor:
     performs standard 2D perspective homography warping onto block vertical quads,
     and exports procedurally compiled textured glTF geometry for Blender.
     """
-    def __init__(self, G: nx.MultiGraph, accepted_panos: list[dict] = None, export_dir: str = "export", data_dir: str = "data", headless: bool = False, radius: float = None, reprocess: bool = False, skip_scraper: bool = False):
+    def __init__(self, G: nx.MultiGraph, accepted_panos: list[dict] = None, export_dir: str = "export", data_dir: str = "data", headless: bool = False, radius: float = None, reprocess: bool = False, skip_scraper: bool = False, harvest_only: bool = False):
         self.G = G
         self.export_dir = export_dir
         self.data_dir = data_dir
@@ -27,6 +27,7 @@ class UrbanBlockReconstructor:
         self.radius = radius
         self.reprocess = reprocess
         self.skip_scraper = skip_scraper
+        self.harvest_only = harvest_only
         
         ensure_dir(self.textures_dir)
         ensure_dir(self.debug_dir)
@@ -801,9 +802,9 @@ class UrbanBlockReconstructor:
         frontal observation, and warps the quad region using perspective homography.
         """
         if isinstance(obs["image_path"], Image.Image):
-            frontal_img = obs["image_path"]
+            frontal_img = obs["image_path"].convert("RGBA")
         else:
-            frontal_img = Image.open(obs["image_path"])
+            frontal_img = Image.open(obs["image_path"]).convert("RGBA")
             
         proj = obs["projection"]
         cam_x = proj["camera_x"]
@@ -864,25 +865,20 @@ class UrbanBlockReconstructor:
         # Compute perspective homography transform matrix
         M = cv2.getPerspectiveTransform(source_pts, target_pts)
         
-        # Warp perspective to straighten texture slice
+        # Warp perspective to straighten texture slice (Border is transparent)
         np_frontal = np.array(frontal_img)
-        np_warped = cv2.warpPerspective(np_frontal, M, (512, 256), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(30, 30, 30))
+        np_warped = cv2.warpPerspective(np_frontal, M, (512, 256), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
         
-        return Image.fromarray(np_warped)
+        return Image.fromarray(np_warped, "RGBA")
 
-    def generate_procedural_stucco(self, width=512, height=256) -> Image.Image:
-        if getattr(self, "_cached_stucco", None) is not None:
-            return self._cached_stucco.copy()
+    def generate_transparent_fallback(self, width=512, height=256) -> Image.Image:
+        if getattr(self, "_cached_transparent", None) is not None:
+            return self._cached_transparent.copy()
             
-        # Beautiful warm stucco (stucco beige/cream)
-        base_color = (238, 232, 220)
-        img = Image.new("RGB", (width, height), base_color)
-        np_img = np.array(img, dtype=np.float32)
-        # Subtle Gaussian noise to mimic organic stucco surface roughness
-        noise = np.random.normal(0, 3.5, (height, width, 3))
-        np_img = np.clip(np_img + noise, 0, 255).astype(np.uint8)
-        self._cached_stucco = Image.fromarray(np_img)
-        return self._cached_stucco.copy()
+        # Fully transparent RGBA fallback image
+        img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        self._cached_transparent = img
+        return self._cached_transparent.copy()
     def find_horizontal_overlap_offset(self, img1: Image.Image, img2: Image.Image) -> int:
         """
         Finds the optimal horizontal starting offset of img2 relative to img1.
@@ -932,7 +928,7 @@ class UrbanBlockReconstructor:
         """
         N = len(group)
         if N == 1:
-            return group[0][1], [0]
+            return group[0][1].convert("RGBA"), [0]
             
         # Calculate shifts between adjacent images
         shifts = []
@@ -945,7 +941,7 @@ class UrbanBlockReconstructor:
             if status1 == "textured" and status2 == "textured":
                 s = self.find_horizontal_overlap_offset(img1, img2)
             else:
-                s = 512  # If either is stucco fallback, do not overlap-blend
+                s = 512  # If either is transparent fallback, do not overlap-blend
             shifts.append(s)
             
         # Compute absolute horizontal positions (offsets)
@@ -958,12 +954,13 @@ class UrbanBlockReconstructor:
         W_final = offsets[-1] + 512
         H_final = 256
         
-        # Build the final image by pasting and blending
-        accum = np.zeros((H_final, W_final, 3), dtype=np.float32)
+        # Build the final image by pasting and blending (4 channels for RGBA)
+        accum = np.zeros((H_final, W_final, 4), dtype=np.float32)
         weight = np.zeros((H_final, W_final), dtype=np.float32)
         
         for i, (f_idx, img, status, f_id) in enumerate(group):
-            img_np = np.array(img, dtype=np.float32)
+            img_rgba = img.convert("RGBA")
+            img_np = np.array(img_rgba, dtype=np.float32)
             x_start = offsets[i]
             x_end = x_start + 512
             
@@ -984,18 +981,18 @@ class UrbanBlockReconstructor:
                     for col in range(right_overlap):
                         mask[:, 512 - right_overlap + col] = 1.0 - (col / float(right_overlap))
                         
-            # Add to accumulators
-            for c in range(3):
+            # Add to accumulators across all 4 channels
+            for c in range(4):
                 accum[:, x_start:x_end, c] += img_np[:, :, c] * mask
             weight[:, x_start:x_end] += mask
             
         # Normalize by weights to get blended image
         weight = np.maximum(weight, 1e-5)
-        for c in range(3):
+        for c in range(4):
             accum[:, :, c] /= weight
             
         final_np = np.clip(accum, 0, 255).astype(np.uint8)
-        return Image.fromarray(final_np), offsets
+        return Image.fromarray(final_np, "RGBA"), offsets
 
     def crop_facade(self, img_bytes: bytes, A: tuple[float, float], B: tuple[float, float], cx: float, cy: float, heading: float) -> Image.Image:
         # Load screenshot bytes as PIL Image
@@ -1074,22 +1071,22 @@ class UrbanBlockReconstructor:
         # Crop the isolated, horizontally aligned facade strip
         cropped = img.crop((x_start, y_top_crop, x_end, y_bottom_crop))
         
-        # Resize to standard texture size 512x256
-        return cropped.resize((512, 256), Image.Resampling.BILINEAR)
+        # Resize to standard texture size 512x256 (RGBA)
+        return cropped.resize((512, 256), Image.Resampling.BILINEAR).convert("RGBA")
 
     def reconstruct_blocks_and_texture(self) -> tuple[list[dict], dict]:
         """
         Densely reconstructs and textures building block volumes.
         Identifies block_19 (Bancomer) dynamically and harvests orthogonal screenshots
         from Playwright Google Street View for its street-facing facades, selecting the oldest 2009 timeline captures.
-        All other facades and blocks receive a procedural warm stucco texture fallback.
+        All other facades and blocks receive a procedural transparent texture fallback.
         """
-        # Generate and save stucco_facade.png to disk for fallbacks in Blender
-        stucco_img = self.generate_procedural_stucco()
-        stucco_path = os.path.join(self.textures_dir, "stucco_facade.png")
-        os.makedirs(os.path.dirname(stucco_path), exist_ok=True)
-        stucco_img.save(stucco_path)
-        print(f"[Reconstruction] Procedural fallback stucco texture saved to: {stucco_path}")
+        # Generate and save transparent_facade.png to disk for fallbacks in Blender
+        fallback_img = self.generate_transparent_fallback()
+        fallback_path = os.path.join(self.textures_dir, "transparent_facade.png")
+        os.makedirs(os.path.dirname(fallback_path), exist_ok=True)
+        fallback_img.save(fallback_path)
+        print(f"[Reconstruction] Transparent fallback texture saved to: {fallback_path}")
 
         raw_blocks = self.extract_block_polygons()
         
@@ -1150,6 +1147,30 @@ class UrbanBlockReconstructor:
             facade_textures = []
             uv_mappings = {}
             
+            # Pre-compute facade cardinals and cache hit status at the block level for siblings/restitching checks
+            facade_cardinals = {}
+            facade_is_cached = {}
+            for f_idx_sib in range(num_verts):
+                sib_A = shrunk_poly[f_idx_sib]
+                sib_B = shrunk_poly[f_idx_sib + 1]
+                sib_dx = sib_B[0] - sib_A[0]
+                sib_dy = sib_B[1] - sib_A[1]
+                sib_normal = np.array([sib_dy, -sib_dx])
+                sib_norm_len = np.linalg.norm(sib_normal)
+                if sib_norm_len > 1e-5:
+                    sib_normal = sib_normal / sib_norm_len
+                else:
+                    sib_normal = np.array([0.0, 1.0])
+                sib_nx, sib_ny = sib_normal[0], sib_normal[1]
+                if abs(sib_nx) > abs(sib_ny):
+                    card = "East" if sib_nx > 0 else "West"
+                else:
+                    card = "North" if sib_ny > 0 else "South"
+                
+                f_id = f"{b_id}_facade_{f_idx_sib}"
+                facade_cardinals[f_id] = card
+                facade_is_cached[f_id] = os.path.exists(f"data/screenshots/facades/{f_id}.png") and f_id in self.metadata_cache
+            
             for f_idx in range(num_verts):
                 A = shrunk_poly[f_idx]
                 B = shrunk_poly[f_idx + 1]
@@ -1192,11 +1213,38 @@ class UrbanBlockReconstructor:
                 cache_key = f"{b_id}_{cardinal.lower()}"
                 panorama_filename = f"{b_id}_{cardinal.lower()}_facade.png"
                 panorama_path = os.path.abspath(os.path.join(self.textures_dir, panorama_filename))
-                is_pano_cached = (not self.reprocess and cache_key in self.stitching_cache and os.path.exists(panorama_path))
                 
+                cached_info = self.stitching_cache.get(cache_key)
+                is_pano_cached = False
+                if not self.reprocess and cached_info and os.path.exists(panorama_path):
+                    # Check if any sibling is now textured but was not textured in the cached stitching
+                    previously_textured = set(cached_info.get("textured_facades", []))
+                    siblings = [fid for fid, card in facade_cardinals.items() if card == cardinal]
+                    
+                    restitch_needed = False
+                    for sib_id in siblings:
+                        sib_is_cached = facade_is_cached[sib_id]
+                        sib_will_be_crawled = False
+                        if not sib_is_cached and self.scraper is not None:
+                            sib_idx = int(sib_id.split("_")[-1])
+                            sib_A = shrunk_poly[sib_idx]
+                            sib_B = shrunk_poly[sib_idx + 1]
+                            sib_mx = (sib_A[0] + sib_B[0]) / 2.0
+                            sib_my = (sib_A[1] + sib_B[1]) / 2.0
+                            sib_road_dist, _ = self.get_road_distance(sib_mx, sib_my)
+                            if sib_road_dist <= 20.0 and (self.radius is None or self.radius < 0 or dist_to_center <= self.radius):
+                                sib_will_be_crawled = True
+                                
+                        if (sib_is_cached or sib_will_be_crawled) and sib_id not in previously_textured:
+                            restitch_needed = True
+                            break
+                            
+                    if not restitch_needed:
+                        is_pano_cached = True
+                        
                 if is_pano_cached:
                     status = "textured"
-                    facade_img = self.generate_procedural_stucco()  # simple fast placeholder, overridden by stitched panorama
+                    facade_img = self.generate_transparent_fallback()  # simple fast placeholder, overridden by stitched panorama
                     
                     cached_entry = self.metadata_cache.get(facade_id, {})
                     meta = {
@@ -1462,9 +1510,9 @@ class UrbanBlockReconstructor:
                         except Exception as crop_err:
                             print(f"[Warning] Failed to crop screenshot: {crop_err}")
                 
-                # If scraping failed, or this is non-targeted facade, generate premium procedural stucco fallback
+                # If scraping failed, or this is non-targeted facade, generate transparent fallback
                 if facade_img is None:
-                    facade_img = self.generate_procedural_stucco()
+                    facade_img = self.generate_transparent_fallback()
                     
                 facade_textures.append(facade_img)
                 local_diag_facades.append({
@@ -1486,6 +1534,10 @@ class UrbanBlockReconstructor:
                     "road_distance_meters": float(road_dist),
                     "status": status
                 }
+                
+            if self.harvest_only:
+                # In harvest-only mode, we don't process geometry, UV mappings, similarity stitching, or Blender texturing
+                continue
                 
             # Stitch block atlas image
             W_atlas = 512
@@ -1530,7 +1582,7 @@ class UrbanBlockReconstructor:
             facade_textures_map = {}
             for f_idx in range(num_verts):
                 f_id = f"{b_id}_facade_{f_idx}"
-                facade_textures_map[f_id] = os.path.abspath(os.path.join(self.textures_dir, "stucco_facade.png"))
+                facade_textures_map[f_id] = os.path.abspath(os.path.join(self.textures_dir, "transparent_facade.png"))
                 
             for cardinal, group in face_groups.items():
                 if len(group) == 0:
@@ -1564,10 +1616,11 @@ class UrbanBlockReconstructor:
                             panorama_img.save(debug_pano_path)
                             print(f"[Edge Stitcher] Successfully stitched and similarity-merged {len(group)} slices into panorama: {debug_pano_path}")
                             
-                            # Save to stitching cache
+                            # Save to stitching cache with details of which facades are textured in it
                             self.stitching_cache[cache_key] = {
                                 "offsets": offsets,
-                                "width": W_final
+                                "width": W_final,
+                                "textured_facades": [x[3] for x in group if x[2] == "textured"]
                             }
                             self.save_stitching_cache()
                         
@@ -1585,9 +1638,9 @@ class UrbanBlockReconstructor:
                     except Exception as stitch_err:
                         print(f"[Warning] Failed similarity stitching, falling back to basic concatenation: {stitch_err}")
                         K = len(group)
-                        panorama_img = Image.new("RGB", (K * 512, 256))
+                        panorama_img = Image.new("RGBA", (K * 512, 256), (0, 0, 0, 0))
                         for i, (f_idx, tex, status, f_id) in enumerate(group):
-                            panorama_img.paste(tex, (i * 512, 0))
+                            panorama_img.paste(tex.convert("RGBA"), (i * 512, 0))
                             
                         panorama_filename = f"{b_id}_{cardinal.lower()}_facade.png"
                         panorama_path = os.path.abspath(os.path.join(self.textures_dir, panorama_filename))
@@ -1644,6 +1697,15 @@ class UrbanBlockReconstructor:
             })
             diag_facades.extend(local_diag_facades)
             
+        if self.harvest_only:
+            print("[Harvest Mode] Scraping and metadata caching complete. Skipping all 3D reconstruction and Blender rendering.")
+            if self.scraper:
+                self.scraper.close()
+            # Save stitching cache back to disk (Incremental processing)
+            save_json(self.stitching_cache, self.stitching_cache_path)
+            self.save_metadata_cache()
+            return [], {}
+
         metadata_filepath = os.path.join(self.export_dir, "metadata.json")
         meta_out = {
             "total_blocks": len(blocks_data),
@@ -1698,8 +1760,8 @@ class UrbanBlockReconstructor:
         Falls back to the stucco cream color if no custom textures exist.
         Returns a list of 3 normalized floats [R, G, B] in [0.0, 1.0].
         """
-        stucco_abs = os.path.abspath(os.path.join(self.textures_dir, "stucco_facade.png"))
-        unique_paths = set(p for p in facade_textures.values() if p and p != stucco_abs and os.path.exists(p))
+        fallback_abs = os.path.abspath(os.path.join(self.textures_dir, "transparent_facade.png"))
+        unique_paths = set(p for p in facade_textures.values() if p and p != fallback_abs and os.path.exists(p))
         
         if not unique_paths:
             # Fallback to warm cream stucco base color
