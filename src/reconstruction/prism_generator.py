@@ -656,12 +656,61 @@ class UrbanBlockReconstructor:
 
     def get_road_distance(self, mx: float, my: float) -> tuple[float, str]:
         """
-        Computes the minimum perpendicular distance from facade center M(mx, my) to all road segments in G.
+        Computes the minimum perpendicular distance from facade center M(mx, my) to all road segments in G
+        using a high-performance spatial grid index.
         """
+        if not hasattr(self, "grid_cells"):
+            self.grid_cells = {}
+            self.grid_size = 50.0 # Cell size in meters
+            x_coords = [data["x"] for n, data in self.G.nodes(data=True)]
+            y_coords = [data["y"] for n, data in self.G.nodes(data=True)]
+            if x_coords and y_coords:
+                self.xmin_g, self.xmax_g = min(x_coords), max(x_coords)
+                self.ymin_g, self.ymax_g = min(y_coords), max(y_coords)
+            else:
+                self.xmin_g, self.xmax_g = -1000.0, 1000.0
+                self.ymin_g, self.ymax_g = -1000.0, 1000.0
+                
+            for u, v, data in self.G.edges(data=True):
+                ux, uy = self.G.nodes[u]["x"], self.G.nodes[u]["y"]
+                vx, vy = self.G.nodes[v]["x"], self.G.nodes[v]["y"]
+                x_min_e = min(ux, vx) - 20.0
+                x_max_e = max(ux, vx) + 20.0
+                y_min_e = min(uy, vy) - 20.0
+                y_max_e = max(uy, vy) + 20.0
+                cx_min = int(math.floor(x_min_e / self.grid_size))
+                cx_max = int(math.floor(x_max_e / self.grid_size))
+                cy_min = int(math.floor(y_min_e / self.grid_size))
+                cy_max = int(math.floor(y_max_e / self.grid_size))
+                for cx in range(cx_min, cx_max + 1):
+                    for cy in range(cy_min, cy_max + 1):
+                        cell_key = (cx, cy)
+                        if cell_key not in self.grid_cells:
+                            self.grid_cells[cell_key] = []
+                        self.grid_cells[cell_key].append((u, v, data))
+
+        cell_x = int(math.floor(mx / self.grid_size))
+        cell_y = int(math.floor(my / self.grid_size))
+        
+        candidate_edges = []
+        seen_edges = set()
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                cell_key = (cell_x + dx, cell_y + dy)
+                if cell_key in self.grid_cells:
+                    for u, v, data in self.grid_cells[cell_key]:
+                        edge_key = (u, v, data.get("id"))
+                        if edge_key not in seen_edges:
+                            seen_edges.add(edge_key)
+                            candidate_edges.append((u, v, data))
+                            
+        if not candidate_edges:
+            candidate_edges = list(self.G.edges(data=True))
+            
         min_dist = float("inf")
         best_edge_id = None
         
-        for u, v, data in self.G.edges(data=True):
+        for u, v, data in candidate_edges:
             ux, uy = self.G.nodes[u]["x"], self.G.nodes[u]["y"]
             vx, vy = self.G.nodes[v]["x"], self.G.nodes[v]["y"]
             
@@ -680,7 +729,7 @@ class UrbanBlockReconstructor:
                 
             if dist < min_dist:
                 min_dist = dist
-                best_edge_id = data["id"]
+                best_edge_id = data.get("id")
                 
         return min_dist, best_edge_id
 
@@ -1403,19 +1452,17 @@ class UrbanBlockReconstructor:
                     
                 is_cached = facade_id in self.facades_cache
                 
+                # We always compute road_dist and best_edge_id dynamically from the road graph
+                road_dist, best_edge_id = self.get_road_distance(mx, my)
+                is_street_facing = (road_dist <= 20.0)
+                
                 if is_cached:
                     entry = self.facades_cache[facade_id]
                     pano_id = entry.get("pano_id")
                     heading = entry.get("captured_heading", entry.get("heading"))
                     if heading is not None:
                         heading = round(heading, 2)
-                    road_relation = entry.get("road_relation", {})
-                    road_dist = road_relation.get("road_distance_meters", 0.0)
-                    best_edge_id = road_relation.get("road_edge_id")
-                    is_street_facing = (road_dist <= 20.0)
                 else:
-                    road_dist, best_edge_id = self.get_road_distance(mx, my)
-                    is_street_facing = (road_dist <= 20.0)
                     pano_id = None
                     heading = None
                 
