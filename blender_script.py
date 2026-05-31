@@ -129,7 +129,7 @@ def build_block_meshes(blocks_data: list):
             tex_path = facade_tex_dict.get(surface_id)
             
             if not tex_path or not os.path.exists(tex_path):
-                tex_path = os.path.abspath("export/textures/stucco_facade.png")
+                tex_path = os.path.abspath("export/textures/transparent_facade.png")
                 
             if tex_path not in loaded_materials:
                 mat_name = f"{b_id}_mat_{os.path.basename(tex_path).replace('.', '_')}"
@@ -149,6 +149,10 @@ def build_block_meshes(blocks_data: list):
                     
                 if bsdf:
                     links.new(node_tex.outputs['Color'], bsdf.inputs['Base Color'])
+                    if 'Alpha' in node_tex.outputs and 'Alpha' in bsdf.inputs:
+                        links.new(node_tex.outputs['Alpha'], bsdf.inputs['Alpha'])
+                    mat.blend_method = 'BLEND'
+                    mat.shadow_method = 'NONE'
                     
                 obj.data.materials.append(mat)
                 loaded_materials[tex_path] = len(obj.data.materials) - 1

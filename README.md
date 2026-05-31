@@ -27,7 +27,7 @@ graph TD
     K --> L[Linear Opacity Weighted Blending]
     L --> M[Dynamic UV Mapping: u = x_i / W_final]
     M --> N[Stitched cardinal panoramas in export/textures/]
-    O[Procedural Stucco Caching] --> P[Fallback Materials]
+    O[Alpha Transparency Caching] --> P[Fallback Materials]
     G --> Q[Multi-Material Blender glTF Compiler]
     N --> Q
     P --> Q
@@ -100,7 +100,7 @@ tecate-simulator/
 │   ├── reconstruction_export.json    # Compiled block vertices, materials, and UV data
 │   ├── metadata.json                 # Coverage rates and asset provenance data
 │   ├── textures/
-│   │   ├── stucco_facade.png         # Fallback stucco texture for unexposed quads
+│   │   ├── transparent_facade.png    # Fallback transparent texture for unexposed quads
 │   │   └── {block_id}_{cardinal}_facade.png  # Similarity-blended storefront maps
 │   └── debug/
 │       ├── global_observation_map.png # Real-time light diagnostic dashboard map
@@ -213,7 +213,7 @@ The master script automatically triggers **Blender** background processing using
 
 1. **Procedural Geometry Compiler**: Reads `export/reconstruction_export.json` containing vertices and faces.
 2. **Texturing & Material Slotting**: Binds cardinally stitched horizontal panoramas to vertical storefront quads and maps exact UV coordinates.
-3. **Stucco Fallback Shader**: Applies a warm, procedurally bump-mapped beige stucco material to non-street-facing walls.
+3. **Alpha Transparent Fallback**: Applies a fully transparent fallback texture to non-street-facing walls or untextured facades, allowing the geometry to blend seamlessly.
 4. **Dynamic Roof Tinting**: Calculates the average RGB value of all storefront textures on a block and applies it as a solid color to the block's roof geometry.
 5. **Illumination & Camera Layout**: Creates a sun lamp and top-down ortho camera.
 6. **Unified GLB Asset Compilation**: Saves the project as `tecate_reconstruction.blend` and exports the fully textured, self-contained scene to **`export/geometry.glb`** (~260MB).
