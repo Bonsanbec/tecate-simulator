@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import math
 import numpy as np
@@ -1325,6 +1326,13 @@ class UrbanBlockReconstructor:
         os.makedirs(os.path.dirname(fallback_path), exist_ok=True)
         fallback_img.save(fallback_path)
         print(f"[Reconstruction] Transparent fallback texture saved to: {fallback_path}")
+        
+        # Build O(1) road name dictionary to avoid nested loops over edges
+        self.road_name_by_id = {}
+        for u, v, data in self.G.edges(data=True):
+            eid = data.get("id")
+            if eid:
+                self.road_name_by_id[eid] = data.get("name", "")
 
         raw_blocks = self.extract_block_polygons()
         
@@ -1355,6 +1363,7 @@ class UrbanBlockReconstructor:
             b_id = rb["block_id"]
             if rb.get("is_external", False):
                 print(f"[Reconstruction] Skipping external boundary mega-manzana: '{b_id}'")
+                sys.stdout.flush()
                 continue
                 
             raw_poly = rb["polygon"]
@@ -1392,22 +1401,28 @@ class UrbanBlockReconstructor:
                 else:
                     normal = np.array([0.0, 1.0])
                     
-                road_dist, best_edge_id = self.get_road_distance(mx, my)
-                is_street_facing = (road_dist <= 20.0)
                 is_cached = facade_id in self.facades_cache
                 
-                pano_id = None
-                heading = None
+                if is_cached:
+                    entry = self.facades_cache[facade_id]
+                    pano_id = entry.get("pano_id")
+                    heading = entry.get("captured_heading", entry.get("heading"))
+                    if heading is not None:
+                        heading = round(heading, 2)
+                    road_relation = entry.get("road_relation", {})
+                    road_dist = road_relation.get("road_distance_meters", 0.0)
+                    best_edge_id = road_relation.get("road_edge_id")
+                    is_street_facing = (road_dist <= 20.0)
+                else:
+                    road_dist, best_edge_id = self.get_road_distance(mx, my)
+                    is_street_facing = (road_dist <= 20.0)
+                    pano_id = None
+                    heading = None
                 
                 # Check if this segment belongs to a block within active radius or is cached
                 if is_cached or (is_street_facing and (self.radius is None or self.radius < 0 or dist_to_center <= self.radius)):
                     if is_cached:
                         entry = self.facades_cache[facade_id]
-                        pano_id = entry.get("pano_id")
-                        heading = entry.get("captured_heading", entry.get("heading"))
-                        if heading is not None:
-                            heading = round(heading, 2)
-                            
                         # Enrich/recalculate all properties to ensure zero nulls in facades_cache
                         p_data = self.panoramas_cache.get(pano_id, {})
                         cam_lat = p_data.get("latitude")
@@ -1420,12 +1435,7 @@ class UrbanBlockReconstructor:
                                 [math.sin(yaw_rad), math.cos(yaw_rad), 0.0],
                                 [0.0, 0.0, 1.0]
                             ]
-                            road_name_val = ""
-                            if best_edge_id:
-                                for u_e, v_e, key_e, data_e in self.G.edges(keys=True, data=True):
-                                    if data_e.get("id") == best_edge_id:
-                                        road_name_val = data_e.get("name", "")
-                                        break
+                            road_name_val = self.road_name_by_id.get(best_edge_id, "")
                                         
                             look_vector = [float(mx - cx), float(my - cy)]
                             dot_prod = float(look_vector[0] * normal[0] + look_vector[1] * normal[1])
@@ -1533,12 +1543,7 @@ class UrbanBlockReconstructor:
                                     "timeline": meta.get("timeline", []),
                                 }
                                 
-                                road_name_val = ""
-                                if best_edge_id:
-                                    for u_e, v_e, key_e, data_e in self.G.edges(keys=True, data=True):
-                                        if data_e.get("id") == best_edge_id:
-                                            road_name_val = data_e.get("name", "")
-                                            break
+                                road_name_val = self.road_name_by_id.get(best_edge_id, "")
                                             
                                 look_vector = [float(mx - cx), float(my - cy)]
                                 dot_prod = float(look_vector[0] * normal[0] + look_vector[1] * normal[1])
@@ -1769,6 +1774,7 @@ class UrbanBlockReconstructor:
                     warped_img = True
                     textured_facades += 1
                     print(f"[Incremental] Found existing virtual facade texture: {virtual_tex_filename}. Skipping sky masking, warping, and blurring.")
+                    sys.stdout.flush()
                 else:
                     # Not on disk! We must generate it
                     if os.path.exists(pano_screenshot_path):
@@ -1850,6 +1856,7 @@ class UrbanBlockReconstructor:
                             # Save virtual facade texture file to disk
                             warped_img.save(virtual_tex_path)
                             print(f"[Virtual Facade] Successfully warped, blurred, and saved {K}-segment virtual facade to: {virtual_tex_filename} with height {height_meters:.2f}m (storefront {height_meters/2.0:.2f}m)")
+                            sys.stdout.flush()
                         except Exception as warp_err:
                             print(f"[Warning] Failed unified warping for group: {warp_err}")
                         
