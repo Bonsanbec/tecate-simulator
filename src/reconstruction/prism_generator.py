@@ -222,6 +222,11 @@ class UrbanBlockReconstructor:
                     "date": entry.get("date", ""),
                     "pitch": entry.get("pitch"),
                     "roll": entry.get("roll"),
+                    "projection_yaw": entry.get("projection_yaw"),
+                    "pano_yaw": entry.get("pano_yaw"),
+                    "road_name": entry.get("road_name", ""),
+                    "adjacent_links": entry.get("adjacent_links", []),
+                    "timeline": entry.get("timeline", []),
                 })
                 
             # 2. Facade Cache
@@ -1064,6 +1069,11 @@ class UrbanBlockReconstructor:
                                     "date": meta.get("date", ""),
                                     "pitch": meta.get("pitch"),
                                     "roll": meta.get("roll"),
+                                    "projection_yaw": meta.get("projection_yaw"),
+                                    "pano_yaw": meta.get("projection_yaw"),
+                                    "road_name": meta.get("road_name", ""),
+                                    "adjacent_links": meta.get("adjacent_links", []),
+                                    "timeline": meta.get("timeline", []),
                                 }
                                 
                                 road_name_val = ""
