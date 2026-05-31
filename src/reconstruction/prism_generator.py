@@ -1248,6 +1248,70 @@ class UrbanBlockReconstructor:
             
         return Image.fromarray(np_img, "RGBA")
 
+    def resolve_almost_adjacent_fallback_segments(self, block_segments_info: list[dict], fallback_path: str) -> None:
+        """
+        Scans block segments to find fallback segments (pano_id is None) that are within distance of 2
+        from a textured segment, and assigns them to the best adjacent panorama.
+        """
+        N = len(block_segments_info)
+        
+        # We repeat for a couple of passes to allow absorption of runs of up to 2 fallback segments
+        for pass_idx in range(2):
+            for i in range(N):
+                seg = block_segments_info[i]
+                if seg["pano_id"] is not None:
+                    continue
+                    
+                # Find nearest textured neighbors circularly
+                left_seg = None
+                for step in range(1, 3):
+                    idx = (i - step) % N
+                    if block_segments_info[idx]["pano_id"] is not None:
+                        left_seg = block_segments_info[idx]
+                        break
+                        
+                right_seg = None
+                for step in range(1, 3):
+                    idx = (i + step) % N
+                    if block_segments_info[idx]["pano_id"] is not None:
+                        right_seg = block_segments_info[idx]
+                        break
+                        
+                if left_seg is None and right_seg is None:
+                    continue
+                    
+                best_neighbor = None
+                if left_seg is not None and right_seg is None:
+                    best_neighbor = left_seg
+                elif right_seg is not None and left_seg is None:
+                    best_neighbor = right_seg
+                else:
+                    # Both L and R are available! Choose the one with the better camera look-angle alignment (higher dot product)
+                    try:
+                        dot_L = abs(np.dot(left_seg["normal"], [math.sin(math.radians(left_seg["heading"])), math.cos(math.radians(left_seg["heading"]))]))
+                        dot_R = abs(np.dot(right_seg["normal"], [math.sin(math.radians(right_seg["heading"])), math.cos(math.radians(right_seg["heading"]))]))
+                        
+                        if dot_L >= dot_R:
+                            best_neighbor = left_seg
+                        else:
+                            best_neighbor = right_seg
+                    except Exception:
+                        best_neighbor = left_seg
+                        
+                if best_neighbor is not None:
+                    seg["pano_id"] = best_neighbor["pano_id"]
+                    seg["heading"] = best_neighbor["heading"]
+                    # Add to facades_cache relationally so it is persisted and resumed cleanly
+                    facade_id = seg["facade_id"]
+                    self.facades_cache[facade_id] = {
+                        "pano_id": seg["pano_id"],
+                        "heading": seg["heading"],
+                        "captured_heading": seg["heading"]
+                    }
+                    self.metadata_cache[facade_id] = {}
+                    self.metadata_cache[facade_id].update(self.facades_cache[facade_id])
+                    self.metadata_cache[facade_id].update(self.panoramas_cache[seg["pano_id"]])
+
     def reconstruct_blocks_and_texture(self) -> tuple[list[dict], dict]:
         """
         Densely reconstructs and textures building block volumes.
@@ -1566,6 +1630,9 @@ class UrbanBlockReconstructor:
                     [0.0, 1.0]
                 ]
             uv_mappings[f"{b_id}_roof"] = [[0.0, 0.0]] * num_verts
+            
+            # Resolve and absorb almost-adjacent fallback segments (criterion of 2) circularly
+            self.resolve_almost_adjacent_fallback_segments(block_segments_info, fallback_path)
             
             # Group contiguous segments sharing the same pano_id and similar headings (within 20 deg tolerance)
             def angular_difference(h1, h2):
