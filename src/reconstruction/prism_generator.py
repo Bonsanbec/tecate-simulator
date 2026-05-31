@@ -1583,7 +1583,7 @@ class UrbanBlockReconstructor:
                                 self.metadata_cache[facade_id] = {}
                                 self.metadata_cache[facade_id].update(self.facades_cache[facade_id])
                                 self.metadata_cache[facade_id].update(self.panoramas_cache[pano_id])
-                                self.save_metadata_cache()
+                                #self.save_metadata_cache()
                                 
                 block_segments_info.append({
                     "f_idx": f_idx,
