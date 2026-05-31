@@ -158,12 +158,13 @@ The master script `src/main.py` orchestrates the entire GIS build, Playwright cr
 | :--- | :--- | :--- |
 | `--headless` | `False` | Run Playwright in headless mode (headless is highly recommended for server runs). |
 | `--reprocess` | `False` | Forces recalculation of cropping, homography warping, and similarity stitching on cached disk screenshots without querying the network. |
-| `--radius` | `-1` | Safety radius from central origin (Parque Hidalgo) in meters. Set to `-1` to process the entire city of Tecate. |
+| `--skip-scraper` | `False` | Completely bypasses Playwright browser initialization and crawling, executing the pipeline entirely offline using cached observations. |
+| `--radius` | `-1` | Safety radius from central origin (Parque Hidalgo) in meters. restricts new crawls to this distance. Set to `-1` for the entire city of Tecate. |
 
-### Running the Recovery and Reconstruction (Headless)
-Runs the entire pipeline using the headless crawler, performing offline homography and automatic metadata recovery for pre-downloaded images:
+### Running E2E Reconstruction Offline (No Scraper)
+Runs the entire pipeline entirely offline, completely bypassing browser crawling and loading observations exclusively from cache:
 ```bash
-PYTHONPATH=. ./venv/bin/python src/main.py --headless
+PYTHONPATH=. ./venv/bin/python src/main.py --skip-scraper
 ```
 
 ### Full Reprocessing of Cached Screenshots
@@ -172,90 +173,37 @@ Regenerates all horizontal panoramas and UV layouts directly from existing scree
 PYTHONPATH=. ./venv/bin/python src/main.py --headless --reprocess
 ```
 
-### Process Central Area only (350-meter radius)
+### Scrape Central Area only (350-meter radius)
 ```bash
 PYTHONPATH=. ./venv/bin/python src/main.py --headless --radius 350
 ```
 
 ---
 
-## 6. Real-Time Auto-Saving & Unified High-Fidelity Caching
+---
 
-The reconstructor implements robust resilience features to prevent any data loss and maintain a unified, enriched geospatial knowledge base:
-* **SIGINT/KeyboardInterrupt Handler**: If a run is interrupted via `Ctrl+C`, the system catches the signal, gracefully closes the active Playwright session, immediately serializes both `facade_metadata_cache.json` and `stitching_cache.json` to disk, and exits safely.
-* **Offline Metadata Recovery**: If screenshot images are present in `data/screenshots/facades/` but are missing from `facade_metadata_cache.json` (due to a prior crash or interruption), the system triggers a recovery fast-path. It uses the static coordinates of the facade to fetch its metadata using rapid GET queries, maps it to the file, and runs standard homography warping on the existing image **without opening Playwright or downloading any screenshots**.
-* **Unified Enriched Schema**: The system aggregates all parameters from Point 1 (Indispensables) and Point 2 (Desirables) into a single unified JSON object under `data/facade_metadata_cache.json` for every facade slice:
+## 6. Robust Real-Time Resilience & Unified Relational Caching
 
-```json
-{
-  "pano_id": "-NXu3HuDlMVBf9Y46OE9fQ",
-  "latitude": 32.57212712658536,
-  "longitude": -116.6231560210298,
-  "altitude": 522.06,
-  "date": "2008-12",
-  "heading": 84.23546955855736,
-  "pitch": 10.33,
-  "roll": -0.95,
-  "hfov": null,
-  "vfov": null,
-  "focal_length_px": null,
-  "resolution": {
-    "screenshot_width": 1280,
-    "screenshot_height": 720,
-    "slice_width": 512,
-    "slice_height": 256
-  },
-  "optical_center": null,
-  "intrinsic_matrix": null,
-  "camera_height_m": null,
-  "camera_position_local": [317.07, -122.66, null],
-  "camera_rotation_matrix": [
-    [0.100, -0.995, 0.0],
-    [0.995, 0.100, 0.0],
-    [0.0, 0.0, 1.0]
-  ],
-  "road_relation": {
-    "road_name": "Boulevard Defensores de Baja California",
-    "road_distance_meters": 7.36,
-    "road_edge_id": "e_234"
-  },
-  "distance_to_center_m": 391.0,
-  "facade_midpoint_local": [-636.56, -832.87],
-  "offset_search_point_local": [-628.65, -834.02],
-  "offset_search_point_gps": [32.56573, -116.63323],
-  "search_query_url": "https://maps.googleapis.com/maps/api/js/GeoPhotoService.SingleImageSearch?pb=...",
-  "captured_url": "https://www.google.com/maps?layer=c&cbll=...",
-  "modern_pano_id": "uZbChf3zuqASbI9Y47B3sg",
-  "camera_alignment_diagnostics": {
-    "look_vector": [-2.95, -1.29],
-    "facade_normal": [0.99, -0.14],
-    "dot_product": -2.74,
-    "is_correct_side": true
-  },
-  "image_filename": "block_5_facade_1409.png",
-  "block_id": "block_5",
-  "facade_index": 1409,
-  "facade_segment_vertices_local": [
-    [-639.11, -832.52],
-    [-634.01, -833.22]
-  ],
-  "facade_normal_vector": [0.99, -0.14],
-  "block_polygon_vertices_raw_local": [
-    [-645.11, -838.52],
-    [-628.01, -839.22],
-    [...]
-  ],
-  "block_polygon_vertices_shrunk_local": [
-    [-639.11, -832.52],
-    [-634.01, -833.22],
-    [...]
-  ],
-  "normal_offset_distance_m": 8.0,
-  "block_shrink_distance_m": 6.0
-}
-```
+The system implements high-performance caching and crash-resilience strategies to prevent data loss and optimize geospatial queries:
 
-* **Automatic Cache Migration**: At instantiation, `migrate_metadata_cache()` scans `data/facade_metadata_cache.json` and automatically migrates any legacy entries to the unified high-fidelity schema deterministically without modifying already collected raw values.
+### A. Non-Destructive KeyboardInterrupt (Ctrl+C) Pipeline
+If the process is interrupted via `Ctrl+C`, the system catches the signal and initiates an advanced synchronous shutdown pipeline to preserve all progress:
+1. **Cache Serialization**: Writes all current parameters across the three relational JSON tables and the horizontal `stitching_cache.json` immediately.
+2. **Intermediate Scene Export**: Generates `reconstruction_export.json`, `metadata.json`, and `reconstruction_diagnostics.json` up to the last processed block segment.
+3. **Coverage Map Generation**: Automatically compiles the `export/debug/global_observation_map.png` using current progress.
+4. **Blender glTF Compilation**: Triggers the background Blender compiler to build `export/geometry.glb` from the partially gathered assets.
+5. **Instant Force Exit**: If the user presses `Ctrl+C` a second time during this cleanup pipeline, the system instantly terminates the process.
+
+### B. Relational Geospatial Cache Model
+The cache is split into three normalized, relational tables under the `data/` directory, achieving a **98.4% reduction in disk size** (from 722 MB down to 11.8 MB combined) while avoiding duplicate information:
+* **`data/panoramas_cache.json` (PK: `pano_id`)**: Stores georeferenced sensor parameters (lat/lon coordinates, unauthenticated API elevation, pitch, roll, dates) of individual panorama nodes.
+* **`data/blocks_cache.json` (PK: `block_id`)**: Stores building block cycle geometries, centroids, distance metrics, height variables, and dynamic roof colors.
+* **`data/facades_cache.json` (PK: `facade_id`)**: Stores individual storefront quad observations, yaw headings, camera rotations, offset points, road relation indices, and foreign keys.
+
+### C. Scraper-Exclusive Radius Boundary Control
+The `--radius` safety filter controls **exclusively** which blocks the scraper searches and crawls for new screenshots on the live Google Maps network.
+* **No Cache Reduction**: It **never** alters the loading of existing cache files or what is textured/rendered in Blender. 
+* All previously crawled and cached blocks, regardless of their distance to the central origin `(0, 0)`, are loaded, homography-rectified, similarity-blended, and compiled into the final 3D glTF scene.
 
 ---
 

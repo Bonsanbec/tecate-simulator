@@ -65,7 +65,8 @@ def run_pipeline(args):
         export_dir="export", 
         headless=args.headless,
         radius=args.radius if args.radius >= 0 else None,
-        reprocess=args.reprocess
+        reprocess=args.reprocess,
+        skip_scraper=args.skip_scraper
     )
     blocks_data, scene_doc = reconstructor.reconstruct_blocks_and_texture()
     
