@@ -74,12 +74,36 @@ class TecateGraphBuilder:
         data = {"nodes": nodes, "edges": edges}
         return data
 
+    def load_tecate_polygon(self) -> list:
+        polygon_path = "reference/tecate-polygon.json"
+        if not os.path.exists(polygon_path):
+            print(f"[Warning] Polygon file not found at: {polygon_path}")
+            return []
+        try:
+            with open(polygon_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            features = data.get("features", [])
+            if not features:
+                return []
+            geometry = features[0].get("geometry", {})
+            geom_type = geometry.get("type")
+            coords = geometry.get("coordinates", [])
+            
+            rings = []
+            if geom_type == "Polygon":
+                rings.append(coords[0])
+            elif geom_type == "MultiPolygon":
+                rings.append(coords[0][0])
+            return rings[0] if rings else []
+        except Exception as e:
+            print(f"[Warning] Failed to load polygon: {e}")
+            return []
+
     def fetch_osm_tecate(self, bbox: tuple[float, float, float, float] = (32.521704, -116.681499, 32.580233, -116.510525)) -> dict:
         """
-        Queries OSM Overpass API to download highway street segments in Tecate.
+        Queries OSM Overpass API to download highway street segments inside Tecate municipal polygon.
         Falls back to default cached files if offline or fails.
         """
-        # Bounding box format: (min_lat, min_lon, max_lat, max_lon)
         if os.path.exists(self.cache_file):
             print(f"[Info] Loading road network from cache file: {self.cache_file}")
             try:
@@ -88,21 +112,43 @@ class TecateGraphBuilder:
             except Exception as e:
                 print(f"[Warning] Failed to read cache: {e}. Downloading instead...")
 
-        # Overpass query string
         overpass_url = "https://overpass-api.de/api/interpreter"
-        query = f"""
-        [out:json][timeout:15];
-        (
-          way["highway"~"primary|secondary|tertiary|residential|unclassified"]({bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]});
-        );
-        out body;
-        >;
-        out skel qt;
-        """
+        
+        # Load municipal polygon
+        poly_coords = self.load_tecate_polygon()
+        if poly_coords:
+            print(f"[Info] Constructing Overpass query using Tecate municipal polygon boundary...")
+            # Sample every 2nd coordinate to keep query compact and 100% safe
+            sampled = poly_coords[::2]
+            if sampled[-1] != poly_coords[-1]:
+                sampled.append(poly_coords[-1])
+            # GeoJSON coordinates are [longitude, latitude], Overpass expects latitude longitude
+            poly_str = " ".join([f"{pt[1]:.6f} {pt[0]:.6f}" for pt in sampled])
+            
+            query = f"""[out:json][timeout:60];
+(
+  way["highway"~"motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|residential|unclassified|service|living_street"](poly:"{poly_str}");
+);
+out body;
+>;
+out skel qt;"""
+        else:
+            print(f"[Warning] Falling back to default bounding box rectangular query...")
+            query = f"""[out:json][timeout:30];
+(
+  way["highway"~"motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|residential|unclassified|service|living_street"]({bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]});
+);
+out body;
+>;
+out skel qt;"""
+        
+        headers = {
+            "User-Agent": "TecateSimulatorReconstructor/1.0 (contact: hakkindavid@github)"
+        }
         
         try:
             print("[Info] Requesting road data from OpenStreetMap Overpass API...")
-            resp = requests.post(overpass_url, data={"data": query}, timeout=15)
+            resp = requests.post(overpass_url, data={"data": query}, headers=headers, timeout=60)
             if resp.status_code == 200:
                 elements = resp.json().get("elements", [])
                 
@@ -111,7 +157,7 @@ class TecateGraphBuilder:
                 ways = []
                 for el in elements:
                     if el["type"] == "node":
-                        osm_nodes[el["id"]] = {"lat": el["lat"], "lon": el["lon"]}
+                        osm_nodes[str(el["id"])] = {"lat": el["lat"], "lon": el["lon"]}
                     elif el["type"] == "way":
                         ways.append(el)
                         
@@ -146,7 +192,7 @@ class TecateGraphBuilder:
                     print(f"[Info] Downloaded road network and saved cache to {self.cache_file}")
                     return data
                     
-            print("[Warning] Overpass API response empty or invalid. Falling back...")
+            print(f"[Warning] Overpass API response empty or invalid (Status: {resp.status_code}). Falling back...")
         except Exception as e:
             print(f"[Warning] Failed to fetch data from OSM Overpass: {e}")
             
