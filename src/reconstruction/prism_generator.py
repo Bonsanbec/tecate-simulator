@@ -347,7 +347,6 @@ class UrbanBlockReconstructor:
                 print(f"[Warning] Failed to generate intermediate outputs: {e}")
                 
         print("[Ctrl+C] Graceful shutdown complete. Exiting safely.")
-        import os
         os._exit(0)
 
     def build_all_facade_segments(self) -> dict:
@@ -634,7 +633,8 @@ class UrbanBlockReconstructor:
                         blocks.append({
                             "block_id": f"block_{block_counter}",
                             "polygon": segmented_verts,
-                            "area_sq_meters": abs(signed_area)
+                            "area_sq_meters": abs(signed_area),
+                            "is_external": (signed_area > 0)
                         })
                         block_counter += 1
                         
@@ -1126,6 +1126,10 @@ class UrbanBlockReconstructor:
 
         for idx, rb in enumerate(raw_blocks):
             b_id = rb["block_id"]
+            if rb.get("is_external", False):
+                print(f"[Reconstruction] Skipping external boundary mega-manzana: '{b_id}'")
+                continue
+                
             raw_poly = rb["polygon"]
             local_diag_facades = []
             
