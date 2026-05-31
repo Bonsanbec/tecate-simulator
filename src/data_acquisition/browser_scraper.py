@@ -643,7 +643,7 @@ class GoogleStreetViewScraper:
                             links.append({
                                 "pano_id": l.get("panoId"),
                                 "road_name": l.get("road_name", ""),
-                                "yaw_deg": float(l.get("yawDeg", 0.0))
+                                "yaw_deg": float(l.get("yawDeg", None))
                             })
                             
                         timeline = []
@@ -655,13 +655,18 @@ class GoogleStreetViewScraper:
                             
                         meta = {
                             "pano_id": p_id,
-                            "latitude": float(loc.get("latitude", lat if lat is not None else 0.0)),
-                            "longitude": float(loc.get("longitude", lon if lon is not None else 0.0)),
+                            "latitude": float(loc.get("latitude", lat)),
+                            "longitude": float(loc.get("longitude", lon)),
                             "date": data.get("Data", {}).get("image_date", ""),
                             "road_name": loc.get("road_name", ""),
                             "adjacent_links": links,
                             "timeline": timeline
                         }
+                        
+                        if meta["latitude"] is None or meta["longitude"] is None:
+                            print("⚠️ [WARNING] Skipping null lat/long meta!")
+                            return None
+                        
                         return meta
                 except Exception:
                     pass
@@ -703,13 +708,18 @@ class GoogleStreetViewScraper:
                         })
                     meta = {
                         "pano_id": p_id,
-                        "latitude": float(loc.get("latitude", lat if lat is not None else 0.0)),
-                        "longitude": float(loc.get("longitude", lon if lon is not None else 0.0)),
+                        "latitude": float(loc.get("latitude", lat)),
+                        "longitude": float(loc.get("longitude", lon)),
                         "date": data.get("Data", {}).get("image_date", ""),
                         "road_name": loc.get("road_name", ""),
                         "adjacent_links": links,
                         "timeline": timeline
                     }
+                    
+                    if meta["latitude"] is None or meta["longitude"] is None:
+                            print("⚠️ [WARNING] Skipping null lat/long meta!")
+                            return None
+                        
                     return meta
             except Exception:
                 pass
