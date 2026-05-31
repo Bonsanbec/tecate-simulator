@@ -61,9 +61,19 @@ class UrbanBlockReconstructor:
             except Exception as e:
                 print(f"[Warning] Failed to load stitching cache: {e}")
                 
-        # Initialize relational cache file paths (No blocks_cache.json!)
+        # Initialize relational cache file paths
+        self.blocks_cache_path = os.path.join(data_dir, "blocks_cache.json")
         self.panoramas_cache_path = os.path.join(data_dir, "panoramas_cache.json")
         self.facades_cache_path = os.path.join(data_dir, "facades_cache.json")
+        
+        # Load blocks
+        self.blocks_cache = {}
+        if os.path.exists(self.blocks_cache_path):
+            try:
+                self.blocks_cache = load_json(self.blocks_cache_path)
+                print(f"[Cache Load] Loaded {len(self.blocks_cache)} blocks from blocks_cache.json")
+            except Exception as e:
+                print(f"[Warning] Failed to load blocks cache: {e}")
         
         # Load panoramas
         self.panoramas_cache = {}
@@ -247,6 +257,13 @@ class UrbanBlockReconstructor:
             print(f"[Cache Auto-Save] Facades cache written to: {self.facades_cache_path}")
         except Exception as e:
             print(f"[Warning] Failed to save facades cache: {e}")
+            
+    def save_blocks_cache(self):
+        try:
+            save_json(self.blocks_cache, self.blocks_cache_path)
+            print(f"[Cache Auto-Save] Blocks cache written to: {self.blocks_cache_path}")
+        except Exception as e:
+            print(f"[Warning] Failed to save blocks cache: {e}")
 
     def _decompose_metadata_cache(self):
         """
@@ -312,6 +329,7 @@ class UrbanBlockReconstructor:
         self._decompose_metadata_cache()
         self.save_panoramas_cache()
         self.save_facades_cache()
+        self.save_blocks_cache()
 
     def graceful_shutdown(self):
         print("\n[Ctrl+C] Graceful shutdown triggered by user. Saving current caches...")
@@ -396,6 +414,11 @@ class UrbanBlockReconstructor:
                 h = hash(b_id) % 100
                 height_meters = 7.0 + (h % 3) * 2.0
                 
+            # Resume block parameters from blocks_cache.json if available
+            if self.blocks_cache and b_id in self.blocks_cache:
+                cached_block = self.blocks_cache[b_id]
+                height_meters = cached_block.get("height_meters", height_meters)
+                
             for f_idx in range(num_verts):
                 facade_id = f"{b_id}_facade_{f_idx}"
                 A = shrunk_poly[f_idx]
@@ -436,10 +459,21 @@ class UrbanBlockReconstructor:
 
     def extract_block_polygons(self) -> list[dict]:
         """
-        Extracts closed cycles from the road graph G using planar CCW traversal.
-        Preserves dead-ends while filtering by municipal polygon and radius,
-        assigning stable coordinate-based IDs.
+        Extracts closed cycles from the road graph G using planar CCW traversal,
+        or resumes them from the local blocks_cache.json if available to prevent recalculation.
         """
+        if self.blocks_cache:
+            print(f"[Cache Resume] Resuming {len(self.blocks_cache)} blocks from blocks_cache.json")
+            blocks = []
+            for b_id, b_data in self.blocks_cache.items():
+                blocks.append({
+                    "block_id": b_id,
+                    "polygon": b_data["polygon"],
+                    "area_sq_meters": b_data.get("area_sq_meters", 100.0),
+                    "is_external": b_data.get("is_external", False)
+                })
+            return blocks
+
         print("[Reconstruction] Trimming road network to extract urban block cycles...")
         temp_G = nx.Graph(self.G)
         
@@ -527,6 +561,12 @@ class UrbanBlockReconstructor:
                                 
                         block_id = f"block_lat_{centroid_lat:.5f}_lon_{centroid_lon:.5f}"
                         
+                        self.blocks_cache[block_id] = {
+                            "polygon": segmented_verts,
+                            "area_sq_meters": abs(signed_area),
+                            "is_external": (signed_area > 0)
+                        }
+                        
                         blocks.append({
                             "block_id": block_id,
                             "polygon": segmented_verts,
@@ -535,6 +575,8 @@ class UrbanBlockReconstructor:
                         })
                         
         print(f"[Reconstruction] Detected {len(blocks)} valid urban blocks (manzanas) inside boundary.")
+        if blocks:
+            self.save_blocks_cache()
         return blocks
 
     def segment_long_polygon_edges(self, poly: list[tuple[float, float]], max_length: float = 5.0) -> list[tuple[float, float]]:
@@ -1403,8 +1445,14 @@ class UrbanBlockReconstructor:
                         "status": status
                     }
                     
-            # Calculate roof color
-            roof_color_val = self.calculate_predominant_roof_color(facade_textures_map)
+            # Persist resolved properties in blocks cache
+            if b_id not in self.blocks_cache:
+                self.blocks_cache[b_id] = {}
+            self.blocks_cache[b_id].update({
+                "polygon": shrunk_poly,
+                "height_meters": height_meters,
+                "roof_color": roof_color_val
+            })
             
             # Persist roof color in facades cache and metadata cache for all block facades
             for f_idx in range(num_verts):
