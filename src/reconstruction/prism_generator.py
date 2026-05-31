@@ -93,6 +93,53 @@ class UrbanBlockReconstructor:
                 combined.update(f_data)
                 combined.update(p_data)
                 combined["pano_id"] = p_id
+                
+                # Reconstruct derived properties dynamically using physical parameters from panoramas_cache
+                lat = p_data.get("latitude")
+                lon = p_data.get("longitude")
+                if lat is not None and lon is not None:
+                    # 1. Camera position local
+                    cx, cy = gps_to_local(lat, lon)
+                    combined["camera_position_local"] = [float(cx), float(cy), None]
+                    
+                    # 2. Camera rotation matrix
+                    heading = f_data.get("captured_heading", f_data.get("heading", 0.0))
+                    if heading is not None:
+                        yaw_rad = math.radians(heading)
+                        rot_matrix = [
+                            [math.cos(yaw_rad), -math.sin(yaw_rad), 0.0],
+                            [math.sin(yaw_rad), math.cos(yaw_rad), 0.0],
+                            [0.0, 0.0, 1.0]
+                        ]
+                        combined["camera_rotation_matrix"] = rot_matrix
+                        
+                    # 3. Camera alignment diagnostics
+                    mx_my = f_data.get("facade_midpoint_local")
+                    vertices = f_data.get("facade_segment_vertices_local")
+                    if mx_my and vertices and len(vertices) == 2:
+                        mx, my = mx_my
+                        look_vector = [float(mx - cx), float(my - cy)]
+                        
+                        dx = vertices[1][0] - vertices[0][0]
+                        dy = vertices[1][1] - vertices[0][1]
+                        length = math.sqrt(dx*dx + dy*dy)
+                        if length > 0:
+                            normal = [-dy / length, dx / length]
+                        else:
+                            normal = [0.0, 1.0]
+                            
+                        dot_prod = float(look_vector[0] * normal[0] + look_vector[1] * normal[1])
+                        combined["camera_alignment_diagnostics"] = {
+                            "look_vector": look_vector,
+                            "facade_normal": [float(normal[0]), float(normal[1])],
+                            "dot_product": dot_prod,
+                            "is_correct_side": bool(dot_prod < 0)
+                        }
+                        
+                    # 4. Captured URL
+                    heading_val = heading if heading is not None else 0.0
+                    combined["captured_url"] = f"https://www.google.com/maps?layer=c&cbll={lat},{lon}&panoid={p_id}&cbp=11,{heading_val:.2f},,0,0"
+
                 self.metadata_cache[f_id] = combined
                 
         # Bootstrap metadata cache from export/metadata.json if empty/missing
@@ -229,9 +276,14 @@ class UrbanBlockReconstructor:
                     "timeline": entry.get("timeline", []),
                 })
                 
-            # 2. Facade Cache
+            # 2. Facade Cache (Disk Optimization)
             if f_id not in self.facades_cache:
                 self.facades_cache[f_id] = {}
+                
+            # Wipe out only the requested optimized keys that are not stored on disk
+            for key in ["camera_position_local", "image_filename", "offset_search_point_local"]:
+                self.facades_cache[f_id].pop(key, None)
+                
             self.facades_cache[f_id].update({
                 "pano_id": p_id,
                 "block_id": entry.get("block_id"),
@@ -244,11 +296,9 @@ class UrbanBlockReconstructor:
                     "slice_width": 512,
                     "slice_height": 256
                 }),
-                "camera_position_local": entry.get("camera_position_local"),
                 "camera_rotation_matrix": entry.get("camera_rotation_matrix"),
                 "road_relation": entry.get("road_relation"),
                 "facade_midpoint_local": entry.get("facade_midpoint_local"),
-                "offset_search_point_local": entry.get("offset_search_point_local"),
                 "offset_search_point_gps": entry.get("offset_search_point_gps"),
                 "search_query_url": entry.get("search_query_url"),
                 "captured_url": entry.get("captured_url"),
