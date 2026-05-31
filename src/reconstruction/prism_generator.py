@@ -17,7 +17,7 @@ class UrbanBlockReconstructor:
     performs standard 2D perspective homography warping onto block vertical quads,
     and exports procedurally compiled textured glTF geometry for Blender.
     """
-    def __init__(self, G: nx.MultiGraph, accepted_panos: list[dict] = None, export_dir: str = "export", data_dir: str = "data", headless: bool = False, radius: float = None, reprocess: bool = False):
+    def __init__(self, G: nx.MultiGraph, accepted_panos: list[dict] = None, export_dir: str = "export", data_dir: str = "data", headless: bool = False, radius: float = None, reprocess: bool = False, skip_scraper: bool = False):
         self.G = G
         self.export_dir = export_dir
         self.data_dir = data_dir
@@ -26,6 +26,7 @@ class UrbanBlockReconstructor:
         self.headless = headless
         self.radius = radius
         self.reprocess = reprocess
+        self.skip_scraper = skip_scraper
         
         ensure_dir(self.textures_dir)
         ensure_dir(self.debug_dir)
@@ -125,22 +126,24 @@ class UrbanBlockReconstructor:
                 print(f"[Warning] Failed to load adjacency for reconstruction: {e}")
                 
         # Initialize GoogleStreetViewScraper for direct headed/headless screenshot capturing
-        from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
-        self.scraper = GoogleStreetViewScraper(headless=self.headless, G=self.G)
+        if self.skip_scraper:
+            self.scraper = None
+            print("[Reconstruction] Running in --skip-scraper mode. Playwright browser crawling will be completely bypassed.")
+        else:
+            from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
+            self.scraper = GoogleStreetViewScraper(headless=self.headless, G=self.G)
 
         # Register graceful Ctrl+C handler
         import signal
+        self.shutdown_in_progress = False
         def handle_sigint(signum, frame):
-            print("\n[Ctrl+C] Graceful exit triggered by user. Saving current caches and clean up...")
-            self.save_stitching_cache()
-            self.save_metadata_cache()
-            try:
-                self.scraper.close()
-            except Exception:
-                pass
-            print("[Ctrl+C] Caches successfully saved. Exiting safely.")
-            import sys
-            sys.exit(0)
+            if self.shutdown_in_progress:
+                print("\n[Ctrl+C] Force exiting instantly!")
+                import os
+                os._exit(1)
+                
+            self.shutdown_in_progress = True
+            self.graceful_shutdown()
             
         signal.signal(signal.SIGINT, handle_sigint)
 
@@ -286,6 +289,66 @@ class UrbanBlockReconstructor:
         self.save_blocks_cache()
         self.save_facades_cache()
 
+    def graceful_shutdown(self):
+        print("\n[Ctrl+C] Graceful shutdown triggered by user. Saving current caches...")
+        self.save_stitching_cache()
+        self.save_metadata_cache()
+        
+        # Check if we have active reconstruction progress to export
+        if getattr(self, "current_blocks_data", None):
+            print("[Ctrl+C] Generating coverage map and scene export files for current progress...")
+            try:
+                # 1. Save reconstruction_export.json
+                flat_nodes = []
+                for n, data in self.G.nodes(data=True):
+                    flat_nodes.append({"id": n, "x": data["x"], "y": data["y"]})
+                    
+                flat_edges = []
+                for u, v, data in self.G.edges(data=True):
+                    flat_edges.append({"u": u, "v": v})
+                    
+                scene_doc = {
+                    "road_graph": {
+                        "nodes": flat_nodes,
+                        "edges": flat_edges
+                    },
+                    "blocks": self.current_blocks_data
+                }
+                
+                export_filepath = os.path.join(self.export_dir, "reconstruction_export.json")
+                save_json(scene_doc, export_filepath)
+                
+                # 2. Save metadata.json
+                total_facades = sum(len(bl["polygon"]) - 1 for bl in self.current_blocks_data)
+                textured_facades = len(self.current_provenance)
+                coverage_pct = (textured_facades / total_facades * 100.0) if total_facades > 0 else 0.0
+                
+                meta_out = {
+                    "total_blocks": len(self.current_blocks_data),
+                    "total_facades": total_facades,
+                    "textured_facades": textured_facades,
+                    "coverage_percentage": coverage_pct,
+                    "provenance": self.current_provenance
+                }
+                save_json(meta_out, os.path.join(self.export_dir, "metadata.json"))
+                
+                # 3. Save reconstruction_diagnostics.json
+                save_json(self.current_diagnostics, os.path.join(self.debug_dir, "reconstruction_diagnostics.json"))
+                
+                # 4. Generate coverage map
+                self.generate_diagnostic_visualization(scene_doc, self.current_diag_facades, coverage_pct)
+                
+                # 5. Compile Blender GLB
+                print("[Ctrl+C] Triggering background Blender compilation...")
+                from src.main import run_blender_export
+                run_blender_export()
+            except Exception as e:
+                print(f"[Warning] Failed to generate intermediate outputs: {e}")
+                
+        print("[Ctrl+C] Graceful shutdown complete. Exiting safely.")
+        import os
+        os._exit(0)
+
     def build_all_facade_segments(self) -> dict:
         """
         Builds a map of all facade segment geometries for all blocks.
@@ -399,16 +462,18 @@ class UrbanBlockReconstructor:
             entry.pop("orientation_accuracy_deg", None)
             
             # Query the unauthenticated metadata API at this coordinate to fetch the real pitch, roll, and altitude
-            print(f"[Migration Query] Refetching real projection parameters for {facade_id} from API...")
-            meta = self.scraper.fetch_public_metadata(lat=lat, lon=lon)
-            
             altitude_val = None
             pitch_val = None
             roll_val = None
-            if meta:
-                altitude_val = meta.get("altitude")
-                pitch_val = meta.get("pitch")
-                roll_val = meta.get("roll")
+            if self.scraper:
+                print(f"[Migration Query] Refetching real projection parameters for {facade_id} from API...")
+                meta = self.scraper.fetch_public_metadata(lat=lat, lon=lon)
+                if meta:
+                    altitude_val = meta.get("altitude")
+                    pitch_val = meta.get("pitch")
+                    roll_val = meta.get("roll")
+            else:
+                print(f"[Migration Query] Bypassing network query for {facade_id} due to --skip-scraper flag.")
             
             # Geometry derivations
             mx, my = 0.0, 0.0
@@ -1038,6 +1103,11 @@ class UrbanBlockReconstructor:
         textured_facades = 0
         diag_facades = []
         
+        self.current_blocks_data = blocks_data
+        self.current_provenance = provenance
+        self.current_diagnostics = diagnostics
+        self.current_diag_facades = diag_facades
+        
         # 1. Resolve Bancomer Block dynamically
         BANCOMER_LAT = 32.573484
         BANCOMER_LON = -116.627276
@@ -1173,12 +1243,12 @@ class UrbanBlockReconstructor:
                 
                 # Check if this segment belongs to a block within the safety radius AND is street-facing
                 dist_to_center = math.sqrt(centroid_x**2 + centroid_y**2)
-                if self.radius is not None and self.radius >= 0:
-                    is_within_radius = (dist_to_center <= self.radius)
-                else:
-                    is_within_radius = True
                 
-                if is_within_radius and is_street_facing:
+                # Safety radius should only restrict the live scraper network crawls.
+                # If already cached on disk and in metadata cache, we ALWAYS load and texture it, regardless of --radius!
+                is_cached = os.path.exists(f"data/screenshots/facades/{facade_id}.png") and facade_id in self.metadata_cache
+                
+                if is_cached or (is_street_facing and (self.radius is None or self.radius < 0 or dist_to_center <= self.radius)):
                     print(f"\n[Scraper Target] Processing target facade slice: {facade_id} (Road distance: {road_dist:.2f} meters, Distance to center: {dist_to_center:.1f} meters).")
                     
                     # Offset the search coordinate by 8.0 meters outward along the facade normal vector
@@ -1224,7 +1294,7 @@ class UrbanBlockReconstructor:
                             screenshot_bytes = None
                             
                     # 2. If not cached, perform live scraper & network lookup
-                    if not screenshot_bytes:
+                    if not screenshot_bytes and self.scraper is not None:
                         meta = self.scraper.fetch_public_metadata(lat=lat, lon=lon)
                         if meta:
                             pano_id = meta["pano_id"]
@@ -1606,7 +1676,8 @@ class UrbanBlockReconstructor:
         }
         
         # Close persistent scraper session
-        self.scraper.close()
+        if self.scraper:
+            self.scraper.close()
         
         # Save stitching cache back to disk (Incremental processing)
         save_json(self.stitching_cache, self.stitching_cache_path)
