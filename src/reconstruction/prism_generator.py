@@ -1105,6 +1105,73 @@ class UrbanBlockReconstructor:
                         heading = entry.get("captured_heading", entry.get("heading"))
                         if heading is not None:
                             heading = round(heading, 2)
+                            
+                        # Enrich/recalculate all properties to ensure zero nulls in facades_cache
+                        p_data = self.panoramas_cache.get(pano_id, {})
+                        cam_lat = p_data.get("latitude")
+                        cam_lon = p_data.get("longitude")
+                        if cam_lat is not None and cam_lon is not None:
+                            cx, cy = gps_to_local(cam_lat, cam_lon)
+                            yaw_rad = math.radians(heading)
+                            rot_matrix = [
+                                [math.cos(yaw_rad), -math.sin(yaw_rad), 0.0],
+                                [math.sin(yaw_rad), math.cos(yaw_rad), 0.0],
+                                [0.0, 0.0, 1.0]
+                            ]
+                            road_name_val = ""
+                            if best_edge_id:
+                                for u_e, v_e, key_e, data_e in self.G.edges(keys=True, data=True):
+                                    if data_e.get("id") == best_edge_id:
+                                        road_name_val = data_e.get("name", "")
+                                        break
+                                        
+                            look_vector = [float(mx - cx), float(my - cy)]
+                            dot_prod = float(look_vector[0] * normal[0] + look_vector[1] * normal[1])
+                            is_correct_side = bool(dot_prod < 0)
+                            
+                            search_x = mx + 8.0 * normal[0]
+                            search_y = my + 8.0 * normal[1]
+                            lat, lon = local_to_gps(search_x, search_y)
+                            search_query_url = f"https://maps.googleapis.com/maps/api/js/GeoPhotoService.SingleImageSearch?pb=!1m5!1sapiv3!5sUS!11m2!1m1!1b0!2m4!1m2!3d{lat:.6f}!4d{lon:.6f}!2d50.0!3m10!2m2!1ses!2sMX!9m1!1e2!11m4!1m3!1e2!2b1!3e2!4m9!1e1!1e2!1e3!1e4!1e6!1e8!1e12!5m0!6m0&callback=_xdc_._v2mub5"
+                            captured_url = f"https://www.google.com/maps?layer=c&cbll={cam_lat},{cam_lon}&panoid={pano_id}&cbp=11,{heading:.2f},,0,0"
+                            
+                            self.facades_cache[facade_id] = {
+                                "pano_id": pano_id,
+                                "block_id": b_id,
+                                "facade_index": int(f_idx),
+                                "heading": heading,
+                                "captured_heading": heading,
+                                "resolution": {
+                                    "screenshot_width": 1280,
+                                    "screenshot_height": 720,
+                                    "slice_width": 512,
+                                    "slice_height": 256
+                                },
+                                "camera_position_local": [float(cx), float(cy), None],
+                                "camera_rotation_matrix": rot_matrix,
+                                "road_relation": {
+                                    "road_name": road_name_val,
+                                    "road_distance_meters": float(road_dist),
+                                    "road_edge_id": best_edge_id
+                                },
+                                "facade_midpoint_local": [float(mx), float(my)],
+                                "offset_search_point_local": [float(search_x), float(search_y)],
+                                "offset_search_point_gps": [float(lat), float(lon)],
+                                "search_query_url": search_query_url,
+                                "captured_url": captured_url,
+                                "modern_pano_id": entry.get("modern_pano_id", pano_id),
+                                "camera_alignment_diagnostics": {
+                                    "look_vector": look_vector,
+                                    "facade_normal": [float(normal[0]), float(normal[1])],
+                                    "dot_product": dot_prod,
+                                    "is_correct_side": is_correct_side
+                                },
+                                "facade_segment_vertices_local": [A, B]
+                            }
+                            # Synchronize to memory metadata_cache
+                            self.metadata_cache[facade_id] = {}
+                            self.metadata_cache[facade_id].update(self.facades_cache[facade_id])
+                            self.metadata_cache[facade_id].update(self.panoramas_cache[pano_id])
                     else:
                         # Offset the search coordinate by 8.0 meters outward along normal
                         search_x = mx + 8.0 * normal[0]
@@ -1445,6 +1512,9 @@ class UrbanBlockReconstructor:
                         "status": status
                     }
                     
+            # Calculate roof color
+            roof_color_val = self.calculate_predominant_roof_color(facade_textures_map)
+
             # Persist resolved properties in blocks cache
             if b_id not in self.blocks_cache:
                 self.blocks_cache[b_id] = {}
