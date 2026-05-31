@@ -90,6 +90,36 @@ class UrbanBlockReconstructor:
         from src.data_acquisition.browser_scraper import GoogleStreetViewScraper
         self.scraper = GoogleStreetViewScraper(headless=self.headless, G=self.G)
 
+        # Register graceful Ctrl+C handler
+        import signal
+        def handle_sigint(signum, frame):
+            print("\n[Ctrl+C] Graceful exit triggered by user. Saving current caches and clean up...")
+            self.save_stitching_cache()
+            self.save_metadata_cache()
+            try:
+                self.scraper.close()
+            except Exception:
+                pass
+            print("[Ctrl+C] Caches successfully saved. Exiting safely.")
+            import sys
+            sys.exit(0)
+            
+        signal.signal(signal.SIGINT, handle_sigint)
+
+    def save_stitching_cache(self):
+        try:
+            save_json(self.stitching_cache, self.stitching_cache_path)
+            print(f"[Cache Auto-Save] Stitching cache written to: {self.stitching_cache_path}")
+        except Exception as e:
+            print(f"[Warning] Failed to save stitching cache: {e}")
+
+    def save_metadata_cache(self):
+        try:
+            save_json(self.metadata_cache, self.metadata_cache_path)
+            print(f"[Cache Auto-Save] Metadata cache written to: {self.metadata_cache_path}")
+        except Exception as e:
+            print(f"[Warning] Failed to save metadata cache: {e}")
+
     def extract_block_polygons(self) -> list[dict]:
         """
         Extracts closed cycles from the road graph G using planar CCW traversal.
@@ -893,6 +923,7 @@ class UrbanBlockReconstructor:
                                 "heading": heading,
                                 "date": meta.get("date", "")
                             }
+                            self.save_metadata_cache()
                             
                     if screenshot_bytes:
                         try:
@@ -1030,6 +1061,7 @@ class UrbanBlockReconstructor:
                                 "offsets": offsets,
                                 "width": W_final
                             }
+                            self.save_stitching_cache()
                         
                         # Set up horizontal panorama UV coordinates and texture path overrides
                         for i, (f_idx, tex, status, f_id) in enumerate(group):
