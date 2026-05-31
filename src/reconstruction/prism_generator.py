@@ -68,8 +68,7 @@ class UrbanBlockReconstructor:
             except Exception as e:
                 print(f"[Warning] Failed to load facades cache: {e}")
                 
-        # Load legacy cache if relational caches are empty
-        self.metadata_cache_path = os.path.join(data_dir, "facade_metadata_cache.json")
+        # Initialize and load metadata cache
         self.metadata_cache = {}
         
         if self.facades_cache:
@@ -86,13 +85,6 @@ class UrbanBlockReconstructor:
                 combined["pano_id"] = p_id
                 combined["block_id"] = b_id
                 self.metadata_cache[f_id] = combined
-        else:
-            if os.path.exists(self.metadata_cache_path):
-                print("[Metadata Cache Migration] Relational caches are empty. Loading legacy flat cache...")
-                try:
-                    self.metadata_cache = load_json(self.metadata_cache_path)
-                except Exception as e:
-                    print(f"[Warning] Failed to load legacy metadata cache: {e}")
                 
         # Bootstrap metadata cache from export/metadata.json if empty/missing
         if not self.metadata_cache:
@@ -115,8 +107,8 @@ class UrbanBlockReconstructor:
                         }
                         bootstrapped += 1
                     if bootstrapped > 0:
-                        save_json(self.metadata_cache, self.metadata_cache_path)
-                        print(f"[Metadata Cache Bootstrap] Successfully bootstrapped {bootstrapped} entries and saved to {self.metadata_cache_path}.")
+                        self.save_metadata_cache()
+                        print(f"[Metadata Cache Bootstrap] Successfully bootstrapped {bootstrapped} entries and saved to relational format.")
                 except Exception as e:
                     print(f"[Warning] Failed to bootstrap metadata cache: {e}")
                 
