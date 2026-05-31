@@ -1025,11 +1025,8 @@ class UrbanBlockReconstructor:
             centroid_y = sum(pt[1] for pt in shrunk_poly[:-1]) / num_verts
             
             dist_to_center = math.sqrt(centroid_x**2 + centroid_y**2)
-            if dist_to_center < 50.0:
-                height_meters = 1.0  # Parque Hidalgo
-            else:
-                h = hash(b_id) % 100
-                height_meters = 7.0 + (h % 3) * 2.0
+            h = hash(b_id) % 100
+            height_meters = 7.0 + (h % 3) * 2.0
             
             facade_textures_map = {}
             uv_mappings = {}
