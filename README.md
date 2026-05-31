@@ -179,11 +179,83 @@ PYTHONPATH=. ./venv/bin/python src/main.py --headless --radius 350
 
 ---
 
-## 6. Real-Time Auto-Saving & Graceful Interruption
+## 6. Real-Time Auto-Saving & Unified High-Fidelity Caching
 
-The reconstructor implements robust resilience features to prevent any data loss:
+The reconstructor implements robust resilience features to prevent any data loss and maintain a unified, enriched geospatial knowledge base:
 * **SIGINT/KeyboardInterrupt Handler**: If a run is interrupted via `Ctrl+C`, the system catches the signal, gracefully closes the active Playwright session, immediately serializes both `facade_metadata_cache.json` and `stitching_cache.json` to disk, and exits safely.
 * **Offline Metadata Recovery**: If screenshot images are present in `data/screenshots/facades/` but are missing from `facade_metadata_cache.json` (due to a prior crash or interruption), the system triggers a recovery fast-path. It uses the static coordinates of the facade to fetch its metadata using rapid GET queries, maps it to the file, and runs standard homography warping on the existing image **without opening Playwright or downloading any screenshots**.
+* **Unified Enriched Schema**: The system aggregates all parameters from Point 1 (Indispensables) and Point 2 (Desirables) into a single unified JSON object under `data/facade_metadata_cache.json` for every facade slice:
+
+```json
+{
+  "pano_id": "-NXu3HuDlMVBf9Y46OE9fQ",
+  "latitude": 32.57212712658536,
+  "longitude": -116.6231560210298,
+  "altitude": 522.06,
+  "date": "2008-12",
+  "heading": 84.23546955855736,
+  "pitch": 10.33,
+  "roll": -0.95,
+  "hfov": null,
+  "vfov": null,
+  "focal_length_px": null,
+  "resolution": {
+    "screenshot_width": 1280,
+    "screenshot_height": 720,
+    "slice_width": 512,
+    "slice_height": 256
+  },
+  "optical_center": null,
+  "intrinsic_matrix": null,
+  "camera_height_m": null,
+  "camera_position_local": [317.07, -122.66, null],
+  "camera_rotation_matrix": [
+    [0.100, -0.995, 0.0],
+    [0.995, 0.100, 0.0],
+    [0.0, 0.0, 1.0]
+  ],
+  "road_relation": {
+    "road_name": "Boulevard Defensores de Baja California",
+    "road_distance_meters": 7.36,
+    "road_edge_id": "e_234"
+  },
+  "distance_to_center_m": 391.0,
+  "facade_midpoint_local": [-636.56, -832.87],
+  "offset_search_point_local": [-628.65, -834.02],
+  "offset_search_point_gps": [32.56573, -116.63323],
+  "search_query_url": "https://maps.googleapis.com/maps/api/js/GeoPhotoService.SingleImageSearch?pb=...",
+  "captured_url": "https://www.google.com/maps?layer=c&cbll=...",
+  "modern_pano_id": "uZbChf3zuqASbI9Y47B3sg",
+  "camera_alignment_diagnostics": {
+    "look_vector": [-2.95, -1.29],
+    "facade_normal": [0.99, -0.14],
+    "dot_product": -2.74,
+    "is_correct_side": true
+  },
+  "image_filename": "block_5_facade_1409.png",
+  "block_id": "block_5",
+  "facade_index": 1409,
+  "facade_segment_vertices_local": [
+    [-639.11, -832.52],
+    [-634.01, -833.22]
+  ],
+  "facade_normal_vector": [0.99, -0.14],
+  "block_polygon_vertices_raw_local": [
+    [-645.11, -838.52],
+    [-628.01, -839.22],
+    [...]
+  ],
+  "block_polygon_vertices_shrunk_local": [
+    [-639.11, -832.52],
+    [-634.01, -833.22],
+    [...]
+  ],
+  "normal_offset_distance_m": 8.0,
+  "block_shrink_distance_m": 6.0
+}
+```
+
+* **Automatic Cache Migration**: At instantiation, `migrate_metadata_cache()` scans `data/facade_metadata_cache.json` and automatically migrates any legacy entries to the unified high-fidelity schema deterministically without modifying already collected raw values.
 
 ---
 

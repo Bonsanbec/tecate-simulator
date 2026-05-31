@@ -106,6 +106,9 @@ class UrbanBlockReconstructor:
             
         signal.signal(signal.SIGINT, handle_sigint)
 
+        # Run unified migration of existing cache entries to enriched format
+        self.migrate_metadata_cache()
+
     def save_stitching_cache(self):
         try:
             save_json(self.stitching_cache, self.stitching_cache_path)
@@ -119,6 +122,208 @@ class UrbanBlockReconstructor:
             print(f"[Cache Auto-Save] Metadata cache written to: {self.metadata_cache_path}")
         except Exception as e:
             print(f"[Warning] Failed to save metadata cache: {e}")
+
+    def build_all_facade_segments(self) -> dict:
+        """
+        Builds a map of all facade segment geometries for all blocks.
+        Returns a dict mapping facade_id -> {
+            "A": A, "B": B, "mx": mx, "my": my, "normal": normal, "block_id": b_id, "height": height_meters, "length": norm_len
+        }
+        """
+        raw_blocks = self.extract_block_polygons()
+        facades = {}
+        for rb in raw_blocks:
+            b_id = rb["block_id"]
+            raw_poly = rb["polygon"]
+            shrunk_poly = self.shrink_polygon(raw_poly, d=6.0)
+            num_verts = len(shrunk_poly) - 1
+            
+            centroid_x = sum(pt[0] for pt in shrunk_poly[:-1]) / num_verts
+            centroid_y = sum(pt[1] for pt in shrunk_poly[:-1]) / num_verts
+            dist_to_center = math.sqrt(centroid_x**2 + centroid_y**2)
+            if dist_to_center < 50.0:
+                height_meters = 1.0
+            else:
+                h = hash(b_id) % 100
+                height_meters = 7.0 + (h % 3) * 2.0
+                
+            for f_idx in range(num_verts):
+                facade_id = f"{b_id}_facade_{f_idx}"
+                A = shrunk_poly[f_idx]
+                B = shrunk_poly[f_idx + 1]
+                mx = (A[0] + B[0]) / 2.0
+                my = (A[1] + B[1]) / 2.0
+                
+                dx = B[0] - A[0]
+                dy = B[1] - A[1]
+                normal = np.array([dy, -dx])
+                norm_len = np.linalg.norm(normal)
+                if norm_len > 1e-5:
+                    normal = normal / norm_len
+                else:
+                    normal = np.array([0.0, 1.0])
+                    
+                facades[facade_id] = {
+                    "A": A,
+                    "B": B,
+                    "mx": mx,
+                    "my": my,
+                    "normal": normal,
+                    "block_id": b_id,
+                    "height": height_meters,
+                    "length": norm_len,
+                    "centroid": [centroid_x, centroid_y],
+                    "raw_poly": raw_poly,
+                    "shrunk_poly": shrunk_poly,
+                    "facade_index": f_idx
+                }
+        return facades
+
+    def migrate_metadata_cache(self):
+        """
+        Migrates the existing metadata cache to the new unified high-fidelity structure
+        containing all parameters from Point 1 and 2, without deleting or overwriting
+        already collected raw parameters.
+        """
+        if not self.metadata_cache:
+            return
+            
+        print("[Metadata Cache Migration] Starting migration of existing cache entries to unified format...")
+        facades_geom = self.build_all_facade_segments()
+        
+        migrated_count = 0
+        for facade_id, entry in list(self.metadata_cache.items()):
+            # Check if it needs migration (if typical new key like "intrinsic_matrix" is missing)
+            if "intrinsic_matrix" in entry:
+                continue
+                
+            lat = entry.get("latitude")
+            lon = entry.get("longitude")
+            heading = entry.get("heading")
+            pano_id = entry.get("pano_id")
+            date_str = entry.get("date", "")
+            
+            if lat is None or lon is None or heading is None or not pano_id:
+                continue
+                
+            # Derive parameters
+            geom = facades_geom.get(facade_id)
+            if geom:
+                road_dist, best_edge_id = self.get_road_distance(geom["mx"], geom["my"])
+            else:
+                road_dist, best_edge_id = 0.0, None
+                
+            # Fetch road name from G or default
+            road_name = ""
+            if best_edge_id:
+                for u, v, key, data in self.G.edges(keys=True, data=True):
+                    if data.get("id") == best_edge_id:
+                        road_name = data.get("name", "")
+                        break
+                        
+            cx, cy = gps_to_local(lat, lon)
+            
+            # Rotation matrix from yaw (heading)
+            yaw_rad = math.radians(heading)
+            rot_matrix = [
+                [math.cos(yaw_rad), -math.sin(yaw_rad), 0.0],
+                [math.sin(yaw_rad), math.cos(yaw_rad), 0.0],
+                [0.0, 0.0, 1.0]
+            ]
+            
+            # Clean up any previously saved placeholder/invented parameters
+            entry.pop("gps_accuracy_m", None)
+            entry.pop("orientation_accuracy_deg", None)
+            
+            # Query the unauthenticated metadata API at this coordinate to fetch the real pitch, roll, and altitude
+            print(f"[Migration Query] Refetching real projection parameters for {facade_id} from API...")
+            meta = self.scraper.fetch_public_metadata(lat=lat, lon=lon)
+            
+            altitude_val = None
+            pitch_val = None
+            roll_val = None
+            if meta:
+                altitude_val = meta.get("altitude")
+                pitch_val = meta.get("pitch")
+                roll_val = meta.get("roll")
+            
+            # Geometry derivations
+            mx, my = 0.0, 0.0
+            centroid_coords = [0.0, 0.0]
+            dist_to_center = 0.0
+            normal_val = [0.0, 1.0]
+            search_x, search_y = lat, lon
+            search_lat, search_lon = lat, lon
+            
+            if geom:
+                mx = geom["mx"]
+                my = geom["my"]
+                centroid_coords = geom["centroid"]
+                dist_to_center = math.sqrt(centroid_coords[0]**2 + centroid_coords[1]**2)
+                normal_val = [float(geom["normal"][0]), float(geom["normal"][1])]
+                search_x = mx + 8.0 * geom["normal"][0]
+                search_y = my + 8.0 * geom["normal"][1]
+                search_lat, search_lon = local_to_gps(search_x, search_y)
+                
+            look_vector = [float(mx - cx), float(my - cy)]
+            dot_prod = float(look_vector[0] * normal_val[0] + look_vector[1] * normal_val[1])
+            is_correct_side = bool(dot_prod < 0)
+            
+            # Request and Capture URLs
+            search_query_url = f"https://maps.googleapis.com/maps/api/js/GeoPhotoService.SingleImageSearch?pb=!1m5!1sapiv3!5sUS!11m2!1m1!1b0!2m4!1m2!3d{search_lat:.6f}!4d{search_lon:.6f}!2d50.0!3m10!2m2!1ses!2sMX!9m1!1e2!11m4!1m3!1e2!2b1!3e2!4m9!1e1!1e2!1e3!1e4!1e6!1e8!1e12!5m0!6m0&callback=_xdc_._v2mub5"
+            captured_url = f"https://www.google.com/maps?layer=c&cbll={lat},{lon}&panoid={pano_id}&cbp=11,{heading:.2f},,0,0"
+
+            # Update entry in-place with new high-fidelity parameters
+            entry["altitude"] = altitude_val
+            entry["pitch"] = pitch_val
+            entry["roll"] = roll_val
+            entry["hfov"] = None
+            entry["vfov"] = None
+            entry["focal_length_px"] = None
+            entry["resolution"] = {
+                "screenshot_width": 1280,
+                "screenshot_height": 720,
+                "slice_width": 512,
+                "slice_height": 256
+            }
+            entry["optical_center"] = None
+            entry["intrinsic_matrix"] = None
+            entry["camera_height_m"] = None
+            entry["camera_position_local"] = [float(cx), float(cy), None]
+            entry["camera_rotation_matrix"] = rot_matrix
+            entry["road_relation"] = {
+                "road_name": road_name,
+                "road_distance_meters": float(road_dist),
+                "road_edge_id": best_edge_id
+            }
+            entry["distance_to_center_m"] = float(dist_to_center)
+            entry["facade_midpoint_local"] = [float(mx), float(my)]
+            entry["offset_search_point_local"] = [float(search_x), float(search_y)]
+            entry["offset_search_point_gps"] = [float(search_lat), float(search_lon)]
+            entry["search_query_url"] = search_query_url
+            entry["captured_url"] = captured_url
+            entry["modern_pano_id"] = None
+            entry["camera_alignment_diagnostics"] = {
+                "look_vector": look_vector,
+                "facade_normal": normal_val,
+                "dot_product": dot_prod,
+                "is_correct_side": is_correct_side
+            }
+            entry["image_filename"] = f"{facade_id}.png"
+            entry["block_id"] = geom["block_id"] if geom else None
+            entry["facade_index"] = geom["facade_index"] if geom else None
+            entry["facade_segment_vertices_local"] = [geom["A"], geom["B"]] if geom else None
+            entry["facade_normal_vector"] = normal_val
+            entry["block_polygon_vertices_raw_local"] = geom["raw_poly"] if geom else None
+            entry["block_polygon_vertices_shrunk_local"] = geom["shrunk_poly"] if geom else None
+            entry["normal_offset_distance_m"] = 8.0
+            entry["block_shrink_distance_m"] = 6.0
+            
+            migrated_count += 1
+            
+        if migrated_count > 0:
+            self.save_metadata_cache()
+            print(f"[Metadata Cache Migration] Successfully migrated {migrated_count} cache entries to the enriched unified format.")
 
     def extract_block_polygons(self) -> list[dict]:
         """
@@ -916,12 +1121,79 @@ class UrbanBlockReconstructor:
                                 )
                                 
                             # Update self.metadata_cache
+                            cx, cy = gps_to_local(cam_lat, cam_lon)
+                            yaw_rad = math.radians(heading)
+                            rot_matrix = [
+                                [math.cos(yaw_rad), -math.sin(yaw_rad), 0.0],
+                                [math.sin(yaw_rad), math.cos(yaw_rad), 0.0],
+                                [0.0, 0.0, 1.0]
+                            ]
+                            
+                            road_name_val = ""
+                            if best_edge_id:
+                                for u_e, v_e, key_e, data_e in self.G.edges(keys=True, data=True):
+                                    if data_e.get("id") == best_edge_id:
+                                        road_name_val = data_e.get("name", "")
+                                        break
+                                        
+                            # Geometry derivations matching the exact logs output
+                            look_vector = [float(mx - cx), float(my - cy)]
+                            dot_prod = float(look_vector[0] * normal[0] + look_vector[1] * normal[1])
+                            is_correct_side = bool(dot_prod < 0)
+                            
+                            search_query_url = f"https://maps.googleapis.com/maps/api/js/GeoPhotoService.SingleImageSearch?pb=!1m5!1sapiv3!5sUS!11m2!1m1!1b0!2m4!1m2!3d{lat:.6f}!4d{lon:.6f}!2d50.0!3m10!2m2!1ses!2sMX!9m1!1e2!11m4!1m3!1e2!2b1!3e2!4m9!1e1!1e2!1e3!1e4!1e6!1e8!1e12!5m0!6m0&callback=_xdc_._v2mub5"
+                            captured_url = f"https://www.google.com/maps?layer=c&cbll={cam_lat},{cam_lon}&panoid={pano_id}&cbp=11,{heading:.2f},,0,0"
+
                             self.metadata_cache[facade_id] = {
                                 "pano_id": pano_id,
                                 "latitude": cam_lat,
                                 "longitude": cam_lon,
+                                "altitude": meta.get("altitude") if meta else None,
+                                "date": meta.get("date", "") if meta else "",
                                 "heading": heading,
-                                "date": meta.get("date", "")
+                                "pitch": meta.get("pitch") if meta else None,
+                                "roll": meta.get("roll") if meta else None,
+                                "hfov": None,
+                                "vfov": None,
+                                "focal_length_px": None,
+                                "resolution": {
+                                    "screenshot_width": 1280,
+                                    "screenshot_height": 720,
+                                    "slice_width": 512,
+                                    "slice_height": 256
+                                },
+                                "optical_center": None,
+                                "intrinsic_matrix": None,
+                                "camera_height_m": None,
+                                "camera_position_local": [float(cx), float(cy), None],
+                                "camera_rotation_matrix": rot_matrix,
+                                "road_relation": {
+                                    "road_name": road_name_val,
+                                    "road_distance_meters": float(road_dist),
+                                    "road_edge_id": best_edge_id
+                                },
+                                "distance_to_center_m": float(dist_to_center),
+                                "facade_midpoint_local": [float(mx), float(my)],
+                                "offset_search_point_local": [float(search_x), float(search_y)],
+                                "offset_search_point_gps": [float(lat), float(lon)],
+                                "search_query_url": search_query_url,
+                                "captured_url": captured_url,
+                                "modern_pano_id": meta.get("pano_id") if meta else None,
+                                "camera_alignment_diagnostics": {
+                                    "look_vector": look_vector,
+                                    "facade_normal": [float(normal[0]), float(normal[1])],
+                                    "dot_product": dot_prod,
+                                    "is_correct_side": is_correct_side
+                                },
+                                "image_filename": f"{facade_id}.png",
+                                "block_id": b_id,
+                                "facade_index": int(f_idx),
+                                "facade_segment_vertices_local": [A, B],
+                                "facade_normal_vector": [float(normal[0]), float(normal[1])],
+                                "block_polygon_vertices_raw_local": raw_poly,
+                                "block_polygon_vertices_shrunk_local": shrunk_poly,
+                                "normal_offset_distance_m": 8.0,
+                                "block_shrink_distance_m": 6.0
                             }
                             self.save_metadata_cache()
                             
