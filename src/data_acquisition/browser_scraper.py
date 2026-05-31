@@ -367,10 +367,37 @@ def parse_photometa_response(data: dict) -> dict | None:
         except Exception:
             pass
             
+        # Parse projection pitch, roll, yaw, and altitude from msg[5][0][1]
+        altitude_val = 0.0
+        pitch_val = 0.0
+        roll_val = 0.0
+        proj_yaw_val = None
+        
+        try:
+            p_block = msg[5][0][1]
+            if len(p_block) >= 3:
+                # Altitude is at index 1
+                if p_block[1] and len(p_block[1]) > 0:
+                    altitude_val = float(p_block[1][0])
+                
+                # Projection yaw, pitch, roll are at index 2
+                if p_block[2] and len(p_block[2]) >= 3:
+                    pitch_val = float(p_block[2][0])
+                    proj_yaw_val = float(p_block[2][1])
+                    raw_roll = float(p_block[2][2])
+                    # Normalize roll to [-180.0, 180.0]
+                    roll_val = (raw_roll + 180.0) % 360.0 - 180.0
+        except Exception:
+            pass
+
         return {
             "pano_id": panoid,
             "latitude": lat,
             "longitude": lon,
+            "altitude": altitude_val,
+            "pitch": pitch_val,
+            "roll": roll_val,
+            "projection_yaw": proj_yaw_val,
             "date": date_str,
             "road_name": road_name,
             "adjacent_links": adjacent_links,
