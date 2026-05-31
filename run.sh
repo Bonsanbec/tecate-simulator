@@ -23,6 +23,8 @@ while true; do
 
     echo "===== CRAWLER FINISHED ====="
 
+    rm tecate_reconstruction.blend1
+
     git add data/ export/ tecate_reconstruction.blend *.glb .gitattributes
 
     git commit -m "Incremental Street View archival $(date)" || true
@@ -31,5 +33,5 @@ while true; do
 
     echo "===== SLEEPING ====="
 
-    sleep 30
+    sleep 1
 done
