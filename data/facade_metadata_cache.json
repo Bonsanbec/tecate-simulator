@@ -24491,5 +24491,19 @@
         "longitude": -116.6373930328405,
         "heading": 173.80110079416679,
         "date": "2009-09"
+    },
+    "block_5_facade_903": {
+        "pano_id": "tiTyNF7zoWrCi6kbUKJkDg",
+        "latitude": 32.57017302202934,
+        "longitude": -116.6373930328405,
+        "heading": 173.8011007941677,
+        "date": "2009-09"
+    },
+    "block_5_facade_904": {
+        "pano_id": "M56w82CDEnvAXHFdoESu4Q",
+        "latitude": 32.5701574315355,
+        "longitude": -116.6375076508145,
+        "heading": 173.80110079416704,
+        "date": "2009-09"
     }
 }
