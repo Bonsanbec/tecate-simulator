@@ -254,7 +254,6 @@ class UrbanBlockReconstructor:
                 "captured_url": entry.get("captured_url"),
                 "modern_pano_id": entry.get("modern_pano_id"),
                 "camera_alignment_diagnostics": entry.get("camera_alignment_diagnostics"),
-                "image_filename": entry.get("image_filename"),
                 "facade_segment_vertices_local": entry.get("facade_segment_vertices_local"),
                 "roof_color": entry.get("roof_color")
             })
@@ -1121,7 +1120,6 @@ class UrbanBlockReconstructor:
                                         "dot_product": dot_prod,
                                         "is_correct_side": is_correct_side
                                     },
-                                    "image_filename": f"{facade_id}.png",
                                     "facade_segment_vertices_local": [A, B]
                                 }
                                 # Synchronize to memory metadata_cache
