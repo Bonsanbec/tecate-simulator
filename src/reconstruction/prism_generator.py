@@ -1013,6 +1013,241 @@ class UrbanBlockReconstructor:
         # Resize to standard texture size 512x256 (RGBA)
         return cropped.resize((512, 256), Image.Resampling.BILINEAR).convert("RGBA")
 
+    def estimate_facade_segment_height(self, p_id: str, heading_val: float, seg: dict) -> float:
+        """
+        Lightweight helper to estimate the building height for a single segment from its panorama.
+        """
+        # Get panorama screenshot path
+        pano_filename = f"{p_id}_yaw_{heading_val:.2f}.png"
+        pano_screenshot_path = os.path.abspath(os.path.join(self.data_dir, "screenshots", "pano", pano_filename))
+        if not os.path.exists(pano_screenshot_path):
+            return 4.0
+            
+        try:
+            img = Image.open(pano_screenshot_path).convert("RGBA")
+            W, H = img.size
+            np_img = np.array(img)
+            
+            cam_z = 2.5
+            cam_yaw = math.radians(heading_val)
+            cam_fov = 75.0
+            c_x = (W - 1) / 2.0
+            c_y = (H - 1) / 2.0
+            f = (W - 1) / (2.0 * math.tan(math.radians(cam_fov) / 2.0))
+            
+            v_look = np.array([math.sin(cam_yaw), math.cos(cam_yaw)])
+            v_right = np.array([math.cos(cam_yaw), -math.sin(cam_yaw)])
+            
+            p_data = self.panoramas_cache[p_id]
+            cx, cy = gps_to_local(p_data["latitude"], p_data["longitude"])
+            
+            # Project endpoints to get column range
+            img_columns = []
+            for pt in [seg["A"], seg["B"]]:
+                dx = pt[0] - cx
+                dy = pt[1] - cy
+                x_c = dx * v_right[0] + dy * v_right[1]
+                z_c = dx * v_look[0] + dy * v_look[1]
+                if z_c > 0.05:
+                    px = c_x + f * (x_c / z_c)
+                    img_columns.append(px)
+            
+            if img_columns:
+                col_min = int(max(0, min(img_columns)))
+                col_max = int(min(W - 1, max(img_columns)))
+            else:
+                return 4.0
+                
+            if col_max - col_min < 10:
+                col_min = 0
+                col_max = W - 1
+                
+            scanned_columns = range(col_min, col_max + 1, 8)
+            solved_heights = []
+            
+            for x in scanned_columns:
+                # Local sky profile
+                x_start = max(0, x - 5)
+                x_end = min(W - 1, x + 5)
+                sky_local = np_img[0:15, x_start:x_end, 0:3]
+                sky_mean = np.mean(sky_local, axis=(0, 1))
+                
+                detected_y = None
+                for y in range(15, int(H * 0.7)):
+                    color = np_img[y, x, 0:3]
+                    dist = np.linalg.norm(color - sky_mean)
+                    grad = np.linalg.norm(np_img[y + 1, x, 0:3].astype(float) - color.astype(float))
+                    if dist > 35.0 and grad > 15.0:
+                        detected_y = y
+                        break
+                        
+                if detected_y is not None:
+                    # Ray direction and depth solving
+                    r = (x - c_x) / f
+                    Vx = r * v_right[0] + v_look[0]
+                    Vy = r * v_right[1] + v_look[1]
+                    
+                    A, B = seg["A"], seg["B"]
+                    Ux = B[0] - A[0]
+                    Uy = B[1] - A[1]
+                    dx_cam = A[0] - cx
+                    dy_cam = A[1] - cy
+                    
+                    det = Ux * Vy - Uy * Vx
+                    z_c_x = None
+                    if abs(det) > 1e-5:
+                        s_val = (dy_cam * Ux - dx_cam * Uy) / det
+                        t_val = (Vx * dy_cam - Vy * dx_cam) / det
+                        if 0.0 <= t_val <= 1.0 and s_val > 0.05:
+                            pt_x = A[0] + t_val * Ux
+                            pt_y = A[1] + t_val * Uy
+                            z_c_x = (pt_x - cx) * v_look[0] + (pt_y - cy) * v_look[1]
+                            
+                    if z_c_x is None:
+                        mx = seg["mx"]
+                        my = seg["my"]
+                        z_c_x = (mx - cx) * v_look[0] + (my - cy) * v_look[1]
+                        
+                    if z_c_x < 0.1:
+                        z_c_x = 0.1
+                        
+                    H_solved = cam_z + z_c_x * ((c_y - detected_y) / f)
+                    solved_heights.append(H_solved)
+                    
+            if solved_heights:
+                return float(np.clip(np.median(solved_heights), 3.2, 6.5))
+        except Exception:
+            pass
+            
+        return 4.0
+
+    def mask_sky_in_panorama(
+        self,
+        image_path: str,
+        cx: float,
+        cy: float,
+        heading: float,
+        height_meters: float,
+        group_segments: list[dict]
+    ) -> Image.Image:
+        """
+        Traces the roofline boundary based on the unified block height_meters and local sky color,
+        and masks the sky by setting its alpha channel to zero.
+        """
+        img = Image.open(image_path).convert("RGBA")
+        W, H = img.size
+        np_img = np.array(img)
+        
+        cam_z = 2.5
+        cam_yaw = math.radians(heading)
+        cam_fov = 75.0
+        c_x = (W - 1) / 2.0
+        c_y = (H - 1) / 2.0
+        f = (W - 1) / (2.0 * math.tan(math.radians(cam_fov) / 2.0))
+        
+        v_look = np.array([math.sin(cam_yaw), math.cos(cam_yaw)])
+        v_right = np.array([math.cos(cam_yaw), -math.sin(cam_yaw)])
+        
+        # Calculate roofline column projection for the height_meters
+        img_columns = []
+        for seg in group_segments:
+            for pt in [seg["A"], seg["B"]]:
+                dx = pt[0] - cx
+                dy = pt[1] - cy
+                x_c = dx * v_right[0] + dy * v_right[1]
+                z_c = dx * v_look[0] + dy * v_look[1]
+                if z_c > 0.05:
+                    px = c_x + f * (x_c / z_c)
+                    img_columns.append(px)
+                    
+        if img_columns:
+            col_min = int(max(0, min(img_columns)))
+            col_max = int(min(W - 1, max(img_columns)))
+        else:
+            col_min = 0
+            col_max = W - 1
+            
+        if col_max - col_min < 20:
+            col_min = 0
+            col_max = W - 1
+            
+        # We trace the roofline per column
+        y_roof_all = np.zeros(W)
+        scanned_columns = range(col_min, col_max + 1, 8)
+        y_roofs_dict = {}
+        
+        for x in scanned_columns:
+            r = (x - c_x) / f
+            Vx = r * v_right[0] + v_look[0]
+            Vy = r * v_right[1] + v_look[1]
+            
+            z_c_x = None
+            for seg in group_segments:
+                A, B = seg["A"], seg["B"]
+                Ux = B[0] - A[0]
+                Uy = B[1] - A[1]
+                dx_cam = A[0] - cx
+                dy_cam = A[1] - cy
+                
+                det = Ux * Vy - Uy * Vx
+                if abs(det) > 1e-5:
+                    s_val = (dy_cam * Ux - dx_cam * Uy) / det
+                    t_val = (Vx * dy_cam - Vy * dx_cam) / det
+                    if 0.0 <= t_val <= 1.0 and s_val > 0.05:
+                        pt_x = A[0] + t_val * Ux
+                        pt_y = A[1] + t_val * Uy
+                        z_c_x = (pt_x - cx) * v_look[0] + (pt_y - cy) * v_look[1]
+                        break
+                        
+            if z_c_x is None:
+                mx_val = group_segments[0]["mx"]
+                my_val = group_segments[0]["my"]
+                z_c_x = (mx_val - cx) * v_look[0] + (my_val - cy) * v_look[1]
+                
+            if z_c_x < 0.1:
+                z_c_x = 0.1
+                
+            y_proj = c_y - f * ((height_meters - cam_z) / z_c_x)
+            
+            x_start = max(0, x - 5)
+            x_end = min(W - 1, x + 5)
+            sky_local = np_img[0:15, x_start:x_end, 0:3]
+            sky_mean = np.mean(sky_local, axis=(0, 1))
+            
+            refined_y = int(np.clip(y_proj, 15, H * 0.7))
+            
+            best_y = refined_y
+            for y_offset in range(-25, 25):
+                y = refined_y + y_offset
+                if 15 <= y < H - 1:
+                    color = np_img[y, x, 0:3]
+                    dist = np.linalg.norm(color - sky_mean)
+                    grad = np.linalg.norm(np_img[y + 1, x, 0:3].astype(float) - color.astype(float))
+                    if dist > 35.0 and grad > 15.0:
+                        best_y = y
+                        break
+                        
+            y_roofs_dict[x] = best_y
+            
+        if len(y_roofs_dict) >= 2:
+            sorted_x = sorted(y_roofs_dict.keys())
+            sorted_y = [y_roofs_dict[x] for x in sorted_x]
+            y_roof_all = np.interp(np.arange(W), sorted_x, sorted_y)
+        elif len(y_roofs_dict) == 1:
+            y_roof_all[:] = list(y_roofs_dict.values())[0]
+        else:
+            mx_val = group_segments[0]["mx"]
+            my_val = group_segments[0]["my"]
+            D = max(0.1, (mx_val - cx) * v_look[0] + (my_val - cy) * v_look[1])
+            y_fallback = c_y - f * ((height_meters - cam_z) / D)
+            y_roof_all[:] = np.clip(y_fallback, 15, H * 0.7)
+            
+        for x in range(W):
+            y_roof_limit = int(y_roof_all[x])
+            np_img[0:y_roof_limit, x, 3] = 0
+            
+        return Image.fromarray(np_img, "RGBA")
+
     def reconstruct_blocks_and_texture(self) -> tuple[list[dict], dict]:
         """
         Densely reconstructs and textures building block volumes.
@@ -1069,6 +1304,8 @@ class UrbanBlockReconstructor:
             dist_to_center = math.sqrt(centroid_x**2 + centroid_y**2)
             h = hash(b_id) % 100
             height_meters = 7.0 + (h % 3) * 2.0
+            if self.blocks_cache and b_id in self.blocks_cache:
+                height_meters = self.blocks_cache[b_id].get("height_meters", height_meters)
             
             facade_textures_map = {}
             uv_mappings = {}
@@ -1300,6 +1537,22 @@ class UrbanBlockReconstructor:
                     "heading": heading if (facade_id in self.facades_cache) else None
                 })
                 
+            # Pre-pass to estimate unified block height
+            block_solved_heights = []
+            for seg in block_segments_info:
+                if seg["pano_id"] is not None and seg["heading"] is not None:
+                    h_val = self.estimate_facade_segment_height(seg["pano_id"], seg["heading"], seg)
+                    if h_val != 4.0:
+                        block_solved_heights.append(h_val)
+                        
+            if block_solved_heights:
+                height_meters = float(np.median(block_solved_heights))
+            else:
+                if self.blocks_cache and b_id in self.blocks_cache:
+                    height_meters = self.blocks_cache[b_id].get("height_meters", 4.0)
+                else:
+                    height_meters = 4.0
+
             if self.harvest_only:
                 # In harvest-only mode, we don't process geometry, UV mappings, similarity stitching, or Blender texturing
                 continue
@@ -1314,14 +1567,24 @@ class UrbanBlockReconstructor:
                 ]
             uv_mappings[f"{b_id}_roof"] = [[0.0, 0.0]] * num_verts
             
-            # Group contiguous segments sharing the same pano_id and heading
+            # Group contiguous segments sharing the same pano_id and similar headings (within 20 deg tolerance)
+            def angular_difference(h1, h2):
+                if h1 is None or h2 is None:
+                    return 180.0
+                diff = abs(h1 - h2)
+                return min(diff, 360.0 - diff)
+                
             # Locate transition boundary starting index
             start_idx = 0
             for i in range(num_verts):
                 prev_idx = (i - 1) % num_verts
-                key_i = (block_segments_info[i]["pano_id"], block_segments_info[i]["heading"])
-                key_prev = (block_segments_info[prev_idx]["pano_id"], block_segments_info[prev_idx]["heading"])
-                if key_i != key_prev:
+                p_i = block_segments_info[i]["pano_id"]
+                p_prev = block_segments_info[prev_idx]["pano_id"]
+                h_i = block_segments_info[i]["heading"]
+                h_prev = block_segments_info[prev_idx]["heading"]
+                
+                # Transition if pano_id is different OR heading difference exceeds 20 degrees
+                if p_i != p_prev or angular_difference(h_i, h_prev) > 20.0:
                     start_idx = i
                     break
                     
@@ -1330,13 +1593,16 @@ class UrbanBlockReconstructor:
             for step in range(num_verts):
                 curr_idx = (start_idx + step) % num_verts
                 segment_info = block_segments_info[curr_idx]
-                key_curr = (segment_info["pano_id"], segment_info["heading"])
                 
                 if not curr_group:
                     curr_group.append(segment_info)
                 else:
-                    key_group = (curr_group[0]["pano_id"], curr_group[0]["heading"])
-                    if key_curr == key_group and key_curr[0] is not None:
+                    g_pano = curr_group[0]["pano_id"]
+                    g_heading = curr_group[0]["heading"]
+                    s_pano = segment_info["pano_id"]
+                    s_heading = segment_info["heading"]
+                    
+                    if s_pano == g_pano and s_pano is not None and angular_difference(s_heading, g_heading) <= 20.0:
                         curr_group.append(segment_info)
                     else:
                         groups.append(curr_group)
@@ -1347,7 +1613,15 @@ class UrbanBlockReconstructor:
             # Process each group to project and warp unified texture
             for group_idx, group in enumerate(groups):
                 p_id = group[0]["pano_id"]
-                heading_val = group[0]["heading"]
+                
+                # Calculate circular mean of segment headings in the group
+                headings = [seg["heading"] for seg in group if seg["heading"] is not None]
+                if headings:
+                    x_sum = sum(math.cos(math.radians(h)) for h in headings)
+                    y_sum = sum(math.sin(math.radians(h)) for h in headings)
+                    heading_val = round(math.degrees(math.atan2(y_sum, x_sum)) % 360.0, 2)
+                else:
+                    heading_val = 0.0
                 
                 if p_id is None:
                     # Fallback segments
@@ -1409,8 +1683,18 @@ class UrbanBlockReconstructor:
                         p_data = self.panoramas_cache[p_id]
                         cx_pano, cy_pano = gps_to_local(p_data["latitude"], p_data["longitude"])
                         
+                        # Apply sky masking using the unified block-level height_meters!
+                        masked_img = self.mask_sky_in_panorama(
+                            image_path=pano_screenshot_path,
+                            cx=cx_pano,
+                            cy=cy_pano,
+                            heading=heading_val,
+                            height_meters=height_meters,
+                            group_segments=group
+                        )
+                        
                         obs = {
-                            "image_path": pano_screenshot_path,
+                            "image_path": masked_img,
                             "projection": {
                                 "camera_x": cx_pano,
                                 "camera_y": cy_pano,
@@ -1444,7 +1728,7 @@ class UrbanBlockReconstructor:
                         virtual_tex_filename = f"{b_id}_virtual_{cardinal.lower()}_{group_idx}.png"
                         virtual_tex_path = os.path.abspath(os.path.join(self.textures_dir, virtual_tex_filename))
                         warped_img.save(virtual_tex_path)
-                        print(f"[Virtual Facade] Successfully warped and saved {K}-segment virtual facade to: {virtual_tex_filename}")
+                        print(f"[Virtual Facade] Successfully warped and saved {K}-segment virtual facade to: {virtual_tex_filename} with height {height_meters:.2f}m")
                     except Exception as warp_err:
                         print(f"[Warning] Failed unified warping for group: {warp_err}")
                         
@@ -1519,7 +1803,7 @@ class UrbanBlockReconstructor:
             if b_id not in self.blocks_cache:
                 self.blocks_cache[b_id] = {}
             self.blocks_cache[b_id].update({
-                "polygon": shrunk_poly,
+                "polygon": raw_poly,
                 "height_meters": height_meters,
                 "roof_color": roof_color_val
             })
