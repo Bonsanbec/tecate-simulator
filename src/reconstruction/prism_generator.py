@@ -214,20 +214,14 @@ class UrbanBlockReconstructor:
             if p_id:
                 if p_id not in self.panoramas_cache:
                     self.panoramas_cache[p_id] = {}
+                
                 self.panoramas_cache[p_id].update({
                     "latitude": entry.get("latitude"),
                     "longitude": entry.get("longitude"),
                     "altitude": entry.get("altitude"),
-                    "date": entry.get("date"),
+                    "date": entry.get("date", ""),
                     "pitch": entry.get("pitch"),
                     "roll": entry.get("roll"),
-                    "hfov": entry.get("hfov"),
-                    "vfov": entry.get("vfov"),
-                    "focal_length_px": entry.get("focal_length_px"),
-                    "optical_center": entry.get("optical_center"),
-                    "intrinsic_matrix": entry.get("intrinsic_matrix"),
-                    "camera_height_m": entry.get("camera_height_m"),
-                    "pano_yaw": entry.get("pano_yaw")
                 })
                 
             # 2. Facade Cache
@@ -938,6 +932,16 @@ class UrbanBlockReconstructor:
 
         raw_blocks = self.extract_block_polygons()
         
+        # Sort blocks by proximity to Parque Hidalgo (0, 0)
+        def block_distance(bl):
+            poly = bl["polygon"]
+            cx = sum(pt[0] for pt in poly[:-1]) / (len(poly) - 1)
+            cy = sum(pt[1] for pt in poly[:-1]) / (len(poly) - 1)
+            return math.sqrt(cx**2 + cy**2)
+            
+        raw_blocks.sort(key=block_distance)
+        print(f"[Reconstruction] Prioritized {len(raw_blocks)} blocks by geographic proximity to city center (Parque Hidalgo).")
+        
         blocks_data = []
         provenance = {}
         diagnostics = {}
@@ -1060,11 +1064,6 @@ class UrbanBlockReconstructor:
                                     "date": meta.get("date", ""),
                                     "pitch": meta.get("pitch"),
                                     "roll": meta.get("roll"),
-                                    "hfov": None,
-                                    "vfov": None,
-                                    "intrinsic_matrix": None,
-                                    "camera_height_m": None,
-                                    "pano_yaw": meta.get("yaw_degrees", 0.0)
                                 }
                                 
                                 road_name_val = ""
