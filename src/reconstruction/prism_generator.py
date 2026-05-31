@@ -39,14 +39,60 @@ class UrbanBlockReconstructor:
             except Exception as e:
                 print(f"[Warning] Failed to load stitching cache: {e}")
                 
-        # Load metadata cache to enable fast offline runs for cached screenshots
+        # Initialize relational cache file paths
+        self.panoramas_cache_path = os.path.join(data_dir, "panoramas_cache.json")
+        self.blocks_cache_path = os.path.join(data_dir, "blocks_cache.json")
+        self.facades_cache_path = os.path.join(data_dir, "facades_cache.json")
+        
+        # Load panoramas
+        self.panoramas_cache = {}
+        if os.path.exists(self.panoramas_cache_path):
+            try:
+                self.panoramas_cache = load_json(self.panoramas_cache_path)
+            except Exception as e:
+                print(f"[Warning] Failed to load panoramas cache: {e}")
+                
+        # Load blocks
+        self.blocks_cache = {}
+        if os.path.exists(self.blocks_cache_path):
+            try:
+                self.blocks_cache = load_json(self.blocks_cache_path)
+            except Exception as e:
+                print(f"[Warning] Failed to load blocks cache: {e}")
+                
+        # Load facades
+        self.facades_cache = {}
+        if os.path.exists(self.facades_cache_path):
+            try:
+                self.facades_cache = load_json(self.facades_cache_path)
+            except Exception as e:
+                print(f"[Warning] Failed to load facades cache: {e}")
+                
+        # Load legacy cache if relational caches are empty
         self.metadata_cache_path = os.path.join(data_dir, "facade_metadata_cache.json")
         self.metadata_cache = {}
-        if os.path.exists(self.metadata_cache_path):
-            try:
-                self.metadata_cache = load_json(self.metadata_cache_path)
-            except Exception as e:
-                print(f"[Warning] Failed to load metadata cache: {e}")
+        
+        if self.facades_cache:
+            # Reconstruct the virtual metadata_cache in-memory for 100% backward-compatibility
+            for f_id, f_data in self.facades_cache.items():
+                p_id = f_data.get("pano_id")
+                b_id = f_data.get("block_id")
+                p_data = self.panoramas_cache.get(p_id, {})
+                b_data = self.blocks_cache.get(b_id, {})
+                combined = {}
+                combined.update(f_data)
+                combined.update(p_data)
+                combined.update(b_data)
+                combined["pano_id"] = p_id
+                combined["block_id"] = b_id
+                self.metadata_cache[f_id] = combined
+        else:
+            if os.path.exists(self.metadata_cache_path):
+                print("[Metadata Cache Migration] Relational caches are empty. Loading legacy flat cache...")
+                try:
+                    self.metadata_cache = load_json(self.metadata_cache_path)
+                except Exception as e:
+                    print(f"[Warning] Failed to load legacy metadata cache: {e}")
                 
         # Bootstrap metadata cache from export/metadata.json if empty/missing
         if not self.metadata_cache:
@@ -116,12 +162,137 @@ class UrbanBlockReconstructor:
         except Exception as e:
             print(f"[Warning] Failed to save stitching cache: {e}")
 
-    def save_metadata_cache(self):
+    def save_panoramas_cache(self):
         try:
-            save_json(self.metadata_cache, self.metadata_cache_path)
-            print(f"[Cache Auto-Save] Metadata cache written to: {self.metadata_cache_path}")
+            save_json(self.panoramas_cache, self.panoramas_cache_path)
+            print(f"[Cache Auto-Save] Panoramas cache written to: {self.panoramas_cache_path}")
         except Exception as e:
-            print(f"[Warning] Failed to save metadata cache: {e}")
+            print(f"[Warning] Failed to save panoramas cache: {e}")
+
+    def save_blocks_cache(self):
+        try:
+            save_json(self.blocks_cache, self.blocks_cache_path)
+            print(f"[Cache Auto-Save] Blocks cache written to: {self.blocks_cache_path}")
+        except Exception as e:
+            print(f"[Warning] Failed to save blocks cache: {e}")
+
+    def save_facades_cache(self):
+        try:
+            save_json(self.facades_cache, self.facades_cache_path)
+            print(f"[Cache Auto-Save] Facades cache written to: {self.facades_cache_path}")
+        except Exception as e:
+            print(f"[Warning] Failed to save facades cache: {e}")
+
+    def _decompose_metadata_cache(self):
+        """
+        Decomposes the virtual in-memory self.metadata_cache into
+        the three relational caches: self.panoramas_cache, self.blocks_cache, and self.facades_cache.
+        """
+        for f_id, entry in self.metadata_cache.items():
+            if not entry:
+                continue
+            # 1. Panorama Cache
+            p_id = entry.get("pano_id")
+            if p_id:
+                if p_id not in self.panoramas_cache:
+                    self.panoramas_cache[p_id] = {}
+                self.panoramas_cache[p_id].update({
+                    "latitude": entry.get("latitude"),
+                    "longitude": entry.get("longitude"),
+                    "altitude": entry.get("altitude"),
+                    "date": entry.get("date"),
+                    "pitch": entry.get("pitch"),
+                    "roll": entry.get("roll"),
+                    "hfov": entry.get("hfov"),
+                    "vfov": entry.get("vfov"),
+                    "focal_length_px": entry.get("focal_length_px"),
+                    "optical_center": entry.get("optical_center"),
+                    "intrinsic_matrix": entry.get("intrinsic_matrix"),
+                    "camera_height_m": entry.get("camera_height_m")
+                })
+                
+            # 2. Block Cache
+            b_id = entry.get("block_id")
+            if b_id:
+                if b_id not in self.blocks_cache:
+                    self.blocks_cache[b_id] = {}
+                    
+                # Derive centroid if not explicitly stored
+                raw_poly = entry.get("block_polygon_vertices_raw_local")
+                shrunk_poly = entry.get("block_polygon_vertices_shrunk_local")
+                centroid = entry.get("centroid")
+                if not centroid:
+                    if shrunk_poly and len(shrunk_poly) > 1:
+                        num_verts = len(shrunk_poly) - 1
+                        cx = sum(pt[0] for pt in shrunk_poly[:-1]) / num_verts
+                        cy = sum(pt[1] for pt in shrunk_poly[:-1]) / num_verts
+                        centroid = [cx, cy]
+                    elif raw_poly and len(raw_poly) > 1:
+                        num_verts = len(raw_poly) - 1
+                        cx = sum(pt[0] for pt in raw_poly[:-1]) / num_verts
+                        cy = sum(pt[1] for pt in raw_poly[:-1]) / num_verts
+                        centroid = [cx, cy]
+                        
+                dist_to_center = entry.get("distance_to_center_m")
+                if dist_to_center is None and centroid:
+                    dist_to_center = math.sqrt(centroid[0]**2 + centroid[1]**2)
+                    
+                height_meters = entry.get("height_meters")
+                if height_meters is None and dist_to_center is not None:
+                    if dist_to_center < 50.0:
+                        height_meters = 1.0
+                    else:
+                        h = hash(b_id) % 100
+                        height_meters = 7.0 + (h % 3) * 2.0
+                        
+                roof_color = entry.get("roof_color")
+                if roof_color is None:
+                    roof_color = self.blocks_cache[b_id].get("roof_color")
+                    
+                self.blocks_cache[b_id].update({
+                    "distance_to_center_m": dist_to_center,
+                    "centroid": centroid,
+                    "height_meters": height_meters,
+                    "block_polygon_vertices_raw_local": raw_poly,
+                    "block_polygon_vertices_shrunk_local": shrunk_poly,
+                    "block_shrink_distance_m": entry.get("block_shrink_distance_m", 6.0),
+                    "normal_offset_distance_m": entry.get("normal_offset_distance_m", 8.0),
+                    "roof_color": roof_color
+                })
+                
+            # 3. Facade Cache
+            if f_id not in self.facades_cache:
+                self.facades_cache[f_id] = {}
+            self.facades_cache[f_id].update({
+                "pano_id": p_id,
+                "block_id": b_id,
+                "facade_index": entry.get("facade_index"),
+                "heading": entry.get("heading"),
+                "resolution": entry.get("resolution", {
+                    "screenshot_width": 1280,
+                    "screenshot_height": 720,
+                    "slice_width": 512,
+                    "slice_height": 256
+                }),
+                "camera_position_local": entry.get("camera_position_local"),
+                "camera_rotation_matrix": entry.get("camera_rotation_matrix"),
+                "road_relation": entry.get("road_relation"),
+                "facade_midpoint_local": entry.get("facade_midpoint_local"),
+                "offset_search_point_local": entry.get("offset_search_point_local"),
+                "offset_search_point_gps": entry.get("offset_search_point_gps"),
+                "search_query_url": entry.get("search_query_url"),
+                "captured_url": entry.get("captured_url"),
+                "modern_pano_id": entry.get("modern_pano_id"),
+                "camera_alignment_diagnostics": entry.get("camera_alignment_diagnostics"),
+                "image_filename": entry.get("image_filename"),
+                "facade_segment_vertices_local": entry.get("facade_segment_vertices_local")
+            })
+
+    def save_metadata_cache(self):
+        self._decompose_metadata_cache()
+        self.save_panoramas_cache()
+        self.save_blocks_cache()
+        self.save_facades_cache()
 
     def build_all_facade_segments(self) -> dict:
         """
@@ -324,6 +495,9 @@ class UrbanBlockReconstructor:
         if migrated_count > 0:
             self.save_metadata_cache()
             print(f"[Metadata Cache Migration] Successfully migrated {migrated_count} cache entries to the enriched unified format.")
+        elif self.metadata_cache and not os.path.exists(self.facades_cache_path):
+            print("[Metadata Cache Migration] Relational cache files do not exist. Decomposing and saving legacy cache now...")
+            self.save_metadata_cache()
 
     def extract_block_polygons(self) -> list[dict]:
         """
@@ -1376,6 +1550,18 @@ class UrbanBlockReconstructor:
                         except Exception as fallback_err:
                             print(f"[Warning] Failed fallback stitching: {fallback_err}")
             
+            roof_color_val = self.calculate_predominant_roof_color(facade_textures_map)
+            
+            # Persist roof_color in blocks_cache and virtual metadata_cache
+            if b_id not in self.blocks_cache:
+                self.blocks_cache[b_id] = {}
+            self.blocks_cache[b_id]["roof_color"] = roof_color_val
+            
+            for f_idx in range(num_verts):
+                f_id = f"{b_id}_facade_{f_idx}"
+                if f_id in self.metadata_cache:
+                    self.metadata_cache[f_id]["roof_color"] = roof_color_val
+                    
             blocks_data.append({
                 "block_id": b_id,
                 "polygon": shrunk_poly,
@@ -1385,7 +1571,7 @@ class UrbanBlockReconstructor:
                 "texture_atlas_filename": atlas_filename,
                 "facade_textures": facade_textures_map,
                 "uv_mappings": uv_mappings,
-                "roof_color": self.calculate_predominant_roof_color(facade_textures_map),
+                "roof_color": roof_color_val,
                 "traceability": [
                     {
                         "facade_idx": f_idx,
@@ -1435,8 +1621,8 @@ class UrbanBlockReconstructor:
         print(f"[Reconstruction] Stitching cache successfully updated at: {self.stitching_cache_path}")
         
         # Save metadata cache back to disk (Incremental processing)
-        save_json(self.metadata_cache, self.metadata_cache_path)
-        print(f"[Reconstruction] Metadata cache successfully updated at: {self.metadata_cache_path}")
+        self.save_metadata_cache()
+        print(f"[Reconstruction] Metadata caches successfully updated in relational format.")
         
         # Compile global observation map
         self.generate_diagnostic_visualization(scene_doc, diag_facades, meta_out["coverage_percentage"])
