@@ -25,7 +25,7 @@ while true; do
 
     rm tecate_reconstruction.blend1
 
-    git add data/ export/ tecate_reconstruction.blend *.glb .gitattributes
+    git add .
 
     git commit -m "Incremental Street View archival $(date)" || true
 
