@@ -318,67 +318,105 @@ def embed_culling_utility_script(fov_deg: float, max_dist: float):
     script_content = f"""# TECATE SIMULATOR: VIEWPORT FOV CULLING UTILITY
 #
 # INSTRUCTIONS:
-# 1. Open this script in Blender's Scripting tab / Text Editor.
-# 2. Click the 'Run Script' button (play icon) to dynamically update visibility!
-# 3. Modify settings below as needed.
+# This script has been automatically configured and registered to run on load.
+# You will find a "Tecate Culler" tab in the 3D Viewport Sidebar (N-panel)!
+# Toggle the auto-culling and adjust the distance/FOV sliders there in real-time.
 
 import bpy
 import math
 import mathutils
 
-# --- CONFIGURATION ---
-MAX_DIST = {max_dist}  # Max distance in meters
-FOV_DEG = {fov_deg}    # Horizontal FOV in degrees
-# ---------------------
+class TecateCullerProperties(bpy.types.PropertyGroup):
+    auto_cull: bpy.props.BoolProperty(
+        name="Auto-Cull Viewport",
+        description="Enable automatic viewport culling as you navigate",
+        default=True,
+        update=lambda self, context: update_culling_visibility()
+    )
+    max_dist: bpy.props.FloatProperty(
+        name="Max Distance",
+        description="Maximum culling distance in meters",
+        default={max_dist},
+        min=50.0,
+        max=2000.0,
+        update=lambda self, context: update_culling_visibility()
+    )
+    fov_deg: bpy.props.FloatProperty(
+        name="FOV Angle",
+        description="Horizontal culling FOV in degrees",
+        default={fov_deg},
+        min=30.0,
+        max=180.0,
+        update=lambda self, context: update_culling_visibility()
+    )
 
-def cull_viewport_fov():
-    # Find active camera
-    camera = bpy.context.scene.camera
-    if not camera:
-        print("[Culler] No active camera found in scene!")
+def update_culling_visibility():
+    if bpy.app.background:
         return
         
-    cam_loc = camera.location
-    # Get look direction from camera world matrix
-    # In Blender, local -Z is forward
-    cam_matrix = camera.matrix_world
-    look_dir = cam_matrix.to_3x3() @ mathutils.Vector((0.0, 0.0, -1.0))
+    scene = bpy.context.scene
+    if not scene or not hasattr(scene, "tecate_culler"):
+        return
+        
+    props = scene.tecate_culler
+    
+    if not props.auto_cull:
+        for obj in bpy.data.objects:
+            if obj.name.startswith("facades_") or obj.name.startswith("roofs_"):
+                obj.hide_viewport = False
+                obj.hide_render = False
+        return
+        
+    region_3d = None
+    if hasattr(bpy.context, "screen") and bpy.context.screen:
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                for space in area.spaces:
+                    if space.type == 'VIEW_3D':
+                        region_3d = space.region_3d
+                        break
+                if region_3d:
+                    break
+                    
+    if not region_3d:
+        return
+        
+    view_matrix_inv = region_3d.view_matrix.inverted()
+    cam_loc = view_matrix_inv.to_translation()
+    look_dir = view_matrix_inv.to_3x3() @ mathutils.Vector((0.0, 0.0, -1.0))
     look_dir_2d = mathutils.Vector((look_dir.x, look_dir.y))
     if look_dir_2d.length > 1e-5:
         look_dir_2d.normalize()
     else:
         look_dir_2d = mathutils.Vector((0.0, 1.0))
         
-    half_fov_rad = math.radians(FOV_DEG / 2.0)
+    max_dist = props.max_dist
+    half_fov_rad = math.radians(props.fov_deg / 2.0)
     min_dot = math.cos(half_fov_rad)
     
-    print(f"[Culler] Culling relative to camera '{{camera.name}}' at {{cam_loc.to_tuple(2)}}")
-    print(f"[Culler] Look Dir 2D: {{look_dir_2d.to_tuple(2)}}, FOV: {{FOV_DEG}}°, Max Dist: {{MAX_DIST}}m")
-    
-    culled_count = 0
-    visible_count = 0
-    
-    # Hide/show facade and roof objects based on their centroids
     for obj in bpy.data.objects:
-        # Check if object is a facade or roof
         if not (obj.name.startswith("facades_") or obj.name.startswith("roofs_")):
             continue
             
         if not obj.data or not hasattr(obj.data, "vertices") or len(obj.data.vertices) == 0:
             continue
             
-        # Compute centroid from vertices
-        xs = [v.co.x for v in obj.data.vertices]
-        ys = [v.co.y for v in obj.data.vertices]
-        centroid_x = sum(xs) / len(xs)
-        centroid_y = sum(ys) / len(ys)
-        
-        dx = centroid_x - cam_loc.x
-        dy = centroid_y - cam_loc.y
+        if "centroid_x" in obj:
+            cx, cy = obj["centroid_x"], obj["centroid_y"]
+        else:
+            xs = [v.co.x for v in obj.data.vertices]
+            ys = [v.co.y for v in obj.data.vertices]
+            cx = sum(xs) / len(xs)
+            cy = sum(ys) / len(ys)
+            obj["centroid_x"] = cx
+            obj["centroid_y"] = cy
+            
+        dx = cx - cam_loc.x
+        dy = cy - cam_loc.y
         dist = math.sqrt(dx*dx + dy*dy)
         
         is_visible = True
-        if dist > MAX_DIST:
+        if dist > max_dist:
             is_visible = False
         elif dist > 1e-5:
             disp_dir = mathutils.Vector((dx / dist, dy / dist))
@@ -386,22 +424,136 @@ def cull_viewport_fov():
             if dot < min_dot:
                 is_visible = False
                 
-        # Update visibility in viewport and render
         obj.hide_viewport = not is_visible
         obj.hide_render = not is_visible
+
+last_cam_loc = mathutils.Vector((0.0, 0.0, 0.0))
+last_look_dir = mathutils.Vector((0.0, 0.0, 0.0))
+
+def tecate_culler_timer():
+    if bpy.app.background:
+        return 0.1
         
-        if is_visible:
-            visible_count += 1
-        else:
-            culled_count += 1
+    global last_cam_loc, last_look_dir
+    
+    if not hasattr(bpy.context, "scene") or not bpy.context.scene:
+        return 0.1
+    if not hasattr(bpy.context.scene, "tecate_culler"):
+        return 0.1
+        
+    props = bpy.context.scene.tecate_culler
+    if not props.auto_cull:
+        return 0.1
+        
+    region_3d = None
+    if hasattr(bpy.context, "screen") and bpy.context.screen:
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                for space in area.spaces:
+                    if space.type == 'VIEW_3D':
+                        region_3d = space.region_3d
+                        break
+                if region_3d:
+                    break
+                    
+    if not region_3d:
+        return 0.1
+        
+    view_matrix_inv = region_3d.view_matrix.inverted()
+    cam_loc = view_matrix_inv.to_translation()
+    look_dir = view_matrix_inv.to_3x3() @ mathutils.Vector((0.0, 0.0, -1.0))
+    
+    loc_diff = (cam_loc - last_cam_loc).length
+    dir_diff = (look_dir - last_look_dir).length
+    
+    if loc_diff > 0.5 or dir_diff > 0.01:
+        last_cam_loc = cam_loc.copy()
+        last_look_dir = look_dir.copy()
+        update_culling_visibility()
+        
+    return 0.1
+
+class VIEW3D_PT_tecate_culler(bpy.types.Panel):
+    bl_label = "Tecate City Viewport Culler"
+    bl_idname = "VIEW3D_PT_tecate_culler"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Tecate Culler'
+    
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        if not hasattr(scene, "tecate_culler"):
+            return
+        props = scene.tecate_culler
+        
+        box = layout.box()
+        box.label(text="Culling Controls", icon='VIEWZOOM')
+        box.prop(props, "auto_cull", toggle=True, icon='HIDE_OFF' if props.auto_cull else 'HIDE_ON')
+        
+        if props.auto_cull:
+            col = box.column(align=True)
+            col.prop(props, "max_dist", slider=True)
+            col.prop(props, "fov_deg", slider=True)
             
-    print(f"[Culler] Done! {{visible_count}} objects visible, {{culled_count}} objects hidden.")
+            visible_count = sum(1 for obj in bpy.data.objects if (obj.name.startswith("facades_") or obj.name.startswith("roofs_")) and not obj.hide_viewport)
+            total_count = sum(1 for obj in bpy.data.objects if (obj.name.startswith("facades_") or obj.name.startswith("roofs_")))
+            
+            row = box.row()
+            row.label(text=f"Visible Blocks: {{visible_count}} / {{total_count}}", icon='RENDER_RESULT')
+
+classes = (
+    TecateCullerProperties,
+    VIEW3D_PT_tecate_culler,
+)
+
+def register():
+    if bpy.app.background:
+        return
+        
+    for cls in classes:
+        try:
+            bpy.utils.register_class(cls)
+        except Exception:
+            pass
+            
+    bpy.types.Scene.tecate_culler = bpy.props.PointerProperty(type=TecateCullerProperties)
+    
+    if not bpy.app.timers.is_registered(tecate_culler_timer):
+        bpy.app.timers.register(tecate_culler_timer)
+        
+    update_culling_visibility()
+
+def unregister():
+    if bpy.app.timers.is_registered(tecate_culler_timer):
+        bpy.app.timers.unregister(tecate_culler_timer)
+        
+    if hasattr(bpy.types.Scene, "tecate_culler"):
+        del bpy.types.Scene.tecate_culler
+        
+    for cls in reversed(classes):
+        try:
+            bpy.utils.unregister_class(cls)
+        except Exception:
+            pass
 
 if __name__ == '__main__':
-    cull_viewport_fov()
+    register()
 """
     txt.from_string(script_content)
-    print(f"[Blender] Embedded interactive utility script: {text_name}")
+    txt.use_module = True # Run this text block automatically as a module on load!
+    
+    # Try to make our script the active text block in any open Text Editor spaces
+    try:
+        for area in bpy.context.screen.areas:
+            if area.type == 'TEXT_EDITOR':
+                for space in area.spaces:
+                    if space.type == 'TEXT_EDITOR':
+                        space.text = txt
+    except Exception:
+        pass
+        
+    print(f"[Blender] Embedded and registered auto-running utility script: {text_name}")
 
 def main():
     args = []
