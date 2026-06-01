@@ -81,7 +81,7 @@ def translate_paths_to_windows(source_json_path, dest_json_path):
         print(f"[Warning] Error translating paths for Windows Blender: {e}")
         return False
 
-def run_blender_export(args):
+def run_blender_export(args=None):
     """Locates and runs the Blender background script to compile geometry.gltf."""
     blender_path = "blender"
     is_running_wsl = is_wsl()

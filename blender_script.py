@@ -66,7 +66,7 @@ def get_block_centroid(poly):
     sy = sum(poly[i][1] for i in range(num_verts))
     return (sx / num_verts, sy / num_verts)
 
-def build_block_meshes(blocks_data: list, cull_fov: bool = True, cam_loc: tuple = (0.0, -120.0, 110.0), cam_rot: tuple = (48.0, 0.0, 0.0), fov_deg: float = 90.0, max_dist: float = 250.0):
+def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple = (0.0, -120.0, 110.0), cam_rot: tuple = (48.0, 0.0, 0.0), fov_deg: float = 90.0, max_dist: float = 250.0):
     """
     Constructs 3D block geometries grouped by material to optimize viewport
     rendering performance, bypass EEVEE shader memory leaks, and prevent
@@ -344,12 +344,13 @@ import mathutils
 class TecateCullerProperties(bpy.types.PropertyGroup):
     cull_mode: bpy.props.EnumProperty(
         name="Cull Mode",
-        description="Choose between automatic culling or manual culling on button click",
+        description="Choose viewport culling behavior",
         items=[
+            ('OFF', "Disabled", "Disable viewport culling entirely"),
             ('AUTO', "Automatic", "Automatically update culling as you move the camera"),
             ('MANUAL', "Manual", "Only update culling when clicking the manual Update button")
         ],
-        default='AUTO',
+        default='OFF',
         update=lambda self, context: update_culling_visibility()
     )
     max_dist: bpy.props.FloatProperty(
@@ -387,6 +388,13 @@ def update_culling_visibility(force=False):
         
     props = scene.tecate_culler
     
+    if props.cull_mode == 'OFF':
+        for obj in bpy.data.objects:
+            if obj.name.startswith("facades_") or obj.name.startswith("roof_") or obj.name.startswith("roofs_"):
+                obj.hide_viewport = False
+                obj.hide_render = False
+        return
+    
     # Get active viewport space
     region_3d = None
     if hasattr(bpy.context, "screen") and bpy.context.screen:
@@ -419,7 +427,7 @@ def update_culling_visibility(force=False):
     candidates = []
     
     for obj in bpy.data.objects:
-        if not (obj.name.startswith("facades_") or obj.name.startswith("roofs_")):
+        if not (obj.name.startswith("facades_") or obj.name.startswith("roof_")):
             continue
             
         if not obj.data or not hasattr(obj.data, "vertices") or len(obj.data.vertices) == 0:
@@ -487,8 +495,8 @@ def tecate_culler_timer():
         
     props = bpy.context.scene.tecate_culler
     
-    # If in MANUAL mode, pause timer updates
-    if props.cull_mode == 'MANUAL':
+    # If in MANUAL or OFF mode, pause timer updates
+    if props.cull_mode in ('MANUAL', 'OFF'):
         return 0.1
         
     region_3d = None
@@ -539,7 +547,7 @@ class VIEW3D_OT_tecate_cull_update(bpy.types.Operator):
     
     def execute(self, context):
         update_culling_visibility(force=True)
-        return {'FINISHED'}
+        return {{'FINISHED'}}
 
 class VIEW3D_PT_tecate_culler(bpy.types.Panel):
     bl_label = "Tecate City Viewport Culler"
@@ -568,13 +576,15 @@ class VIEW3D_PT_tecate_culler(bpy.types.Panel):
             row.operator("view3d.tecate_cull_update", icon='FILE_REFRESH', text="Update Viewport Culling")
             
         col = box.column(align=True)
+        if props.cull_mode == 'OFF':
+            col.enabled = False
         col.prop(props, "max_dist", slider=True)
         col.prop(props, "fov_deg", slider=True)
         col.prop(props, "max_visible_blocks", slider=True)
         
         # Statistics
-        visible_count = sum(1 for obj in bpy.data.objects if (obj.name.startswith("facades_") or obj.name.startswith("roofs_")) and not obj.hide_viewport)
-        total_count = sum(1 for obj in bpy.data.objects if (obj.name.startswith("facades_") or obj.name.startswith("roofs_")))
+        visible_count = sum(1 for obj in bpy.data.objects if (obj.name.startswith("facades_") or obj.name.startswith("roof_")) and not obj.hide_viewport)
+        total_count = sum(1 for obj in bpy.data.objects if (obj.name.startswith("facades_") or obj.name.startswith("roof_")))
         
         row = box.row()
         row.label(text=f"Visible Blocks: {{visible_count}} / {{total_count}}", icon='RENDER_RESULT')
@@ -649,7 +659,7 @@ def main():
     export_json = "export/reconstruction_export.json"
     
     # Culling and Camera settings defaults
-    cull_fov = True
+    cull_fov = False
     cam_loc = (0.0, -120.0, 110.0)
     cam_rot = (48.0, 0.0, 0.0)
     fov_deg = 90.0
@@ -661,6 +671,8 @@ def main():
             export_json = args[idx + 1]
         elif arg == "--no-cull":
             cull_fov = False
+        elif arg == "--cull":
+            cull_fov = True
         elif arg == "--cam-loc" and idx + 1 < len(args):
             try:
                 cam_loc = tuple(float(x) for x in args[idx + 1].split(","))
