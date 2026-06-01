@@ -444,15 +444,48 @@ class GoogleStreetViewScraper:
         self.playwright_context_manager = sync_playwright()
         self.playwright = self.playwright_context_manager.__enter__()
         
-        self.browser = self.playwright.chromium.launch(
-            headless=self.headless,
-            args=[
-                "--use-gl=angle",
-                "--use-angle=swiftshader",
-                "--ignore-gpu-blocklist",
-                "--disable-web-security"
-            ]
-        )
+        try:
+            self.browser = self.playwright.chromium.launch(
+                headless=self.headless,
+                args=[
+                    "--use-gl=angle",
+                    "--use-angle=swiftshader",
+                    "--ignore-gpu-blocklist",
+                    "--disable-web-security"
+                ]
+            )
+        except Exception as e:
+            print("\n" + "="*80)
+            print(f"[Error] Playwright failed to launch the Chromium browser: {e}")
+            
+            # Detect platform & print help
+            import sys
+            is_linux = sys.platform.startswith("linux")
+            is_wsl_env = False
+            if is_linux:
+                try:
+                    with open("/proc/version", "r") as f:
+                        content = f.read().lower()
+                        is_wsl_env = "microsoft" in content or "wsl" in content
+                except Exception:
+                    pass
+            
+            if "Executable doesn't exist" in str(e) or "playwright install" in str(e):
+                print("\nMissing Playwright browser binaries!")
+                print("To install, run:")
+                print("    playwright install chromium")
+                print("Or if using virtualenv:")
+                print("    ./venv/bin/playwright install chromium")
+            elif is_linux:
+                print("\nMissing system libraries for Chromium on Linux/WSL!")
+                print("To install the required dependencies, run:")
+                print("    playwright install-deps")
+                print("Or if using virtualenv:")
+                print("    ./venv/bin/playwright install-deps")
+                if is_wsl_env and not self.headless:
+                    print("\nTip: WSL does not have a display server by default. Ensure you run with --headless.")
+            print("="*80 + "\n")
+            raise e
         self.context = self.browser.new_context(
             viewport={"width": 1280, "height": 720},
             user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -551,11 +584,12 @@ class GoogleStreetViewScraper:
             # Capture viewport screenshot
             screenshot_bytes = self.page.screenshot()
             
-            # Save a debug screenshot for visual diagnostic confirmation
-            os.makedirs("data/screenshots/facades", exist_ok=True)
-            debug_path = f"data/screenshots/facades/{slice_id}.png"
-            with open(debug_path, "wb") as f:
-                f.write(screenshot_bytes)
+            # Save a debug screenshot for visual diagnostic confirmation (avoided for temp_ captures)
+            if not slice_id.startswith("temp_"):
+                os.makedirs("data/screenshots/facades", exist_ok=True)
+                debug_path = f"data/screenshots/facades/{slice_id}.png"
+                with open(debug_path, "wb") as f:
+                    f.write(screenshot_bytes)
                 
             return screenshot_bytes
         except Exception as e:

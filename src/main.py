@@ -23,6 +23,14 @@ def is_wsl():
             pass
     return False
 
+def is_headless_by_default():
+    """Determines if the Playwright browser should launch in headless mode by default."""
+    if is_wsl():
+        return True
+    if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+        return True
+    return False
+
 def get_windows_path(wsl_path):
     """Converts a WSL path to a Windows path using the wslpath utility."""
     try:
@@ -99,8 +107,21 @@ def run_blender_export(args=None):
                 blender_path = win_paths[0]
             else:
                 blender_path = "blender.exe"  # Last resort fallback
-    else:
-        # Common macOS paths for Blender
+    elif sys.platform == "win32":
+        # Native Windows
+        blender_path = shutil.which("blender") or shutil.which("blender.exe")
+        if not blender_path:
+            win_paths = sorted(
+                glob.glob("C:/Program Files/Blender Foundation/Blender */blender.exe"),
+                reverse=True
+            )
+            if win_paths:
+                blender_path = win_paths[0]
+            else:
+                blender_path = "blender"
+    elif sys.platform == "darwin":
+        # macOS
+        blender_path = "blender"
         mac_paths = [
             "/Applications/Blender.app/Contents/MacOS/Blender",
             "/Applications/Blender.app/Contents/MacOS/blender",
@@ -110,6 +131,9 @@ def run_blender_export(args=None):
             if os.path.exists(path):
                 blender_path = path
                 break
+    else:
+        # Linux / other
+        blender_path = shutil.which("blender") or "blender"
                 
     print(f"[Blender Compiler] Compiling geometry.gltf using Blender: '{blender_path}'")
     
@@ -226,8 +250,8 @@ def run_pipeline(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tecate 2009 Historical Urban Reconstruction Pipeline CLI")
-    parser.add_argument("--headless", action="store_true", default=False,
-                        help="Run Playwright Chromium browser in headless mode (default: False to support WebGL on Mac)")
+    parser.add_argument("--headless", action="store_true", default=is_headless_by_default(),
+                        help="Run Playwright Chromium browser in headless mode (defaults to True on WSL/headless Linux, False on Mac)")
     parser.add_argument("--skip-scraper", action="store_true", default=False,
                         help="Bypass Playwright browser crawling and load directly from cached structural_graph nodes")
     parser.add_argument("--harvest-only", action="store_true", default=False,
