@@ -216,6 +216,21 @@ class UrbanBlockReconstructor:
         # Run unified migration of existing cache entries to enriched format
         self.migrate_metadata_cache()
 
+        # Load existing reconstruction export to enable block-level incremental skipping
+        self.existing_export_blocks = {}
+        self.reconstruction_export_path = os.path.join(self.export_dir, "reconstruction_export.json")
+        if not self.reprocess and os.path.exists(self.reconstruction_export_path):
+            try:
+                existing_data = load_json(self.reconstruction_export_path)
+                if isinstance(existing_data, dict) and "blocks" in existing_data:
+                    for block in existing_data["blocks"]:
+                        b_id = block.get("block_id")
+                        if b_id:
+                            self.existing_export_blocks[b_id] = block
+                print(f"[Incremental Resume] Found {len(self.existing_export_blocks)} already reconstructed blocks in {self.reconstruction_export_path}")
+            except Exception as e:
+                print(f"[Warning] Failed to load existing reconstruction export: {e}")
+
     def is_point_in_polygon(self, x: float, y: float, polygon: list) -> bool:
         """
         Ray-casting algorithm to determine if a point (x, y) is inside a polygon.
@@ -240,28 +255,28 @@ class UrbanBlockReconstructor:
 
     def save_stitching_cache(self):
         try:
-            save_json(self.stitching_cache, self.stitching_cache_path)
+            save_json(self.stitching_cache, self.stitching_cache_path, indent=None)
             print(f"[Cache Auto-Save] Stitching cache written to: {self.stitching_cache_path}")
         except Exception as e:
             print(f"[Warning] Failed to save stitching cache: {e}")
 
     def save_panoramas_cache(self):
         try:
-            save_json(self.panoramas_cache, self.panoramas_cache_path)
+            save_json(self.panoramas_cache, self.panoramas_cache_path, indent=None)
             print(f"[Cache Auto-Save] Panoramas cache written to: {self.panoramas_cache_path}")
         except Exception as e:
             print(f"[Warning] Failed to save panoramas cache: {e}")
 
     def save_facades_cache(self):
         try:
-            save_json(self.facades_cache, self.facades_cache_path)
+            save_json(self.facades_cache, self.facades_cache_path, indent=None)
             print(f"[Cache Auto-Save] Facades cache written to: {self.facades_cache_path}")
         except Exception as e:
             print(f"[Warning] Failed to save facades cache: {e}")
             
     def save_blocks_cache(self):
         try:
-            save_json(self.blocks_cache, self.blocks_cache_path)
+            save_json(self.blocks_cache, self.blocks_cache_path, indent=None)
             print(f"[Cache Auto-Save] Blocks cache written to: {self.blocks_cache_path}")
         except Exception as e:
             print(f"[Warning] Failed to save blocks cache: {e}")
@@ -464,15 +479,37 @@ class UrbanBlockReconstructor:
         or resumes them from the local blocks_cache.json if available to prevent recalculation.
         """
         if self.blocks_cache:
-            print(f"[Cache Resume] Resuming {len(self.blocks_cache)} blocks from blocks_cache.json")
+            print(f"[Cache Resume] Resuming and filtering blocks from blocks_cache.json...")
             blocks = []
+            resumed_count = 0
             for b_id, b_data in self.blocks_cache.items():
+                poly = b_data["polygon"]
+                if len(poly) < 3:
+                    continue
+                num_verts = len(poly) - 1
+                centroid_x = sum(pt[0] for pt in poly[:-1]) / num_verts
+                centroid_y = sum(pt[1] for pt in poly[:-1]) / num_verts
+                
+                # 1. Filter by active safety radius if set
+                if self.radius is not None and self.radius > 0:
+                    dist_to_center = math.sqrt(centroid_x**2 + centroid_y**2)
+                    if dist_to_center > self.radius:
+                        continue
+                        
+                # 2. Filter by municipal polygon boundary if loaded
+                if self.tecate_poly:
+                    centroid_lat, centroid_lon = local_to_gps(centroid_x, centroid_y)
+                    if not self.is_point_in_polygon(centroid_lon, centroid_lat, self.tecate_poly):
+                        continue
+                        
                 blocks.append({
                     "block_id": b_id,
-                    "polygon": b_data["polygon"],
+                    "polygon": poly,
                     "area_sq_meters": b_data.get("area_sq_meters", 100.0),
                     "is_external": b_data.get("is_external", False)
                 })
+                resumed_count += 1
+            print(f"[Cache Resume] Successfully resumed {resumed_count} blocks (filtered from {len(self.blocks_cache)} cache entries).")
             return blocks
 
         print("[Reconstruction] Trimming road network to extract urban block cycles...")
@@ -1407,6 +1444,7 @@ class UrbanBlockReconstructor:
         self.current_provenance = provenance
         self.current_diagnostics = diagnostics
         self.current_diag_facades = diag_facades
+        newly_resolved_count = 0
 
         for idx, rb in enumerate(raw_blocks):
             b_id = rb["block_id"]
@@ -1414,6 +1452,88 @@ class UrbanBlockReconstructor:
                 print(f"[Reconstruction] Skipping external boundary mega-manzana: '{b_id}'")
                 sys.stdout.flush()
                 continue
+            # --- INCREMENTAL BLOCK SKIPPING ---
+            if not self.reprocess and b_id in self.existing_export_blocks:
+                existing_block = self.existing_export_blocks[b_id]
+                local_diag_facades = []
+                blocks_data.append(existing_block)
+                poly = existing_block["polygon"]
+                num_verts = len(poly) - 1
+                
+                # Recover provenance for metadata mapping and texturing count
+                facade_textures = existing_block.get("facade_textures", {})
+                for f_id, tex_path in facade_textures.items():
+                    if "transparent_facade.png" not in tex_path:
+                        f_cache = self.facades_cache.get(f_id) or {}
+                        p_id = f_cache.get("pano_id")
+                        if p_id:
+                            p_data = self.panoramas_cache.get(p_id, {})
+                            f_idx = int(f_id.split("_")[-1])
+                            A = poly[f_idx]
+                            B = poly[f_idx+1]
+                            dx = B[0] - A[0]
+                            dy = B[1] - A[1]
+                            length = math.sqrt(dx*dx + dy*dy)
+                            normal = [dy / length, -dx / length] if length > 0 else [0.0, 1.0]
+                            
+                            prov = {
+                                "source_pano_id": p_id,
+                                "source_date": p_data.get("date", ""),
+                                "source_lat_lon": [p_data.get("latitude", 0.0), p_data.get("longitude", 0.0)],
+                                "facade_normal": normal,
+                                "projection_parameters": {
+                                    "cam_z": 2.5,
+                                    "height_meters": float(existing_block.get("height_meters", 8.0)),
+                                    "facade_length": float(length)
+                                }
+                            }
+                            provenance[f_id] = prov
+                            textured_facades += 1
+
+                # Reconstruct diagnostics for this block
+                for f_idx in range(num_verts):
+                    f_id = f"{b_id}_facade_{f_idx}"
+                    f_cache = self.facades_cache.get(f_id) or {}
+                    is_textured = (f_id in provenance)
+                    status = "textured" if is_textured else "fallback"
+                    
+                    A = poly[f_idx]
+                    B = poly[f_idx + 1]
+                    mx = (A[0] + B[0]) / 2.0
+                    my = (A[1] + B[1]) / 2.0
+                    dx = B[0] - A[0]
+                    dy = B[1] - A[1]
+                    length = math.sqrt(dx*dx + dy*dy)
+                    normal_list = [dy / length, -dx / length] if length > 0 else [0.0, 1.0]
+                    
+                    p_id = f_cache.get("pano_id")
+                    p_data = self.panoramas_cache.get(p_id, {}) if p_id else {}
+                    
+                    local_diag_facades.append({
+                        "facade_id": f_id,
+                        "A": A, "B": B, "mx": mx, "my": my, "normal": normal_list,
+                        "status": status,
+                        "best_obs": {
+                            "metadata": {
+                                "latitude": p_data.get("latitude", 0.0),
+                                "longitude": p_data.get("longitude", 0.0)
+                            }
+                        } if is_textured else None
+                    })
+                    diagnostics[f_id] = {
+                        "facade_id": f_id,
+                        "midpoint": [float(mx), float(my)],
+                        "normal": normal_list,
+                        "is_street_facing": True,
+                        "road_distance_meters": (f_cache.get("road_relation") or {}).get("road_distance_meters", 0.0),
+                        "status": status
+                    }
+                    
+                diag_facades.extend(local_diag_facades)
+                print(f"[Incremental Block Skip] Block '{b_id}' already fully processed. Reusing geometry and texturing.")
+                sys.stdout.flush()
+                continue
+            # ----------------------------------
                 
             raw_poly = rb["polygon"]
             local_diag_facades = []
@@ -2010,6 +2130,44 @@ class UrbanBlockReconstructor:
                 ]
             })
             diag_facades.extend(local_diag_facades)
+            newly_resolved_count += 1
+            
+            # Autoguardado e checkpoints intermedios cada 5 bloques nuevos resueltos
+            if newly_resolved_count > 0 and newly_resolved_count % 5 == 0:
+                print(f"[Checkpoint] Auto-saving progress ({newly_resolved_count} new blocks resolved)...")
+                
+                # 1. Save reconstruction_export.json
+                flat_nodes = []
+                for n, data in self.G.nodes(data=True):
+                    flat_nodes.append({"id": n, "x": data["x"], "y": data["y"]})
+                flat_edges = []
+                for u, v, data in self.G.edges(data=True):
+                    flat_edges.append({"u": u, "v": v})
+                scene_doc = {
+                    "road_graph": {
+                        "nodes": flat_nodes,
+                        "edges": flat_edges
+                    },
+                    "blocks": blocks_data
+                }
+                save_json(scene_doc, self.reconstruction_export_path)
+                
+                # 2. Save metadata.json
+                temp_total_facades = sum(len(bl["polygon"]) - 1 for bl in blocks_data)
+                temp_meta_out = {
+                    "total_blocks": len(blocks_data),
+                    "total_facades": temp_total_facades,
+                    "textured_facades": textured_facades,
+                    "coverage_percentage": (textured_facades / temp_total_facades * 100.0) if temp_total_facades > 0 else 0.0,
+                    "provenance": provenance
+                }
+                save_json(temp_meta_out, os.path.join(self.export_dir, "metadata.json"))
+                
+                # 3. Save diagnostics and caches
+                save_json(diagnostics, os.path.join(self.debug_dir, "reconstruction_diagnostics.json"))
+                self.save_stitching_cache()
+                self.save_metadata_cache()
+                sys.stdout.flush()
 
         if self.harvest_only:
             print("[Harvest Mode] Scraping and metadata caching complete. Skipping all 3D reconstruction and Blender rendering.")
