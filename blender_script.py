@@ -70,7 +70,8 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = True, cam_loc: tuple 
     """
     Constructs 3D block geometries grouped by material to optimize viewport
     rendering performance, bypass EEVEE shader memory leaks, and prevent
-    GLB/glTF exporter duplication crashes. Supports active camera FOV culling.
+    GLB/glTF exporter duplication crashes. Reconstructs all blocks, but sets
+    initial visibility based on camera FOV/frustum to protect memory.
     """
     num_total = len(blocks_data)
     
@@ -100,17 +101,19 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = True, cam_loc: tuple 
     # Pre-cache fallback texture path to avoid check in loop
     fallback_path = os.path.abspath("export/textures/transparent_facade.png")
     
-    # Group geometries by material (tex_path for facades, roof_key for roofs)
+    # Group geometries by material (tex_path for facades)
     facade_geometry = {}
-    roof_geometry = {}
     
-    num_built = 0
+    num_visible = 0
+    num_hidden = 0
+    
     for idx, bl in enumerate(blocks_data):
         b_id = bl["block_id"]
         poly = bl["polygon"]
         height = bl["height_meters"]
         
-        # Compute centroid for FOV/distance culling
+        # 1. Evaluate block's initial camera visibility
+        is_visible = True
         centroid = get_block_centroid(poly)
         if cull_fov:
             cx, cy = cam_loc[0], cam_loc[1]
@@ -120,21 +123,24 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = True, cam_loc: tuple 
             dy = by - cy
             dist = math.sqrt(dx*dx + dy*dy)
             
-            # 1. Distance culling check
+            # Check maximum distance culling
             if dist > max_dist:
-                continue
-                
-            # 2. Horizontal FOV culling check
-            if dist > 1e-5:
+                is_visible = False
+            # Check horizontal FOV culling
+            elif dist > 1e-5:
                 disp_dir = mathutils.Vector((dx / dist, dy / dist))
                 dot = disp_dir.dot(look_dir_2d)
                 half_fov_rad = math.radians(fov_deg / 2.0)
                 min_dot = math.cos(half_fov_rad)
                 
                 if dot < min_dot:
-                    continue
+                    is_visible = False
                     
-        num_built += 1
+        if is_visible:
+            num_visible += 1
+        else:
+            num_hidden += 1
+            
         num_verts = len(poly) - 1
         z_base = 0.0
         
@@ -142,7 +148,7 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = True, cam_loc: tuple 
         uv_mappings = bl.get("uv_mappings", {})
         facade_tex_dict = bl.get("facade_textures", {})
         
-        # 1. Process vertical facade faces
+        # 2. Process vertical facade faces
         for i in range(num_verts):
             next_idx = (i + 1) % num_verts
             surface_id = f"{b_id}_facade_{i}"
@@ -162,7 +168,9 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = True, cam_loc: tuple 
                 tex_path = fallback_path
                 
             if tex_path not in facade_geometry:
-                facade_geometry[tex_path] = { "verts": [], "faces": [], "uvs": [] }
+                facade_geometry[tex_path] = { "verts": [], "faces": [], "uvs": [], "is_visible": is_visible }
+            else:
+                facade_geometry[tex_path]["is_visible"] = facade_geometry[tex_path]["is_visible"] or is_visible
                 
             geo = facade_geometry[tex_path]
             s_idx = len(geo["verts"])
@@ -170,25 +178,50 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = True, cam_loc: tuple 
             geo["faces"].append([s_idx, s_idx + 1, s_idx + 2, s_idx + 3])
             geo["uvs"].extend(uvs)
             
-        # 2. Process roof face
+        # 3. Process and build individual roof object for this block
         roof_verts = [(poly[i][0], poly[i][1], z_base + height) for i in reversed(range(num_verts))]
         roof_color = bl.get("roof_color", [238 / 255.0, 232 / 255.0, 220 / 255.0])
         roof_key = tuple(round(c, 3) for c in roof_color)
         
-        if roof_key not in roof_geometry:
-            roof_geometry[roof_key] = { "verts": [], "faces": [] }
+        roof_mesh_name = f"roof_{b_id}_mesh"
+        roof_mesh = bpy.data.meshes.new(name=roof_mesh_name)
+        roof_mesh.from_pydata(roof_verts, [], [list(range(num_verts))])
+        roof_mesh.update()
+        
+        # Get or create shared roof color material
+        if roof_key not in loaded_roof_materials:
+            roof_mat_name = f"roof_mat_{roof_key[0]:.3f}_{roof_key[1]:.3f}_{roof_key[2]:.3f}"
+            mat = bpy.data.materials.get(roof_mat_name)
+            if not mat:
+                mat = bpy.data.materials.new(name=roof_mat_name)
+                mat.use_nodes = True
+                bsdf = mat.node_tree.nodes.get("Principled BSDF")
+                if bsdf:
+                    bsdf.inputs['Base Color'].default_value = (roof_key[0], roof_key[1], roof_key[2], 1.0)
+            loaded_roof_materials[roof_key] = mat
             
-        geo = roof_geometry[roof_key]
-        s_idx = len(geo["verts"])
-        geo["verts"].extend(roof_verts)
-        geo["faces"].append(list(range(s_idx, s_idx + num_verts)))
+        roof_mat = loaded_roof_materials[roof_key]
+        
+        # Create roof object
+        roof_obj_name = f"roof_{b_id}"
+        roof_obj = bpy.data.objects.new(roof_obj_name, roof_mesh)
+        bpy.context.scene.collection.objects.link(roof_obj)
+        roof_obj.data.materials.append(roof_mat)
+        
+        # Store block centroid on the object for super-fast dynamic culling
+        roof_obj["centroid_x"] = centroid[0]
+        roof_obj["centroid_y"] = centroid[1]
+        
+        # Apply initial visibility
+        roof_obj.hide_viewport = not is_visible
+        roof_obj.hide_render = not is_visible
 
     if cull_fov:
-        print(f"[Blender] Reconstructed {num_built} of {num_total} urban blocks (culled {num_total - num_built} blocks outside FOV).")
+        print(f"[Blender] Reconstructed all {num_total} urban blocks ({num_visible} initially visible, {num_hidden} hidden outside FOV).")
     else:
-        print(f"[Blender] Reconstructed all {num_built} urban blocks.")
+        print(f"[Blender] Reconstructed all {num_total} urban blocks (all visible).")
 
-    # 3. Create facade mesh objects in Blender (one object per unique material)
+    # 4. Create facade mesh objects in Blender (one object per unique material/texture)
     print(f"[Blender] Compiling {len(facade_geometry)} unique facade materials...")
     for tex_path, geo in facade_geometry.items():
         mat_name = f"mat_{os.path.basename(tex_path).replace('.', '_')}"
@@ -249,34 +282,17 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = True, cam_loc: tuple 
         bpy.context.scene.collection.objects.link(obj)
         obj.data.materials.append(mat)
         
-    # 4. Create roof mesh objects in Blender (one object per rounded roof color)
-    print(f"[Blender] Compiling {len(roof_geometry)} unique roof color materials...")
-    for roof_key, geo in roof_geometry.items():
-        mesh_name = f"roof_{roof_key[0]:.3f}_{roof_key[1]:.3f}_mesh"
+        # Compute and cache centroid on the object for super-fast culling
+        xs = [v[0] for v in geo["verts"]]
+        ys = [v[1] for v in geo["verts"]]
+        centroid_x = sum(xs) / len(xs)
+        centroid_y = sum(ys) / len(ys)
+        obj["centroid_x"] = centroid_x
+        obj["centroid_y"] = centroid_y
         
-        mesh = bpy.data.meshes.new(name=mesh_name)
-        mesh.from_pydata(geo["verts"], [], geo["faces"])
-        mesh.update()
-        
-        # Get or create roof material
-        if roof_key not in loaded_roof_materials:
-            roof_mat_name = f"roof_mat_{roof_key[0]:.3f}_{roof_key[1]:.3f}_{roof_key[2]:.3f}"
-            mat = bpy.data.materials.get(roof_mat_name)
-            if not mat:
-                mat = bpy.data.materials.new(name=roof_mat_name)
-                mat.use_nodes = True
-                bsdf = mat.node_tree.nodes.get("Principled BSDF")
-                if bsdf:
-                    bsdf.inputs['Base Color'].default_value = (roof_key[0], roof_key[1], roof_key[2], 1.0)
-            loaded_roof_materials[roof_key] = mat
-            
-        roof_mat = loaded_roof_materials[roof_key]
-        
-        # Create Object and bind material
-        obj_name = f"roofs_{roof_key[0]:.3f}_{roof_key[1]:.3f}"
-        obj = bpy.data.objects.new(obj_name, mesh)
-        bpy.context.scene.collection.objects.link(obj)
-        obj.data.materials.append(roof_mat)
+        # Apply initial visibility
+        obj.hide_viewport = not geo["is_visible"]
+        obj.hide_render = not geo["is_visible"]
 
 def setup_lighting_and_camera(cam_loc: tuple = (0.0, -120.0, 110.0), cam_rot: tuple = (48.0, 0.0, 0.0), fov_deg: float = 90.0):
     """Sets up standard illumination and a convenient top-down camera views."""
