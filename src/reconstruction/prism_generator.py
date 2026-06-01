@@ -358,7 +358,7 @@ class UrbanBlockReconstructor:
         self.save_metadata_cache()
         
         # Check if we have active reconstruction progress to export
-        if True:
+        if getattr(self, "current_blocks_data", None):
             print("[Ctrl+C] Generating coverage map and scene export files for current progress...")
             try:
                 # 1. Save reconstruction_export.json
