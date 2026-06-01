@@ -100,9 +100,20 @@ def run_blender_export(args=None):
         if not blender_path:
             # Look in standard Windows program files directories mounted in WSL
             win_paths = sorted(
-                glob.glob("/mnt/c/Program Files/Blender Foundation/Blender */blender.exe"),
+                glob.glob("/mnt/c/Program Files/Blender Foundation/Blender */blender.exe") +
+                glob.glob("/mnt/c/Program Files/Blender Foundation/Blender * Alpha/blender.exe"),
                 reverse=True
             )
+            # Add explicit check for user's Blender 5.1 installation on C: drive mounts
+            explicit_paths = [
+                "/mnt/c/Program Files/Blender Foundation/Blender 5.1/blender.exe",
+                "/mnt/c/Program Files/Blender Foundation/Blender 5.1 Alpha/blender.exe",
+                "/c/Program Files/Blender Foundation/Blender 5.1/blender.exe",
+                "/c/Program Files/Blender Foundation/Blender 5.1 Alpha/blender.exe",
+            ]
+            for p in explicit_paths:
+                if os.path.exists(p):
+                    win_paths.insert(0, p)
             if win_paths:
                 blender_path = win_paths[0]
             else:
@@ -112,9 +123,18 @@ def run_blender_export(args=None):
         blender_path = shutil.which("blender") or shutil.which("blender.exe")
         if not blender_path:
             win_paths = sorted(
-                glob.glob("C:/Program Files/Blender Foundation/Blender */blender.exe"),
+                glob.glob("C:/Program Files/Blender Foundation/Blender */blender.exe") +
+                glob.glob("C:/Program Files/Blender Foundation/Blender * Alpha/blender.exe"),
                 reverse=True
             )
+            # Add explicit check for user's Blender 5.1 installation
+            explicit_paths = [
+                "C:/Program Files/Blender Foundation/Blender 5.1/blender.exe",
+                "C:/Program Files/Blender Foundation/Blender 5.1 Alpha/blender.exe",
+            ]
+            for p in explicit_paths:
+                if os.path.exists(p):
+                    win_paths.insert(0, p)
             if win_paths:
                 blender_path = win_paths[0]
             else:
@@ -205,6 +225,7 @@ def run_pipeline(args):
     print("=" * 60)
     print("      TECATE 2009 HISTORICAL URBAN RECONSTRUCTION PIPELINE")
     print("=" * 60)
+    print(f"[Pipeline] Parallel processing enabled: utilizing {args.parallel} worker threads.")
     print("-" * 60)
 
     # Make sure output directories exist

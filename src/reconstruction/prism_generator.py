@@ -2539,22 +2539,72 @@ class UrbanBlockReconstructor:
         dx += 100.0
         dy += 100.0
         
+        # Available drawing area
+        avail_w = width - 2 * margin
+        avail_h = height - 2 * margin
+        
+        # Scale factors (pixels per meter)
+        scale_x = avail_w / dx
+        scale_y = avail_h / dy
+        scale = min(scale_x, scale_y) # Maintain a perfect 1:1 aspect ratio (perpendicular view)
+        
+        # Center the bounding box within the available canvas space
+        offset_x = margin + (avail_w - dx * scale) / 2
+        offset_y = margin + (avail_h - dy * scale) / 2
+        
         def to_pix(x, y):
-            px = margin + int(((x - xmin) / dx) * (width - 2 * margin))
-            py = height - margin - int(((y - ymin) / dy) * (height - 2 * margin))
+            px = int(offset_x + (x - xmin) * scale)
+            py = int(height - offset_y - (y - ymin) * scale)
             return px, py
             
         # Clean light mode background
         canvas = Image.new("RGB", (width, height), (245, 246, 248))
         draw = ImageDraw.Draw(canvas, "RGBA")
         
+        # Try to load a clean modern TrueType font for high-fidelity text rendering
+        font_large = None
+        font_medium = None
+        font_small = None
+        
+        font_paths = []
+        if sys.platform == "win32":
+            win_dir = os.environ.get("WINDIR", "C:\\Windows")
+            font_paths = [
+                os.path.join(win_dir, "Fonts", "arialbd.ttf"),
+                os.path.join(win_dir, "Fonts", "arial.ttf"),
+            ]
+        elif sys.platform == "darwin":
+            font_paths = [
+                "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+                "/System/Library/Fonts/Supplemental/Arial.ttf",
+                "/System/Library/Fonts/Supplemental/Helvetica.ttf",
+            ]
+        else:
+            font_paths = [
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/liberation/LiberationSans-Regular.ttf",
+            ]
+            
+        from PIL import ImageFont
+        for fp in font_paths:
+            if os.path.exists(fp):
+                try:
+                    font_large = ImageFont.truetype(fp, 18)
+                    font_medium = ImageFont.truetype(fp, 13)
+                    font_small = ImageFont.truetype(fp, 11)
+                    break
+                except Exception:
+                    pass
+                    
         # 1. Draw entire road network skeleton (bounding box streets)
         node_map = {n["id"]: (n["x"], n["y"]) for n in scene_doc["road_graph"]["nodes"]}
         for ed in scene_doc["road_graph"]["edges"]:
             p1 = node_map.get(ed["u"])
             p2 = node_map.get(ed["v"])
             if p1 and p2:
-                draw.line([to_pix(*p1), to_pix(*p2)], fill=(200, 204, 208, 255), width=2)
+                # Slightly darker and thicker for high visibility
+                draw.line([to_pix(*p1), to_pix(*p2)], fill=(185, 190, 195, 255), width=2)
                 
         # Create block ID mapping to quickly look up roof colors
         block_colors = {}
@@ -2568,7 +2618,7 @@ class UrbanBlockReconstructor:
             poly = bl["polygon"]
             pixel_poly = [to_pix(pt[0], pt[1]) for pt in poly]
             rgb = block_colors.get(bl["block_id"], (238, 232, 220))
-            draw.polygon(pixel_poly, fill=(rgb[0], rgb[1], rgb[2], 180), outline=(160, 165, 175, 255))
+            draw.polygon(pixel_poly, fill=(rgb[0], rgb[1], rgb[2], 180), outline=(150, 155, 165, 255))
             
         # 3. Draw facades (highlight textured ones in green)
         for f in diag_facades:
@@ -2579,41 +2629,44 @@ class UrbanBlockReconstructor:
                 col = (46, 204, 113, 255)  # Premium emerald green
                 width_line = 4
             else:
-                col = (200, 200, 200, 100)  # Subtle gray
-                width_line = 1
+                col = (180, 185, 190, 150)  # Thicker, slightly darker gray for better visibility
+                width_line = 2
                 
             draw.line([p_a, p_b], fill=col, width=width_line)
             
-        # Draw HUD dashboard in a clean modern light container
-        draw.rectangle([50, 50, 550, 280], fill=(255, 255, 255, 240), outline=(200, 204, 208, 255), width=2)
+        # Draw HUD dashboard in top-left
+        draw.rectangle([50, 50, 480, 230], fill=(255, 255, 255, 245), outline=(200, 204, 208, 255), width=2)
         
-        draw.text((70, 70), "TECATE RECONSTRUCTION COVERAGE MAP", fill=(44, 62, 80, 255))
-        draw.text((70, 95), "Natural Cycles & Roof Color Mapping", fill=(52, 152, 219, 255))
-        draw.text((70, 120), "-" * 48, fill=(200, 204, 208, 100))
+        draw.text((70, 65), "TECATE RECONSTRUCTION COVERAGE", fill=(44, 62, 80, 255), font=font_large)
+        draw.text((70, 92), "Historical Urban Simulation Project", fill=(52, 152, 219, 255), font=font_medium)
+        draw.text((70, 110), "-" * 52, fill=(200, 204, 208, 100), font=font_small)
+        
+        draw.text((70, 128), f"Total Simulated Blocks: {len(scene_doc['blocks'])}", fill=(127, 140, 141, 255), font=font_medium)
+        draw.text((70, 153), f"Historical Texturing: {coverage_pct:.1f}%", fill=(46, 204, 113, 255), font=font_large or font_medium)
+        draw.text((70, 185), f"Center Radius: {'Unlimited' if self.radius is None or self.radius < 0 else f'{self.radius}m'}", fill=(127, 140, 141, 255), font=font_medium)
+        
+        # Draw Legend (Simbología) in bottom-left
+        draw.rectangle([50, height - 260, 480, height - 50], fill=(255, 255, 255, 245), outline=(200, 204, 208, 255), width=2)
+        
+        draw.text((70, height - 245), "SIMBOLOGÍA", fill=(44, 62, 80, 255), font=font_large)
+        draw.text((70, height - 225), "-" * 52, fill=(200, 204, 208, 100), font=font_small)
         
         legend = [
-            ("Textured Facade Slice (NCC Blended)", (46, 204, 113), "line"),
-            ("Untextured Stucco Fallback Facade", (200, 200, 200), "line"),
-            ("Urban Block (Colored by Roof Tint)", (180, 190, 200), "rect"),
-            ("Road network segment", (200, 204, 208), "line")
+            ("Textured Facade Slice (NCC)", (46, 204, 113), "line"),
+            ("Untextured Stucco Fallback", (180, 185, 190), "line"),
+            ("Urban Block (Roof Color)", (180, 190, 200), "rect"),
+            ("Road Network Segment", (185, 190, 195), "line")
         ]
-        ly = 135
+        ly = height - 205
         for name, col_leg, geom in legend:
             if geom == "line":
                 draw.line([70, ly + 8, 90, ly + 8], fill=col_leg, width=3)
             elif geom == "rect":
-                draw.rectangle([70, ly + 2, 90, ly + 14], fill=(col_leg[0], col_leg[1], col_leg[2], 180), outline=(160, 165, 175))
+                draw.rectangle([70, ly + 2, 90, ly + 14], fill=(col_leg[0], col_leg[1], col_leg[2], 180), outline=(150, 155, 165))
                 
-            draw.text((105, ly), name, fill=(44, 62, 80, 255))
-            ly += 22
+            draw.text((105, ly), name, fill=(44, 62, 80, 255), font=font_medium)
+            ly += 25
             
-        # Coverage metrics container
-        draw.rectangle([50, height - 200, 450, height - 50], fill=(255, 255, 255, 240), outline=(200, 204, 208, 255), width=2)
-        draw.text((70, height - 180), "COVERAGE METRICS", fill=(44, 62, 80, 255))
-        draw.text((70, height - 150), f"Total Natural Blocks: {len(scene_doc['blocks'])}", fill=(127, 140, 141, 255))
-        draw.text((70, height - 125), f"Historical Texturing: {coverage_pct:.1f}%", fill=(46, 204, 113, 255))
-        draw.text((70, height - 100), f"Center Radius: {'Unlimited' if self.radius is None or self.radius < 0 else f'{self.radius}m'}", fill=(127, 140, 141, 255))
-        
         debug_filepath = os.path.join(self.debug_dir, "global_observation_map.png")
         canvas.save(debug_filepath)
         print(f"[Reconstruction] Premium light diagnostic map saved to: {debug_filepath}")
