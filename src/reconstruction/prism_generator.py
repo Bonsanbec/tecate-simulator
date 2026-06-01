@@ -1166,13 +1166,15 @@ class UrbanBlockReconstructor:
                 sky_mean = np.mean(sky_local, axis=(0, 1))
                 
                 detected_y = None
-                for y in range(15, int(H * 0.7)):
-                    color = np_img[y, x, 0:3]
-                    dist = np.linalg.norm(color - sky_mean)
-                    grad = np.linalg.norm(np_img[y + 1, x, 0:3].astype(float) - color.astype(float))
-                    if dist > 35.0 and grad > 15.0:
-                        detected_y = y
-                        break
+                y_max_search = int(H * 0.7)
+                if y_max_search > 15:
+                    colors = np_img[15:y_max_search, x, 0:3].astype(float)
+                    next_colors = np_img[16:y_max_search+1, x, 0:3].astype(float)
+                    dists = np.linalg.norm(colors - sky_mean, axis=1)
+                    grads = np.linalg.norm(next_colors - colors, axis=1)
+                    valid_indices = np.where((dists > 35.0) & (grads > 15.0))[0]
+                    if len(valid_indices) > 0:
+                        detected_y = 15 + valid_indices[0]
                         
                 if detected_y is not None:
                     # Ray direction and depth solving
@@ -1310,15 +1312,16 @@ class UrbanBlockReconstructor:
             refined_y = int(np.clip(y_proj, 15, H * 0.7))
             
             best_y = refined_y
-            for y_offset in range(-25, 25):
-                y = refined_y + y_offset
-                if 15 <= y < H - 1:
-                    color = np_img[y, x, 0:3]
-                    dist = np.linalg.norm(color - sky_mean)
-                    grad = np.linalg.norm(np_img[y + 1, x, 0:3].astype(float) - color.astype(float))
-                    if dist > 35.0 and grad > 15.0:
-                        best_y = y
-                        break
+            y_min = max(15, refined_y - 25)
+            y_max = min(H - 2, refined_y + 25)
+            if y_max > y_min:
+                colors = np_img[y_min:y_max, x, 0:3].astype(float)
+                next_colors = np_img[y_min+1:y_max+1, x, 0:3].astype(float)
+                dists = np.linalg.norm(colors - sky_mean, axis=1)
+                grads = np.linalg.norm(next_colors - colors, axis=1)
+                valid_indices = np.where((dists > 35.0) & (grads > 15.0))[0]
+                if len(valid_indices) > 0:
+                    best_y = y_min + valid_indices[0]
                         
             y_roofs_dict[x] = best_y
             
@@ -2002,6 +2005,7 @@ class UrbanBlockReconstructor:
                     except Exception as warp_err:
                         print(f"[Warning] Failed unified warping for group: {warp_err}")
                         
+            p_data = None
             L_lengths = [seg["norm_len"] for seg in group]
             L_total = sum(L_lengths) if sum(L_lengths) > 1e-5 else 1.0
             cum_L = 0.0
@@ -2043,10 +2047,10 @@ class UrbanBlockReconstructor:
                     "status": status,
                     "best_obs": {
                         "metadata": {
-                            "latitude": self.panoramas_cache[p_id]["latitude"],
-                            "longitude": self.panoramas_cache[p_id]["longitude"]
+                            "latitude": p_data["latitude"],
+                            "longitude": p_data["longitude"]
                         }
-                    } if status == "textured" else None
+                    } if (status == "textured" and p_data is not None) else None
                 })
                 local_diagnostics[f_id] = {
                     "facade_id": f_id,
@@ -2122,6 +2126,9 @@ class UrbanBlockReconstructor:
             eid = data.get("id")
             if eid:
                 self.road_name_by_id[eid] = data.get("name", "")
+
+        # Pre-initialize spatial grid index sequentially in main thread to ensure thread safety
+        self.get_road_distance(0.0, 0.0)
 
         raw_blocks = self.extract_block_polygons()
         
@@ -2392,8 +2399,8 @@ class UrbanBlockReconstructor:
                             if res["newly_resolved"]:
                                 newly_resolved_count += 1
                                 
-                            # Autoguardado checkpoints every 5 newly resolved blocks
-                            if newly_resolved_count > 0 and newly_resolved_count % 5 == 0:
+                            # Autoguardado checkpoints every 25 newly resolved blocks
+                            if newly_resolved_count > 0 and newly_resolved_count % 25 == 0:
                                 self.save_checkpoint_helper(blocks_data, provenance, diagnostics, len(provenance))
                     except Exception as e:
                         print(f"[Error] Thread execution failed for block {rb['block_id']}: {e}")
@@ -2413,8 +2420,8 @@ class UrbanBlockReconstructor:
                     if res["newly_resolved"]:
                         newly_resolved_count += 1
                         
-                    # Autoguardado checkpoints every 5 newly resolved blocks
-                    if newly_resolved_count > 0 and newly_resolved_count % 5 == 0:
+                    # Autoguardado checkpoints every 25 newly resolved blocks
+                    if newly_resolved_count > 0 and newly_resolved_count % 25 == 0:
                         self.save_checkpoint_helper(blocks_data, provenance, diagnostics, len(provenance))
 
         # Check for harvest_only early exit

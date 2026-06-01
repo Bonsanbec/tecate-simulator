@@ -651,6 +651,42 @@ if __name__ == '__main__':
         
     print(f"[Blender] Embedded and registered auto-running utility script: {text_name}")
 
+def configure_gpu_acceleration():
+    """Automatically configures GPU acceleration (Metal for M1 Mac, OptiX/CUDA for RTX 4060) if available."""
+    print("[Blender] Detecting and configuring GPU acceleration...")
+    try:
+        preferences = bpy.context.preferences
+        addons = preferences.addons
+        cycles_preferences = addons.get("cycles")
+        if cycles_preferences:
+            cycles_preferences = cycles_preferences.preferences
+            cycles_preferences.refresh_devices()
+            
+            # Find the best available device type
+            best_type = 'NONE'
+            for device_type in ['METAL', 'OPTIX', 'CUDA', 'HIP', 'ONEAPI']:
+                for device in cycles_preferences.devices:
+                    if device.type == device_type:
+                        best_type = device_type
+                        break
+                if best_type != 'NONE':
+                    break
+            
+            if best_type != 'NONE':
+                cycles_preferences.compute_device_type = best_type
+                for device in cycles_preferences.devices:
+                    if device.type == best_type or device.type == 'CPU':
+                        device.use = True
+                        print(f"[Blender GPU] Enabled device: {device.name} ({device.type})")
+                    else:
+                        device.use = False
+                bpy.context.scene.cycles.device = 'GPU'
+                print(f"[Blender GPU] Configured Cycles to use GPU compute via {best_type}.")
+            else:
+                print("[Blender GPU] No compatible GPU compute devices found. Falling back to CPU.")
+    except Exception as e:
+        print(f"[Blender GPU Warning] Failed to configure GPU preferences: {e}")
+
 def main():
     args = []
     if "--" in sys.argv:
@@ -703,6 +739,9 @@ def main():
     with open(export_json, "r", encoding="utf-8") as f:
         scene_doc = json.load(f)
         
+    # Configure hardware GPU compute
+    configure_gpu_acceleration()
+    
     clear_scene()
     
     # Reconstruct road skeleton
