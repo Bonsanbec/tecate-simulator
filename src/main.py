@@ -226,7 +226,8 @@ def run_pipeline(args):
         radius=args.radius if args.radius >= 0 else None,
         reprocess=args.reprocess,
         skip_scraper=args.skip_scraper,
-        harvest_only=args.harvest_only
+        harvest_only=args.harvest_only,
+        parallel=args.parallel
     )
     blocks_data, scene_doc = reconstructor.reconstruct_blocks_and_texture()
     
@@ -262,6 +263,8 @@ if __name__ == "__main__":
                         help="Safety radius centered at (0, 0) in meters. Set to -1 to process the whole city of Tecate.")
     
     # Camera Viewport Culling parameters
+    parser.add_argument("--parallel", type=int, default=4,
+                        help="Number of concurrent threads for image processing and texturing (default: 4, set to 1 for sequential)")
     parser.add_argument("--no-cull", action="store_true", default=False,
                         help="Disable camera FOV/frustum culling in Blender scene construction")
     parser.add_argument("--cam-loc", type=str, default="0.0,-120.0,110.0",
