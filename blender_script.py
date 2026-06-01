@@ -387,27 +387,19 @@ def update_culling_visibility(force=False):
         
     props = scene.tecate_culler
     
-    # Get active viewport space and shading type
+    # Get active viewport space
     region_3d = None
-    shading_type = 'SOLID'
-    
     if hasattr(bpy.context, "screen") and bpy.context.screen:
         for area in bpy.context.screen.areas:
             if area.type == 'VIEW_3D':
                 for space in area.spaces:
                     if space.type == 'VIEW_3D':
                         region_3d = space.region_3d
-                        shading_type = space.shading.type
                         break
                 if region_3d:
                     break
                     
     if not region_3d:
-        return
-        
-    # RULE 1: Only execute culling updates when in MATERIAL or RENDERED shading modes
-    # If in SOLID or WIREFRAME, we pause culling to save CPU and maintain stable viewport states
-    if shading_type not in ('MATERIAL', 'RENDERED') and not force:
         return
         
     view_matrix_inv = region_3d.view_matrix.inverted()
@@ -479,13 +471,14 @@ def update_culling_visibility(force=False):
 
 last_cam_loc = mathutils.Vector((0.0, 0.0, 0.0))
 last_look_dir = mathutils.Vector((0.0, 0.0, 0.0))
-last_shading_type = 'SOLID'
+still_since = 0.0
+cull_updated = True
 
 def tecate_culler_timer():
     if bpy.app.background:
         return 0.1
         
-    global last_cam_loc, last_look_dir, last_shading_type
+    global last_cam_loc, last_look_dir, still_since, cull_updated
     
     if not hasattr(bpy.context, "scene") or not bpy.context.scene:
         return 0.1
@@ -494,39 +487,22 @@ def tecate_culler_timer():
         
     props = bpy.context.scene.tecate_culler
     
-    # Get active viewport settings
+    # If in MANUAL mode, pause timer updates
+    if props.cull_mode == 'MANUAL':
+        return 0.1
+        
     region_3d = None
-    shading_type = 'SOLID'
     if hasattr(bpy.context, "screen") and bpy.context.screen:
         for area in bpy.context.screen.areas:
             if area.type == 'VIEW_3D':
                 for space in area.spaces:
                     if space.type == 'VIEW_3D':
                         region_3d = space.region_3d
-                        shading_type = space.shading.type
                         break
                 if region_3d:
                     break
                     
     if not region_3d:
-        return 0.1
-        
-    # Trigger update if shading mode changed (e.g. from SOLID to MATERIAL)
-    # to guarantee culling is applied immediately when entering textured viewport!
-    shading_changed = (shading_type != last_shading_type)
-    if shading_changed:
-        last_shading_type = shading_type
-        if shading_type in ('MATERIAL', 'RENDERED'):
-            update_culling_visibility(force=True)
-        else:
-            # Unhide all blocks in SOLID or WIREFRAME since they have zero texture RAM cost
-            for obj in bpy.data.objects:
-                if obj.name.startswith("facades_") or obj.name.startswith("roofs_"):
-                    obj.hide_viewport = False
-                    obj.hide_render = False
-            
-    # RULE 2: If in MANUAL mode or solid shading, pause timer updates
-    if props.cull_mode == 'MANUAL' or shading_type not in ('MATERIAL', 'RENDERED'):
         return 0.1
         
     view_matrix_inv = region_3d.view_matrix.inverted()
@@ -536,10 +512,23 @@ def tecate_culler_timer():
     loc_diff = (cam_loc - last_cam_loc).length
     dir_diff = (look_dir - last_look_dir).length
     
-    if loc_diff > 0.5 or dir_diff > 0.01:
+    import time
+    current_time = time.time()
+    
+    # Check if viewport camera is actively moving
+    if loc_diff > 0.1 or dir_diff > 0.005:
+        # Camera is actively moving! Reset still timer and lock culling
         last_cam_loc = cam_loc.copy()
         last_look_dir = look_dir.copy()
-        update_culling_visibility()
+        still_since = current_time
+        cull_updated = False
+    else:
+        # Camera is standing still!
+        if not cull_updated:
+            # Check if it has panned still for more than 1.0 second
+            if current_time - still_since >= 1.0:
+                update_culling_visibility()
+                cull_updated = True
         
     return 0.1
 
@@ -618,24 +607,8 @@ def register():
     if not bpy.app.timers.is_registered(tecate_culler_timer):
         bpy.app.timers.register(tecate_culler_timer)
         
-    # Set default visibility state depending on initial shading mode
-    shading_type = 'SOLID'
-    if hasattr(bpy.context, "screen") and bpy.context.screen:
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_3D':
-                for space in area.spaces:
-                    if space.type == 'VIEW_3D':
-                        shading_type = space.shading.type
-                        break
-                        
-    if shading_type in ('MATERIAL', 'RENDERED'):
-        update_culling_visibility(force=True)
-    else:
-        # Unhide all blocks by default in SOLID/WIREFRAME to prevent empty-city confusion!
-        for obj in bpy.data.objects:
-            if obj.name.startswith("facades_") or obj.name.startswith("roofs_"):
-                obj.hide_viewport = False
-                obj.hide_render = False
+    # Always perform culling update immediately on register
+    update_culling_visibility(force=True)
 
 def unregister():
     if bpy.app.timers.is_registered(tecate_culler_timer):
