@@ -2135,6 +2135,237 @@ class UrbanBlockReconstructor:
         raw_blocks.sort(key=block_distance)
         print(f"[Reconstruction] Prioritized {len(raw_blocks)} blocks by geographic proximity to city center (Parque Hidalgo).")
         
+        # --- PRE-PASS: SEQUENTIAL METADATA RESOLUTION & SCREENSHOT SCRAPING ---
+        if not self.skip_scraper and self.scraper is not None:
+            print("[Reconstruction] Starting sequential pre-pass on the main thread to resolve metadata and cache screenshots...")
+            sys.stdout.flush()
+            
+            for idx, rb in enumerate(raw_blocks):
+                b_id = rb["block_id"]
+                if rb.get("is_external", False):
+                    continue
+                if not self.reprocess and b_id in self.existing_export_blocks:
+                    continue
+                    
+                raw_poly = rb["polygon"]
+                shrunk_poly = self.shrink_polygon(raw_poly, d=6.0)
+                num_verts = len(shrunk_poly) - 1
+                centroid_x = sum(pt[0] for pt in shrunk_poly[:-1]) / num_verts
+                centroid_y = sum(pt[1] for pt in shrunk_poly[:-1]) / num_verts
+                dist_to_center = math.sqrt(centroid_x**2 + centroid_y**2)
+                
+                block_segments_info = []
+                
+                # 1. Resolve metadata for all segments sequentially
+                for f_idx in range(num_verts):
+                    facade_id = f"{b_id}_facade_{f_idx}"
+                    A = shrunk_poly[f_idx]
+                    B = shrunk_poly[f_idx + 1]
+                    mx = (A[0] + B[0]) / 2.0
+                    my = (A[1] + B[1]) / 2.0
+                    dx = B[0] - A[0]
+                    dy = B[1] - A[1]
+                    normal = np.array([dy, -dx])
+                    norm_len = np.linalg.norm(normal)
+                    if norm_len > 1e-5:
+                        normal = normal / norm_len
+                    else:
+                        normal = np.array([0.0, 1.0])
+                        
+                    is_cached = facade_id in self.facades_cache
+                    road_dist, best_edge_id = self.get_road_distance(mx, my)
+                    is_street_facing = (road_dist <= 20.0)
+                    
+                    if not is_cached and (is_street_facing and (self.radius is None or self.radius < 0 or dist_to_center <= self.radius)):
+                        # Scrape metadata sequentially on main thread
+                        search_x = mx + 8.0 * normal[0]
+                        search_y = my + 8.0 * normal[1]
+                        lat, lon = local_to_gps(search_x, search_y)
+                        heading = math.degrees(math.atan2(-normal[0], -normal[1])) % 360.0
+                        heading = round(heading, 2)
+                        
+                        print(f"[Pre-pass API Query] Fetching metadata for {facade_id}...")
+                        meta = self.scraper.fetch_public_metadata(lat=lat, lon=lon)
+                        if meta:
+                            pano_id = meta["pano_id"]
+                            cam_lat = meta["latitude"]
+                            cam_lon = meta["longitude"]
+                            
+                            # Chronology selection
+                            timeline = meta.get("timeline", [])
+                            oldest_pano_id = pano_id
+                            oldest_date = meta.get("date", "9999-12")
+                            for tl in timeline:
+                                tl_id = tl["pano_id"]
+                                tl_date = tl["date"]
+                                if tl_date and tl_date < oldest_date:
+                                    oldest_pano_id = tl_id
+                                    oldest_date = tl_date
+                                    
+                            if oldest_pano_id != pano_id:
+                                print(f"[Temporal Chronology] Found older timeline state: {oldest_pano_id} ({oldest_date}) replaces modern {pano_id}.")
+                                oldest_meta = self.scraper.fetch_public_metadata(pano_id=oldest_pano_id)
+                                if oldest_meta:
+                                    meta = oldest_meta
+                                    pano_id = oldest_pano_id
+                                    cam_lat = meta["latitude"]
+                                    cam_lon = meta["longitude"]
+                                    
+                            cx, cy = gps_to_local(cam_lat, cam_lon)
+                            yaw_rad = math.radians(heading)
+                            rot_matrix = [
+                                [math.cos(yaw_rad), -math.sin(yaw_rad), 0.0],
+                                [math.sin(yaw_rad), math.cos(yaw_rad), 0.0],
+                                [0.0, 0.0, 1.0]
+                            ]
+                            
+                            self.panoramas_cache[pano_id] = {
+                                "latitude": cam_lat,
+                                "longitude": cam_lon,
+                                "altitude": meta.get("altitude"),
+                                "date": meta.get("date", ""),
+                                "pitch": meta.get("pitch"),
+                                "roll": meta.get("roll"),
+                                "projection_yaw": meta.get("projection_yaw"),
+                                "pano_yaw": meta.get("projection_yaw"),
+                                "road_name": meta.get("road_name", ""),
+                                "adjacent_links": meta.get("adjacent_links", []),
+                                "timeline": meta.get("timeline", []),
+                            }
+                            
+                            road_name_val = self.road_name_by_id.get(best_edge_id, "")
+                            look_vector = [float(mx - cx), float(my - cy)]
+                            dot_prod = float(look_vector[0] * normal[0] + look_vector[1] * normal[1])
+                            is_correct_side = bool(dot_prod < 0)
+                            
+                            search_query_url = f"https://maps.googleapis.com/maps/api/js/GeoPhotoService.SingleImageSearch?pb=!1m5!1sapiv3!5sUS!11m2!1m1!1b0!2m4!1m2!3d{lat:.6f}!4d{lon:.6f}!2d50.0!3m10!2m2!1ses!2sMX!9m1!1e2!11m4!1m3!1e2!2b1!3e2!4m9!1e1!1e2!1e3!1e4!1e6!1e8!1e12!5m0!6m0&callback=_xdc_._v2mub5"
+                            captured_url = f"https://www.google.com/maps?layer=c&cbll={cam_lat},{cam_lon}&panoid={pano_id}&cbp=11,{heading:.2f},,0,0"
+                            
+                            self.facades_cache[facade_id] = {
+                                "pano_id": pano_id,
+                                "block_id": b_id,
+                                "facade_index": int(f_idx),
+                                "heading": heading,
+                                "captured_heading": heading,
+                                "resolution": {
+                                    "screenshot_width": 1280,
+                                    "screenshot_height": 720,
+                                    "slice_width": 512,
+                                    "slice_height": 256
+                                },
+                                "camera_position_local": [float(cx), float(cy), None],
+                                "camera_rotation_matrix": rot_matrix,
+                                "road_relation": {
+                                    "road_name": road_name_val,
+                                    "road_distance_meters": float(road_dist),
+                                    "road_edge_id": best_edge_id
+                                },
+                                "facade_midpoint_local": [float(mx), float(my)],
+                                "offset_search_point_local": [float(search_x), float(search_y)],
+                                "offset_search_point_gps": [float(lat), float(lon)],
+                                "search_query_url": search_query_url,
+                                "captured_url": captured_url,
+                                "modern_pano_id": meta.get("pano_id"),
+                                "camera_alignment_diagnostics": {
+                                    "look_vector": look_vector,
+                                    "facade_normal": [float(normal[0]), float(normal[1])],
+                                    "dot_product": dot_prod,
+                                    "is_correct_side": is_correct_side
+                                },
+                                "facade_segment_vertices_local": [A, B]
+                            }
+                            self.metadata_cache[facade_id] = {}
+                            self.metadata_cache[facade_id].update(self.facades_cache[facade_id])
+                            self.metadata_cache[facade_id].update(self.panoramas_cache[pano_id])
+                            
+                    if facade_id in self.facades_cache:
+                        entry = self.facades_cache[facade_id]
+                        block_segments_info.append({
+                            "pano_id": entry["pano_id"],
+                            "heading": entry.get("captured_heading", entry.get("heading")),
+                            "normal": normal
+                        })
+                        
+                # 2. Resolve groups and download screenshots sequentially on main thread
+                if block_segments_info:
+                    num_verts_info = len(block_segments_info)
+                    
+                    def angular_difference(h1, h2):
+                        if h1 is None or h2 is None:
+                            return 180.0
+                        diff = abs(h1 - h2)
+                        return min(diff, 360.0 - diff)
+                        
+                    start_idx = 0
+                    for i in range(num_verts_info):
+                        prev_idx = (i - 1) % num_verts_info
+                        p_i = block_segments_info[i]["pano_id"]
+                        p_prev = block_segments_info[prev_idx]["pano_id"]
+                        h_i = block_segments_info[i]["heading"]
+                        h_prev = block_segments_info[prev_idx]["heading"]
+                        if p_i != p_prev or angular_difference(h_i, h_prev) > 20.0:
+                            start_idx = i
+                            break
+                            
+                    groups = []
+                    curr_group = []
+                    for step in range(num_verts_info):
+                        curr_idx = (start_idx + step) % num_verts_info
+                        segment_info = block_segments_info[curr_idx]
+                        if not curr_group:
+                            curr_group.append(segment_info)
+                        else:
+                            g_pano = curr_group[0]["pano_id"]
+                            g_heading = curr_group[0]["heading"]
+                            s_pano = segment_info["pano_id"]
+                            s_heading = segment_info["heading"]
+                            if s_pano == g_pano and s_pano is not None and angular_difference(s_heading, g_heading) <= 20.0:
+                                curr_group.append(segment_info)
+                            else:
+                                groups.append(curr_group)
+                                curr_group = [segment_info]
+                    if curr_group:
+                        groups.append(curr_group)
+                        
+                    for group in groups:
+                        p_id = group[0]["pano_id"]
+                        if p_id is not None:
+                            headings = [seg["heading"] for seg in group if seg["heading"] is not None]
+                            if headings:
+                                x_sum = sum(math.cos(math.radians(h)) for h in headings)
+                                y_sum = sum(math.sin(math.radians(h)) for h in headings)
+                                heading_val = round(math.degrees(math.atan2(y_sum, x_sum)) % 360.0, 2)
+                            else:
+                                heading_val = 0.0
+                                
+                            pano_filename = f"{p_id}_yaw_{heading_val:.2f}.png"
+                            pano_screenshot_path = os.path.abspath(os.path.join(self.data_dir, "screenshots", "pano", pano_filename))
+                            
+                            if not os.path.exists(pano_screenshot_path):
+                                print(f"[Pre-pass Scraper] Capturing panorama screenshot: {pano_filename}...")
+                                p_data = self.panoramas_cache[p_id]
+                                screenshot_bytes = self.scraper.capture_facade_screenshot(
+                                    lat=p_data["latitude"],
+                                    lon=p_data["longitude"],
+                                    heading=heading_val,
+                                    pano_id=p_id,
+                                    slice_id=f"temp_capture_{p_id}"
+                                )
+                                if screenshot_bytes:
+                                    ensure_dir(os.path.dirname(pano_screenshot_path))
+                                    with open(pano_screenshot_path, "wb") as f_img:
+                                        f_img.write(screenshot_bytes)
+                                        
+            # Save final caches after scraping pre-pass completes
+            self.save_metadata_cache()
+            print("[Reconstruction] Pre-pass completed successfully! All required metadata and screenshots are cached on disk.")
+            sys.stdout.flush()
+
+        # Close persistent scraper session on main thread before running workers
+        if self.scraper:
+            self.scraper.close()
+            self.scraper = None  # Ensure threads never attempt to query browser/network
+        
         blocks_data = []
         provenance = {}
         diagnostics = {}
@@ -2228,10 +2459,6 @@ class UrbanBlockReconstructor:
             },
             "blocks": blocks_data
         }
-        
-        # Close persistent scraper session
-        if self.scraper:
-            self.scraper.close()
         
         # Save stitching cache back to disk (Incremental processing)
         save_json(self.stitching_cache, self.stitching_cache_path)

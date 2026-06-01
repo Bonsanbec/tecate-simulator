@@ -494,28 +494,7 @@ class GoogleStreetViewScraper:
         
         os.makedirs("data/screenshots", exist_ok=True)
         self.intercepted_panos = {}
-        
-        def intercept_response(response):
-            try:
-                r_url = response.url
-                if "output=tile" in r_url or "/v1/tile" in r_url:
-                    parsed = urllib.parse.urlparse(r_url)
-                    params = urllib.parse.parse_qs(parsed.query)
-                    p_id = params.get("panoid", [None])[0]
-                    if p_id:
-                        self.intercepted_panos[p_id] = time.time()
-                        
-                if "cbk?output=json" in r_url or "cbk" in r_url:
-                    text = response.text()
-                    if "panoId" in text:
-                        match = re.search(r'"panoId"\s*:\s*"([a-zA-Z0-9_\-]{22})"', text)
-                        if match:
-                            self.intercepted_panos[match.group(1)] = time.time()
-            except Exception:
-                pass
-
-        self.page.on("response", intercept_response)
-        print("[Playwright] Persistent Chromium session initialized and network listener registered.")
+        print("[Playwright] Persistent Chromium session initialized.")
 
     def close(self):
         """Safely closes the persistent Chromium instance."""
@@ -610,57 +589,13 @@ class GoogleStreetViewScraper:
             return None
             
         try:
-            use_playwright = False
-            response_text_content = None
-            status_code = None
-            
-            if self.page is not None:
-                try:
-                    print(f"[fetch_public_metadata] Querying URL via active Playwright Chromium session: {url}")
-                    response_text = self.page.evaluate(f"""
-                        async () => {{
-                            try {{
-                                const response = await fetch({json.dumps(url)});
-                                return {{
-                                    status: response.status,
-                                    text: await response.text()
-                                }};
-                            }} catch (err) {{
-                                return {{
-                                    status: 500,
-                                    text: err.toString()
-                                }};
-                            }}
-                        }}
-                    """)
-                    if response_text and response_text.get("status") == 200:
-                        text_val = response_text.get("text")
-                        if "[null, 2]" not in text_val:
-                            status_code = 200
-                            response_text_content = text_val
-                            use_playwright = True
-                            print(f"[fetch_public_metadata] Playwright Fetch Status: {status_code}")
-                        else:
-                            print(f"[fetch_public_metadata] Playwright Fetch returned [null, 2]. Falling back to standard requests.")
-                except Exception as pe:
-                    print(f"[fetch_public_metadata Warning] Playwright fetch failed: {pe}. Falling back to standard requests.")
-
             if (self.log):
                 print(f"[fetch_public_metadata Debug] Querying URL: {url}")
-            if use_playwright:
-                class MockResponse:
-                    def __init__(self, text, status_code):
-                        self.text = text
-                        self.status_code = status_code
-                    def json(self):
-                        return json.loads(self.text)
-                resp = MockResponse(response_text_content, status_code)
-            else:
-                headers = {
-                    "Referer": "https://www.google.com/maps/",
-                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                }
-                resp = requests.get(url, headers=headers, timeout=10)
+            headers = {
+                "Referer": "https://www.google.com/maps/",
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+            resp = requests.get(url, headers=headers, timeout=10)
                 
             if (self.log):    
                 print(f"[fetch_public_metadata Debug] Response Status: {resp.status_code}")
