@@ -81,8 +81,8 @@ def translate_paths_to_windows(source_json_path, dest_json_path):
         print(f"[Warning] Error translating paths for Windows Blender: {e}")
         return False
 
-def run_blender_export():
-    """Locates and runs the Blender background script to compile geometry.glb."""
+def run_blender_export(args):
+    """Locates and runs the Blender background script to compile geometry.gltf."""
     blender_path = "blender"
     is_running_wsl = is_wsl()
     
@@ -111,10 +111,23 @@ def run_blender_export():
                 blender_path = path
                 break
                 
-    print(f"[Blender Compiler] Compiling geometry.glb using Blender: '{blender_path}'")
+    print(f"[Blender Compiler] Compiling geometry.gltf using Blender: '{blender_path}'")
     
     python_script = "blender_script.py"
     import_json = "export/reconstruction_export.json"
+    
+    # Gather extra culling and camera arguments to pass to the script
+    extra_args = []
+    if hasattr(args, "no_cull") and args.no_cull:
+        extra_args.append("--no-cull")
+    if hasattr(args, "cam_loc") and args.cam_loc:
+        extra_args.extend(["--cam-loc", args.cam_loc])
+    if hasattr(args, "cam_rot") and args.cam_rot:
+        extra_args.extend(["--cam-rot", args.cam_rot])
+    if hasattr(args, "fov_deg") and args.fov_deg:
+        extra_args.extend(["--fov-deg", str(args.fov_deg)])
+    if hasattr(args, "max_dist") and args.max_dist:
+        extra_args.extend(["--max-dist", str(args.max_dist)])
     
     if is_running_wsl:
         # Translate JSON paths for Windows Blender
@@ -134,7 +147,7 @@ def run_blender_export():
             "--",
             "--import",
             win_import_json_path
-        ]
+        ] + extra_args
     else:
         cmd = [
             blender_path,
@@ -144,7 +157,7 @@ def run_blender_export():
             "--",
             "--import",
             import_json
-        ]
+        ] + extra_args
         
     try:
         res = subprocess.run(
@@ -154,7 +167,7 @@ def run_blender_export():
             text=True
         )
         if res.returncode == 0:
-            print("[Blender Compiler] Successfully compiled geometry.glb!")
+            print("[Blender Compiler] Successfully compiled geometry.gltf!")
         else:
             print(f"[Warning] Blender compilation returned non-zero exit code: {res.returncode}")
             print(res.stdout)
@@ -207,7 +220,7 @@ def run_pipeline(args):
     print("Texture Atlas PNGs generated in: export/textures/")
     
     # 3. TRIGGER BLENDER COMPILATION
-    run_blender_export()
+    run_blender_export(args)
     
     print("=" * 60)
 
@@ -223,6 +236,18 @@ if __name__ == "__main__":
                         help="Reprocess cached screenshots (crop, align, stitch) without redownloading them.")
     parser.add_argument("--radius", type=float, default=-1,
                         help="Safety radius centered at (0, 0) in meters. Set to -1 to process the whole city of Tecate.")
+    
+    # Camera Viewport Culling parameters
+    parser.add_argument("--no-cull", action="store_true", default=False,
+                        help="Disable camera FOV/frustum culling in Blender scene construction")
+    parser.add_argument("--cam-loc", type=str, default="0.0,-120.0,110.0",
+                        help="Blender camera location (comma-separated x,y,z)")
+    parser.add_argument("--cam-rot", type=str, default="48.0,0.0,0.0",
+                        help="Blender camera rotation in degrees (comma-separated rx,ry,rz)")
+    parser.add_argument("--fov-deg", type=float, default=90.0,
+                        help="Blender camera horizontal FOV in degrees")
+    parser.add_argument("--max-dist", type=float, default=250.0,
+                        help="Blender camera maximum view distance in meters")
     
     args = parser.parse_args()
     run_pipeline(args)
