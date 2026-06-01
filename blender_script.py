@@ -322,7 +322,6 @@ def setup_lighting_and_camera(cam_loc: tuple = (0.0, -120.0, 110.0), cam_rot: tu
     cam_obj.location = cam_loc
     cam_obj.rotation_euler = (math.radians(cam_rot[0]), math.radians(cam_rot[1]), math.radians(cam_rot[2]))
     bpy.context.scene.camera = cam_obj
-
 def embed_culling_utility_script(fov_deg: float, max_dist: float):
     """Embeds an interactive Python viewport culling utility inside the .blend file."""
     text_name = "Viewport_FOV_Cull_Utility.py"
@@ -343,10 +342,14 @@ import math
 import mathutils
 
 class TecateCullerProperties(bpy.types.PropertyGroup):
-    auto_cull: bpy.props.BoolProperty(
-        name="Auto-Cull Viewport",
-        description="Enable automatic viewport culling as you navigate",
-        default=True,
+    cull_mode: bpy.props.EnumProperty(
+        name="Cull Mode",
+        description="Choose between automatic culling or manual culling on button click",
+        items=[
+            ('AUTO', "Automatic", "Automatically update culling as you move the camera"),
+            ('MANUAL', "Manual", "Only update culling when clicking the manual Update button")
+        ],
+        default='AUTO',
         update=lambda self, context: update_culling_visibility()
     )
     max_dist: bpy.props.FloatProperty(
@@ -365,8 +368,16 @@ class TecateCullerProperties(bpy.types.PropertyGroup):
         max=180.0,
         update=lambda self, context: update_culling_visibility()
     )
+    max_visible_blocks: bpy.props.IntProperty(
+        name="Safety Cap",
+        description="Hard limit of visible blocks to prevent EEVEE memory crash",
+        default=30,
+        min=5,
+        max=100,
+        update=lambda self, context: update_culling_visibility()
+    )
 
-def update_culling_visibility():
+def update_culling_visibility(force=False):
     if bpy.app.background:
         return
         
@@ -376,25 +387,27 @@ def update_culling_visibility():
         
     props = scene.tecate_culler
     
-    if not props.auto_cull:
-        for obj in bpy.data.objects:
-            if obj.name.startswith("facades_") or obj.name.startswith("roofs_"):
-                obj.hide_viewport = False
-                obj.hide_render = False
-        return
-        
+    # Get active viewport space and shading type
     region_3d = None
+    shading_type = 'SOLID'
+    
     if hasattr(bpy.context, "screen") and bpy.context.screen:
         for area in bpy.context.screen.areas:
             if area.type == 'VIEW_3D':
                 for space in area.spaces:
                     if space.type == 'VIEW_3D':
                         region_3d = space.region_3d
+                        shading_type = space.shading.type
                         break
                 if region_3d:
                     break
                     
     if not region_3d:
+        return
+        
+    # RULE 1: Only execute culling updates when in MATERIAL or RENDERED shading modes
+    # If in SOLID or WIREFRAME, we pause culling to save CPU and maintain stable viewport states
+    if shading_type not in ('MATERIAL', 'RENDERED') and not force:
         return
         
     view_matrix_inv = region_3d.view_matrix.inverted()
@@ -409,6 +422,9 @@ def update_culling_visibility():
     max_dist = props.max_dist
     half_fov_rad = math.radians(props.fov_deg / 2.0)
     min_dot = math.cos(half_fov_rad)
+    
+    # Evaluate visibility and calculate 2D distance for sorting
+    candidates = []
     
     for obj in bpy.data.objects:
         if not (obj.name.startswith("facades_") or obj.name.startswith("roofs_")):
@@ -440,17 +456,36 @@ def update_culling_visibility():
             if dot < min_dot:
                 is_visible = False
                 
-        obj.hide_viewport = not is_visible
-        obj.hide_render = not is_visible
+        if is_visible:
+            candidates.append((dist, obj))
+        else:
+            obj.hide_viewport = True
+            obj.hide_render = True
+            
+    # RULE 3: Hard Safety Cap to NEVER load too many textures at once
+    # Sort candidates by distance (closest first)
+    candidates.sort(key=lambda item: item[0])
+    
+    safety_cap = props.max_visible_blocks
+    
+    # Unhide closest candidates up to the safety cap
+    for idx, (dist, obj) in enumerate(candidates):
+        if idx < safety_cap:
+            obj.hide_viewport = False
+            obj.hide_render = False
+        else:
+            obj.hide_viewport = True
+            obj.hide_render = True
 
 last_cam_loc = mathutils.Vector((0.0, 0.0, 0.0))
 last_look_dir = mathutils.Vector((0.0, 0.0, 0.0))
+last_shading_type = 'SOLID'
 
 def tecate_culler_timer():
     if bpy.app.background:
         return 0.1
         
-    global last_cam_loc, last_look_dir
+    global last_cam_loc, last_look_dir, last_shading_type
     
     if not hasattr(bpy.context, "scene") or not bpy.context.scene:
         return 0.1
@@ -458,21 +493,40 @@ def tecate_culler_timer():
         return 0.1
         
     props = bpy.context.scene.tecate_culler
-    if not props.auto_cull:
-        return 0.1
-        
+    
+    # Get active viewport settings
     region_3d = None
+    shading_type = 'SOLID'
     if hasattr(bpy.context, "screen") and bpy.context.screen:
         for area in bpy.context.screen.areas:
             if area.type == 'VIEW_3D':
                 for space in area.spaces:
                     if space.type == 'VIEW_3D':
                         region_3d = space.region_3d
+                        shading_type = space.shading.type
                         break
                 if region_3d:
                     break
                     
     if not region_3d:
+        return 0.1
+        
+    # Trigger update if shading mode changed (e.g. from SOLID to MATERIAL)
+    # to guarantee culling is applied immediately when entering textured viewport!
+    shading_changed = (shading_type != last_shading_type)
+    if shading_changed:
+        last_shading_type = shading_type
+        if shading_type in ('MATERIAL', 'RENDERED'):
+            update_culling_visibility(force=True)
+        else:
+            # Unhide all blocks in SOLID or WIREFRAME since they have zero texture RAM cost
+            for obj in bpy.data.objects:
+                if obj.name.startswith("facades_") or obj.name.startswith("roofs_"):
+                    obj.hide_viewport = False
+                    obj.hide_render = False
+            
+    # RULE 2: If in MANUAL mode or solid shading, pause timer updates
+    if props.cull_mode == 'MANUAL' or shading_type not in ('MATERIAL', 'RENDERED'):
         return 0.1
         
     view_matrix_inv = region_3d.view_matrix.inverted()
@@ -489,6 +543,15 @@ def tecate_culler_timer():
         
     return 0.1
 
+class VIEW3D_OT_tecate_cull_update(bpy.types.Operator):
+    bl_label = "Update Viewport Culling"
+    bl_idname = "view3d.tecate_cull_update"
+    bl_description = "Run frustum and culling relative to current viewport view"
+    
+    def execute(self, context):
+        update_culling_visibility(force=True)
+        return {'FINISHED'}
+
 class VIEW3D_PT_tecate_culler(bpy.types.Panel):
     bl_label = "Tecate City Viewport Culler"
     bl_idname = "VIEW3D_PT_tecate_culler"
@@ -504,22 +567,39 @@ class VIEW3D_PT_tecate_culler(bpy.types.Panel):
         props = scene.tecate_culler
         
         box = layout.box()
-        box.label(text="Culling Controls", icon='VIEWZOOM')
-        box.prop(props, "auto_cull", toggle=True, icon='HIDE_OFF' if props.auto_cull else 'HIDE_ON')
+        box.label(text="Culling Settings", icon='VIEWZOOM')
         
-        if props.auto_cull:
-            col = box.column(align=True)
-            col.prop(props, "max_dist", slider=True)
-            col.prop(props, "fov_deg", slider=True)
+        # Mode Selection
+        box.row().prop(props, "cull_mode", expand=True)
+        
+        # If in MANUAL mode, show big update button
+        if props.cull_mode == 'MANUAL':
+            row = box.row(align=True)
+            row.scale_y = 1.5
+            row.operator("view3d.tecate_cull_update", icon='FILE_REFRESH', text="Update Viewport Culling")
             
-            visible_count = sum(1 for obj in bpy.data.objects if (obj.name.startswith("facades_") or obj.name.startswith("roofs_")) and not obj.hide_viewport)
-            total_count = sum(1 for obj in bpy.data.objects if (obj.name.startswith("facades_") or obj.name.startswith("roofs_")))
-            
-            row = box.row()
-            row.label(text=f"Visible Blocks: {{visible_count}} / {{total_count}}", icon='RENDER_RESULT')
+        col = box.column(align=True)
+        col.prop(props, "max_dist", slider=True)
+        col.prop(props, "fov_deg", slider=True)
+        col.prop(props, "max_visible_blocks", slider=True)
+        
+        # Statistics
+        visible_count = sum(1 for obj in bpy.data.objects if (obj.name.startswith("facades_") or obj.name.startswith("roofs_")) and not obj.hide_viewport)
+        total_count = sum(1 for obj in bpy.data.objects if (obj.name.startswith("facades_") or obj.name.startswith("roofs_")))
+        
+        row = box.row()
+        row.label(text=f"Visible Blocks: {{visible_count}} / {{total_count}}", icon='RENDER_RESULT')
+        
+        # Warning if safety cap is reached
+        if visible_count >= props.max_visible_blocks:
+            alert = box.box()
+            alert.alert = True
+            alert.label(text="⚠ SAFETY CAP ACTIVE!", icon='ERROR')
+            alert.label(text="Capped to prevent memory overflow.")
 
 classes = (
     TecateCullerProperties,
+    VIEW3D_OT_tecate_cull_update,
     VIEW3D_PT_tecate_culler,
 )
 
@@ -538,7 +618,24 @@ def register():
     if not bpy.app.timers.is_registered(tecate_culler_timer):
         bpy.app.timers.register(tecate_culler_timer)
         
-    update_culling_visibility()
+    # Set default visibility state depending on initial shading mode
+    shading_type = 'SOLID'
+    if hasattr(bpy.context, "screen") and bpy.context.screen:
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                for space in area.spaces:
+                    if space.type == 'VIEW_3D':
+                        shading_type = space.shading.type
+                        break
+                        
+    if shading_type in ('MATERIAL', 'RENDERED'):
+        update_culling_visibility(force=True)
+    else:
+        # Unhide all blocks by default in SOLID/WIREFRAME to prevent empty-city confusion!
+        for obj in bpy.data.objects:
+            if obj.name.startswith("facades_") or obj.name.startswith("roofs_"):
+                obj.hide_viewport = False
+                obj.hide_render = False
 
 def unregister():
     if bpy.app.timers.is_registered(tecate_culler_timer):
