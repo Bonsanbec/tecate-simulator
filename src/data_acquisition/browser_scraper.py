@@ -557,8 +557,12 @@ class GoogleStreetViewScraper:
                 }
             """)
             
-            # Wait 5.0 seconds for WebGL tiles to fully stabilize and render in high-res
-            time.sleep(5.0)
+            # Wait for WebGL tiles to stabilize and render in high-res
+            try:
+                self.page.wait_for_load_state("networkidle", timeout=1500)
+            except Exception:
+                pass
+            time.sleep(1.0) # Short stabilization sleep instead of fixed 5.0s
             
             # Capture viewport screenshot
             screenshot_bytes = self.page.screenshot()
