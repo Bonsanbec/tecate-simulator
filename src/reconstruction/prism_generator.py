@@ -18,7 +18,7 @@ class UrbanBlockReconstructor:
     performs standard 2D perspective homography warping onto block vertical quads,
     and exports procedurally compiled textured glTF geometry for Blender.
     """
-    def __init__(self, G: nx.MultiGraph, accepted_panos: list[dict] = None, export_dir: str = "export", data_dir: str = "data", headless: bool = False, radius: float = None, reprocess: bool = False, skip_scraper: bool = False, harvest_only: bool = False, parallel: int = 4):
+    def __init__(self, G: nx.MultiGraph, export_dir: str = "export", data_dir: str = "data", headless: bool = False, radius: float = None, reprocess: bool = False, skip_scraper: bool = False, harvest_only: bool = False, parallel: int = 4):
         self.G = G
         self.export_dir = export_dir
         self.data_dir = data_dir
@@ -226,8 +226,7 @@ class UrbanBlockReconstructor:
             
         signal.signal(signal.SIGINT, handle_sigint)
 
-        # Run unified migration of existing cache entries to enriched format
-        self.migrate_metadata_cache()
+
 
         # Load existing reconstruction export to enable block-level incremental skipping
         self.existing_export_blocks = {}
@@ -504,11 +503,7 @@ class UrbanBlockReconstructor:
                 }
         return facades
 
-    def migrate_metadata_cache(self):
-        """
-        Obsolete metadata cache migration. Bypassed under clean relational structure.
-        """
-        pass
+
 
     def extract_block_polygons(self) -> list[dict]:
         """
@@ -795,7 +790,7 @@ class UrbanBlockReconstructor:
             if seg_len_sq < 1e-5:
                 dist = math.sqrt((mx - ux)**2 + (my - uy)**2)
             else:
-                t = ((mx - ux) * dx + (my - my) * dy) / seg_len_sq
+                t = ((mx - ux) * dx + (my - uy) * dy) / seg_len_sq
                 t = max(0.0, min(1.0, t))
                 proj_x = ux + t * dx
                 proj_y = uy + t * dy
@@ -807,50 +802,7 @@ class UrbanBlockReconstructor:
                 
         return min_dist, best_edge_id
 
-    def score_observation_candidate(self, mx: float, my: float, normal: np.ndarray, obs: dict, wall_edge_id: str) -> float:
-        """
-        Evaluates a candidate Layer 2 observation for matching a wall segment.
-        Strictly prioritizes normal alignment, road containment, and visibility quality.
-        """
-        proj = obs["projection"]
-        prov = obs["provenance"]
-        meta = obs["metadata"]
-        
-        cx = proj["camera_x"]
-        cy = proj["camera_y"]
-        cam_yaw = math.radians(proj["yaw_degrees"])
-        
-        # Camera look vector
-        v_cam = np.array([math.sin(cam_yaw), math.cos(cam_yaw)])
-        
-        # Alignment dot product: camera should face opposite to the outward wall normal
-        alignment = -np.dot(v_cam, normal)
-        if alignment <= 0.05:  # Camera is facing away from facade
-            return 0.0
-            
-        dx = cx - mx
-        dy = cy - my
-        dist = math.sqrt(dx*dx + dy*dy)
-        if dist < 1e-3:
-            return 0.0
-            
-        # 1. Normal alignment multiplier
-        score_align = alignment
-        
-        # 2. Relaxed Euclidean distance decay
-        score_dist = math.exp(-dist / 35.0)
-        
-        # 3. Same Road Segment bonus
-        source_pano_id = prov["source_pano_id"]
-        obs_edge_id = self.pano_to_edge.get(source_pano_id)
-        same_road_bonus = 1.8 if (obs_edge_id == wall_edge_id and wall_edge_id is not None) else 1.0
-        
-        # 4. Frontal Visibility Quality
-        visibility_quality = meta.get("quality_score", 0.5)
-        
-        # 5. Combined Score
-        score = score_align * score_dist * same_road_bonus * visibility_quality
-        return score
+
 
     def extract_rectified_facade_observation_texture(
         self, 
@@ -943,120 +895,7 @@ class UrbanBlockReconstructor:
         if cache_key not in self._cached_transparent_dict:
             self._cached_transparent_dict[cache_key] = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         return self._cached_transparent_dict[cache_key].copy()
-    def find_horizontal_overlap_offset(self, img1: Image.Image, img2: Image.Image) -> int:
-        """
-        Finds the optimal horizontal starting offset of img2 relative to img1.
-        Both images are assumed to be PIL Images of size 512x256.
-        Uses coarse-to-fine Normalized Cross-Correlation (NCC) template matching on grayscale conversions.
-        """
-        gray1 = cv2.cvtColor(np.array(img1), cv2.COLOR_RGB2GRAY)
-        gray2 = cv2.cvtColor(np.array(img2), cv2.COLOR_RGB2GRAY)
-        
-        best_s = 350  # Default fallback shift (around 30% overlap)
-        best_score = -1.0
-        
-        # 1. Coarse search with step of 5
-        for s in range(100, 460, 5):
-            w_overlap = 512 - s
-            strip1 = gray1[:, s:512]
-            strip2 = gray2[:, 0:w_overlap]
-            
-            score = cv2.matchTemplate(strip1, strip2, cv2.TM_CCOEFF_NORMED)[0, 0]
-            if score > best_score:
-                best_score = score
-                best_s = s
-                
-        # 2. Fine search with step of 1 around best coarse shift
-        coarse_best = best_s
-        for s in range(max(100, coarse_best - 4), min(460, coarse_best + 5)):
-            w_overlap = 512 - s
-            strip1 = gray1[:, s:512]
-            strip2 = gray2[:, 0:w_overlap]
-            
-            score = cv2.matchTemplate(strip1, strip2, cv2.TM_CCOEFF_NORMED)[0, 0]
-            if score > best_score:
-                best_score = score
-                best_s = s
-                
-        # If the match score is too low, fall back to a reasonable default overlap (e.g. 350)
-        if best_score < 0.35:
-            return 350
-            
-        return best_s
 
-    def stitch_facades_with_similarity(self, group: list) -> tuple[Image.Image, list[int]]:
-        """
-        Stitches a list of sequential facade images using template matching overlaps and linear blending.
-        Each item in the group is: (f_idx, tex_img, status, f_id).
-        Returns the final stitched Image and a list of horizontal starting coordinates (offsets) for each image.
-        """
-        N = len(group)
-        if N == 1:
-            return group[0][1].convert("RGBA"), [0]
-            
-        # Calculate shifts between adjacent images
-        shifts = []
-        for i in range(N - 1):
-            img1 = group[i][1]
-            img2 = group[i+1][1]
-            status1 = group[i][2]
-            status2 = group[i+1][2]
-            
-            if status1 == "textured" and status2 == "textured":
-                s = self.find_horizontal_overlap_offset(img1, img2)
-            else:
-                s = 512  # If either is transparent fallback, do not overlap-blend
-            shifts.append(s)
-            
-        # Compute absolute horizontal positions (offsets)
-        offsets = [0]
-        curr = 0
-        for s in shifts:
-            curr += s
-            offsets.append(curr)
-            
-        W_final = offsets[-1] + 512
-        H_final = 256
-        
-        # Build the final image by pasting and blending (4 channels for RGBA)
-        accum = np.zeros((H_final, W_final, 4), dtype=np.float32)
-        weight = np.zeros((H_final, W_final), dtype=np.float32)
-        
-        for i, (f_idx, img, status, f_id) in enumerate(group):
-            img_rgba = img.convert("RGBA")
-            img_np = np.array(img_rgba, dtype=np.float32)
-            x_start = offsets[i]
-            x_end = x_start + 512
-            
-            # Determine the overlap regions to apply a linear ramp blend
-            mask = np.ones((H_final, 512), dtype=np.float32)
-            
-            # Left overlap blending ramp
-            if i > 0:
-                left_overlap = 512 - shifts[i-1]
-                if left_overlap > 0:
-                    for col in range(left_overlap):
-                        mask[:, col] = col / float(left_overlap)
-                        
-            # Right overlap blending ramp
-            if i < N - 1:
-                right_overlap = 512 - shifts[i]
-                if right_overlap > 0:
-                    for col in range(right_overlap):
-                        mask[:, 512 - right_overlap + col] = 1.0 - (col / float(right_overlap))
-                        
-            # Add to accumulators across all 4 channels
-            for c in range(4):
-                accum[:, x_start:x_end, c] += img_np[:, :, c] * mask
-            weight[:, x_start:x_end] += mask
-            
-        # Normalize by weights to get blended image
-        weight = np.maximum(weight, 1e-5)
-        for c in range(4):
-            accum[:, :, c] /= weight
-            
-        final_np = np.clip(accum, 0, 255).astype(np.uint8)
-        return Image.fromarray(final_np, "RGBA"), offsets
 
     def crop_facade(self, img_bytes: bytes, A: tuple[float, float], B: tuple[float, float], cx: float, cy: float, heading: float) -> Image.Image:
         # Load screenshot bytes as PIL Image

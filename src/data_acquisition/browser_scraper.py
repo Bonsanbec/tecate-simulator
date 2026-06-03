@@ -424,7 +424,6 @@ class GoogleStreetViewScraper:
         self.browser = None
         self.context = None
         self.page = None
-        self.intercepted_panos = {}
 
     def __del__(self):
         self.close()
@@ -493,7 +492,6 @@ class GoogleStreetViewScraper:
         self.page = self.context.new_page()
         
         os.makedirs("data/screenshots", exist_ok=True)
-        self.intercepted_panos = {}
         print("[Playwright] Persistent Chromium session initialized.")
 
     def close(self):
