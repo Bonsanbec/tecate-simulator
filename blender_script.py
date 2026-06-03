@@ -98,9 +98,6 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
     loaded_materials = {}
     loaded_roof_materials = {}
     
-    # Pre-cache fallback texture path to avoid check in loop
-    fallback_path = os.path.abspath("export/textures/transparent_facade.png")
-    
     # Group geometries by material (tex_path for facades)
     facade_geometry = {}
     
@@ -164,15 +161,17 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
             
             # Face texture path
             tex_path = facade_tex_dict.get(surface_id)
-            if not tex_path or not os.path.exists(tex_path):
-                tex_path = fallback_path
-                
-            if tex_path not in facade_geometry:
-                facade_geometry[tex_path] = { "verts": [], "faces": [], "uvs": [], "is_visible": is_visible }
+            if not tex_path or not os.path.exists(tex_path) or "transparent_facade.png" in tex_path:
+                tex_key = "untextured"
             else:
-                facade_geometry[tex_path]["is_visible"] = facade_geometry[tex_path]["is_visible"] or is_visible
+                tex_key = tex_path
                 
-            geo = facade_geometry[tex_path]
+            if tex_key not in facade_geometry:
+                facade_geometry[tex_key] = { "verts": [], "faces": [], "uvs": [], "is_visible": is_visible }
+            else:
+                facade_geometry[tex_key]["is_visible"] = facade_geometry[tex_key]["is_visible"] or is_visible
+                
+            geo = facade_geometry[tex_key]
             s_idx = len(geo["verts"])
             geo["verts"].extend([BL, BR, TR, TL])
             geo["faces"].append([s_idx, s_idx + 1, s_idx + 2, s_idx + 3])
@@ -223,9 +222,13 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
 
     # 4. Create facade mesh objects in Blender (one object per unique material/texture)
     print(f"[Blender] Compiling {len(facade_geometry)} unique facade materials...")
-    for tex_path, geo in facade_geometry.items():
-        mat_name = f"mat_{os.path.basename(tex_path).replace('.', '_')}"
-        mesh_name = f"facade_{os.path.basename(tex_path)}_mesh"
+    for tex_key, geo in facade_geometry.items():
+        if tex_key == "untextured":
+            mat_name = "mat_untextured_facade"
+            mesh_name = "facade_untextured_mesh"
+        else:
+            mat_name = f"mat_{os.path.basename(tex_key).replace('.', '_')}"
+            mesh_name = f"facade_{os.path.basename(tex_key)}_mesh"
         
         mesh = bpy.data.meshes.new(name=mesh_name)
         mesh.from_pydata(geo["verts"], [], geo["faces"])
@@ -239,16 +242,16 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
                     uv_layer.data[loop.index].uv = geo["uvs"][loop.index]
                     
         # Load image exactly once globally
-        if tex_path not in loaded_images:
+        if tex_key != "untextured" and tex_key not in loaded_images:
             try:
-                img = bpy.data.images.load(tex_path)
-                loaded_images[tex_path] = img
+                img = bpy.data.images.load(tex_key)
+                loaded_images[tex_key] = img
             except Exception as e:
-                print(f"[Warning] Failed to load texture {tex_path}: {e}")
-                loaded_images[tex_path] = None
+                print(f"[Warning] Failed to load texture {tex_key}: {e}")
+                loaded_images[tex_key] = None
                 
         # Create material exactly once globally
-        if tex_path not in loaded_materials:
+        if tex_key not in loaded_materials:
             mat = bpy.data.materials.get(mat_name)
             if not mat:
                 mat = bpy.data.materials.new(name=mat_name)
@@ -257,27 +260,35 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
                 links = mat.node_tree.links
                 
                 bsdf = nodes.get("Principled BSDF")
-                node_tex = nodes.new(type='ShaderNodeTexImage')
-                node_tex.image = loaded_images[tex_path]
-                
-                if bsdf:
-                    links.new(node_tex.outputs['Color'], bsdf.inputs['Base Color'])
-                    if 'Alpha' in node_tex.outputs and 'Alpha' in bsdf.inputs:
-                        links.new(node_tex.outputs['Alpha'], bsdf.inputs['Alpha'])
-                    try:
-                        mat.blend_method = 'BLEND'
-                    except AttributeError:
-                        pass
-                    try:
-                        mat.shadow_method = 'NONE'
-                    except AttributeError:
-                        pass
-            loaded_materials[tex_path] = mat
+                if tex_key == "untextured":
+                    if bsdf:
+                        bsdf.inputs['Base Color'].default_value = (0.9, 0.85, 0.8, 1.0) # warm stucco cream
+                else:
+                    node_tex = nodes.new(type='ShaderNodeTexImage')
+                    node_tex.image = loaded_images[tex_key]
+                    
+                    if bsdf:
+                        links.new(node_tex.outputs['Color'], bsdf.inputs['Base Color'])
+                        if 'Alpha' in node_tex.outputs and 'Alpha' in bsdf.inputs:
+                            links.new(node_tex.outputs['Alpha'], bsdf.inputs['Alpha'])
+                        try:
+                            mat.blend_method = 'BLEND'
+                        except AttributeError:
+                            pass
+                        try:
+                            mat.shadow_method = 'NONE'
+                        except AttributeError:
+                            pass
+            loaded_materials[tex_key] = mat
             
-        mat = loaded_materials[tex_path]
+        mat = loaded_materials[tex_key]
         
         # Create Object and bind material
-        obj_name = f"facades_{os.path.basename(tex_path).replace('.', '_')}"
+        if tex_key == "untextured":
+            obj_name = "facades_untextured"
+        else:
+            obj_name = f"facades_{os.path.basename(tex_key).replace('.', '_')}"
+            
         obj = bpy.data.objects.new(obj_name, mesh)
         bpy.context.scene.collection.objects.link(obj)
         obj.data.materials.append(mat)
