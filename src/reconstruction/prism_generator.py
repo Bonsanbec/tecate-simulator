@@ -1960,7 +1960,7 @@ class UrbanBlockReconstructor:
             if p_id is None:
                 for seg in group:
                     f_id = seg["facade_id"]
-                    facade_textures_map[f_id] = os.path.abspath(fallback_path)
+                    facade_textures_map[f_id] = os.path.abspath(fallback_path) if fallback_path else None
                     status = "fallback"
                     local_diag_facades.append({
                         "facade_id": f_id,
@@ -2114,7 +2114,7 @@ class UrbanBlockReconstructor:
                     }
                     local_provenance[f_id] = prov
                 else:
-                    facade_textures_map[f_id] = os.path.abspath(fallback_path)
+                    facade_textures_map[f_id] = os.path.abspath(fallback_path) if fallback_path else None
                     
                 local_diag_facades.append({
                     "facade_id": f_id,
@@ -2169,8 +2169,8 @@ class UrbanBlockReconstructor:
             "polygon": shrunk_poly,
             "height_meters": height_meters,
             "centroid": [centroid_x, centroid_y],
-            "texture_atlas_path": os.path.abspath(fallback_path),
-            "texture_atlas_filename": "transparent_facade.png",
+            "texture_atlas_path": os.path.abspath(fallback_path) if fallback_path else None,
+            "texture_atlas_filename": "transparent_facade.png" if fallback_path else None,
             "facade_textures": facade_textures_map,
             "uv_mappings": uv_mappings,
             "roof_color": roof_color_val,
@@ -2197,12 +2197,8 @@ class UrbanBlockReconstructor:
         Groups contiguous segments sharing the same panorama and heading,
         projecting and warping only once to eliminate visual seams.
         """
-        # Generate and save transparent_facade.png to disk for fallbacks in Blender
-        fallback_img = self.generate_transparent_fallback()
-        fallback_path = os.path.join(self.textures_dir, "transparent_facade.png")
-        os.makedirs(os.path.dirname(fallback_path), exist_ok=True)
-        fallback_img.save(fallback_path)
-        print(f"[Reconstruction] Transparent fallback texture saved to: {fallback_path}")
+        # Fallback textures are removed completely; Blender will render untextured solid cream color.
+        fallback_path = None
         
         # Build O(1) road name dictionary to avoid nested loops over edges
         self.road_name_by_id = {}
