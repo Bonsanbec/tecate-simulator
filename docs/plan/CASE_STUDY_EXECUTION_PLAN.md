@@ -216,7 +216,7 @@ data/case_study/
 ├── recomputed_midpoints.json          # Facade midpoints
 ├── pose_validation_report.json        # Camera pose validation
 └── target_images/
-    └── {pano_id}_yaw_*.png           # Source images
+    └── {pano_id}_yaw_*.png           # Source images (symlink)
 
 export/case_study/
 ├── target_facade_texture.png          # 512×512 RGBA facade texture
