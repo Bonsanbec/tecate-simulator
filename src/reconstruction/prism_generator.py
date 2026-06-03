@@ -61,6 +61,7 @@ class UrbanBlockReconstructor:
         # Load stitching cache to enable fast incremental reconstruction
         self.stitching_cache_path = os.path.join(data_dir, "stitching_cache.json")
         self.stitching_cache = {}
+        self.stitching_cache_changed = False
         if os.path.exists(self.stitching_cache_path):
             try:
                 self.stitching_cache = load_json(self.stitching_cache_path)
@@ -74,6 +75,7 @@ class UrbanBlockReconstructor:
         
         # Load blocks
         self.blocks_cache = {}
+        self.blocks_cache_changed = False
         if os.path.exists(self.blocks_cache_path):
             try:
                 self.blocks_cache = load_json(self.blocks_cache_path)
@@ -83,6 +85,7 @@ class UrbanBlockReconstructor:
         
         # Load panoramas
         self.panoramas_cache = {}
+        self.panoramas_cache_changed = False
         if os.path.exists(self.panoramas_cache_path):
             try:
                 self.panoramas_cache = load_json(self.panoramas_cache_path)
@@ -91,6 +94,7 @@ class UrbanBlockReconstructor:
                 
         # Load facades
         self.facades_cache = {}
+        self.facades_cache_changed = False
         if os.path.exists(self.facades_cache_path):
             try:
                 self.facades_cache = load_json(self.facades_cache_path)
@@ -207,6 +211,10 @@ class UrbanBlockReconstructor:
         # Register graceful Ctrl+C handler
         import signal
         self.shutdown_in_progress = False
+        self.current_blocks_data = []
+        self.current_provenance = {}
+        self.current_diagnostics = {}
+        self.current_diag_facades = []
         def handle_sigint(signum, frame):
             if self.shutdown_in_progress:
                 print("\n[Ctrl+C] Force exiting instantly!")
@@ -259,29 +267,41 @@ class UrbanBlockReconstructor:
         return inside
 
     def save_stitching_cache(self):
+        if not self.stitching_cache_changed:
+            return
         try:
             save_json(self.stitching_cache, self.stitching_cache_path, indent=None)
+            self.stitching_cache_changed = False
             print(f"[Cache Auto-Save] Stitching cache written to: {self.stitching_cache_path}")
         except Exception as e:
             print(f"[Warning] Failed to save stitching cache: {e}")
 
     def save_panoramas_cache(self):
+        if not self.panoramas_cache_changed:
+            return
         try:
             save_json(self.panoramas_cache, self.panoramas_cache_path, indent=None)
+            self.panoramas_cache_changed = False
             print(f"[Cache Auto-Save] Panoramas cache written to: {self.panoramas_cache_path}")
         except Exception as e:
             print(f"[Warning] Failed to save panoramas cache: {e}")
 
     def save_facades_cache(self):
+        if not self.facades_cache_changed:
+            return
         try:
             save_json(self.facades_cache, self.facades_cache_path, indent=None)
+            self.facades_cache_changed = False
             print(f"[Cache Auto-Save] Facades cache written to: {self.facades_cache_path}")
         except Exception as e:
             print(f"[Warning] Failed to save facades cache: {e}")
             
     def save_blocks_cache(self):
+        if not self.blocks_cache_changed:
+            return
         try:
             save_json(self.blocks_cache, self.blocks_cache_path, indent=None)
+            self.blocks_cache_changed = False
             print(f"[Cache Auto-Save] Blocks cache written to: {self.blocks_cache_path}")
         except Exception as e:
             print(f"[Warning] Failed to save blocks cache: {e}")
@@ -291,60 +311,72 @@ class UrbanBlockReconstructor:
         Decomposes the virtual in-memory self.metadata_cache into
         the two relational caches: self.panoramas_cache and self.facades_cache.
         """
-        for f_id, entry in self.metadata_cache.items():
-            if not entry:
-                continue
-            # 1. Panorama Cache
-            p_id = entry.get("pano_id")
-            if p_id:
-                if p_id not in self.panoramas_cache:
-                    self.panoramas_cache[p_id] = {}
-                
-                self.panoramas_cache[p_id].update({
-                    "latitude": entry.get("latitude"),
-                    "longitude": entry.get("longitude"),
-                    "altitude": entry.get("altitude"),
-                    "date": entry.get("date", ""),
-                    "pitch": entry.get("pitch"),
-                    "roll": entry.get("roll"),
-                    "projection_yaw": entry.get("projection_yaw"),
-                    "pano_yaw": entry.get("pano_yaw"),
-                    "road_name": entry.get("road_name", ""),
-                    "adjacent_links": entry.get("adjacent_links", []),
-                    "timeline": entry.get("timeline", []),
-                })
-                
-            # 2. Facade Cache (Disk Optimization)
-            if f_id not in self.facades_cache:
-                self.facades_cache[f_id] = {}
-                
-            # Wipe out only the requested optimized keys that are not stored on disk
-            for key in ["camera_position_local", "image_filename", "offset_search_point_local"]:
-                self.facades_cache[f_id].pop(key, None)
-                
-            self.facades_cache[f_id].update({
-                "pano_id": p_id,
-                "block_id": entry.get("block_id"),
-                "facade_index": entry.get("facade_index"),
-                "heading": entry.get("heading"),
-                "captured_heading": entry.get("captured_heading", entry.get("heading")),
-                "resolution": entry.get("resolution", {
-                    "screenshot_width": 1280,
-                    "screenshot_height": 720,
-                    "slice_width": 512,
-                    "slice_height": 256
-                }),
-                "camera_rotation_matrix": entry.get("camera_rotation_matrix"),
-                "road_relation": entry.get("road_relation"),
-                "facade_midpoint_local": entry.get("facade_midpoint_local"),
-                "offset_search_point_gps": entry.get("offset_search_point_gps"),
-                "search_query_url": entry.get("search_query_url"),
-                "captured_url": entry.get("captured_url"),
-                "modern_pano_id": entry.get("modern_pano_id"),
-                "camera_alignment_diagnostics": entry.get("camera_alignment_diagnostics"),
-                "facade_segment_vertices_local": entry.get("facade_segment_vertices_local"),
-                "roof_color": entry.get("roof_color")
-            })
+        with self.cache_lock:
+            for f_id, entry in self.metadata_cache.items():
+                if not entry:
+                    continue
+                # 1. Panorama Cache
+                p_id = entry.get("pano_id")
+                if p_id:
+                    pano_updates = {
+                        "latitude": entry.get("latitude"),
+                        "longitude": entry.get("longitude"),
+                        "altitude": entry.get("altitude"),
+                        "date": entry.get("date", ""),
+                        "pitch": entry.get("pitch"),
+                        "roll": entry.get("roll"),
+                        "projection_yaw": entry.get("projection_yaw"),
+                        "pano_yaw": entry.get("pano_yaw"),
+                        "road_name": entry.get("road_name", ""),
+                        "adjacent_links": entry.get("adjacent_links", []),
+                        "timeline": entry.get("timeline", []),
+                    }
+                    if p_id not in self.panoramas_cache:
+                        self.panoramas_cache[p_id] = {}
+                        self.panoramas_cache_changed = True
+                    for k, v in pano_updates.items():
+                        if self.panoramas_cache[p_id].get(k) != v:
+                            self.panoramas_cache[p_id][k] = v
+                            self.panoramas_cache_changed = True
+                    
+                # 2. Facade Cache (Disk Optimization)
+                if f_id not in self.facades_cache:
+                    self.facades_cache[f_id] = {}
+                    self.facades_cache_changed = True
+                    
+                # Wipe out only the requested optimized keys that are not stored on disk
+                for key in ["camera_position_local", "image_filename", "offset_search_point_local"]:
+                    if key in self.facades_cache[f_id]:
+                        self.facades_cache[f_id].pop(key)
+                        self.facades_cache_changed = True
+                    
+                facade_updates = {
+                    "pano_id": p_id,
+                    "block_id": entry.get("block_id"),
+                    "facade_index": entry.get("facade_index"),
+                    "heading": entry.get("heading"),
+                    "captured_heading": entry.get("captured_heading", entry.get("heading")),
+                    "resolution": entry.get("resolution", {
+                        "screenshot_width": 1280,
+                        "screenshot_height": 720,
+                        "slice_width": 512,
+                        "slice_height": 256
+                    }),
+                    "camera_rotation_matrix": entry.get("camera_rotation_matrix"),
+                    "road_relation": entry.get("road_relation"),
+                    "facade_midpoint_local": entry.get("facade_midpoint_local"),
+                    "offset_search_point_gps": entry.get("offset_search_point_gps"),
+                    "search_query_url": entry.get("search_query_url"),
+                    "captured_url": entry.get("captured_url"),
+                    "modern_pano_id": entry.get("modern_pano_id"),
+                    "camera_alignment_diagnostics": entry.get("camera_alignment_diagnostics"),
+                    "facade_segment_vertices_local": entry.get("facade_segment_vertices_local"),
+                    "roof_color": entry.get("roof_color")
+                }
+                for k, v in facade_updates.items():
+                    if self.facades_cache[f_id].get(k) != v:
+                        self.facades_cache[f_id][k] = v
+                        self.facades_cache_changed = True
 
     def save_metadata_cache(self):
         self._decompose_metadata_cache()
@@ -1344,6 +1376,40 @@ class UrbanBlockReconstructor:
             
         return Image.fromarray(np_img, "RGBA")
 
+    def is_block_complete(self, b_id: str) -> bool:
+        """
+        Checks if a block in self.existing_export_blocks has any street-facing facades
+        that are missing from self.facades_cache, or are in cache but missing from disk.
+        """
+        if b_id not in self.existing_export_blocks:
+            return False
+            
+        existing_block = self.existing_export_blocks[b_id]
+        poly = existing_block["polygon"]
+        num_verts = len(poly) - 1
+        for f_idx in range(num_verts):
+            f_id = f"{b_id}_facade_{f_idx}"
+            tex_path = existing_block.get("facade_textures", {}).get(f_id, "")
+            if "transparent_facade.png" in tex_path:
+                A = poly[f_idx]
+                B = poly[f_idx + 1]
+                mx = (A[0] + B[0]) / 2.0
+                my = (A[1] + B[1]) / 2.0
+                road_dist, _ = self.get_road_distance(mx, my)
+                if road_dist <= 20.0:
+                    with self.cache_lock:
+                        f_cache = self.facades_cache.get(f_id)
+                    if not f_cache:
+                        return False
+                    p_id = f_cache.get("pano_id")
+                    if p_id:
+                        heading_val = f_cache.get("captured_heading", f_cache.get("heading", 0.0))
+                        pano_filename = f"{p_id}_yaw_{heading_val:.2f}.png"
+                        pano_screenshot_path = os.path.join(self.data_dir, "screenshots", "pano", pano_filename)
+                        if not os.path.exists(pano_screenshot_path):
+                            return False
+        return True
+
     def resolve_almost_adjacent_fallback_segments(self, block_segments_info: list[dict], fallback_path: str) -> None:
         """
         Scans block segments to find fallback segments (pano_id is None) that are within distance of 2
@@ -1399,14 +1465,16 @@ class UrbanBlockReconstructor:
                     seg["heading"] = best_neighbor["heading"]
                     # Add to facades_cache relationally so it is persisted and resumed cleanly
                     facade_id = seg["facade_id"]
-                    self.facades_cache[facade_id] = {
-                        "pano_id": seg["pano_id"],
-                        "heading": seg["heading"],
-                        "captured_heading": seg["heading"]
-                    }
-                    self.metadata_cache[facade_id] = {}
-                    self.metadata_cache[facade_id].update(self.facades_cache[facade_id])
-                    self.metadata_cache[facade_id].update(self.panoramas_cache[seg["pano_id"]])
+                    with self.cache_lock:
+                        self.facades_cache[facade_id] = {
+                            "pano_id": seg["pano_id"],
+                            "heading": seg["heading"],
+                            "captured_heading": seg["heading"]
+                        }
+                        self.facades_cache_changed = True
+                        self.metadata_cache[facade_id] = {}
+                        self.metadata_cache[facade_id].update(self.facades_cache[facade_id])
+                        self.metadata_cache[facade_id].update(self.panoramas_cache[seg["pano_id"]])
 
     def cardinal_from_normal(self, normal):
         nx, ny = normal[0], normal[1]
@@ -1457,95 +1525,99 @@ class UrbanBlockReconstructor:
         with self.cache_lock:
             in_existing = b_id in self.existing_export_blocks
         if not self.reprocess and in_existing:
-            with self.cache_lock:
-                existing_block = self.existing_export_blocks[b_id]
-            
-            blocks_data_entry = existing_block
-            local_provenance = {}
-            local_diagnostics = {}
-            local_diag_facades = []
-            
-            poly = existing_block["polygon"]
-            num_verts = len(poly) - 1
-            
-            # Recover provenance
-            facade_textures = existing_block.get("facade_textures", {})
-            for f_id, tex_path in facade_textures.items():
-                if "transparent_facade.png" not in tex_path:
+            should_skip = True
+            if not self.skip_scraper:
+                should_skip = self.is_block_complete(b_id)
+            if should_skip:
+                with self.cache_lock:
+                    existing_block = self.existing_export_blocks[b_id]
+                
+                blocks_data_entry = existing_block
+                local_provenance = {}
+                local_diagnostics = {}
+                local_diag_facades = []
+                
+                poly = existing_block["polygon"]
+                num_verts = len(poly) - 1
+                
+                # Recover provenance
+                facade_textures = existing_block.get("facade_textures", {})
+                for f_id, tex_path in facade_textures.items():
+                    if "transparent_facade.png" not in tex_path:
+                        with self.cache_lock:
+                            f_cache = self.facades_cache.get(f_id) or {}
+                            p_id = f_cache.get("pano_id")
+                            p_data = self.panoramas_cache.get(p_id, {}) if p_id else {}
+                        
+                        if p_id:
+                            f_idx = int(f_id.split("_")[-1])
+                            A = poly[f_idx]
+                            B = poly[f_idx+1]
+                            dx = B[0] - A[0]
+                            dy = B[1] - A[1]
+                            length = math.sqrt(dx*dx + dy*dy)
+                            normal = [dy / length, -dx / length] if length > 0 else [0.0, 1.0]
+                            
+                            prov = {
+                                "source_pano_id": p_id,
+                                "source_date": p_data.get("date", ""),
+                                "source_lat_lon": [p_data.get("latitude", 0.0), p_data.get("longitude", 0.0)],
+                                "facade_normal": normal,
+                                "projection_parameters": {
+                                    "cam_z": 2.5,
+                                    "height_meters": float(existing_block.get("height_meters", 8.0)),
+                                    "facade_length": float(length)
+                                }
+                            }
+                            local_provenance[f_id] = prov
+                            
+                # Reconstruct diagnostics for this block
+                for f_idx in range(num_verts):
+                    f_id = f"{b_id}_facade_{f_idx}"
                     with self.cache_lock:
                         f_cache = self.facades_cache.get(f_id) or {}
                         p_id = f_cache.get("pano_id")
                         p_data = self.panoramas_cache.get(p_id, {}) if p_id else {}
                     
-                    if p_id:
-                        f_idx = int(f_id.split("_")[-1])
-                        A = poly[f_idx]
-                        B = poly[f_idx+1]
-                        dx = B[0] - A[0]
-                        dy = B[1] - A[1]
-                        length = math.sqrt(dx*dx + dy*dy)
-                        normal = [dy / length, -dx / length] if length > 0 else [0.0, 1.0]
-                        
-                        prov = {
-                            "source_pano_id": p_id,
-                            "source_date": p_data.get("date", ""),
-                            "source_lat_lon": [p_data.get("latitude", 0.0), p_data.get("longitude", 0.0)],
-                            "facade_normal": normal,
-                            "projection_parameters": {
-                                "cam_z": 2.5,
-                                "height_meters": float(existing_block.get("height_meters", 8.0)),
-                                "facade_length": float(length)
+                    is_textured = (f_id in local_provenance)
+                    status = "textured" if is_textured else "fallback"
+                    
+                    A = poly[f_idx]
+                    B = poly[f_idx + 1]
+                    mx = (A[0] + B[0]) / 2.0
+                    my = (A[1] + B[1]) / 2.0
+                    dx = B[0] - A[0]
+                    dy = B[1] - A[1]
+                    length = math.sqrt(dx*dx + dy*dy)
+                    normal_list = [dy / length, -dx / length] if length > 0 else [0.0, 1.0]
+                    
+                    local_diag_facades.append({
+                        "facade_id": f_id,
+                        "A": A, "B": B, "mx": mx, "my": my, "normal": normal_list,
+                        "status": status,
+                        "best_obs": {
+                            "metadata": {
+                                "latitude": p_data.get("latitude", 0.0),
+                                "longitude": p_data.get("longitude", 0.0)
                             }
-                        }
-                        local_provenance[f_id] = prov
-                        
-            # Reconstruct diagnostics for this block
-            for f_idx in range(num_verts):
-                f_id = f"{b_id}_facade_{f_idx}"
-                with self.cache_lock:
-                    f_cache = self.facades_cache.get(f_id) or {}
-                    p_id = f_cache.get("pano_id")
-                    p_data = self.panoramas_cache.get(p_id, {}) if p_id else {}
-                
-                is_textured = (f_id in local_provenance)
-                status = "textured" if is_textured else "fallback"
-                
-                A = poly[f_idx]
-                B = poly[f_idx + 1]
-                mx = (A[0] + B[0]) / 2.0
-                my = (A[1] + B[1]) / 2.0
-                dx = B[0] - A[0]
-                dy = B[1] - A[1]
-                length = math.sqrt(dx*dx + dy*dy)
-                normal_list = [dy / length, -dx / length] if length > 0 else [0.0, 1.0]
-                
-                local_diag_facades.append({
-                    "facade_id": f_id,
-                    "A": A, "B": B, "mx": mx, "my": my, "normal": normal_list,
-                    "status": status,
-                    "best_obs": {
-                        "metadata": {
-                            "latitude": p_data.get("latitude", 0.0),
-                            "longitude": p_data.get("longitude", 0.0)
-                        }
-                    } if is_textured else None
-                })
-                local_diagnostics[f_id] = {
-                    "facade_id": f_id,
-                    "midpoint": [float(mx), float(my)],
-                    "normal": normal_list,
-                    "is_street_facing": True,
-                    "road_distance_meters": (f_cache.get("road_relation") or {}).get("road_distance_meters", 0.0),
-                    "status": status
+                        } if is_textured else None
+                    })
+                    local_diagnostics[f_id] = {
+                        "facade_id": f_id,
+                        "midpoint": [float(mx), float(my)],
+                        "normal": normal_list,
+                        "is_street_facing": True,
+                        "road_distance_meters": (f_cache.get("road_relation") or {}).get("road_distance_meters", 0.0),
+                        "status": status
+                    }
+                    
+                return {
+                    "block_data": blocks_data_entry,
+                    "provenance": local_provenance,
+                    "diagnostics": local_diagnostics,
+                    "diag_facades": local_diag_facades,
+                    "newly_resolved": False
                 }
-                
-            return {
-                "block_data": blocks_data_entry,
-                "provenance": local_provenance,
-                "diagnostics": local_diagnostics,
-                "diag_facades": local_diag_facades,
-                "newly_resolved": False
-            }
 
         raw_poly = rb["polygon"]
         local_diag_facades = []
@@ -1668,6 +1740,7 @@ class UrbanBlockReconstructor:
                                 },
                                 "facade_segment_vertices_local": [A, B]
                             }
+                            self.facades_cache_changed = True
                             self.metadata_cache[facade_id] = {}
                             self.metadata_cache[facade_id].update(self.facades_cache[facade_id])
                             self.metadata_cache[facade_id].update(self.panoramas_cache[pano_id])
@@ -1731,6 +1804,7 @@ class UrbanBlockReconstructor:
                                     "adjacent_links": meta.get("adjacent_links", []),
                                     "timeline": meta.get("timeline", []),
                                 }
+                                self.panoramas_cache_changed = True
                                 
                                 road_name_val = self.road_name_by_id.get(best_edge_id, "")
                                             
@@ -1774,6 +1848,7 @@ class UrbanBlockReconstructor:
                                     },
                                     "facade_segment_vertices_local": [A, B]
                                 }
+                                self.facades_cache_changed = True
                                 self.metadata_cache[facade_id] = {}
                                 self.metadata_cache[facade_id].update(self.facades_cache[facade_id])
                                 self.metadata_cache[facade_id].update(self.panoramas_cache[pano_id])
@@ -2068,15 +2143,24 @@ class UrbanBlockReconstructor:
         with self.cache_lock:
             if b_id not in self.blocks_cache:
                 self.blocks_cache[b_id] = {}
-            self.blocks_cache[b_id].update({
+                self.blocks_cache_changed = True
+            
+            block_updates = {
                 "polygon": raw_poly,
                 "height_meters": height_meters,
                 "roof_color": roof_color_val
-            })
+            }
+            for k, v in block_updates.items():
+                if self.blocks_cache[b_id].get(k) != v:
+                    self.blocks_cache[b_id][k] = v
+                    self.blocks_cache_changed = True
+                    
             for f_idx in range(num_verts):
                 f_id = f"{b_id}_facade_{f_idx}"
                 if f_id in self.facades_cache:
-                    self.facades_cache[f_id]["roof_color"] = roof_color_val
+                    if self.facades_cache[f_id].get("roof_color") != roof_color_val:
+                        self.facades_cache[f_id]["roof_color"] = roof_color_val
+                        self.facades_cache_changed = True
                 if f_id in self.metadata_cache:
                     self.metadata_cache[f_id]["roof_color"] = roof_color_val
                     
@@ -2152,7 +2236,8 @@ class UrbanBlockReconstructor:
                 if rb.get("is_external", False):
                     continue
                 if not self.reprocess and b_id in self.existing_export_blocks:
-                    continue
+                    if self.is_block_complete(b_id):
+                        continue
                     
                 raw_poly = rb["polygon"]
                 shrunk_poly = self.shrink_polygon(raw_poly, d=6.0)
@@ -2239,6 +2324,7 @@ class UrbanBlockReconstructor:
                                 "adjacent_links": meta.get("adjacent_links", []),
                                 "timeline": meta.get("timeline", []),
                             }
+                            self.panoramas_cache_changed = True
                             
                             road_name_val = self.road_name_by_id.get(best_edge_id, "")
                             look_vector = [float(mx - cx), float(my - cy)]
@@ -2281,6 +2367,7 @@ class UrbanBlockReconstructor:
                                 },
                                 "facade_segment_vertices_local": [A, B]
                             }
+                            self.facades_cache_changed = True
                             self.metadata_cache[facade_id] = {}
                             self.metadata_cache[facade_id].update(self.facades_cache[facade_id])
                             self.metadata_cache[facade_id].update(self.panoramas_cache[pano_id])
@@ -2373,10 +2460,15 @@ class UrbanBlockReconstructor:
             self.scraper.close()
             self.scraper = None  # Ensure threads never attempt to query browser/network
         
-        blocks_data = []
-        provenance = {}
-        diagnostics = {}
-        diag_facades = []
+        self.current_blocks_data = []
+        self.current_provenance = {}
+        self.current_diagnostics = {}
+        self.current_diag_facades = []
+        
+        blocks_data = self.current_blocks_data
+        provenance = self.current_provenance
+        diagnostics = self.current_diagnostics
+        diag_facades = self.current_diag_facades
         newly_resolved_count = 0
 
         # Concurrent thread execution when self.parallel > 1
@@ -2429,7 +2521,7 @@ class UrbanBlockReconstructor:
             print("[Harvest Mode] Scraping and metadata caching complete. Skipping all 3D reconstruction and Blender rendering.")
             if self.scraper:
                 self.scraper.close()
-            save_json(self.stitching_cache, self.stitching_cache_path)
+            self.save_stitching_cache()
             self.save_metadata_cache()
             return [], {}
 
@@ -2468,8 +2560,7 @@ class UrbanBlockReconstructor:
         }
         
         # Save stitching cache back to disk (Incremental processing)
-        save_json(self.stitching_cache, self.stitching_cache_path)
-        print(f"[Reconstruction] Stitching cache successfully updated at: {self.stitching_cache_path}")
+        self.save_stitching_cache()
         
         # Save metadata cache back to disk (Incremental processing)
         self.save_metadata_cache()
