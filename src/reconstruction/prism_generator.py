@@ -1382,7 +1382,7 @@ class UrbanBlockReconstructor:
                 # Recover provenance
                 facade_textures = existing_block.get("facade_textures", {})
                 for f_id, tex_path in facade_textures.items():
-                    if "transparent_facade.png" not in tex_path:
+                    if tex_path is not None and "transparent_facade.png" not in tex_path:
                         with self.cache_lock:
                             f_cache = self.facades_cache.get(f_id) or {}
                             p_id = f_cache.get("pano_id")
