@@ -1228,8 +1228,8 @@ class UrbanBlockReconstructor:
         num_verts = len(poly) - 1
         for f_idx in range(num_verts):
             f_id = f"{b_id}_facade_{f_idx}"
-            tex_path = existing_block.get("facade_textures", {}).get(f_id, "")
-            if "transparent_facade.png" in tex_path:
+            tex_path = existing_block.get("facade_textures", {}).get(f_id)
+            if not tex_path or "transparent_facade.png" in tex_path or tex_path == "untextured":
                 A = poly[f_idx]
                 B = poly[f_idx + 1]
                 mx = (A[0] + B[0]) / 2.0
