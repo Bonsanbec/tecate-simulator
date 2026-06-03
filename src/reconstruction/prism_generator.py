@@ -221,8 +221,15 @@ class UrbanBlockReconstructor:
                 import os
                 os._exit(1)
                 
+            print("\n[Ctrl+C] Interrupted! Switching to offline mode (--skip-scraper) for the remainder of execution...")
             self.shutdown_in_progress = True
-            self.graceful_shutdown()
+            self.skip_scraper = True
+            if self.scraper:
+                try:
+                    self.scraper.close()
+                except Exception:
+                    pass
+                self.scraper = None
             
         signal.signal(signal.SIGINT, handle_sigint)
 
@@ -2067,6 +2074,8 @@ class UrbanBlockReconstructor:
             sys.stdout.flush()
             
             for idx, rb in enumerate(raw_blocks):
+                if self.skip_scraper or self.scraper is None:
+                    break
                 b_id = rb["block_id"]
                 if rb.get("is_external", False):
                     continue
@@ -2085,6 +2094,8 @@ class UrbanBlockReconstructor:
                 
                 # 1. Resolve metadata for all segments sequentially
                 for f_idx in range(num_verts):
+                    if self.skip_scraper or self.scraper is None:
+                        break
                     facade_id = f"{b_id}_facade_{f_idx}"
                     A = shrunk_poly[f_idx]
                     B = shrunk_poly[f_idx + 1]
@@ -2257,6 +2268,8 @@ class UrbanBlockReconstructor:
                         groups.append(curr_group)
                         
                     for group in groups:
+                        if self.skip_scraper or self.scraper is None:
+                            break
                         p_id = group[0]["pano_id"]
                         if p_id is not None:
                             headings = [seg["heading"] for seg in group if seg["heading"] is not None]
