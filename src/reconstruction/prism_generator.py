@@ -725,7 +725,7 @@ class UrbanBlockReconstructor:
 
     def get_road_distance(self, mx: float, my: float) -> tuple[float, str]:
         """
-        Computes the minimum perpendicular distance from facade center M(mx, my) to all road segments in G
+        Computes the minimum perpendicular distance from facade center M(mx, uy) to all road segments in G
         using a high-performance spatial grid index.
         """
         if not hasattr(self, "grid_cells"):

@@ -35,9 +35,6 @@
 3. **`TemporalVisualClassifier` exists but is not wired** into the live pipeline (B-1)
 4. **Only 3.75% of city blocks are in the current export** (processing is ongoing)
 
-### Known Bug
-- `get_road_distance()` has a typo (`my - my` instead of `my - uy`) causing incorrect road distance calculations for diagonal street segments
-
 ### Key Architecture Facts
 - All geometry in **local Cartesian meters** relative to Parque Hidalgo (32.573229°N, 116.626536°W)
 - Three-table relational cache: `panoramas_cache` (3,906) + `facades_cache` (22,289) + `blocks_cache` (4,239)

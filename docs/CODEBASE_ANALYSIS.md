@@ -307,43 +307,7 @@ Three levels of skip-ahead:
 
 ## 3. Known Code Issues
 
-### Bug: Typo in `get_road_distance` (Line 766)
-
-```python
-# Actual code:
-t = ((mx - ux) * dx + (my - my) * dy) / seg_len_sq
-#                      ^^^^^^^^^^
-# BUG: (my - my) should be (my - uy)
-```
-
-This causes the `t` clamp parameter to be computed as:
-```
-t = ((mx - ux) * dx + 0 * dy) / seg_len_sq
-```
-
-The Y component of the projection is always zero, causing incorrect perpendicular distances for non-axis-aligned edges. The minimum distance is still computed (as the closest point on segment), but with incorrect `t` values for diagonal edges.
-
-**Impact**: Road distance estimates may be inaccurate for diagonal street segments, potentially misclassifying some facade segments as street-facing or non-street-facing.
-
-### Limitation: `stitch_facades_with_similarity` Not Used in Current Pipeline
-
-The `find_horizontal_overlap_offset` and `stitch_facades_with_similarity` methods implement NCC-based overlap stitching for sequential facade slices. However, the **current pipeline uses the unified virtual group warping approach** (`extract_rectified_facade_observation_texture`) instead. These stitching methods appear to be legacy code from a prior architecture.
-
-### Limitation: `score_observation_candidate` Not Used
-
-The `score_observation_candidate` method implements a sophisticated scoring function (alignment × distance decay × same-road bonus × visibility quality). However, in `reconstruct_single_block`, panorama selection is based on **direct API query at the search point** followed by **date comparison** — not this scoring function. The scoring method may be from a prior observation-matching architecture.
-
-### Limitation: `TemporalVisualClassifier` / `TemporalMRFSolver` Not Wired
-
-These classes exist in `src/temporal_filter/classifier.py` and implement CV-based temporal image classification. They are not called anywhere in `prism_generator.py`. Date selection is handled by raw date comparison on the `timeline` list.
-
-### Observation: `accepted_panos` Parameter Unused
-
-The `UrbanBlockReconstructor.__init__` accepts `accepted_panos: list[dict] = None` but this list is not referenced in any method body. It may be a placeholder for future MRF-based pre-filtering.
-
-### Observation: `intercepted_panos` Not Populated
-
-`GoogleStreetViewScraper.intercepted_panos` is initialized but no `page.on("response", ...)` listener is registered in the current code. Network interception is not active.
+...
 
 ---
 
