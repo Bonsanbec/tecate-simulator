@@ -4,6 +4,32 @@ import subprocess
 import sys
 from src.core_io.io_manager import ensure_dir
 
+def load_env():
+    """Loads environment variables from .env file if it exists."""
+    possible_paths = [
+        ".env",
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    ]
+    for path in possible_paths:
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith("#"):
+                            continue
+                        if "=" in line:
+                            key, val = line.split("=", 1)
+                            key = key.strip()
+                            val = val.strip()
+                            # Strip quotes if any
+                            if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+                                val = val[1:-1]
+                            os.environ[key] = val
+                break
+            except Exception as e:
+                print(f"[Warning] Failed to read .env file at {path}: {e}")
+
 def main():
     print("[collect_case_study_images] Starting...")
     
@@ -74,10 +100,26 @@ def main():
             to_fetch.append(f"data/screenshots/pano/{img}")
             
     if to_fetch:
-        print(f"[collect_case_study_images] Need to fetch {len(to_fetch)} screenshot files from remote WSL...")
+        load_env()
+        
+        store_remote = os.environ.get("store_remote")
+        store_remote_path = os.environ.get("store_remote_path", "~/tecate-simulator")
+        store_remote_wsl = os.environ.get("store_remote_wsl", "1")
+        
+        if not store_remote:
+            print("[collect_case_study_images] Error: Missing screenshots and no remote host configured in .env (store_remote).")
+            print("[collect_case_study_images] Treating as local. Please ensure Git LFS screenshots are pulled locally.")
+            sys.exit(1)
+            
+        print(f"[collect_case_study_images] Need to fetch {len(to_fetch)} screenshot files from remote {store_remote}...")
         
         files_arg = " ".join(to_fetch)
-        cmd = f'ssh HakkinDavid@hakkin.tail4b53f5.ts.net "wsl tar -C ~/tecate-simulator -czf - {files_arg}" | tar -xzf -'
+        tar_cmd = f"tar -C {store_remote_path} -czf - {files_arg}"
+        
+        if store_remote_wsl in ("1", "true", "True"):
+            tar_cmd = f"wsl {tar_cmd}"
+            
+        cmd = f'ssh {store_remote} "{tar_cmd}" | tar -xzf -'
         
         print(f"Running command: {cmd}")
         res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
