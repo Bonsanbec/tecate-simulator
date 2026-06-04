@@ -14,12 +14,18 @@ elif [ -f "./.venv/bin/python" ]; then
     fi
 fi
 
+# Collect arguments, default to --headless if none are provided
+ARGS=("$@")
+if [ ${#ARGS[@]} -eq 0 ]; then
+    ARGS=("--headless")
+fi
+
 echo "===== USING PYTHON INTERPRETER: $PYTHON_CMD ====="
 
 while true; do
     echo "===== STARTING CRAWLER ====="
 
-    PYTHONPATH=. "$PYTHON_CMD" src/main.py --headless
+    PYTHONPATH=. "$PYTHON_CMD" src/main.py "${ARGS[@]}"
 
     echo "===== CRAWLER FINISHED ====="
 
