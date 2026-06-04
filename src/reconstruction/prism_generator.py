@@ -1806,7 +1806,7 @@ class UrbanBlockReconstructor:
             if p_id is None:
                 for seg in group:
                     f_id = seg["facade_id"]
-                    facade_textures_map[f_id] = os.path.abspath(fallback_path) if fallback_path else None
+                    facade_textures_map[f_id] = os.path.relpath(fallback_path, start=self.export_dir) if fallback_path else None
                     status = "fallback"
                     local_diag_facades.append({
                         "facade_id": f_id,
@@ -1943,7 +1943,7 @@ class UrbanBlockReconstructor:
                         [u_seg_end, 1.0],
                         [u_seg_start, 1.0]
                     ]
-                    facade_textures_map[f_id] = virtual_tex_path
+                    facade_textures_map[f_id] = os.path.relpath(virtual_tex_path, start=self.export_dir)
                     
                     with self.cache_lock:
                         p_data = self.panoramas_cache[p_id]
@@ -1960,7 +1960,7 @@ class UrbanBlockReconstructor:
                     }
                     local_provenance[f_id] = prov
                 else:
-                    facade_textures_map[f_id] = os.path.abspath(fallback_path) if fallback_path else None
+                    facade_textures_map[f_id] = os.path.relpath(fallback_path, start=self.export_dir) if fallback_path else None
                     
                 local_diag_facades.append({
                     "facade_id": f_id,
@@ -2015,7 +2015,7 @@ class UrbanBlockReconstructor:
             "polygon": shrunk_poly,
             "height_meters": height_meters,
             "centroid": [centroid_x, centroid_y],
-            "texture_atlas_path": os.path.abspath(fallback_path) if fallback_path else None,
+            "texture_atlas_path": os.path.relpath(fallback_path, start=self.export_dir) if fallback_path else None,
             "texture_atlas_filename": "transparent_facade.png" if fallback_path else None,
             "facade_textures": facade_textures_map,
             "uv_mappings": uv_mappings,
