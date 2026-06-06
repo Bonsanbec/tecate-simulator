@@ -92,6 +92,9 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
         print(f"[Blender] Camera FOV Culling Active: Loc={cam_loc}, Look={tuple(look_dir_2d)}, FOV={fov_deg}°, MaxDist={max_dist}m")
     else:
         print("[Blender] Camera FOV Culling Disabled. Loading entire city...")
+    
+    if skip_textures:
+        print("[Blender] Skipping textures!")
 
     # Global caches to prevent image and material duplication
     loaded_images = {}
