@@ -163,7 +163,7 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
             uvs = uv_mappings.get(surface_id, [[0.0, 0.0]] * 4)
             
             # Face texture path
-            tex_path = facade_tex_dict.get(surface_id)
+            tex_path = None if skip_textures else facade_tex_dict.get(surface_id)
             if not tex_path or not os.path.exists(tex_path) or "transparent_facade.png" in tex_path:
                 tex_key = "untextured"
             else:
@@ -245,7 +245,7 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
                     uv_layer.data[loop.index].uv = geo["uvs"][loop.index]
                     
         # Load image exactly once globally
-        if tex_key != "untextured" and tex_key not in loaded_images and not skip_textures:
+        if tex_key != "untextured" and tex_key not in loaded_images:
             try:
                 img = bpy.data.images.load(tex_key)
                 loaded_images[tex_key] = img
