@@ -46,7 +46,6 @@ func _ready():
 func _create_colliders_recursive(node: Node):
 	if node is MeshInstance3D:
 		node.create_trimesh_collision()
-		print("[ApplyShader] Created collider for mesh: ", node.name)
 	for child in node.get_children():
 		_create_colliders_recursive(child)
 
@@ -66,7 +65,6 @@ func _snap_meshes_recursive(node: Node):
 				if height != null:
 					# Adjust the Y position of the node
 					node.global_position.y = height
-					print("[ApplyShader] Snapped ", name, " to height: ", height)
 				else:
 					print("[ApplyShader] Warning: Could not find terrain height for ", name, " at position ", global_center)
 					
@@ -105,7 +103,6 @@ func _apply_shader_recursive(node: Node, shader: Shader):
 		# 1. Do never render roofs (make them invisible)
 		if name.begins_with("roof_") or name.begins_with("roofs_"):
 			node.visible = false
-			print("[ApplyShader] Hid roof mesh: ", name)
 			
 		# 2. Check if the mesh is explicitly untextured
 		elif name.contains("untextured"):
@@ -152,14 +149,13 @@ func _apply_shader_recursive(node: Node, shader: Shader):
 				mat.set_shader_parameter("depth_scale", 0.08)
 				
 				node.material_override = mat
-				print("[ApplyShader] Successfully applied POM material override to: ", name)
 			else:
 				# 2. Make meshes with missing textures transparent as well
 				var transparent_mat = StandardMaterial3D.new()
 				transparent_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 				transparent_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.0)
 				node.material_override = transparent_mat
-				print("[ApplyShader] Texture not found. Applied transparency override to: ", name, " path: ", albedo_path)
+				
 				
 	for child in node.get_children():
 		_apply_shader_recursive(child, shader)
