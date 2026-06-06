@@ -1,6 +1,14 @@
 extends Node3D
 
+var lat_regex: RegEx
+var lon_regex: RegEx
+
 func _ready():
+	lat_regex = RegEx.new()
+	lat_regex.compile("lat_(\\d+)_(\\d+)")
+	lon_regex = RegEx.new()
+	lon_regex.compile("lon_(-?\\d+)_(\\d+)")
+	
 	var terrain_node = get_node_or_null("Terrain")
 	var geometry_node = get_node_or_null("Geometry")
 	var player_node = get_node_or_null("Player")
@@ -43,9 +51,50 @@ func _ready():
 		print("[ApplyShader] Applying POM shader to facade meshes...")
 		_apply_shader_recursive(geometry_node, shader)
 
+func _is_transparent_or_textureless(node: Node) -> bool:
+	if not (node is MeshInstance3D):
+		return false
+		
+	var name = node.name
+	# Roofs are textureless and should not be rendered
+	if name.begins_with("roof_") or name.begins_with("roofs_"):
+		return true
+		
+	# Explicitly untextured meshes
+	if name.contains("untextured"):
+		return true
+		
+	# Facades block meshes
+	if name.begins_with("facades_block_") or name.begins_with("facade_block_"):
+		var base_name = name
+		if base_name.begins_with("facades_"):
+			base_name = base_name.right(base_name.length() - "facades_".length())
+		elif base_name.begins_with("facade_"):
+			base_name = base_name.right(base_name.length() - "facade_".length())
+			
+		if base_name.ends_with("_mesh"):
+			base_name = base_name.left(base_name.length() - "_mesh".length())
+			
+		# Dynamically restore coordinate decimal points (e.g. lat_32_57328 -> lat_32.57328)
+		base_name = lat_regex.sub(base_name, "lat_$1.$2", true)
+		base_name = lon_regex.sub(base_name, "lon_$1.$2", true)
+		
+		var tex_name = base_name
+		if tex_name.ends_with("_png"):
+			tex_name = tex_name.left(tex_name.length() - "_png".length()) + ".png"
+			
+		var albedo_path = "res://assets/" + tex_name
+		var normal_path = "res://assets/" + tex_name.replace(".png", "_normal_height.png")
+		
+		if not (ResourceLoader.exists(albedo_path) and ResourceLoader.exists(normal_path)):
+			return true
+			
+	return false
+
 func _create_colliders_recursive(node: Node):
 	if node is MeshInstance3D:
-		node.create_trimesh_collision()
+		if not _is_transparent_or_textureless(node):
+			node.create_trimesh_collision()
 	for child in node.get_children():
 		_create_colliders_recursive(child)
 
@@ -54,19 +103,22 @@ func _snap_meshes_recursive(node: Node):
 		var name = node.name
 		# Only snap roofs and facades
 		if name.begins_with("roof_") or name.begins_with("facades_"):
-			var mesh = node.mesh
-			if mesh:
-				var aabb = mesh.get_aabb()
-				var local_center = aabb.position + aabb.size / 2.0
-				var global_center = node.global_transform * local_center
-				
-				# Raycast downwards from high above
-				var height = _get_terrain_height(global_center.x, global_center.z)
-				if height != null:
-					# Adjust the Y position of the node
-					node.global_position.y = height
-				else:
-					print("[ApplyShader] Warning: Could not find terrain height for ", name, " at position ", global_center)
+			if _is_transparent_or_textureless(node):
+				node.visible = false
+			else:
+				var mesh = node.mesh
+				if mesh:
+					var aabb = mesh.get_aabb()
+					var local_center = aabb.position + aabb.size / 2.0
+					var global_center = node.global_transform * local_center
+					
+					# Raycast downwards from high above
+					var height = _get_terrain_height(global_center.x, global_center.z)
+					if height != null:
+						# Adjust the Y position of the node
+						node.global_position.y = height
+					else:
+						print("[ApplyShader] Warning: Could not find terrain height for ", name, " at position ", global_center)
 					
 	for child in node.get_children():
 		_snap_meshes_recursive(child)
@@ -100,18 +152,8 @@ func _get_terrain_height(x: float, z: float):
 func _apply_shader_recursive(node: Node, shader: Shader):
 	if node is MeshInstance3D:
 		var name = node.name
-		# 1. Do never render roofs (make them invisible)
-		if name.begins_with("roof_") or name.begins_with("roofs_"):
+		if _is_transparent_or_textureless(node):
 			node.visible = false
-			
-		# 2. Check if the mesh is explicitly untextured
-		elif name.contains("untextured"):
-			var transparent_mat = StandardMaterial3D.new()
-			transparent_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			transparent_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.0)
-			node.material_override = transparent_mat
-			print("[ApplyShader] Applied transparency override to untextured mesh: ", name)
-			
 		elif (name.begins_with("facades_block_") or name.begins_with("facade_block_")):
 			var base_name = name
 			if base_name.begins_with("facades_"):
@@ -123,12 +165,8 @@ func _apply_shader_recursive(node: Node, shader: Shader):
 				base_name = base_name.left(base_name.length() - "_mesh".length())
 				
 			# Dynamically restore coordinate decimal points (e.g. lat_32_57328 -> lat_32.57328)
-			var regex = RegEx.new()
-			regex.compile("lat_(\\d+)_(\\d+)")
-			base_name = regex.sub(base_name, "lat_$1.$2", true)
-			
-			regex.compile("lon_(-?\\d+)_(\\d+)")
-			base_name = regex.sub(base_name, "lon_$1.$2", true)
+			base_name = lat_regex.sub(base_name, "lat_$1.$2", true)
+			base_name = lon_regex.sub(base_name, "lon_$1.$2", true)
 			
 			var tex_name = base_name
 			# If the name ends with "_png", replace with ".png"
@@ -138,24 +176,16 @@ func _apply_shader_recursive(node: Node, shader: Shader):
 			var albedo_path = "res://assets/" + tex_name
 			var normal_path = "res://assets/" + tex_name.replace(".png", "_normal_height.png")
 			
-			if ResourceLoader.exists(albedo_path) and ResourceLoader.exists(normal_path):
-				var albedo_tex = load(albedo_path)
-				var normal_tex = load(normal_path)
-				
-				var mat = ShaderMaterial.new()
-				mat.shader = shader
-				mat.set_shader_parameter("texture_albedo_roughness", albedo_tex)
-				mat.set_shader_parameter("texture_normal_height", normal_tex)
-				mat.set_shader_parameter("depth_scale", 0.08)
-				
-				node.material_override = mat
-			else:
-				# 2. Make meshes with missing textures transparent as well
-				var transparent_mat = StandardMaterial3D.new()
-				transparent_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-				transparent_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.0)
-				node.material_override = transparent_mat
-				
+			var albedo_tex = load(albedo_path)
+			var normal_tex = load(normal_path)
+			
+			var mat = ShaderMaterial.new()
+			mat.shader = shader
+			mat.set_shader_parameter("texture_albedo_roughness", albedo_tex)
+			mat.set_shader_parameter("texture_normal_height", normal_tex)
+			mat.set_shader_parameter("depth_scale", 0.08)
+			
+			node.material_override = mat
 				
 	for child in node.get_children():
 		_apply_shader_recursive(child, shader)
