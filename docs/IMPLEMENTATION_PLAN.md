@@ -29,7 +29,7 @@ The previous MVP attempted to extract complex 3D meshes for facade elements (win
 * **LOD Management**: Utilize Godot 4's native `LOD` system (via import settings or `GeometryInstance3D` visibility ranges) to swap materials and hide/show props dynamically.
 
 ### 2. Case Study Workspace Collection
-The development environment does not populate local screenshot caches by default. Developers must run:
+The development environment does not populate local screenshot caches by default nor exports the low-poly geometry. Developers must run:
 ```bash
 python scripts/collect_case_study_images.py
 ```
@@ -45,10 +45,11 @@ We align them via the following 2D Procrustes-style mathematical transform:
 5. **Apply Transform**: Apply the resulting transformation matrix to the terrain GLB import node in Godot to bring it into alignment with the local Cartesian building block coordinates.
 
 ### 4. Planar Block Height Alignment (Terrain Projection)
-The low-poly building geometry exported at `export/geometry.gltf` (centered at Parque Hidalgo 0,0) lacks elevation adjustments; all building blocks have their base at height Z = 0. To resolve this and sit buildings correctly on the terrain:
+The low-poly building geometry exported at remote's `export/geometry.gltf` (centered at Parque Hidalgo 0,0) lacks elevation adjustments; all building blocks have their base at height Z = 0. To resolve this and sit buildings correctly on the terrain:
 1. **Centroid Elevation Retrieval**: For each building block, compute the 2D Cartesian centroid $(C_x, C_y)$ of its footprint.
 2. **Raycast Snapping**: Perform a vertical raycast from $(C_x, C_y, +\infty)$ downwards onto the aligned terrain GLB mesh to find the terrain intersection height $Z_{terrain}$.
 3. **Height Offset & Skirt Extrusion**: Set the block's base elevation to $Z_{terrain}$. To prevent visual gaps or floating corners due to local terrain slope, extend the block geometry downwards (skirt/foundation extrusion) by a safety margin (e.g., 1.5m) into the terrain mesh. This keeps roofs level and avoids complex polygon shearing or UV stretching.
+Note: For retrieving the GLTF from remote, follow a similar approach to that of collect_case_study_images.py.
 
 ### 5. Parameterized Per-Facade PBR & Height Generation
 * **Default Heuristics**: Maps semantic mask IDs from SegFormer to material properties:
