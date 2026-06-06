@@ -33,7 +33,7 @@ The development environment does not populate local screenshot caches by default
 ```bash
 python scripts/collect_case_study_images.py
 ```
-This script reads the target facade list from `data/case_study/target_facade.json`, references the caches, detects missing or Git LFS pointer files, and fetches the required screenshots from the remote host configured in `.env` via SSH/WSL. It then creates symlinks in `data/case_study/target_images/` pointing to the retrieved images.
+This script reads the target facade list from `data/case_study/target_facade.json`, references the caches, detects missing or Git LFS pointer files, and fetches the required screenshots from the remote host configured in `.env` via SSH/WSL. It then creates symlinks in `data/case_study/target_images/` pointing to the retrieved images. And also pull the export/geometry.gltf similarly.
 
 ### 3. Terrain-Reconstruction Coordinate Alignment
 The terrain GLB has its center at the shape's center and contains an altered NW-most vertex. The reconstruction pipeline places Parque Hidalgo (32.573229, -116.626536) at Cartesian (0,0). 
