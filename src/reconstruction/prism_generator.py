@@ -34,6 +34,15 @@ class UrbanBlockReconstructor:
         import threading
         self.cache_lock = threading.Lock()
         self.scraper_lock = threading.Lock()
+        self.model_lock = threading.Lock()
+        
+        from src.reconstruction.segmentation_processor import SegmentationProcessor
+        from src.reconstruction.pbr_generator import PBRGenerator
+        from src.reconstruction.prop_spawner import PropSpawner
+        
+        self.seg_processor = SegmentationProcessor()
+        self.pbr_gen = PBRGenerator()
+        self.prop_spawner = PropSpawner()
         
         ensure_dir(self.textures_dir)
         ensure_dir(self.debug_dir)
@@ -1745,6 +1754,8 @@ class UrbanBlockReconstructor:
                 "harvest_only": True
             }
             
+
+        local_props = []
         for f_idx in range(num_verts):
             uv_mappings[f"{b_id}_facade_{f_idx}"] = [
                 [0.0, 0.0],
@@ -1835,10 +1846,16 @@ class UrbanBlockReconstructor:
             status = "fallback"
             warped_img = None
             
-            if os.path.exists(virtual_tex_path):
+            normal_height_filename = virtual_tex_filename.replace(".png", "_normal_height.png")
+            normal_height_path = os.path.abspath(os.path.join(self.textures_dir, normal_height_filename))
+            
+            if os.path.exists(virtual_tex_path) and os.path.exists(normal_height_path):
                 status = "textured"
-                warped_img = True
-                print(f"[Incremental] Found existing virtual facade texture: {virtual_tex_filename}. Skipping sky masking, warping, and blurring.")
+                try:
+                    warped_img = Image.open(virtual_tex_path)
+                except Exception:
+                    warped_img = None
+                print(f"[Incremental] Found existing virtual facade texture: {virtual_tex_filename} and normal/height map. Skipping sky masking, warping, and blurring.")
                 sys.stdout.flush()
             else:
                 # Scrape if not on disk
@@ -1920,12 +1937,41 @@ class UrbanBlockReconstructor:
                             warped_img = Image.fromarray(np_warped, "RGBA")
                             
                         status = "textured"
-                        warped_img.save(virtual_tex_path)
-                        print(f"[Virtual Facade] Successfully warped, blurred, and saved {K}-segment virtual facade to: {virtual_tex_filename} with height {height_meters:.2f}m (storefront {height_meters/2.0:.2f}m)")
+                        print(f"[Virtual Facade] Successfully warped and blurred {K}-segment virtual facade in memory: {virtual_tex_filename}")
                         sys.stdout.flush()
                     except Exception as warp_err:
                         print(f"[Warning] Failed unified warping for group: {warp_err}")
+                        sys.stdout.flush()
+            if status == "textured" and warped_img is not None:
+                try:
+                    # 1. Run semantic segmentation under model_lock (for thread-safe inference)
+                    with self.model_lock:
+                        mask = self.seg_processor.segment_image(warped_img)
                         
+                    # 2. Generate and pack Albedo-Roughness and Normal-Height maps
+                    albedo_rough, normal_height = self.pbr_gen.generate_maps(
+                        warped_img, mask, facade_id=group[0]["facade_id"]
+                    )
+                    
+                    # 3. Save packed maps
+                    albedo_rough.save(virtual_tex_path)
+                    
+                    normal_height_filename = virtual_tex_filename.replace(".png", "_normal_height.png")
+                    normal_height_path = os.path.abspath(os.path.join(self.textures_dir, normal_height_filename))
+                    normal_height.save(normal_height_path)
+                    
+                    # 4. Extract props in 3D Cartesian coordinates relative to facade segment
+                    group_props = self.prop_spawner.extract_props(
+                        mask, A_combined, B_combined, 0.0, height_meters, facade_id=group[0]["facade_id"]
+                    )
+                    local_props.extend(group_props)
+                    
+                    print(f"[PBR & Props] Generated PBR maps and spawned {len(group_props)} props for group {group_idx}")
+                    sys.stdout.flush()
+                except Exception as pbr_err:
+                    print(f"[Warning] Failed PBR and prop generation for group: {pbr_err}")
+                    sys.stdout.flush()
+
             p_data = None
             L_lengths = [seg["norm_len"] for seg in group]
             L_total = sum(L_lengths) if sum(L_lengths) > 1e-5 else 1.0
@@ -2020,6 +2066,7 @@ class UrbanBlockReconstructor:
             "facade_textures": facade_textures_map,
             "uv_mappings": uv_mappings,
             "roof_color": roof_color_val,
+            "props": local_props,
             "traceability": [
                 {
                     "facade_idx": f_idx,

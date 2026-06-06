@@ -66,7 +66,38 @@ def get_block_centroid(poly):
     sy = sum(poly[i][1] for i in range(num_verts))
     return (sx / num_verts, sy / num_verts)
 
-def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple = (0.0, -120.0, 110.0), cam_rot: tuple = (48.0, 0.0, 0.0), fov_deg: float = 90.0, max_dist: float = 250.0, skip_textures=False):
+def apply_smooth_and_bevel(obj, width=0.05, segments=2):
+    """Applies shade-smooth and a Bevel modifier to make building edges look realistic and smooth."""
+    if not obj or obj.type != 'MESH':
+        return
+        
+    mesh = obj.data
+    # Set all polygons to smooth shading
+    if hasattr(mesh, "polygons"):
+        for poly in mesh.polygons:
+            poly.use_smooth = True
+            
+    # Add Bevel Modifier
+    bev = obj.modifiers.new(name="Bevel", type='BEVEL')
+    bev.width = width
+    bev.segments = segments
+    bev.limit_method = 'ANGLE'
+    bev.angle_limit = 0.523599  # 30 degrees in radians
+    
+    # Enable Auto-Smooth
+    # In Blender 4.0 and earlier: mesh.use_auto_smooth = True
+    # In Blender 4.1+: add SMOOTH_BY_ANGLE modifier
+    try:
+        mesh.use_auto_smooth = True
+        mesh.auto_smooth_angle = 0.523599
+    except AttributeError:
+        try:
+            sma = obj.modifiers.new(name="SmoothByAngle", type='SMOOTH_BY_ANGLE')
+            sma.angle = 0.523599
+        except Exception as e:
+            print(f"[Warning] Could not apply Smooth by Angle modifier: {e}")
+
+def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple = (0.0, -120.0, 110.0), cam_rot: tuple = (48.0, 0.0, 0.0), fov_deg: float = 90.0, max_dist: float = 250.0, skip_textures=False, export_dir="export"):
     """
     Constructs 3D block geometries grouped by material to optimize viewport
     rendering performance, bypass EEVEE shader memory leaks, and prevent
@@ -164,6 +195,12 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
             
             # Face texture path
             tex_path = None if skip_textures else facade_tex_dict.get(surface_id)
+            if tex_path and not os.path.exists(tex_path):
+                alt_path = os.path.join(export_dir, tex_path)
+                if os.path.exists(alt_path):
+                    tex_path = alt_path
+            if tex_path:
+                tex_path = os.path.abspath(tex_path)
             if not tex_path or not os.path.exists(tex_path) or "transparent_facade.png" in tex_path:
                 tex_key = "untextured"
             else:
@@ -209,6 +246,7 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
         roof_obj = bpy.data.objects.new(roof_obj_name, roof_mesh)
         bpy.context.scene.collection.objects.link(roof_obj)
         roof_obj.data.materials.append(roof_mat)
+        apply_smooth_and_bevel(roof_obj)
         
         # Store block centroid on the object for super-fast dynamic culling
         roof_obj["centroid_x"] = centroid[0]
@@ -217,6 +255,29 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
         # Apply initial visibility
         roof_obj.hide_viewport = not is_visible
         roof_obj.hide_render = not is_visible
+        
+        # 4. Spawn prop placeholders as empty objects
+        props = bl.get("props", [])
+        for p_idx, p in enumerate(props):
+            prop_type = p["prop_type"]
+            pos = p["position"]
+            rot = p["rotation"]
+            scale = p["scale"]
+            
+            empty_name = f"prop_{prop_type}_{b_id}_{p_idx}"
+            empty_obj = bpy.data.objects.new(empty_name, None)
+            
+            empty_obj.location = (pos[0], pos[1], pos[2])
+            empty_obj.rotation_euler = (rot[0], rot[1], rot[2])
+            empty_obj.scale = (scale[0], scale[1], scale[2])
+            
+            # Save metadata so Godot knows the type
+            empty_obj["prop_type"] = prop_type
+            
+            bpy.context.scene.collection.objects.link(empty_obj)
+            
+            empty_obj.hide_viewport = not is_visible
+            empty_obj.hide_render = not is_visible
 
     if cull_fov:
         print(f"[Blender] Reconstructed all {num_total} urban blocks ({num_visible} initially visible, {num_hidden} hidden outside FOV).")
@@ -282,6 +343,23 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
                             mat.shadow_method = 'NONE'
                         except AttributeError:
                             pass
+                            
+                        # Link corresponding Normal/Height map if it exists
+                        normal_path = tex_key.replace(".png", "_normal_height.png")
+                        if os.path.exists(normal_path):
+                            try:
+                                normal_img = bpy.data.images.load(normal_path)
+                                normal_img.colorspace_settings.name = 'Non-Color'
+                                
+                                node_normal_tex = nodes.new(type='ShaderNodeTexImage')
+                                node_normal_tex.image = normal_img
+                                
+                                node_normal_map = nodes.new(type='ShaderNodeNormalMap')
+                                
+                                links.new(node_normal_tex.outputs['Color'], node_normal_map.inputs['Color'])
+                                links.new(node_normal_map.outputs['Normal'], bsdf.inputs['Normal'])
+                            except Exception as n_err:
+                                print(f"[Warning] Failed to load/bind normal map {normal_path}: {n_err}")
             loaded_materials[tex_key] = mat
             
         mat = loaded_materials[tex_key]
@@ -295,6 +373,7 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
         obj = bpy.data.objects.new(obj_name, mesh)
         bpy.context.scene.collection.objects.link(obj)
         obj.data.materials.append(mat)
+        apply_smooth_and_bevel(obj)
         
         # Compute and cache centroid on the object for super-fast culling
         xs = [v[0] for v in geo["verts"]]
@@ -772,7 +851,8 @@ def main():
         cam_rot=cam_rot,
         fov_deg=fov_deg,
         max_dist=max_dist,
-        skip_textures=skip_textures
+        skip_textures=skip_textures,
+        export_dir=os.path.dirname(export_json) or "."
     )
     
     # Configure lighting and camera
@@ -802,7 +882,8 @@ def main():
             export_texcoords=True,
             export_normals=True,
             export_materials='EXPORT',
-            export_image_format='NONE', # Keep existing high-res textures as relative references on disk
+            export_image_format='AUTO', # Keep existing high-res textures as relative references on disk
+            export_extras=True,
             use_selection=False
         )
         print(f"[Blender] Successfully exported: {os.path.abspath(gltf_path)}")

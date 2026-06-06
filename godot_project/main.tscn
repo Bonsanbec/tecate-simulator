@@ -1,0 +1,43 @@
+[gd_scene load_steps=7 format=3 uid="uid://db7572d55c7a"]
+
+[ext_resource type="Script" path="res://apply_shader.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/geometry.gltf" id="2_geometry"]
+[ext_resource type="PackedScene" path="res://assets/tecate.glb" id="3_terrain"]
+[ext_resource type="Script" path="res://player.gd" id="4_player_script"]
+
+[sub_resource type="Environment" id="Environment_tct"]
+background_mode = 1
+background_color = Color(0.415686, 0.619608, 0.835294, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.65098, 0.65098, 0.65098, 1)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
+radius = 0.4
+height = 2.0
+
+[node name="MainScene" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Terrain" parent="." instance=ExtResource("3_terrain")]
+transform = Transform3D(0.84277856, 0, 0, 0, 0.84277856, 0, 0, 0, 0.84277856, 28057.9043, 0, 16614.8854)
+
+[node name="Geometry" parent="." instance=ExtResource("2_geometry")]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 20, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_tct")
+
+[node name="Player" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 140, 12, 95)
+script = ExtResource("4_player_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+shape = SubResource("CapsuleShape3D_player")
+
+[node name="Camera3D" type="Camera3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+far = 5000.0
