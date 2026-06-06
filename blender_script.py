@@ -66,7 +66,7 @@ def get_block_centroid(poly):
     sy = sum(poly[i][1] for i in range(num_verts))
     return (sx / num_verts, sy / num_verts)
 
-def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple = (0.0, -120.0, 110.0), cam_rot: tuple = (48.0, 0.0, 0.0), fov_deg: float = 90.0, max_dist: float = 250.0):
+def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple = (0.0, -120.0, 110.0), cam_rot: tuple = (48.0, 0.0, 0.0), fov_deg: float = 90.0, max_dist: float = 250.0, skip_textures=False):
     """
     Constructs 3D block geometries grouped by material to optimize viewport
     rendering performance, bypass EEVEE shader memory leaks, and prevent
@@ -242,7 +242,7 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
                     uv_layer.data[loop.index].uv = geo["uvs"][loop.index]
                     
         # Load image exactly once globally
-        if tex_key != "untextured" and tex_key not in loaded_images:
+        if tex_key != "untextured" and tex_key not in loaded_images and not skip_textures:
             try:
                 img = bpy.data.images.load(tex_key)
                 loaded_images[tex_key] = img
@@ -711,6 +711,7 @@ def main():
     cam_rot = (48.0, 0.0, 0.0)
     fov_deg = 90.0
     max_dist = 250.0
+    skip_textures = False
     
     # Parsing custom arguments
     for idx, arg in enumerate(args):
@@ -718,6 +719,8 @@ def main():
             export_json = args[idx + 1]
         elif arg == "--no-cull":
             cull_fov = False
+        elif arg == "--skip-textures":
+            skip_textures = True
         elif arg == "--cull":
             cull_fov = True
         elif arg == "--cam-loc" and idx + 1 < len(args):
@@ -765,7 +768,8 @@ def main():
         cam_loc=cam_loc,
         cam_rot=cam_rot,
         fov_deg=fov_deg,
-        max_dist=max_dist
+        max_dist=max_dist,
+        skip_textures=skip_textures
     )
     
     # Configure lighting and camera
@@ -779,12 +783,12 @@ def main():
     embed_culling_utility_script(fov_deg=fov_deg, max_dist=max_dist)
     
     # Save standard blend file
-    save_path = "tecate_reconstruction.blend"
+    save_path = f"tecate_reconstruction{'_textureless' if skip_textures else ''}.blend"
     bpy.ops.wm.save_as_mainfile(filepath=save_path)
     print(f"[Blender] Reconstructed 3D City successfully saved to: {os.path.abspath(save_path)}")
     
     # Export fully textured glTF asset to export/geometry.gltf
-    gltf_path = "export/geometry.gltf"
+    gltf_path = f"export/geometry{'_textureless' if skip_textures else ''}.gltf"
     print(f"[Blender] Exporting scene to separate optimized glTF asset: {gltf_path}")
     try:
         # Standard gltf operator exports all meshes and materials, referencing textures relatively
