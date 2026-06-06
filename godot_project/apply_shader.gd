@@ -102,8 +102,13 @@ func _get_terrain_height(x: float, z: float):
 func _apply_shader_recursive(node: Node, shader: Shader):
 	if node is MeshInstance3D:
 		var name = node.name
-		# 1. Check if the mesh is explicitly untextured
-		if name.contains("untextured"):
+		# 1. Do never render roofs (make them invisible)
+		if name.begins_with("roof_") or name.begins_with("roofs_"):
+			node.visible = false
+			print("[ApplyShader] Hid roof mesh: ", name)
+			
+		# 2. Check if the mesh is explicitly untextured
+		elif name.contains("untextured"):
 			var transparent_mat = StandardMaterial3D.new()
 			transparent_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			transparent_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.0)
