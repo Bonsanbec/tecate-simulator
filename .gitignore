@@ -13,6 +13,7 @@ export/geometry.bin
 *.glb
 *.babylon
 *.blend
+*.blend1
 *.json
 *.bin
 *.gltf
