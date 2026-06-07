@@ -2,13 +2,10 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://onjxbwed1dne"
+uid="uid://cpk83te34qhwo"
 path="res://.godot/imported/tecate_side_Base_color.png-d05ed17ad4d4b9f2ca3615969cc65031.ctex"
 metadata={
 "vram_texture": false
-}
-generator_parameters={
-"md5": "03a2ae3a58ee4b27a32d02d39bea1e1c"
 }
 
 [deps]
@@ -26,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
