@@ -16,3 +16,4 @@ export/geometry.bin
 *.bin
 *.gltf
 .env
+/godot_project/.godot
