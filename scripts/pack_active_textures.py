@@ -53,12 +53,12 @@ def main():
     # and all the active textures from export/textures/
     tar_files = []
     for fn in ['geometry_textureless.gltf', 'geometry_textureless.bin', 'geometry.gltf', 'geometry.bin']:
-        p = os.path.join('godot_project/assets', fn)
+        p = os.path.join('godot_project/assets/blocks/', fn)
         if os.path.exists(p):
             tar_files.append(p)
             
     for t in active_textures:
-        p = os.path.join('godot_project/assets', t)
+        p = os.path.join('godot_project/assets/blocks', t)
         if os.path.exists(p):
             tar_files.append(p)
         else:

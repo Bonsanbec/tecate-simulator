@@ -22,7 +22,7 @@ class UrbanBlockReconstructor:
         self.G = G
         self.export_dir = export_dir
         self.data_dir = data_dir
-        self.textures_dir = "godot_project/assets"
+        self.textures_dir = "godot_project/assets/blocks"
         self.debug_dir = os.path.join(export_dir, "debug")
         self.headless = headless
         self.radius = radius
