@@ -130,7 +130,6 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
     # Global caches to prevent image and material duplication
     loaded_images = {}
     loaded_materials = {}
-    loaded_roof_materials = {}
     
     # Group geometries by material (tex_path for facades)
     facade_geometry = {}
@@ -216,45 +215,6 @@ def build_block_meshes(blocks_data: list, cull_fov: bool = False, cam_loc: tuple
             geo["verts"].extend([BL, BR, TR, TL])
             geo["faces"].append([s_idx, s_idx + 1, s_idx + 2, s_idx + 3])
             geo["uvs"].extend(uvs)
-            
-        # 3. Process and build individual roof object for this block
-        roof_verts = [(poly[i][0], poly[i][1], z_base + height) for i in reversed(range(num_verts))]
-        roof_color = bl.get("roof_color", [238 / 255.0, 232 / 255.0, 220 / 255.0])
-        roof_key = tuple(round(c, 3) for c in roof_color)
-        
-        roof_mesh_name = f"roof_{b_id}_mesh"
-        roof_mesh = bpy.data.meshes.new(name=roof_mesh_name)
-        roof_mesh.from_pydata(roof_verts, [], [list(range(num_verts))])
-        roof_mesh.update()
-        
-        # Get or create shared roof color material
-        if roof_key not in loaded_roof_materials:
-            roof_mat_name = f"roof_mat_{roof_key[0]:.3f}_{roof_key[1]:.3f}_{roof_key[2]:.3f}"
-            mat = bpy.data.materials.get(roof_mat_name)
-            if not mat:
-                mat = bpy.data.materials.new(name=roof_mat_name)
-                mat.use_nodes = True
-                bsdf = mat.node_tree.nodes.get("Principled BSDF")
-                if bsdf:
-                    bsdf.inputs['Base Color'].default_value = (roof_key[0], roof_key[1], roof_key[2], 1.0)
-            loaded_roof_materials[roof_key] = mat
-            
-        roof_mat = loaded_roof_materials[roof_key]
-        
-        # Create roof object
-        roof_obj_name = f"roof_{b_id}"
-        roof_obj = bpy.data.objects.new(roof_obj_name, roof_mesh)
-        bpy.context.scene.collection.objects.link(roof_obj)
-        roof_obj.data.materials.append(roof_mat)
-        apply_smooth_and_bevel(roof_obj)
-        
-        # Store block centroid on the object for super-fast dynamic culling
-        roof_obj["centroid_x"] = centroid[0]
-        roof_obj["centroid_y"] = centroid[1]
-        
-        # Apply initial visibility
-        roof_obj.hide_viewport = not is_visible
-        roof_obj.hide_render = not is_visible
         
         # 4. Spawn prop placeholders as empty objects
         props = bl.get("props", [])
