@@ -2,13 +2,10 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://odt0tc8j3mq7"
+uid="uid://caaq2kynou5ya"
 path="res://.godot/imported/tecate_groundTexture.png-2d07eb6f2afc4f4fc8b5f9116f31bf89.ctex"
 metadata={
 "vram_texture": false
-}
-generator_parameters={
-"md5": "72fa11f500fef17baca66ac4c7aced39"
 }
 
 [deps]
@@ -26,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
