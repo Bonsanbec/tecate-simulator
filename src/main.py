@@ -229,7 +229,7 @@ def run_pipeline(args):
     print("-" * 60)
 
     # Make sure output directories exist
-    ensure_dir("export/textures")
+    ensure_dir("godot_project/assets")
 
     # 1. BUILD ROAD GRAPH FROM OSM
     builder = TecateGraphBuilder(cache_dir="data")
@@ -263,7 +263,7 @@ def run_pipeline(args):
 
     print("-" * 60)
     print("Pipeline Execution Complete!")
-    print("Texture Atlas PNGs generated in: export/textures/")
+    print("Texture Atlas PNGs generated in: godot_project/assets/")
     
     # 3. TRIGGER BLENDER COMPILATION
     run_blender_export(args)
