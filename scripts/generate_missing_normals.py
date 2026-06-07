@@ -11,7 +11,7 @@ from src.reconstruction.segmentation_processor import SegmentationProcessor
 from src.reconstruction.pbr_generator import PBRGenerator
 
 def main():
-    assets_dir = "godot_project/assets"
+    assets_dir = "godot_project/assets/blocks/"
     print(f"[PBR Generator] Scanning for missing normal/height maps in {assets_dir}...")
     
     # Find all virtual facade textures

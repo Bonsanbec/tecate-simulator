@@ -229,7 +229,7 @@ def run_pipeline(args):
     print("-" * 60)
 
     # Make sure output directories exist
-    ensure_dir("godot_project/assets")
+    ensure_dir("godot_project/assets/blocks")
 
     # 1. BUILD ROAD GRAPH FROM OSM
     builder = TecateGraphBuilder(cache_dir="data")
