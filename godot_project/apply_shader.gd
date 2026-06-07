@@ -83,8 +83,8 @@ func _is_transparent_or_textureless(node: Node) -> bool:
 		if tex_name.ends_with("_png"):
 			tex_name = tex_name.left(tex_name.length() - "_png".length()) + ".png"
 			
-		var albedo_path = "res://assets/" + tex_name
-		var normal_path = "res://assets/" + tex_name.replace(".png", "_normal_height.png")
+		var albedo_path = "res://assets/blocks/" + tex_name
+		var normal_path = "res://assets/blocks/" + tex_name.replace(".png", "_normal_height.png")
 		
 		if not (ResourceLoader.exists(albedo_path) and ResourceLoader.exists(normal_path)):
 			return true
@@ -173,8 +173,8 @@ func _apply_shader_recursive(node: Node, shader: Shader):
 			if tex_name.ends_with("_png"):
 				tex_name = tex_name.left(tex_name.length() - "_png".length()) + ".png"
 				
-			var albedo_path = "res://assets/" + tex_name
-			var normal_path = "res://assets/" + tex_name.replace(".png", "_normal_height.png")
+			var albedo_path = "res://assets/blocks/" + tex_name
+			var normal_path = "res://assets/blocks/" + tex_name.replace(".png", "_normal_height.png")
 			
 			var albedo_tex = load(albedo_path)
 			var normal_tex = load(normal_path)

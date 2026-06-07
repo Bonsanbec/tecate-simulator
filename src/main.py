@@ -263,7 +263,7 @@ def run_pipeline(args):
 
     print("-" * 60)
     print("Pipeline Execution Complete!")
-    print("Texture Atlas PNGs generated in: godot_project/assets/")
+    print("Texture Atlas PNGs generated in: godot_project/assets/blocks/")
     
     # 3. TRIGGER BLENDER COMPILATION
     run_blender_export(args)
