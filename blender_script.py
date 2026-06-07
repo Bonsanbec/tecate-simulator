@@ -830,8 +830,8 @@ def main():
     bpy.ops.wm.save_as_mainfile(filepath=save_path)
     print(f"[Blender] Reconstructed 3D City successfully saved to: {os.path.abspath(save_path)}")
     
-    # Export fully textured glTF asset to export/geometry.gltf
-    gltf_path = f"export/geometry{'_textureless' if skip_textures else ''}.gltf"
+    # Export fully textured glTF asset to godot_project/assets/geometry.gltf
+    gltf_path = f"godot_project/assets/geometry{'_textureless' if skip_textures else ''}.gltf"
     print(f"[Blender] Exporting scene to separate optimized glTF asset: {gltf_path}")
     try:
         # Standard gltf operator exports all meshes and materials, referencing textures relatively
