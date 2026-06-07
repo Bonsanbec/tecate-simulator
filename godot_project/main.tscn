@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://db7572d55c7a"]
 
 [ext_resource type="Script" path="res://apply_shader.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://assets/geometry.gltf" id="2_geometry"]
+[ext_resource type="PackedScene" path="res://assets/blocks/geometry.gltf" id="2_geometry"]
 [ext_resource type="PackedScene" path="res://assets/tecate.glb" id="3_terrain"]
 [ext_resource type="Script" path="res://player.gd" id="4_player_script"]
 
