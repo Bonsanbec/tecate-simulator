@@ -9,6 +9,7 @@ export/reconstruction_export.json
 export/debug/reconstruction_diagnostics.json
 export/geometry.bin
 *.png
+*.import
 *.glb
 *.babylon
 *.blend
