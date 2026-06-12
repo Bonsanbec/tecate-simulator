@@ -1022,7 +1022,8 @@ class UrbanBlockReconstructor:
             v_look = np.array([math.sin(cam_yaw), math.cos(cam_yaw)])
             v_right = np.array([math.cos(cam_yaw), -math.sin(cam_yaw)])
             
-            p_data = self.panoramas_cache[p_id]
+            with self.cache_lock:
+                p_data = self.panoramas_cache[p_id]
             cx, cy = gps_to_local(p_data["latitude"], p_data["longitude"])
             
             # Project endpoints to get column range
@@ -1636,15 +1637,37 @@ class UrbanBlockReconstructor:
                                     oldest_date = tl_date
                                     
                             if oldest_pano_id != pano_id:
-                                print(f"[Temporal Chronology] Found older timeline state: {oldest_pano_id} ({oldest_date}) replaces modern {pano_id}.")
                                 oldest_meta = None
-                                scraper_obj = self.scraper
-                                if scraper_obj is not None:
-                                    with self.scraper_lock:
-                                        try:
-                                            oldest_meta = scraper_obj.fetch_public_metadata(pano_id=oldest_pano_id)
-                                        except Exception:
-                                            oldest_meta = None
+                                
+                                # Check cache first (Optimization 2)
+                                with self.cache_lock:
+                                    cached_oldest = self.panoramas_cache.get(oldest_pano_id)
+                                    
+                                if cached_oldest:
+                                    print(f"[Temporal Chronology] Found older timeline state: {oldest_pano_id} ({oldest_date}) replaces modern {pano_id} (retrieved from cache).")
+                                    oldest_meta = {
+                                        "pano_id": oldest_pano_id,
+                                        "latitude": cached_oldest["latitude"],
+                                        "longitude": cached_oldest["longitude"],
+                                        "altitude": cached_oldest.get("altitude"),
+                                        "date": cached_oldest.get("date", ""),
+                                        "pitch": cached_oldest.get("pitch"),
+                                        "roll": cached_oldest.get("roll"),
+                                        "projection_yaw": cached_oldest.get("projection_yaw"),
+                                        "pano_yaw": cached_oldest.get("pano_yaw"),
+                                        "road_name": cached_oldest.get("road_name", ""),
+                                        "adjacent_links": cached_oldest.get("adjacent_links", []),
+                                        "timeline": cached_oldest.get("timeline", []),
+                                    }
+                                else:
+                                    print(f"[Temporal Chronology] Found older timeline state: {oldest_pano_id} ({oldest_date}) replaces modern {pano_id} (fetching via network).")
+                                    scraper_obj = self.scraper
+                                    if scraper_obj is not None:
+                                        with self.scraper_lock:
+                                            try:
+                                                oldest_meta = scraper_obj.fetch_public_metadata(pano_id=oldest_pano_id)
+                                            except Exception:
+                                                oldest_meta = None
                                 if oldest_meta:
                                     meta = oldest_meta
                                     pano_id = oldest_pano_id
@@ -1878,7 +1901,8 @@ class UrbanBlockReconstructor:
                     scraper_obj = self.scraper
                     if scraper_obj is not None:
                         with self.scraper_lock:
-                            p_data = self.panoramas_cache[p_id]
+                            with self.cache_lock:
+                                p_data = self.panoramas_cache[p_id]
                             try:
                                 screenshot_bytes = scraper_obj.capture_facade_screenshot(
                                     lat=p_data["latitude"],
@@ -2104,6 +2128,168 @@ class UrbanBlockReconstructor:
             "newly_resolved": True
         }
 
+    def _resolve_single_facade_metadata(self, task, scraper_obj):
+        """
+        Worker task running in a thread pool to resolve metadata for a single facade.
+        """
+        import random
+        import time
+        import math
+        import numpy as np
+
+        # Jitter delay to avoid maps abuse flags
+        time.sleep(random.uniform(0.1, 0.4))
+
+        if self.skip_scraper or scraper_obj is None:
+            return
+
+        facade_id = task["facade_id"]
+        lat = task["lat"]
+        lon = task["lon"]
+        heading = task["heading"]
+        b_id = task["b_id"]
+        f_idx = task["f_idx"]
+        mx = task["mx"]
+        my = task["my"]
+        search_x = task["search_x"]
+        search_y = task["search_y"]
+        normal = task["normal"]
+        road_dist = task["road_dist"]
+        best_edge_id = task["best_edge_id"]
+        A = task["A"]
+        B = task["B"]
+
+        print(f"[Pre-pass API Query] Fetching metadata for {facade_id}...")
+        meta = None
+        try:
+            meta = scraper_obj.fetch_public_metadata(lat=lat, lon=lon)
+        except Exception:
+            meta = None
+
+        if meta:
+            pano_id = meta["pano_id"]
+            cam_lat = meta["latitude"]
+            cam_lon = meta["longitude"]
+
+            # Chronology selection
+            timeline = meta.get("timeline", [])
+            oldest_pano_id = pano_id
+            oldest_date = meta.get("date", "9999-12")
+            for tl in timeline:
+                tl_id = tl["pano_id"]
+                tl_date = tl["date"]
+                if tl_date and tl_date < oldest_date:
+                    oldest_pano_id = tl_id
+                    oldest_date = tl_date
+
+            if oldest_pano_id != pano_id:
+                oldest_meta = None
+
+                # Check cache first (Optimization 2)
+                with self.cache_lock:
+                    cached_oldest = self.panoramas_cache.get(oldest_pano_id)
+
+                if cached_oldest:
+                    print(f"[Temporal Chronology] Found older timeline state: {oldest_pano_id} ({oldest_date}) replaces modern {pano_id} (retrieved from cache).")
+                    # Construct meta structure from cached panorama
+                    oldest_meta = {
+                        "pano_id": oldest_pano_id,
+                        "latitude": cached_oldest["latitude"],
+                        "longitude": cached_oldest["longitude"],
+                        "altitude": cached_oldest.get("altitude"),
+                        "date": cached_oldest.get("date", ""),
+                        "pitch": cached_oldest.get("pitch"),
+                        "roll": cached_oldest.get("roll"),
+                        "projection_yaw": cached_oldest.get("projection_yaw"),
+                        "pano_yaw": cached_oldest.get("pano_yaw"),
+                        "road_name": cached_oldest.get("road_name", ""),
+                        "adjacent_links": cached_oldest.get("adjacent_links", []),
+                        "timeline": cached_oldest.get("timeline", []),
+                    }
+                else:
+                    print(f"[Temporal Chronology] Found older timeline state: {oldest_pano_id} ({oldest_date}) replaces modern {pano_id} (fetching via network).")
+                    try:
+                        oldest_meta = scraper_obj.fetch_public_metadata(pano_id=oldest_pano_id)
+                    except Exception:
+                        oldest_meta = None
+
+                if oldest_meta:
+                    meta = oldest_meta
+                    pano_id = oldest_pano_id
+                    cam_lat = meta["latitude"]
+                    cam_lon = meta["longitude"]
+
+            cx, cy = gps_to_local(cam_lat, cam_lon)
+            yaw_rad = math.radians(heading)
+            rot_matrix = [
+                [math.cos(yaw_rad), -math.sin(yaw_rad), 0.0],
+                [math.sin(yaw_rad), math.cos(yaw_rad), 0.0],
+                [0.0, 0.0, 1.0]
+            ]
+
+            road_name_val = self.road_name_by_id.get(best_edge_id, "")
+            look_vector = [float(mx - cx), float(my - cy)]
+            dot_prod = float(look_vector[0] * normal[0] + look_vector[1] * normal[1])
+            is_correct_side = bool(dot_prod < 0)
+
+            search_query_url = f"https://maps.googleapis.com/maps/api/js/GeoPhotoService.SingleImageSearch?pb=!1m5!1sapiv3!5sUS!11m2!1m1!1b0!2m4!1m2!3d{lat:.6f}!4d{lon:.6f}!2d50.0!3m10!2m2!1ses!2sMX!9m1!1e2!11m4!1m3!1e2!2b1!3e2!4m9!1e1!1e2!1e3!1e4!1e6!1e8!1e12!5m0!6m0&callback=_xdc_._v2mub5"
+            captured_url = f"https://www.google.com/maps?layer=c&cbll={cam_lat},{cam_lon}&panoid={pano_id}&cbp=11,{heading:.2f},,0,0"
+
+            # Save caches thread-safely
+                self.panoramas_cache[pano_id] = {
+                    "latitude": cam_lat,
+                    "longitude": cam_lon,
+                    "altitude": meta.get("altitude"),
+                    "date": meta.get("date", ""),
+                    "pitch": meta.get("pitch"),
+                    "roll": meta.get("roll"),
+                    "projection_yaw": meta.get("projection_yaw"),
+                    "pano_yaw": meta.get("projection_yaw"),
+                    "road_name": meta.get("road_name", ""),
+                    "adjacent_links": meta.get("adjacent_links", []),
+                    "timeline": meta.get("timeline", []),
+                }
+                self.panoramas_cache_changed = True
+
+                self.facades_cache[facade_id] = {
+                    "pano_id": pano_id,
+                    "block_id": b_id,
+                    "facade_index": int(f_idx),
+                    "heading": heading,
+                    "captured_heading": heading,
+                    "resolution": {
+                        "screenshot_width": 1280,
+                        "screenshot_height": 720,
+                        "slice_width": 512,
+                        "slice_height": 256
+                    },
+                    "camera_position_local": [float(cx), float(cy), None],
+                    "camera_rotation_matrix": rot_matrix,
+                    "road_relation": {
+                        "road_name": road_name_val,
+                        "road_distance_meters": float(road_dist),
+                        "road_edge_id": best_edge_id
+                    },
+                    "facade_midpoint_local": [float(mx), float(my)],
+                    "offset_search_point_local": [float(search_x), float(search_y)],
+                    "offset_search_point_gps": [float(lat), float(lon)],
+                    "search_query_url": search_query_url,
+                    "captured_url": captured_url,
+                    "modern_pano_id": meta.get("pano_id"),
+                    "camera_alignment_diagnostics": {
+                        "look_vector": look_vector,
+                        "facade_normal": [float(normal[0]), float(normal[1])],
+                        "dot_product": dot_prod,
+                        "is_correct_side": is_correct_side
+                    },
+                    "facade_segment_vertices_local": [A, B]
+                }
+                self.facades_cache_changed = True
+
+                self.metadata_cache[facade_id] = {}
+                self.metadata_cache[facade_id].update(self.facades_cache[facade_id])
+                self.metadata_cache[facade_id].update(self.panoramas_cache[pano_id])
+
     def reconstruct_blocks_and_texture(self) -> tuple[list[dict], dict]:
         """
         Densely reconstructs and textures building block volumes.
@@ -2146,25 +2332,23 @@ class UrbanBlockReconstructor:
             cx = sum(pt[0] for pt in poly[:-1]) / (len(poly) - 1)
             cy = sum(pt[1] for pt in poly[:-1]) / (len(poly) - 1)
             return math.sqrt(cx**2 + cy**2)
-            
         raw_blocks.sort(key=block_distance)
         print(f"[Reconstruction] Prioritized {len(raw_blocks)} blocks by geographic proximity to city center (Parque Hidalgo).")
         
-        # --- PRE-PASS: SEQUENTIAL METADATA RESOLUTION & SCREENSHOT SCRAPING ---
+        # --- PRE-PASS: PARALLEL METADATA RESOLUTION & SEQUENTIAL SCREENSHOT SCRAPING ---
         if not self.skip_scraper and self.scraper is not None:
-            print("[Reconstruction] Starting sequential pre-pass on the main thread to resolve metadata and cache screenshots...")
+            print("[Reconstruction] Starting parallel metadata resolution pre-pass...")
             sys.stdout.flush()
             
-            for idx, rb in enumerate(raw_blocks):
-                if self.skip_scraper or self.scraper is None:
-                    break
+            metadata_tasks = []
+            for rb in raw_blocks:
                 b_id = rb["block_id"]
                 if rb.get("is_external", False):
                     continue
                 if not self.reprocess and b_id in self.existing_export_blocks:
                     if self.is_block_complete(b_id):
                         continue
-                    
+                        
                 raw_poly = rb["polygon"]
                 shrunk_poly = self.shrink_polygon(raw_poly, d=6.0)
                 num_verts = len(shrunk_poly) - 1
@@ -2172,13 +2356,15 @@ class UrbanBlockReconstructor:
                 centroid_y = sum(pt[1] for pt in shrunk_poly[:-1]) / num_verts
                 dist_to_center = math.sqrt(centroid_x**2 + centroid_y**2)
                 
-                block_segments_info = []
-                
-                # 1. Resolve metadata for all segments sequentially
                 for f_idx in range(num_verts):
-                    if self.skip_scraper or self.scraper is None:
-                        break
                     facade_id = f"{b_id}_facade_{f_idx}"
+                    
+                    with self.cache_lock:
+                        is_cached = facade_id in self.facades_cache
+                        
+                    if is_cached:
+                        continue
+                        
                     A = shrunk_poly[f_idx]
                     B = shrunk_poly[f_idx + 1]
                     mx = (A[0] + B[0]) / 2.0
@@ -2192,135 +2378,91 @@ class UrbanBlockReconstructor:
                     else:
                         normal = np.array([0.0, 1.0])
                         
-                    is_cached = facade_id in self.facades_cache
                     road_dist, best_edge_id = self.get_road_distance(mx, my)
                     is_street_facing = (road_dist <= 20.0)
                     
-                    if not is_cached and (is_street_facing and (self.radius is None or self.radius < 0 or dist_to_center <= self.radius)):
-                        # Scrape metadata sequentially on main thread
+                    if is_street_facing and (self.radius is None or self.radius < 0 or dist_to_center <= self.radius):
                         search_x = mx + 8.0 * normal[0]
                         search_y = my + 8.0 * normal[1]
                         lat, lon = local_to_gps(search_x, search_y)
                         heading = math.degrees(math.atan2(-normal[0], -normal[1])) % 360.0
                         heading = round(heading, 2)
                         
-                        print(f"[Pre-pass API Query] Fetching metadata for {facade_id}...")
-                        meta = None
-                        scraper_obj = self.scraper
-                        if scraper_obj is not None:
-                            try:
-                                meta = scraper_obj.fetch_public_metadata(lat=lat, lon=lon)
-                            except Exception:
-                                meta = None
-                        if meta:
-                            pano_id = meta["pano_id"]
-                            cam_lat = meta["latitude"]
-                            cam_lon = meta["longitude"]
-                            
-                            # Chronology selection
-                            timeline = meta.get("timeline", [])
-                            oldest_pano_id = pano_id
-                            oldest_date = meta.get("date", "9999-12")
-                            for tl in timeline:
-                                tl_id = tl["pano_id"]
-                                tl_date = tl["date"]
-                                if tl_date and tl_date < oldest_date:
-                                    oldest_pano_id = tl_id
-                                    oldest_date = tl_date
-                                    
-                            if oldest_pano_id != pano_id:
-                                print(f"[Temporal Chronology] Found older timeline state: {oldest_pano_id} ({oldest_date}) replaces modern {pano_id}.")
-                                oldest_meta = None
-                                scraper_obj = self.scraper
-                                if scraper_obj is not None:
-                                    try:
-                                        oldest_meta = scraper_obj.fetch_public_metadata(pano_id=oldest_pano_id)
-                                    except Exception:
-                                        oldest_meta = None
-                                if oldest_meta:
-                                    meta = oldest_meta
-                                    pano_id = oldest_pano_id
-                                    cam_lat = meta["latitude"]
-                                    cam_lon = meta["longitude"]
-                                    
-                            cx, cy = gps_to_local(cam_lat, cam_lon)
-                            yaw_rad = math.radians(heading)
-                            rot_matrix = [
-                                [math.cos(yaw_rad), -math.sin(yaw_rad), 0.0],
-                                [math.sin(yaw_rad), math.cos(yaw_rad), 0.0],
-                                [0.0, 0.0, 1.0]
-                            ]
-                            
-                            self.panoramas_cache[pano_id] = {
-                                "latitude": cam_lat,
-                                "longitude": cam_lon,
-                                "altitude": meta.get("altitude"),
-                                "date": meta.get("date", ""),
-                                "pitch": meta.get("pitch"),
-                                "roll": meta.get("roll"),
-                                "projection_yaw": meta.get("projection_yaw"),
-                                "pano_yaw": meta.get("projection_yaw"),
-                                "road_name": meta.get("road_name", ""),
-                                "adjacent_links": meta.get("adjacent_links", []),
-                                "timeline": meta.get("timeline", []),
-                            }
-                            self.panoramas_cache_changed = True
-                            
-                            road_name_val = self.road_name_by_id.get(best_edge_id, "")
-                            look_vector = [float(mx - cx), float(my - cy)]
-                            dot_prod = float(look_vector[0] * normal[0] + look_vector[1] * normal[1])
-                            is_correct_side = bool(dot_prod < 0)
-                            
-                            search_query_url = f"https://maps.googleapis.com/maps/api/js/GeoPhotoService.SingleImageSearch?pb=!1m5!1sapiv3!5sUS!11m2!1m1!1b0!2m4!1m2!3d{lat:.6f}!4d{lon:.6f}!2d50.0!3m10!2m2!1ses!2sMX!9m1!1e2!11m4!1m3!1e2!2b1!3e2!4m9!1e1!1e2!1e3!1e4!1e6!1e8!1e12!5m0!6m0&callback=_xdc_._v2mub5"
-                            captured_url = f"https://www.google.com/maps?layer=c&cbll={cam_lat},{cam_lon}&panoid={pano_id}&cbp=11,{heading:.2f},,0,0"
-                            
-                            self.facades_cache[facade_id] = {
-                                "pano_id": pano_id,
-                                "block_id": b_id,
-                                "facade_index": int(f_idx),
-                                "heading": heading,
-                                "captured_heading": heading,
-                                "resolution": {
-                                    "screenshot_width": 1280,
-                                    "screenshot_height": 720,
-                                    "slice_width": 512,
-                                    "slice_height": 256
-                                },
-                                "camera_position_local": [float(cx), float(cy), None],
-                                "camera_rotation_matrix": rot_matrix,
-                                "road_relation": {
-                                    "road_name": road_name_val,
-                                    "road_distance_meters": float(road_dist),
-                                    "road_edge_id": best_edge_id
-                                },
-                                "facade_midpoint_local": [float(mx), float(my)],
-                                "offset_search_point_local": [float(search_x), float(search_y)],
-                                "offset_search_point_gps": [float(lat), float(lon)],
-                                "search_query_url": search_query_url,
-                                "captured_url": captured_url,
-                                "modern_pano_id": meta.get("pano_id"),
-                                "camera_alignment_diagnostics": {
-                                    "look_vector": look_vector,
-                                    "facade_normal": [float(normal[0]), float(normal[1])],
-                                    "dot_product": dot_prod,
-                                    "is_correct_side": is_correct_side
-                                },
-                                "facade_segment_vertices_local": [A, B]
-                            }
-                            self.facades_cache_changed = True
-                            self.metadata_cache[facade_id] = {}
-                            self.metadata_cache[facade_id].update(self.facades_cache[facade_id])
-                            self.metadata_cache[facade_id].update(self.panoramas_cache[pano_id])
-                            
-                    if facade_id in self.facades_cache:
-                        entry = self.facades_cache[facade_id]
+                        metadata_tasks.append({
+                            "facade_id": facade_id,
+                            "b_id": b_id,
+                            "f_idx": f_idx,
+                            "mx": mx,
+                            "my": my,
+                            "search_x": search_x,
+                            "search_y": search_y,
+                            "lat": lat,
+                            "lon": lon,
+                            "normal": normal,
+                            "heading": heading,
+                            "road_dist": road_dist,
+                            "best_edge_id": best_edge_id,
+                            "A": A,
+                            "B": B
+                        })
+
+            if metadata_tasks:
+                print(f"[Reconstruction] Resolving metadata for {len(metadata_tasks)} facades in parallel utilizing 4 worker threads...")
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor(max_workers=min(4, len(metadata_tasks))) as executor:
+                    futures = {executor.submit(self._resolve_single_facade_metadata, task, self.scraper): task for task in metadata_tasks}
+                    for future in concurrent.futures.as_completed(futures):
+                        task = futures[future]
+                        try:
+                            future.result()
+                        except Exception as e:
+                            print(f"[Error] Failed to resolve metadata for {task['facade_id']}: {e}")
+
+            print("[Reconstruction] Starting sequential pre-pass screenshot scraping on the main thread...")
+            sys.stdout.flush()
+            
+            for idx, rb in enumerate(raw_blocks):
+                if self.skip_scraper or self.scraper is None:
+                    break
+                b_id = rb["block_id"]
+                if rb.get("is_external", False):
+                    continue
+                if not self.reprocess and b_id in self.existing_export_blocks:
+                    if self.is_block_complete(b_id):
+                        continue
+                        
+                raw_poly = rb["polygon"]
+                shrunk_poly = self.shrink_polygon(raw_poly, d=6.0)
+                num_verts = len(shrunk_poly) - 1
+                
+                block_segments_info = []
+                for f_idx in range(num_verts):
+                    facade_id = f"{b_id}_facade_{f_idx}"
+                    
+                    A = shrunk_poly[f_idx]
+                    B = shrunk_poly[f_idx + 1]
+                    dx = B[0] - A[0]
+                    dy = B[1] - A[1]
+                    normal = np.array([dy, -dx])
+                    norm_len = np.linalg.norm(normal)
+                    if norm_len > 1e-5:
+                        normal = normal / norm_len
+                    else:
+                        normal = np.array([0.0, 1.0])
+                        
+                    with self.cache_lock:
+                        is_in_cache = facade_id in self.facades_cache
+                        
+                    if is_in_cache:
+                        with self.cache_lock:
+                            entry = self.facades_cache[facade_id]
                         block_segments_info.append({
                             "pano_id": entry["pano_id"],
                             "heading": entry.get("captured_heading", entry.get("heading")),
                             "normal": normal
                         })
                         
-                # 2. Resolve groups and download screenshots sequentially on main thread
+                # Resolve groups and download screenshots sequentially on main thread
                 if block_segments_info:
                     num_verts_info = len(block_segments_info)
                     
@@ -2379,30 +2521,31 @@ class UrbanBlockReconstructor:
                             
                             if not os.path.exists(pano_screenshot_path):
                                 print(f"[Pre-pass Scraper] Capturing panorama screenshot: {pano_filename}...")
-                                p_data = self.panoramas_cache[p_id]
-                                screenshot_bytes = None
-                                scraper_obj = self.scraper
-                                if scraper_obj is not None:
-                                    try:
-                                        screenshot_bytes = scraper_obj.capture_facade_screenshot(
-                                            lat=p_data["latitude"],
-                                            lon=p_data["longitude"],
-                                            heading=heading_val,
-                                            pano_id=p_id,
-                                            slice_id=f"temp_capture_{p_id}"
-                                        )
-                                    except Exception:
-                                        screenshot_bytes = None
-                                if screenshot_bytes:
-                                    ensure_dir(os.path.dirname(pano_screenshot_path))
-                                    with open(pano_screenshot_path, "wb") as f_img:
-                                        f_img.write(screenshot_bytes)
-                                        
+                                with self.cache_lock:
+                                    p_data = self.panoramas_cache.get(p_id)
+                                    
+                                if p_data:
+                                    screenshot_bytes = None
+                                    scraper_obj = self.scraper
+                                    if scraper_obj is not None:
+                                        try:
+                                            screenshot_bytes = scraper_obj.capture_facade_screenshot(
+                                                lat=p_data["latitude"],
+                                                lon=p_data["longitude"],
+                                                heading=heading_val,
+                                                pano_id=p_id,
+                                                slice_id=f"temp_capture_{p_id}"
+                                            )
+                                        except Exception:
+                                            screenshot_bytes = None
+                                    if screenshot_bytes:
+                                        ensure_dir(os.path.dirname(pano_screenshot_path))
+                                        with open(pano_screenshot_path, "wb") as f_img:
+                                            f_img.write(screenshot_bytes)
+                                            
             # Save final caches after scraping pre-pass completes
             self.save_metadata_cache()
             print("[Reconstruction] Pre-pass completed successfully! All required metadata and screenshots are cached on disk.")
-            sys.stdout.flush()
-
         # Close persistent scraper session on main thread before running workers
         scraper_obj = self.scraper
         if scraper_obj:
