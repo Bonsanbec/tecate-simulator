@@ -300,18 +300,20 @@ def test_custom_blocks_cache_roundtrip(tmp_path):
     
     last_edge_idx = 145
     last_block_idx = 890
+    completed_block_indices = {1, 2, 3, 5}
     
     # Save
-    save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx)
+    save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx, completed_block_indices=completed_block_indices)
     assert os.path.exists(cache_path)
     
     # Load
-    loaded_blocks, le_idx, lb_idx = load_custom_blocks_cache(cache_path)
+    loaded_blocks, le_idx, lb_idx, loaded_completed = load_custom_blocks_cache(cache_path)
     
     # Assert correctness
     assert loaded_blocks == custom_blocks
     assert le_idx == last_edge_idx
     assert lb_idx == last_block_idx
+    assert loaded_completed == completed_block_indices
 
 def test_rasterize_single_block():
     """Verifies that rasterize_single_block correctly assigns platform, sidewalk, and curb heights."""

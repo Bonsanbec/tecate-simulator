@@ -26,7 +26,7 @@ except ImportError:
             return args[0]
         return decorator
 
-def save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx):
+def save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx, completed_block_indices=None):
     try:
         os.makedirs(os.path.dirname(cache_path), exist_ok=True)
         palette = list(set(custom_blocks.values()))
@@ -44,23 +44,26 @@ def save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_bloc
             z_arr[idx] = z
             block_ids[idx] = palette_map[name]
             
-        np.savez_compressed(
-            cache_path,
-            x=x_arr,
-            y=y_arr,
-            z=z_arr,
-            block_ids=block_ids,
-            palette=np.array(palette),
-            last_edge_idx=np.array(last_edge_idx),
-            last_block_idx=np.array(last_block_idx)
-        )
+        kwargs = {
+            'x': x_arr,
+            'y': y_arr,
+            'z': z_arr,
+            'block_ids': block_ids,
+            'palette': np.array(palette),
+            'last_edge_idx': np.array(last_edge_idx),
+            'last_block_idx': np.array(last_block_idx)
+        }
+        if completed_block_indices is not None:
+            kwargs['completed_block_indices'] = np.array(list(completed_block_indices), dtype=np.int32)
+            
+        np.savez_compressed(cache_path, **kwargs)
         print(f"[Exporter] Cache saved successfully: {cache_path} (edge progress: {last_edge_idx}, block progress: {last_block_idx})")
     except Exception as e:
         print(f"[Exporter Warning] Failed to save custom blocks cache: {e}")
 
 def load_custom_blocks_cache(cache_path):
     if not os.path.exists(cache_path):
-        return {}, 0, 0
+        return {}, 0, 0, set()
         
     print(f"[Exporter] Loading pre-rasterized geometry from cache: {cache_path}")
     start_time = time.time()
@@ -73,6 +76,10 @@ def load_custom_blocks_cache(cache_path):
             palette = data['palette']
             last_edge_idx = int(data.get('last_edge_idx', 0))
             last_block_idx = int(data.get('last_block_idx', 0))
+            if 'completed_block_indices' in data:
+                completed_block_indices = set(data['completed_block_indices'].tolist())
+            else:
+                completed_block_indices = set(range(last_block_idx))
             
         x_list = x_arr.tolist()
         y_list = y_arr.tolist()
@@ -98,10 +105,10 @@ def load_custom_blocks_cache(cache_path):
         keys = list(zip(x_list, y_list, z_list))
         custom_blocks = dict(zip(keys, palette_map))
         print(f"[Exporter] Loaded {len(custom_blocks)} custom blocks from cache in {time.time() - start_time:.2f} seconds (progress: edge {last_edge_idx}, block {last_block_idx}).")
-        return custom_blocks, last_edge_idx, last_block_idx
+        return custom_blocks, last_edge_idx, last_block_idx, completed_block_indices
     except Exception as e:
         print(f"[Exporter Warning] Failed to load custom blocks cache: {e}. Re-rasterizing from scratch...")
-        return {}, 0, 0
+        return {}, 0, 0, set()
 
 def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None, y_offset=0, height_cache=None):
     local_blocks = {}
@@ -736,6 +743,16 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         min_x, max_x = min(xs), max(xs)
         min_y, max_y = min(ys), max(ys)
         
+        final_min_x = min_x
+        final_max_x = max_x
+        final_min_y = min_y
+        final_max_y = max_y
+        if existing_bbox is not None:
+            final_min_x = min(final_min_x, existing_bbox.get("min_local_x", final_min_x))
+            final_max_x = max(final_max_x, existing_bbox.get("max_local_x", final_max_x))
+            final_min_y = min(final_min_y, existing_bbox.get("min_local_y", final_min_y))
+            final_max_y = max(final_max_y, existing_bbox.get("max_local_y", final_max_y))
+        
         active_corners = [
             (min_x, min_y), (max_x, min_y),
             (min_x, max_y), (max_x, max_y),
@@ -762,7 +779,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
     
         print("[Exporter] Rasterizing road networks and custom block lot platforms...")
         cache_path = os.path.join(output_dir, "custom_blocks_cache.npz")
-        custom_blocks, last_edge_idx, last_block_idx = load_custom_blocks_cache(cache_path)
+        custom_blocks, last_edge_idx, last_block_idx, completed_block_indices = load_custom_blocks_cache(cache_path)
         initial_edge_idx = last_edge_idx
         initial_block_idx = last_block_idx
         
@@ -886,17 +903,18 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                         
         # B. Rasterize block lots (manzanas) with perimetral sidewalks (overwriting road overlaps)
         num_blocks = len(blocks)
+        completed_flags = [False] * num_blocks
+        for i in completed_block_indices:
+            if 0 <= i < num_blocks:
+                completed_flags[i] = True
+                
         if last_block_idx < num_blocks:
             workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
             print(f"[Exporter] Rasterizing block platforms in parallel using {workers} threads...")
             t_start_blocks = time.time()
             
-            completed_flags = [False] * num_blocks
-            for i in range(last_block_idx):
-                completed_flags[i] = True
-                
             progress_lock = threading.Lock()
-            completed_count = last_block_idx
+            completed_count = sum(completed_flags)
             
             # Print initial progress bar immediately
             print_progress("[Exporter] Rasterizing block platforms", completed_count, num_blocks, t_start_blocks)
@@ -914,7 +932,9 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             executor = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
             try:
                 futures = {}
-                for idx in range(last_block_idx, num_blocks):
+                for idx in range(num_blocks):
+                    if completed_flags[idx]:
+                        continue
                     if cancel_event.is_set():
                         break
                     b = blocks[idx]
@@ -954,15 +974,35 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         # Unified Cache Saving: Save if any new road edges or blocks were rasterized
         if not cancel_event.is_set():
             if last_edge_idx > initial_edge_idx or last_block_idx > initial_block_idx:
-                save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx)
+                completed_block_indices = {i for i, val in enumerate(completed_flags) if val}
+                save_custom_blocks_cache(
+                    cache_path, custom_blocks, last_edge_idx, last_block_idx,
+                    completed_block_indices=completed_block_indices
+                )
                         
         print(f"[Exporter] Rasterized {len(custom_blocks)} custom geometry blocks.")
         
-        regions = {}
+        # Define all chunks in the active merged bounding box to generate the terrain fully
+        min_cx = int(math.floor(final_min_x / 16.0))
+        max_cx = int(math.ceil(final_max_x / 16.0))
+        min_cz = int(math.floor(-final_max_y / 16.0))
+        max_cz = int(math.ceil(-final_min_y / 16.0))
+        
+        # Also include any custom blocks that might lie outside the bounding box
         for (x, y, z) in custom_blocks.keys():
-            rx = int(math.floor(x / 512.0))
-            rz = int(math.floor(z / 512.0))
-            regions.setdefault((rx, rz), []).append((x, y, z))
+            cx = int(math.floor(x / 16.0))
+            cz = int(math.floor(z / 16.0))
+            min_cx = min(min_cx, cx)
+            max_cx = max(max_cx, cx)
+            min_cz = min(min_cz, cz)
+            max_cz = max(max_cz, cz)
+            
+        regions = {}
+        for cx in range(min_cx, max_cx + 1):
+            for cz in range(min_cz, max_cz + 1):
+                rx = int(math.floor(cx / 32.0))
+                rz = int(math.floor(cz / 32.0))
+                regions.setdefault((rx, rz), []).append((cx * 16 + 8, 0, cz * 16 + 8))
             
         os.makedirs(region_dir, exist_ok=True)
         
@@ -1076,6 +1116,8 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                     # Advance last_block_idx based on the newly merged contiguous prefix
                     while last_block_idx < num_blocks and completed_flags[last_block_idx]:
                         last_block_idx += 1
+                    
+                    completed_block_indices = {i for i, val in enumerate(completed_flags) if val}
             except Exception:
                 pass
                 
@@ -1084,7 +1126,15 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             executor.shutdown(wait=False, cancel_futures=True)
             
         if 'cache_path' in locals() and 'custom_blocks' in locals() and custom_blocks:
-            save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx)
+            if 'completed_block_indices' not in locals():
+                if 'completed_flags' in locals():
+                    completed_block_indices = {i for i, val in enumerate(completed_flags) if val}
+                else:
+                    completed_block_indices = None
+            save_custom_blocks_cache(
+                cache_path, custom_blocks, last_edge_idx, last_block_idx,
+                completed_block_indices=completed_block_indices
+            )
             
     # Always save height cache
     height_cache.save()
