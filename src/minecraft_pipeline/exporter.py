@@ -699,6 +699,21 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
         # Load small chunk dictionary on demand to avoid OOM
         chunk_dict = custom_blocks.get_chunk_dict(cx_global, cz_global) if hasattr(custom_blocks, 'get_chunk_dict') else custom_blocks
         
+        # Pre-lookup all 256 heights for this chunk to avoid lock contention
+        local_heights = [0] * 256
+        for dz in range(16):
+            z_val = cz_global * 16 + dz
+            for dx in range(16):
+                x_val = cx_global * 16 + dx
+                cached_h = height_cache.get(x_val, z_val)
+                if cached_h is None:
+                    h_real = interpolator.query_height(x_val, -z_val)
+                    cached_h = int(round(h_real)) - y_offset
+                    height_cache.set(x_val, z_val, cached_h)
+                local_heights[dz * 16 + dx] = cached_h
+                
+        has_custom = bool(chunk_dict)
+        
         sections_nbt_list = []
         for s_y in range(-4, 20):
             y_min_sec = s_y * 16
@@ -714,16 +729,9 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
                     for dx in range(16):
                         x_val = cx_global * 16 + dx
                         
-                        block_name = chunk_dict.get((x_val, y_val, z_val))
+                        block_name = chunk_dict.get((x_val, y_val, z_val)) if has_custom else None
                         if block_name is None:
-                            # Use thread-safe height cache to speed up snaps
-                            cached_h = height_cache.get(x_val, z_val)
-                            if cached_h is None:
-                                h_real = interpolator.query_height(x_val, -z_val)
-                                cached_h = int(round(h_real)) - y_offset
-                                height_cache.set(x_val, z_val, cached_h)
-                                
-                            y_terrain = cached_h
+                            y_terrain = local_heights[dz * 16 + dx]
                             if y_val < y_terrain - 3:
                                 block_name = "minecraft:stone"
                             elif y_val < y_terrain:
