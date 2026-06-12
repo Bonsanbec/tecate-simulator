@@ -261,20 +261,15 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None,
     for x_mc, z_mc, d_boundary in zip(xs_in, zs_in, dists_in):
         if cancel_event.is_set():
             return local_blocks
-            
+
+        if d_boundary > 1.0:
+            continue
+
         y_mc = get_mc_terrain_y(x_mc, z_mc)
+
         y_platform = y_mc + 1
-        
-        if d_boundary <= 2.0:
-            if d_boundary <= 1.0:
-                block_name = "minecraft:polished_andesite"
-            else:
-                block_name = "minecraft:smooth_stone"
-        else:
-            block_name = "minecraft:light_gray_concrete"
-            
-        local_blocks[(x_mc, y_platform, z_mc)] = block_name
-        local_blocks[(x_mc, y_mc, z_mc)] = "minecraft:dirt"
+
+        local_blocks[(x_mc, y_platform, z_mc)] = "minecraft:yellow_concrete"
         
     return local_blocks
 
