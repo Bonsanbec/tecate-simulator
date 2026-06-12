@@ -1607,10 +1607,14 @@ class UrbanBlockReconstructor:
                     heading = round(heading, 2)
                     
                     meta = None
-                    if self.scraper is not None:
+                    scraper_obj = self.scraper
+                    if scraper_obj is not None:
                         with self.scraper_lock:
                             print(f"[API Query] Fetching metadata for new target {facade_id}...")
-                            meta = self.scraper.fetch_public_metadata(lat=lat, lon=lon)
+                            try:
+                                meta = scraper_obj.fetch_public_metadata(lat=lat, lon=lon)
+                            except Exception:
+                                meta = None
                             
                         if meta:
                             pano_id = meta["pano_id"]
@@ -1629,8 +1633,14 @@ class UrbanBlockReconstructor:
                                     
                             if oldest_pano_id != pano_id:
                                 print(f"[Temporal Chronology] Found older timeline state: {oldest_pano_id} ({oldest_date}) replaces modern {pano_id}.")
-                                with self.scraper_lock:
-                                    oldest_meta = self.scraper.fetch_public_metadata(pano_id=oldest_pano_id)
+                                oldest_meta = None
+                                scraper_obj = self.scraper
+                                if scraper_obj is not None:
+                                    with self.scraper_lock:
+                                        try:
+                                            oldest_meta = scraper_obj.fetch_public_metadata(pano_id=oldest_pano_id)
+                                        except Exception:
+                                            oldest_meta = None
                                 if oldest_meta:
                                     meta = oldest_meta
                                     pano_id = oldest_pano_id
@@ -1860,15 +1870,21 @@ class UrbanBlockReconstructor:
             else:
                 # Scrape if not on disk
                 if not os.path.exists(pano_screenshot_path) and self.scraper is not None:
-                    with self.scraper_lock:
-                        p_data = self.panoramas_cache[p_id]
-                        screenshot_bytes = self.scraper.capture_facade_screenshot(
-                            lat=p_data["latitude"],
-                            lon=p_data["longitude"],
-                            heading=heading_val,
-                            pano_id=p_id,
-                            slice_id=f"temp_capture_{p_id}"
-                        )
+                    screenshot_bytes = None
+                    scraper_obj = self.scraper
+                    if scraper_obj is not None:
+                        with self.scraper_lock:
+                            p_data = self.panoramas_cache[p_id]
+                            try:
+                                screenshot_bytes = scraper_obj.capture_facade_screenshot(
+                                    lat=p_data["latitude"],
+                                    lon=p_data["longitude"],
+                                    heading=heading_val,
+                                    pano_id=p_id,
+                                    slice_id=f"temp_capture_{p_id}"
+                                )
+                            except Exception:
+                                screenshot_bytes = None
                     if screenshot_bytes:
                         ensure_dir(os.path.dirname(pano_screenshot_path))
                         with open(pano_screenshot_path, "wb") as f_img:
@@ -2170,7 +2186,13 @@ class UrbanBlockReconstructor:
                         heading = round(heading, 2)
                         
                         print(f"[Pre-pass API Query] Fetching metadata for {facade_id}...")
-                        meta = self.scraper.fetch_public_metadata(lat=lat, lon=lon)
+                        meta = None
+                        scraper_obj = self.scraper
+                        if scraper_obj is not None:
+                            try:
+                                meta = scraper_obj.fetch_public_metadata(lat=lat, lon=lon)
+                            except Exception:
+                                meta = None
                         if meta:
                             pano_id = meta["pano_id"]
                             cam_lat = meta["latitude"]
@@ -2189,7 +2211,13 @@ class UrbanBlockReconstructor:
                                     
                             if oldest_pano_id != pano_id:
                                 print(f"[Temporal Chronology] Found older timeline state: {oldest_pano_id} ({oldest_date}) replaces modern {pano_id}.")
-                                oldest_meta = self.scraper.fetch_public_metadata(pano_id=oldest_pano_id)
+                                oldest_meta = None
+                                scraper_obj = self.scraper
+                                if scraper_obj is not None:
+                                    try:
+                                        oldest_meta = scraper_obj.fetch_public_metadata(pano_id=oldest_pano_id)
+                                    except Exception:
+                                        oldest_meta = None
                                 if oldest_meta:
                                     meta = oldest_meta
                                     pano_id = oldest_pano_id
@@ -2333,13 +2361,19 @@ class UrbanBlockReconstructor:
                             if not os.path.exists(pano_screenshot_path):
                                 print(f"[Pre-pass Scraper] Capturing panorama screenshot: {pano_filename}...")
                                 p_data = self.panoramas_cache[p_id]
-                                screenshot_bytes = self.scraper.capture_facade_screenshot(
-                                    lat=p_data["latitude"],
-                                    lon=p_data["longitude"],
-                                    heading=heading_val,
-                                    pano_id=p_id,
-                                    slice_id=f"temp_capture_{p_id}"
-                                )
+                                screenshot_bytes = None
+                                scraper_obj = self.scraper
+                                if scraper_obj is not None:
+                                    try:
+                                        screenshot_bytes = scraper_obj.capture_facade_screenshot(
+                                            lat=p_data["latitude"],
+                                            lon=p_data["longitude"],
+                                            heading=heading_val,
+                                            pano_id=p_id,
+                                            slice_id=f"temp_capture_{p_id}"
+                                        )
+                                    except Exception:
+                                        screenshot_bytes = None
                                 if screenshot_bytes:
                                     ensure_dir(os.path.dirname(pano_screenshot_path))
                                     with open(pano_screenshot_path, "wb") as f_img:
@@ -2351,9 +2385,13 @@ class UrbanBlockReconstructor:
             sys.stdout.flush()
 
         # Close persistent scraper session on main thread before running workers
-        if self.scraper:
-            self.scraper.close()
-            self.scraper = None  # Ensure threads never attempt to query browser/network
+        scraper_obj = self.scraper
+        if scraper_obj:
+            try:
+                scraper_obj.close()
+            except Exception:
+                pass
+            self.scraper = None
         
         self.current_blocks_data = []
         self.current_provenance = {}
@@ -2414,8 +2452,13 @@ class UrbanBlockReconstructor:
         # Check for harvest_only early exit
         if self.harvest_only:
             print("[Harvest Mode] Scraping and metadata caching complete. Skipping all 3D reconstruction and Blender rendering.")
-            if self.scraper:
-                self.scraper.close()
+            scraper_obj = self.scraper
+            if scraper_obj:
+                try:
+                    scraper_obj.close()
+                except Exception:
+                    pass
+                self.scraper = None
             self.save_stitching_cache()
             self.save_metadata_cache()
             return [], {}
