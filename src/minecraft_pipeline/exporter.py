@@ -269,7 +269,7 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None,
 
         y_platform = y_mc + 1
 
-        local_blocks[(x_mc, y_platform, z_mc)] = "minecraft:yellow_concrete"
+        local_blocks[(x_mc, y_platform, z_mc)] = "minecraft:smooth_stone"
         
     return local_blocks
 
