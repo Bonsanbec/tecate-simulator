@@ -269,7 +269,7 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None,
 
         y_platform = y_mc + 1
 
-        local_blocks[(x_mc, y_platform, z_mc)] = "minecraft:smooth_stone"
+        local_blocks[(x_mc, y_platform, z_mc)] = "minecraft:yellow_concrete"
         
     return local_blocks
 
@@ -697,25 +697,8 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
         cz_global = rz * 32 + cz_local
         
         # Load small chunk dictionary on demand to avoid OOM
-        raw_chunk_dict = custom_blocks.get_chunk_dict(cx_global, cz_global) if hasattr(custom_blocks, 'get_chunk_dict') else custom_blocks
+        chunk_dict = custom_blocks.get_chunk_dict(cx_global, cz_global) if hasattr(custom_blocks, 'get_chunk_dict') else custom_blocks
         
-        # Shift Y coordinates of cached blocks to align with the current y_offset, and rename yellow_concrete
-        chunk_dict = {}
-        for (x_coord, y_coord, z_coord), name in raw_chunk_dict.items():
-            h_real = interpolator.query_height(x_coord, -z_coord)
-            offset_diff_231 = abs((int(round(h_real)) - y_coord) - 231)
-            if offset_diff_231 <= 5:
-                y_offset_cached = 231
-            else:
-                y_offset_cached = 161
-            y_shifted = y_coord - (y_offset - y_offset_cached)
-            
-            if name == "minecraft:yellow_concrete":
-                y_terrain = int(round(h_real)) - y_offset
-                if y_shifted == y_terrain + 1:
-                    name = "minecraft:smooth_stone"
-            chunk_dict[(x_coord, y_shifted, z_coord)] = name
-            
         # Pre-lookup all 256 heights for this chunk to avoid lock contention
         local_heights = [0] * 256
         for dz in range(16):
