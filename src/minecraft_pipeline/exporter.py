@@ -12,6 +12,19 @@ from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from .nbt import NBT, TAG_COMPOUND, TAG_LIST, TAG_STRING, TAG_INT, TAG_LONG, TAG_BYTE, TAG_DOUBLE, TAG_LONG_ARRAY, save_gzip
 from .mca import MCARegion, pack_block_states
 from .road_metadata_cache import get_edge_key, extract_and_cache_road_metadata, get_default_metadata
+import cv2
+
+try:
+    from numba import njit
+    HAS_NUMBA = True
+except ImportError:
+    HAS_NUMBA = False
+    def njit(*args, **kwargs):
+        def decorator(func):
+            return func
+        if len(args) == 1 and callable(args[0]):
+            return args[0]
+        return decorator
 
 def save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx):
     try:
@@ -91,14 +104,18 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event):
     min_z_p = int(math.floor(min(zs_poly)))
     max_z_p = int(math.ceil(max(zs_poly)))
     
+    # Convert to OpenCV contour format (N, 1, 2)
+    contour = np.array(poly_mc, dtype=np.float32).reshape(-1, 1, 2)
+    
     for x_mc in range(min_x_p, max_x_p + 1):
         if cancel_event.is_set():
             return local_blocks
         for z_mc in range(min_z_p, max_z_p + 1):
-            if point_in_polygon(x_mc, z_mc, poly_mc):
-                d_boundary = distance_to_polygon_boundary(x_mc, z_mc, poly_mc)
+            # Returns positive distance if inside, negative if outside, zero if on edge
+            dist = cv2.pointPolygonTest(contour, (float(x_mc), float(z_mc)), True)
+            if dist >= 0:
+                d_boundary = dist
                 y_mc = get_mc_terrain_y(x_mc, z_mc)
-                
                 y_platform = y_mc + 1
                 
                 if d_boundary <= 2.0:
@@ -339,14 +356,15 @@ def draw_line_3d(x1, y1, z1, x2, y2, z2):
         pts.append((int(round(x)), int(round(y)), int(round(z))))
     return list(set(pts))
 
+@njit(nogil=True)
 def point_in_polygon(x, z, polygon):
     inside = False
     n = len(polygon)
     if n == 0:
         return False
-    p1x, p1z = polygon[0]
+    p1x, p1z = polygon[0][0], polygon[0][1]
     for i in range(n + 1):
-        p2x, p2z = polygon[i % n]
+        p2x, p2z = polygon[i % n][0], polygon[i % n][1]
         if z > min(p1z, p2z):
             if z <= max(p1z, p2z):
                 if x <= max(p1x, p2x):
@@ -357,14 +375,15 @@ def point_in_polygon(x, z, polygon):
         p1x, p1z = p2x, p2z
     return inside
 
+@njit(nogil=True)
 def distance_to_polygon_boundary(x, z, polygon):
     min_dist = float('inf')
     n = len(polygon)
     if n == 0:
         return 0.0
     for i in range(n):
-        ax, az = polygon[i]
-        bx, bz = polygon[(i + 1) % n]
+        ax, az = polygon[i][0], polygon[i][1]
+        bx, bz = polygon[(i + 1) % n][0], polygon[(i + 1) % n][1]
         dx = bx - ax
         dz = bz - az
         len2 = dx*dx + dz*dz
