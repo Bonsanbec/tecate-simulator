@@ -1257,6 +1257,26 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
     # 5. Write level.dat and metadata if we calculated y_offset and resolver
     if resolver_ready:
         print("[Exporter] Finalizing level.dat settings...")
+        
+        # Copy the Higher Heights datapack into the world's datapacks directory first
+        import shutil
+        datapacks_dir = os.path.join(world_dir, "datapacks")
+        os.makedirs(datapacks_dir, exist_ok=True)
+        
+        datapack_filename = None
+        for item in os.listdir(output_dir):
+            if item.endswith(".zip") and "HigherHeights" in item:
+                src_path = os.path.join(output_dir, item)
+                dst_path = os.path.join(datapacks_dir, item)
+                shutil.copy2(src_path, dst_path)
+                print(f"[Exporter] Activated Higher Heights datapack: {item}")
+                datapack_filename = item
+                
+        # Build the datapacks NBT lists
+        enabled_packs = ["vanilla"]
+        if datapack_filename is not None:
+            enabled_packs.append(f"file/{datapack_filename}")
+            
         level_dat_path = os.path.join(world_dir, "level.dat")
         spawn_y = get_mc_terrain_y(0, 0) + 2
         
@@ -1277,23 +1297,15 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 NBT(TAG_STRING, "doMobSpawning", "false"),
                 NBT(TAG_STRING, "keepInventory", "true"),
                 NBT(TAG_STRING, "doDaylightCycle", "false")
+            ]),
+            NBT(TAG_COMPOUND, "DataPacks", [
+                NBT(TAG_LIST, "Enabled", (TAG_STRING, enabled_packs)),
+                NBT(TAG_LIST, "Disabled", (TAG_STRING, []))
             ])
         ])
         
         level_root = NBT(TAG_COMPOUND, "", [level_data_nbt])
         save_gzip(level_root, level_dat_path)
-        
-        # Copy the Higher Heights datapack into the world's datapacks directory
-        import shutil
-        datapacks_dir = os.path.join(world_dir, "datapacks")
-        os.makedirs(datapacks_dir, exist_ok=True)
-        
-        for item in os.listdir(output_dir):
-            if item.endswith(".zip") and "HigherHeights" in item:
-                src_path = os.path.join(output_dir, item)
-                dst_path = os.path.join(datapacks_dir, item)
-                shutil.copy2(src_path, dst_path)
-                print(f"[Exporter] Activated Higher Heights datapack: {item}")
         
         # Calculate final merged bounding box BBox
         final_min_x = min_x
