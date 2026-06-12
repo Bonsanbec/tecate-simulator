@@ -283,18 +283,6 @@ class TerrainHeightCache:
         self.lock = threading.Lock()
         self.cache = {}
         self.changed = False
-        
-        if os.path.exists(self.cache_path):
-            try:
-                with open(self.cache_path, 'r') as f:
-                    data = json.load(f)
-                    for k, v in data.items():
-                        parts = k.split(',')
-                        if len(parts) == 2:
-                            self.cache[(int(parts[0]), int(parts[1]))] = v
-                print(f"[TerrainHeightCache] Loaded {len(self.cache)} entries from {self.cache_path}")
-            except Exception as e:
-                print(f"[TerrainHeightCache Warning] Failed to load cache: {e}")
 
     def get(self, x, z):
         with self.lock:
@@ -306,18 +294,7 @@ class TerrainHeightCache:
             self.changed = True
 
     def save(self):
-        with self.lock:
-            if not self.changed:
-                return
-            try:
-                os.makedirs(os.path.dirname(self.cache_path), exist_ok=True)
-                data = {f"{k[0]},{k[1]}": v for k, v in self.cache.items()}
-                with open(self.cache_path, 'w') as f:
-                    json.dump(data, f)
-                self.changed = False
-                print(f"[TerrainHeightCache] Saved {len(data)} entries to {self.cache_path}")
-            except Exception as e:
-                print(f"[TerrainHeightCache Warning] Failed to save cache: {e}")
+        pass
 
 def load_terrain_vertices(glb_path, s, tx, tz):
     """Loads tinMesh (Mesh 1) vertices and projects them to local Cartesian space."""
