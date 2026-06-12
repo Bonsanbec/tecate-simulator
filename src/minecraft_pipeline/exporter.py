@@ -61,122 +61,6 @@ def save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_bloc
     except Exception as e:
         print(f"[Exporter Warning] Failed to save custom blocks cache: {e}")
 
-class VoxelMap:
-    def __init__(self, x_arr, y_arr, z_arr, block_ids, palette):
-        cx = x_arr // 16
-        cz = z_arr // 16
-        keys = (cx.astype(np.int64) << 32) | (cz.astype(np.int64) & 0xFFFFFFFF)
-        
-        sort_idx = np.argsort(keys)
-        self.x_arr = x_arr[sort_idx]
-        self.y_arr = y_arr[sort_idx]
-        self.z_arr = z_arr[sort_idx]
-        self.block_ids = block_ids[sort_idx]
-        self.palette = palette
-        
-        sorted_keys = keys[sort_idx]
-        unique_keys, first_indices = np.unique(sorted_keys, return_index=True)
-        
-        self.chunk_slices = {}
-        n_unique = len(unique_keys)
-        for i in range(n_unique):
-            k = unique_keys[i]
-            start = first_indices[i]
-            end = first_indices[i+1] if i + 1 < n_unique else len(sorted_keys)
-            cx_val = int(k >> 32)
-            cz_val = int(k & 0xFFFFFFFF)
-            if cz_val >= 0x80000000:
-                cz_val -= 0x100000000
-            self.chunk_slices[(cx_val, cz_val)] = (start, end)
-            
-        self.new_blocks_by_chunk = {}
-        self._total_new_blocks = 0
-        
-    def __len__(self):
-        return len(self.x_arr) + self._total_new_blocks
-
-    def __setitem__(self, key, value):
-        x, y, z = key
-        cx = x // 16
-        cz = z // 16
-        chunk_dict = self.new_blocks_by_chunk.setdefault((cx, cz), {})
-        if (x, y, z) not in chunk_dict:
-            self._total_new_blocks += 1
-        chunk_dict[(x, y, z)] = value
-
-    def __contains__(self, key):
-        x, y, z = key
-        cx = x // 16
-        cz = z // 16
-        if (cx, cz) in self.new_blocks_by_chunk and (x, y, z) in self.new_blocks_by_chunk[(cx, cz)]:
-            return True
-        slice_info = self.chunk_slices.get((cx, cz))
-        if slice_info is not None:
-            # Check inside the chunk slice (small list/array lookups)
-            start, end = slice_info
-            xs = self.x_arr[start:end]
-            ys = self.y_arr[start:end]
-            zs = self.z_arr[start:end]
-            for i in range(len(xs)):
-                if xs[i] == x and ys[i] == y and zs[i] == z:
-                    return True
-        return False
-
-    def get(self, key, default=None):
-        x, y, z = key
-        cx = x // 16
-        cz = z // 16
-        slice_info = self.chunk_slices.get((cx, cz))
-        if slice_info is not None:
-            start, end = slice_info
-            xs = self.x_arr[start:end]
-            ys = self.y_arr[start:end]
-            zs = self.z_arr[start:end]
-            for i in range(len(xs)):
-                if xs[i] == x and ys[i] == y and zs[i] == z:
-                    return self.palette[self.block_ids[start + i]]
-        
-        # Check newly rasterized blocks
-        new_blocks = self.new_blocks_by_chunk.get((cx, cz))
-        if new_blocks is not None and key in new_blocks:
-            return new_blocks[key]
-            
-        return default
-
-    def update(self, local_dict):
-        for (x, y, z), name in local_dict.items():
-            self[x, y, z] = name
-
-    def get_chunk_dict(self, cx, cz):
-        chunk_dict = {}
-        
-        slice_info = self.chunk_slices.get((cx, cz))
-        if slice_info is not None:
-            start, end = slice_info
-            xs = self.x_arr[start:end]
-            ys = self.y_arr[start:end]
-            zs = self.z_arr[start:end]
-            bids = self.block_ids[start:end]
-            for i in range(len(xs)):
-                chunk_dict[(xs[i], ys[i], zs[i])] = self.palette[bids[i]]
-                
-        new_blocks = self.new_blocks_by_chunk.get((cx, cz))
-        if new_blocks is not None:
-            chunk_dict.update(new_blocks)
-            
-        return chunk_dict
-
-    def items(self):
-        for i in range(len(self.x_arr)):
-            yield (self.x_arr[i], self.y_arr[i], self.z_arr[i]), self.palette[self.block_ids[i]]
-        for chunk_dict in self.new_blocks_by_chunk.values():
-            for coord, name in chunk_dict.items():
-                yield coord, name
-
-    def keys(self):
-        for coord, _ in self.items():
-            yield coord
-
 def load_custom_blocks_cache(cache_path):
     if not os.path.exists(cache_path):
         return {}, 0, 0, set()
@@ -197,6 +81,11 @@ def load_custom_blocks_cache(cache_path):
             else:
                 completed_block_indices = set(range(last_block_idx))
             
+        x_list = x_arr.tolist()
+        y_list = y_arr.tolist()
+        z_list = z_arr.tolist()
+        block_ids_list = block_ids.tolist()
+        
         # Self-healing byte string decoder to prevent nested "b'b'...'" string issues
         palette_list = []
         for p in palette:
@@ -212,7 +101,9 @@ def load_custom_blocks_cache(cache_path):
                 val = val[2:-1]
             palette_list.append(val)
         
-        custom_blocks = VoxelMap(x_arr, y_arr, z_arr, block_ids, palette_list)
+        palette_map = [palette_list[bid] for bid in block_ids_list]
+        keys = list(zip(x_list, y_list, z_list))
+        custom_blocks = dict(zip(keys, palette_map))
         print(f"[Exporter] Loaded {len(custom_blocks)} custom blocks from cache in {time.time() - start_time:.2f} seconds (progress: edge {last_edge_idx}, block {last_block_idx}).")
         return custom_blocks, last_edge_idx, last_block_idx, completed_block_indices
     except Exception as e:
@@ -706,9 +597,6 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
         cx_global = rx * 32 + cx_local
         cz_global = rz * 32 + cz_local
         
-        # Load small chunk dictionary on demand to avoid OOM
-        chunk_dict = custom_blocks.get_chunk_dict(cx_global, cz_global) if hasattr(custom_blocks, 'get_chunk_dict') else custom_blocks
-        
         sections_nbt_list = []
         for s_y in range(-4, 20):
             y_min_sec = s_y * 16
@@ -724,7 +612,7 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
                     for dx in range(16):
                         x_val = cx_global * 16 + dx
                         
-                        block_name = chunk_dict.get((x_val, y_val, z_val))
+                        block_name = custom_blocks.get((x_val, y_val, z_val))
                         if block_name is None:
                             # Use thread-safe height cache to speed up snaps
                             cached_h = height_cache.get(x_val, z_val)
