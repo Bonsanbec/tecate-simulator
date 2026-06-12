@@ -330,7 +330,7 @@ def test_rasterize_single_block():
     
     # Check that platforms are placed at Y=13, and points with d_boundary > 1.0 are skipped
     assert (1, 13, -9) in blocks
-    assert blocks[(1, 13, -9)] == "minecraft:yellow_concrete"
+    assert blocks[(1, 13, -9)] == "minecraft:smooth_stone"
     assert (5, 13, -5) not in blocks
 
 def test_rasterize_single_block_batch_heights():
@@ -373,7 +373,7 @@ def test_rasterize_single_block_batch_heights():
     )
     
     assert (1, -217, -9) in blocks
-    assert blocks[(1, -217, -9)] == "minecraft:yellow_concrete"
+    assert blocks[(1, -217, -9)] == "minecraft:smooth_stone"
     assert (5, -217, -5) not in blocks
     assert interpolator.batch_queried_count > 0
     assert interpolator.queried_count == 0
