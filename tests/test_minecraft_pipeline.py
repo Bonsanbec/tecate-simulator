@@ -335,5 +335,50 @@ def test_rasterize_single_block():
     assert (1, 13, -1) in blocks
     assert blocks[(1, 13, -1)] in ["minecraft:polished_andesite", "minecraft:smooth_stone"]
 
+def test_rasterize_single_block_batch_heights():
+    """Verifies that rasterize_single_block correctly accepts interpolator and caches height values in batch."""
+    from src.minecraft_pipeline.exporter import rasterize_single_block, TerrainHeightCache
+    import threading
+    import numpy as np
+    
+    b = {"polygon": [[0, 0], [10, 0], [10, 10], [0, 10]]}
+    
+    class MockInterpolator:
+        def __init__(self):
+            self.queried_count = 0
+            self.batch_queried_count = 0
+            
+        def query_height(self, x, z):
+            self.queried_count += 1
+            return 12.0
+            
+        def query_height_batch(self, coords):
+            self.batch_queried_count += 1
+            return np.full(len(coords), 12.0, dtype=np.float32)
+            
+    interpolator = MockInterpolator()
+    height_cache = TerrainHeightCache(cache_path="dummy_path.json")
+    height_cache.cache = {}
+    
+    def mock_get_terrain_y(x, z):
+        h = height_cache.get(x, z)
+        if h is None:
+            h = int(round(interpolator.query_height(x, -z))) - 230
+            height_cache.set(x, z, h)
+        return h
+        
+    cancel_event = threading.Event()
+    
+    blocks = rasterize_single_block(
+        b, mock_get_terrain_y, cancel_event,
+        interpolator=interpolator, y_offset=230, height_cache=height_cache
+    )
+    
+    assert (5, -217, -5) in blocks
+    assert blocks[(5, -217, -5)] == "minecraft:light_gray_concrete"
+    assert interpolator.batch_queried_count > 0
+    assert interpolator.queried_count == 0
+
+
 
 

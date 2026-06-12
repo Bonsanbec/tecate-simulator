@@ -103,7 +103,7 @@ def load_custom_blocks_cache(cache_path):
         print(f"[Exporter Warning] Failed to load custom blocks cache: {e}. Re-rasterizing from scratch...")
         return {}, 0, 0
 
-def rasterize_single_block(b, get_mc_terrain_y, cancel_event):
+def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None, y_offset=0, height_cache=None):
     local_blocks = {}
     poly = b["polygon"]
     poly_mc = [[pt[0], -pt[1]] for pt in poly]
@@ -118,30 +118,45 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event):
     min_z_p = int(math.floor(min(zs_poly)))
     max_z_p = int(math.ceil(max(zs_poly)))
     
-    # Convert to OpenCV contour format (N, 1, 2)
-    contour = np.array(poly_mc, dtype=np.float32).reshape(-1, 1, 2)
+    # 1. Scan for inside points and distances using Numba/fallback scanner
+    xs_in, zs_in, dists_in = find_inside_points(min_x_p, max_x_p, min_z_p, max_z_p, poly_mc)
     
-    for x_mc in range(min_x_p, max_x_p + 1):
+    if len(xs_in) == 0:
+        return local_blocks
+        
+    # 2. Pre-resolve missing heights in batch if interpolator and height_cache are provided
+    if interpolator is not None and height_cache is not None:
+        missing_queries = []
+        for x_mc, z_mc in zip(xs_in, zs_in):
+            if height_cache.get(x_mc, z_mc) is None:
+                missing_queries.append((x_mc, -z_mc))
+                
+        if missing_queries:
+            batch_heights = interpolator.query_height_batch(missing_queries)
+            for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
+                z_val = -mz_q
+                cached_h = int(round(h_real)) - y_offset
+                height_cache.set(x_q, z_val, cached_h)
+                
+    # 3. Generate block platforms
+    for x_mc, z_mc, d_boundary in zip(xs_in, zs_in, dists_in):
         if cancel_event.is_set():
             return local_blocks
-        for z_mc in range(min_z_p, max_z_p + 1):
-            # Returns positive distance if inside, negative if outside, zero if on edge
-            dist = cv2.pointPolygonTest(contour, (float(x_mc), float(z_mc)), True)
-            if dist >= 0:
-                d_boundary = dist
-                y_mc = get_mc_terrain_y(x_mc, z_mc)
-                y_platform = y_mc + 1
-                
-                if d_boundary <= 2.0:
-                    if d_boundary <= 1.0:
-                        block_name = "minecraft:polished_andesite"
-                    else:
-                        block_name = "minecraft:smooth_stone"
-                else:
-                    block_name = "minecraft:light_gray_concrete"
-                    
-                local_blocks[(x_mc, y_platform, z_mc)] = block_name
-                local_blocks[(x_mc, y_mc, z_mc)] = "minecraft:dirt"
+            
+        y_mc = get_mc_terrain_y(x_mc, z_mc)
+        y_platform = y_mc + 1
+        
+        if d_boundary <= 2.0:
+            if d_boundary <= 1.0:
+                block_name = "minecraft:polished_andesite"
+            else:
+                block_name = "minecraft:smooth_stone"
+        else:
+            block_name = "minecraft:light_gray_concrete"
+            
+        local_blocks[(x_mc, y_platform, z_mc)] = block_name
+        local_blocks[(x_mc, y_mc, z_mc)] = "minecraft:dirt"
+        
     return local_blocks
 
 class TerrainHeightCache:
@@ -463,6 +478,41 @@ def distance_to_polygon_boundary(x, z, polygon):
         if dist < min_dist:
             min_dist = dist
     return min_dist
+
+@njit(nogil=True)
+def _find_inside_points_jit(min_x, max_x, min_z, max_z, polygon):
+    max_pts = (max_x - min_x + 1) * (max_z - min_z + 1)
+    xs = np.empty(max_pts, dtype=np.int32)
+    zs = np.empty(max_pts, dtype=np.int32)
+    dists = np.empty(max_pts, dtype=np.float64)
+    
+    count = 0
+    for x in range(min_x, max_x + 1):
+        for z in range(min_z, max_z + 1):
+            if _point_in_polygon_jit(float(x), float(z), polygon):
+                xs[count] = x
+                zs[count] = z
+                dists[count] = _distance_to_polygon_boundary_jit(float(x), float(z), polygon)
+                count += 1
+                
+    return xs[:count], zs[:count], dists[:count]
+
+def find_inside_points(min_x, max_x, min_z, max_z, polygon):
+    if HAS_NUMBA:
+        if not isinstance(polygon, np.ndarray):
+            polygon = np.array(polygon, dtype=np.float64)
+        return _find_inside_points_jit(min_x, max_x, min_z, max_z, polygon)
+        
+    xs = []
+    zs = []
+    dists = []
+    for x in range(min_x, max_x + 1):
+        for z in range(min_z, max_z + 1):
+            if point_in_polygon(x, z, polygon):
+                xs.append(x)
+                zs.append(z)
+                dists.append(distance_to_polygon_boundary(x, z, polygon))
+    return np.array(xs, dtype=np.int32), np.array(zs, dtype=np.int32), np.array(dists, dtype=np.float64)
 
 def get_deterministic_choice(x, y, z, choices, weights):
     """Deterministically selects a choice based on coordinates hash."""
@@ -867,7 +917,8 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                     b = blocks[idx]
                     f = executor.submit(
                         rasterize_single_block,
-                        b, get_mc_terrain_y, cancel_event
+                        b, get_mc_terrain_y, cancel_event,
+                        interpolator, y_offset, height_cache
                     )
                     futures[f] = idx
                     
