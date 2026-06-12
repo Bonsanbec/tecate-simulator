@@ -282,44 +282,48 @@ class UrbanBlockReconstructor:
         return inside
 
     def save_stitching_cache(self):
-        if not self.stitching_cache_changed:
-            return
-        try:
-            save_json(self.stitching_cache, self.stitching_cache_path, indent=None)
-            self.stitching_cache_changed = False
-            print(f"[Cache Auto-Save] Stitching cache written to: {self.stitching_cache_path}")
-        except Exception as e:
-            print(f"[Warning] Failed to save stitching cache: {e}")
+        with self.cache_lock:
+            if not self.stitching_cache_changed:
+                return
+            try:
+                save_json(self.stitching_cache, self.stitching_cache_path, indent=None)
+                self.stitching_cache_changed = False
+                print(f"[Cache Auto-Save] Stitching cache written to: {self.stitching_cache_path}")
+            except Exception as e:
+                print(f"[Warning] Failed to save stitching cache: {e}")
 
     def save_panoramas_cache(self):
-        if not self.panoramas_cache_changed:
-            return
-        try:
-            save_json(self.panoramas_cache, self.panoramas_cache_path, indent=None)
-            self.panoramas_cache_changed = False
-            print(f"[Cache Auto-Save] Panoramas cache written to: {self.panoramas_cache_path}")
-        except Exception as e:
-            print(f"[Warning] Failed to save panoramas cache: {e}")
+        with self.cache_lock:
+            if not self.panoramas_cache_changed:
+                return
+            try:
+                save_json(self.panoramas_cache, self.panoramas_cache_path, indent=None)
+                self.panoramas_cache_changed = False
+                print(f"[Cache Auto-Save] Panoramas cache written to: {self.panoramas_cache_path}")
+            except Exception as e:
+                print(f"[Warning] Failed to save panoramas cache: {e}")
 
     def save_facades_cache(self):
-        if not self.facades_cache_changed:
-            return
-        try:
-            save_json(self.facades_cache, self.facades_cache_path, indent=None)
-            self.facades_cache_changed = False
-            print(f"[Cache Auto-Save] Facades cache written to: {self.facades_cache_path}")
-        except Exception as e:
-            print(f"[Warning] Failed to save facades cache: {e}")
+        with self.cache_lock:
+            if not self.facades_cache_changed:
+                return
+            try:
+                save_json(self.facades_cache, self.facades_cache_path, indent=None)
+                self.facades_cache_changed = False
+                print(f"[Cache Auto-Save] Facades cache written to: {self.facades_cache_path}")
+            except Exception as e:
+                print(f"[Warning] Failed to save facades cache: {e}")
             
     def save_blocks_cache(self):
-        if not self.blocks_cache_changed:
-            return
-        try:
-            save_json(self.blocks_cache, self.blocks_cache_path, indent=None)
-            self.blocks_cache_changed = False
-            print(f"[Cache Auto-Save] Blocks cache written to: {self.blocks_cache_path}")
-        except Exception as e:
-            print(f"[Warning] Failed to save blocks cache: {e}")
+        with self.cache_lock:
+            if not self.blocks_cache_changed:
+                return
+            try:
+                save_json(self.blocks_cache, self.blocks_cache_path, indent=None)
+                self.blocks_cache_changed = False
+                print(f"[Cache Auto-Save] Blocks cache written to: {self.blocks_cache_path}")
+            except Exception as e:
+                print(f"[Warning] Failed to save blocks cache: {e}")
 
     def _decompose_metadata_cache(self):
         """
@@ -2119,6 +2123,21 @@ class UrbanBlockReconstructor:
         # Pre-initialize spatial grid index sequentially in main thread to ensure thread safety
         self.get_road_distance(0.0, 0.0)
 
+        # Start periodic cache auto-save background thread (runs every 10 seconds)
+        import threading
+        stop_autosave = threading.Event()
+        
+        def autosave_loop():
+            while not stop_autosave.is_set():
+                stop_autosave.wait(10.0)
+                if stop_autosave.is_set():
+                    break
+                self.save_metadata_cache()
+                self.save_stitching_cache()
+                
+        autosave_thread = threading.Thread(target=autosave_loop, daemon=True)
+        autosave_thread.start()
+
         raw_blocks = self.extract_block_polygons()
         
         # Sort blocks by proximity to Parque Hidalgo (0, 0)
@@ -2461,6 +2480,8 @@ class UrbanBlockReconstructor:
                 self.scraper = None
             self.save_stitching_cache()
             self.save_metadata_cache()
+            stop_autosave.set()
+            autosave_thread.join(timeout=2.0)
             return [], {}
 
         total_facades = sum(len(bl["polygon"]) - 1 for bl in blocks_data)
@@ -2503,6 +2524,10 @@ class UrbanBlockReconstructor:
         # Save metadata cache back to disk (Incremental processing)
         self.save_metadata_cache()
         print(f"[Reconstruction] Metadata caches successfully updated in relational format.")
+        
+        # Stop periodic cache auto-save background thread
+        stop_autosave.set()
+        autosave_thread.join(timeout=2.0)
         
         # Compile global observation map
         self.generate_diagnostic_visualization(scene_doc, diag_facades, meta_out["coverage_percentage"])
