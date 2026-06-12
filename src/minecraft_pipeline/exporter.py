@@ -458,6 +458,37 @@ class TerrainHeightInterpolator:
             
         return results
 
+# Process-local globals for multiprocessing workers
+_worker_interpolator = None
+_worker_custom_blocks = None
+_worker_y_offset = None
+
+def init_worker_process(glb_path, s, tx, tz, custom_blocks, y_offset):
+    global _worker_interpolator, _worker_custom_blocks, _worker_y_offset
+    _worker_interpolator = TerrainHeightInterpolator(glb_path, s, tx, tz)
+    _worker_custom_blocks = custom_blocks
+    _worker_y_offset = y_offset
+
+def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y):
+    global _worker_interpolator, _worker_custom_blocks, _worker_y_offset
+    
+    # Process-local cache for height coordinates
+    local_cache = TerrainHeightCache()
+    
+    export_single_region(
+        rx=rx,
+        rz=rz,
+        pts=pts,
+        mca_path=mca_path,
+        custom_blocks=_worker_custom_blocks,
+        interpolator=_worker_interpolator,
+        y_offset=_worker_y_offset,
+        height_cache=local_cache,
+        cancel_event=None,
+        min_s_y=min_s_y,
+        max_s_y=max_s_y
+    )
+
 def draw_line_3d(x1, y1, z1, x2, y2, z2):
     pts = []
     dx = x2 - x1
@@ -1125,16 +1156,19 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             print(f"[Exporter] Incremental export: skipped {skipped_regions} already generated valid region files.")
             
         workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
-        
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
+        print(f"[Exporter] Generating region MCA files in parallel using {workers} processes...")
+        executor = concurrent.futures.ProcessPoolExecutor(
+            max_workers=workers,
+            initializer=init_worker_process,
+            initargs=(glb_path, s, tx, tz, custom_blocks, y_offset)
+        )
         try:
             futures = {}
             for (rx, rz), pts in regions_to_generate:
                 mca_path = os.path.join(region_dir, f"r.{rx}.{rz}.mca")
                 f = executor.submit(
-                    export_single_region,
-                    rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache,
-                    cancel_event, min_s_y, max_s_y
+                    export_single_region_process_wrapper,
+                    rx, rz, pts, mca_path, min_s_y, max_s_y
                 )
                 futures[f] = (rx, rz)
                 
