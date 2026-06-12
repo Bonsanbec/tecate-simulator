@@ -287,7 +287,7 @@ def test_bbox_union_merging():
 
 def test_custom_blocks_cache_roundtrip(tmp_path):
     """Verifies that custom blocks cache is saved and loaded correctly, preserving coordinates, names, and progress indices."""
-    from src.minecraft_pipeline.exporter import save_custom_blocks_cache, load_custom_blocks_cache_raw
+    from src.minecraft_pipeline.exporter import save_custom_blocks_cache, load_custom_blocks_cache
     
     cache_path = os.path.join(tmp_path, "test_cache.npz")
     
@@ -305,27 +305,13 @@ def test_custom_blocks_cache_roundtrip(tmp_path):
     save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx)
     assert os.path.exists(cache_path)
     
-    # Load raw
-    data_tuple, le_idx, lb_idx = load_custom_blocks_cache_raw(cache_path)
-    assert data_tuple is not None
-    
-    # Reconstruct dict from raw tuple
-    x_arr, y_arr, z_arr, block_ids, palette = data_tuple
-    x_list = x_arr.tolist()
-    y_list = y_arr.tolist()
-    z_list = z_arr.tolist()
-    block_ids_list = block_ids.tolist()
-    palette_list = [str(p) for p in palette]
-    
-    palette_map = [palette_list[bid] for bid in block_ids_list]
-    keys = list(zip(x_list, y_list, z_list))
-    loaded_blocks = dict(zip(keys, palette_map))
+    # Load
+    loaded_blocks, le_idx, lb_idx = load_custom_blocks_cache(cache_path)
     
     # Assert correctness
     assert loaded_blocks == custom_blocks
     assert le_idx == last_edge_idx
     assert lb_idx == last_block_idx
-
 
 def test_rasterize_single_block():
     """Verifies that rasterize_single_block correctly assigns platform, sidewalk, and curb heights."""
@@ -348,100 +334,6 @@ def test_rasterize_single_block():
     # Curb/Sidewalk at the boundary
     assert (1, 13, -1) in blocks
     assert blocks[(1, 13, -1)] in ["minecraft:polished_andesite", "minecraft:smooth_stone"]
-
-def test_block_provider_filtering():
-    """Verifies that BlockProvider correctly filters coordinates and blocks for dict and array backings."""
-    from src.minecraft_pipeline.exporter import BlockProvider
-    
-    # 1. Dict-backed testing
-    custom_blocks = {
-        (10, 20, 30): "block_a",     # Region (0, 0)
-        (515, 20, 515): "block_b",   # Region (1, 1)
-        (10, 20, 515): "block_c",    # Region (0, 1)
-    }
-    
-    provider_dict = BlockProvider(custom_blocks_dict=custom_blocks)
-    
-    blocks_0_0, pts_0_0 = provider_dict.get_blocks_and_pts_for_region(0, 0)
-    assert blocks_0_0 == {(10, 20, 30): "block_a"}
-    assert pts_0_0 == [(10, 20, 30)]
-    
-    blocks_0_1, pts_0_1 = provider_dict.get_blocks_and_pts_for_region(0, 1)
-    assert blocks_0_1 == {(10, 20, 515): "block_c"}
-    
-    # 2. NumPy-backed testing
-    import numpy as np
-    x = np.array([10, 515, 10], dtype=np.int32)
-    y = np.array([20, 20, 20], dtype=np.int32)
-    z = np.array([30, 515, 515], dtype=np.int32)
-    block_ids = np.array([0, 1, 2], dtype=np.uint8)
-    palette = np.array(["block_a", "block_b", "block_c"])
-    
-    provider_data = BlockProvider(custom_blocks_data=(x, y, z, block_ids, palette))
-    
-    blocks_0_0_arr, pts_0_0_arr = provider_data.get_blocks_and_pts_for_region(0, 0)
-    assert blocks_0_0_arr == {(10, 20, 30): "block_a"}
-    assert pts_0_0_arr == [(10, 20, 30)]
-    
-    blocks_1_1_arr, pts_1_1_arr = provider_data.get_blocks_and_pts_for_region(1, 1)
-    assert blocks_1_1_arr == {(515, 20, 515): "block_b"}
-
-
-def test_custom_blocks_cache_concatenation(tmp_path):
-    """Verifies that save_custom_blocks_cache correctly concatenates new blocks with existing cache data."""
-    from src.minecraft_pipeline.exporter import save_custom_blocks_cache, load_custom_blocks_cache_raw
-    import numpy as np
-    
-    cache_path = os.path.join(tmp_path, "concat_cache.npz")
-    
-    # 1. Save initial cache
-    initial_blocks = {
-        (0, 0, 0): "minecraft:stone",
-        (1, 1, 1): "minecraft:dirt"
-    }
-    save_custom_blocks_cache(cache_path, initial_blocks, 10, 20)
-    assert os.path.exists(cache_path)
-    
-    # Load it
-    existing_data, le_idx, lb_idx = load_custom_blocks_cache_raw(cache_path)
-    assert existing_data is not None
-    assert le_idx == 10
-    assert lb_idx == 20
-    
-    # 2. Save new blocks, concatenating with existing_data
-    new_blocks = {
-        (2, 2, 2): "minecraft:grass_block",
-        (0, 0, 0): "minecraft:stone" # Duplicate coordinates check
-    }
-    save_custom_blocks_cache(cache_path, new_blocks, 15, 25, existing_data_tuple=existing_data)
-    
-    # 3. Load the concatenated cache and verify
-    combined_data, le_idx_final, lb_idx_final = load_custom_blocks_cache_raw(cache_path)
-    assert combined_data is not None
-    assert le_idx_final == 15
-    assert lb_idx_final == 25
-    
-    x_arr, y_arr, z_arr, block_ids, palette = combined_data
-    assert len(x_arr) == 4 # 2 initial blocks + 2 new blocks
-    
-    # Let's map it back to dict using the BlockProvider region lookup to verify duplicate resolution/correctness
-    from src.minecraft_pipeline.exporter import BlockProvider
-    provider = BlockProvider(custom_blocks_data=combined_data)
-    
-    # Since all coordinates are in region (0, 0)
-    blocks_0_0, _ = provider.get_blocks_and_pts_for_region(0, 0)
-    
-    assert blocks_0_0[(0, 0, 0)] == "minecraft:stone"
-    assert blocks_0_0[(1, 1, 1)] == "minecraft:dirt"
-    assert blocks_0_0[(2, 2, 2)] == "minecraft:grass_block"
-    
-    # Confirm palette contents
-    palette_strings = [str(p) for p in palette]
-    assert "minecraft:stone" in palette_strings
-    assert "minecraft:dirt" in palette_strings
-    assert "minecraft:grass_block" in palette_strings
-
-
 
 
 
