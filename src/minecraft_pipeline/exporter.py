@@ -13,23 +13,53 @@ from .nbt import NBT, TAG_COMPOUND, TAG_LIST, TAG_STRING, TAG_INT, TAG_LONG, TAG
 from .mca import MCARegion, pack_block_states
 from .road_metadata_cache import get_edge_key, extract_and_cache_road_metadata, get_default_metadata
 
-def save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx):
+def save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx, existing_data_tuple=None):
     try:
         os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-        palette = list(set(custom_blocks.values()))
-        palette_map = {name: idx for idx, name in enumerate(palette)}
         
-        n = len(custom_blocks)
-        x_arr = np.empty(n, dtype=np.int32)
-        y_arr = np.empty(n, dtype=np.int32)
-        z_arr = np.empty(n, dtype=np.int32)
-        block_ids = np.empty(n, dtype=np.uint8)
+        if existing_data_tuple is not None:
+            ex_x, ex_y, ex_z, ex_block_ids, ex_palette = existing_data_tuple
+            ex_palette_strings = []
+            for p in ex_palette:
+                if isinstance(p, bytes):
+                    ex_palette_strings.append(p.decode('utf-8'))
+                else:
+                    ex_palette_strings.append(str(p))
+        else:
+            ex_x, ex_y, ex_z, ex_block_ids, ex_palette_strings = None, None, None, None, []
+            
+        # Build unified palette by appending new unique names to existing palette list
+        unified_palette = list(ex_palette_strings)
+        palette_map = {name: idx for idx, name in enumerate(unified_palette)}
+        
+        new_palette_entries = set(custom_blocks.values())
+        for name in new_palette_entries:
+            if name not in palette_map:
+                palette_map[name] = len(unified_palette)
+                unified_palette.append(name)
+                
+        n_new = len(custom_blocks)
+        x_new = np.empty(n_new, dtype=np.int32)
+        y_new = np.empty(n_new, dtype=np.int32)
+        z_new = np.empty(n_new, dtype=np.int32)
+        block_ids_new = np.empty(n_new, dtype=np.uint8)
         
         for idx, ((x, y, z), name) in enumerate(custom_blocks.items()):
-            x_arr[idx] = x
-            y_arr[idx] = y
-            z_arr[idx] = z
-            block_ids[idx] = palette_map[name]
+            x_new[idx] = x
+            y_new[idx] = y
+            z_new[idx] = z
+            block_ids_new[idx] = palette_map[name]
+            
+        if ex_x is not None and len(ex_x) > 0:
+            x_arr = np.concatenate([ex_x, x_new])
+            y_arr = np.concatenate([ex_y, y_new])
+            z_arr = np.concatenate([ex_z, z_new])
+            block_ids = np.concatenate([ex_block_ids, block_ids_new])
+        else:
+            x_arr = x_new
+            y_arr = y_new
+            z_arr = z_new
+            block_ids = block_ids_new
             
         np.savez_compressed(
             cache_path,
@@ -37,19 +67,19 @@ def save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_bloc
             y=y_arr,
             z=z_arr,
             block_ids=block_ids,
-            palette=np.array(palette),
+            palette=np.array(unified_palette),
             last_edge_idx=np.array(last_edge_idx),
             last_block_idx=np.array(last_block_idx)
         )
-        print(f"[Exporter] Cache saved successfully: {cache_path} (edge progress: {last_edge_idx}, block progress: {last_block_idx})")
+        print(f"[Exporter] Cache saved successfully: {cache_path} (edge progress: {last_edge_idx}, block progress: {last_block_idx}, total blocks: {len(x_arr)})")
     except Exception as e:
         print(f"[Exporter Warning] Failed to save custom blocks cache: {e}")
 
-def load_custom_blocks_cache(cache_path):
+def load_custom_blocks_cache_raw(cache_path):
     if not os.path.exists(cache_path):
-        return {}, 0, 0
+        return None, 0, 0
         
-    print(f"[Exporter] Loading pre-rasterized geometry from cache: {cache_path}")
+    print(f"[Exporter] Loading pre-rasterized geometry arrays from cache: {cache_path}")
     start_time = time.time()
     try:
         with np.load(cache_path) as data:
@@ -61,20 +91,49 @@ def load_custom_blocks_cache(cache_path):
             last_edge_idx = int(data.get('last_edge_idx', 0))
             last_block_idx = int(data.get('last_block_idx', 0))
             
-        x_list = x_arr.tolist()
-        y_list = y_arr.tolist()
-        z_list = z_arr.tolist()
-        block_ids_list = block_ids.tolist()
-        palette_list = [str(p) for p in palette]
-        
-        palette_map = [palette_list[bid] for bid in block_ids_list]
-        keys = list(zip(x_list, y_list, z_list))
-        custom_blocks = dict(zip(keys, palette_map))
-        print(f"[Exporter] Loaded {len(custom_blocks)} custom blocks from cache in {time.time() - start_time:.2f} seconds (progress: edge {last_edge_idx}, block {last_block_idx}).")
-        return custom_blocks, last_edge_idx, last_block_idx
+        print(f"[Exporter] Loaded arrays from cache in {time.time() - start_time:.2f} seconds (progress: edge {last_edge_idx}, block {last_block_idx}).")
+        return (x_arr, y_arr, z_arr, block_ids, palette), last_edge_idx, last_block_idx
     except Exception as e:
         print(f"[Exporter Warning] Failed to load custom blocks cache: {e}. Re-rasterizing from scratch...")
-        return {}, 0, 0
+        return None, 0, 0
+
+class BlockProvider:
+    def __init__(self, custom_blocks_dict=None, custom_blocks_data=None):
+        self.dict = custom_blocks_dict
+        self.data = custom_blocks_data
+        
+    def get_blocks_and_pts_for_region(self, rx, rz):
+        if self.dict is not None:
+            region_blocks = {}
+            pts = []
+            for (x, y, z), name in self.dict.items():
+                if rx * 512 <= x < (rx + 1) * 512 and rz * 512 <= z < (rz + 1) * 512:
+                    region_blocks[(x, y, z)] = name
+                    pts.append((x, y, z))
+            return region_blocks, pts
+        elif self.data is not None:
+            x_arr, y_arr, z_arr, block_ids, palette = self.data
+            mask = (x_arr >= rx * 512) & (x_arr < (rx + 1) * 512) & (z_arr >= rz * 512) & (z_arr < (rz + 1) * 512)
+            
+            rx_arr = x_arr[mask]
+            ry_arr = y_arr[mask]
+            rz_arr = z_arr[mask]
+            rblock_ids = block_ids[mask]
+            
+            x_list = rx_arr.tolist()
+            y_list = ry_arr.tolist()
+            z_list = rz_arr.tolist()
+            block_ids_list = rblock_ids.tolist()
+            palette_list = [str(p) for p in palette]
+            
+            palette_map = [palette_list[bid] for bid in block_ids_list]
+            keys = list(zip(x_list, y_list, z_list))
+            
+            region_blocks = dict(zip(keys, palette_map))
+            pts = keys
+            return region_blocks, pts
+        return {}, []
+
 
 def rasterize_single_block(b, get_mc_terrain_y, cancel_event):
     local_blocks = {}
@@ -561,6 +620,10 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
     resolver_ready = False
     y_offset = 0
     min_x, max_x, min_y, max_y = 0.0, 0.0, 0.0, 0.0
+    custom_blocks_data = None
+    custom_blocks = {}
+    last_edge_idx = 0
+    last_block_idx = 0
     
     try:
         print(f"[Exporter] Loading reconstruction data from: {reconstruction_json_path}")
@@ -619,15 +682,19 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         resolver_ready = True
     
         print("[Exporter] Rasterizing road networks and custom block lot platforms...")
-        cache_path = os.path.join(output_dir, "custom_blocks_cache.npz")
-        custom_blocks, last_edge_idx, last_block_idx = load_custom_blocks_cache(cache_path)
         
-        # A. Rasterize road graph (first, so block platforms can overwrite/clip them)
         nodes = road_graph.get("nodes", [])
         edges = road_graph.get("edges", [])
+        num_edges = len(edges)
+        num_blocks = len(blocks)
+        
+        cache_path = os.path.join(output_dir, "custom_blocks_cache.npz")
+        custom_blocks_data, last_edge_idx, last_block_idx = load_custom_blocks_cache_raw(cache_path)
+        custom_blocks = {}
+        
+        # A. Rasterize road graph (first, so block platforms can overwrite/clip them)
         node_map = {nd["id"]: nd for nd in nodes}
         
-        num_edges = len(edges)
         if last_edge_idx < num_edges:
             print(f"[Exporter] Rasterizing road network starting from index {last_edge_idx}...")
             for idx in range(last_edge_idx, num_edges):
@@ -798,17 +865,36 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 
             # We computed new blocks, save the cache
             if not cancel_event.is_set():
-                save_custom_blocks_cache(cache_path, custom_blocks, num_edges, num_blocks)
+                save_custom_blocks_cache(cache_path, custom_blocks, num_edges, num_blocks, custom_blocks_data)
         else:
             print("[Exporter] Block platforms rasterization already fully completed.")
                         
-        print(f"[Exporter] Rasterized {len(custom_blocks)} custom geometry blocks.")
+        # Instantiate block provider
+        if custom_blocks:
+            # We rasterized new blocks and saved them to cache. Let's reload to get the combined data.
+            custom_blocks_data, _, _ = load_custom_blocks_cache_raw(cache_path)
+            
+        if custom_blocks_data is not None:
+            provider = BlockProvider(custom_blocks_data=custom_blocks_data)
+            print(f"[Exporter] Utilizing memory-optimized BlockProvider with pre-rasterized geometry arrays.")
+        else:
+            provider = BlockProvider(custom_blocks_dict=custom_blocks)
+            print(f"[Exporter] Rasterized {len(custom_blocks)} custom geometry blocks.")
         
         regions = {}
-        for (x, y, z) in custom_blocks.keys():
-            rx = int(math.floor(x / 512.0))
-            rz = int(math.floor(z / 512.0))
-            regions.setdefault((rx, rz), []).append((x, y, z))
+        if provider.dict is not None:
+            for (x, y, z) in provider.dict.keys():
+                rx = int(math.floor(x / 512.0))
+                rz = int(math.floor(z / 512.0))
+                regions.setdefault((rx, rz), []).append((x, y, z))
+        elif provider.data is not None:
+            x_arr, y_arr, z_arr, block_ids, palette = provider.data
+            rx_arr = (x_arr // 512).astype(np.int32)
+            rz_arr = (z_arr // 512).astype(np.int32)
+            coords = np.column_stack((rx_arr, rz_arr))
+            unique_regions = np.unique(coords, axis=0)
+            for rx, rz in unique_regions:
+                regions[(int(rx), int(rz))] = None
             
         os.makedirs(region_dir, exist_ok=True)
         
@@ -824,7 +910,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         
         regions_to_generate = []
         skipped_regions = 0
-        for (rx, rz), pts in sorted_regions:
+        for (rx, rz), _ in sorted_regions:
             mca_path = os.path.join(region_dir, f"r.{rx}.{rz}.mca")
             if os.path.exists(mca_path):
                 try:
@@ -834,7 +920,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                         continue
                 except Exception:
                     print(f"[Exporter Warning] Region r.{rx}.{rz}.mca on disk is corrupted. Re-generating...")
-            regions_to_generate.append(((rx, rz), pts))
+            regions_to_generate.append((rx, rz))
             
         if skipped_regions > 0:
             print(f"[Exporter] Incremental export: skipped {skipped_regions} already generated valid region files.")
@@ -844,11 +930,12 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
         try:
             futures = {}
-            for (rx, rz), pts in regions_to_generate:
+            for (rx, rz) in regions_to_generate:
                 mca_path = os.path.join(region_dir, f"r.{rx}.{rz}.mca")
+                region_blocks, pts = provider.get_blocks_and_pts_for_region(rx, rz)
                 f = executor.submit(
                     export_single_region,
-                    rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache, cancel_event
+                    rx, rz, pts, mca_path, region_blocks, interpolator, y_offset, height_cache, cancel_event
                 )
                 futures[f] = (rx, rz)
                 
@@ -904,7 +991,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         if 'executor' in locals():
             executor.shutdown(wait=False, cancel_futures=True)
         if 'cache_path' in locals() and 'custom_blocks' in locals() and custom_blocks:
-            save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx)
+            save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx, custom_blocks_data)
             
     # Always save height cache
     height_cache.save()
