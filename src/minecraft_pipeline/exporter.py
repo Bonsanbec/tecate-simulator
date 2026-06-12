@@ -76,6 +76,43 @@ def load_custom_blocks_cache(cache_path):
         print(f"[Exporter Warning] Failed to load custom blocks cache: {e}. Re-rasterizing from scratch...")
         return {}, 0, 0
 
+def rasterize_single_block(b, get_mc_terrain_y, cancel_event):
+    local_blocks = {}
+    poly = b["polygon"]
+    poly_mc = [[pt[0], -pt[1]] for pt in poly]
+    
+    xs_poly = [pt[0] for pt in poly_mc]
+    zs_poly = [pt[1] for pt in poly_mc]
+    if not xs_poly or not zs_poly:
+        return local_blocks
+        
+    min_x_p = int(math.floor(min(xs_poly)))
+    max_x_p = int(math.ceil(max(xs_poly)))
+    min_z_p = int(math.floor(min(zs_poly)))
+    max_z_p = int(math.ceil(max(zs_poly)))
+    
+    for x_mc in range(min_x_p, max_x_p + 1):
+        if cancel_event.is_set():
+            return local_blocks
+        for z_mc in range(min_z_p, max_z_p + 1):
+            if point_in_polygon(x_mc, z_mc, poly_mc):
+                d_boundary = distance_to_polygon_boundary(x_mc, z_mc, poly_mc)
+                y_mc = get_mc_terrain_y(x_mc, z_mc)
+                
+                y_platform = y_mc + 1
+                
+                if d_boundary <= 2.0:
+                    if d_boundary <= 1.0:
+                        block_name = "minecraft:polished_andesite"
+                    else:
+                        block_name = "minecraft:smooth_stone"
+                else:
+                    block_name = "minecraft:light_gray_concrete"
+                    
+                local_blocks[(x_mc, y_platform, z_mc)] = block_name
+                local_blocks[(x_mc, y_mc, z_mc)] = "minecraft:dirt"
+    return local_blocks
+
 class TerrainHeightCache:
     """
     A thread-safe caching system for terrain height lookups to avoid
@@ -705,50 +742,63 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         # B. Rasterize block lots (manzanas) with perimetral sidewalks (overwriting road overlaps)
         num_blocks = len(blocks)
         if last_block_idx < num_blocks:
-            print(f"[Exporter] Rasterizing block platforms starting from index {last_block_idx}...")
-            for idx in range(last_block_idx, num_blocks):
-                if cancel_event.is_set():
-                    raise KeyboardInterrupt()
-                b = blocks[idx]
-                if (idx + 1) % 50 == 0 or idx + 1 == num_blocks:
-                    print_progress("[Exporter] Rasterizing block platforms", idx + 1, num_blocks)
-                poly = b["polygon"]
-                poly_mc = [[pt[0], -pt[1]] for pt in poly]
+            workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
+            print(f"[Exporter] Rasterizing block platforms in parallel using {workers} threads...")
+            
+            completed_flags = [False] * num_blocks
+            for i in range(last_block_idx):
+                completed_flags[i] = True
                 
-                xs_poly = [pt[0] for pt in poly_mc]
-                zs_poly = [pt[1] for pt in poly_mc]
-                if not xs_poly or not zs_poly:
-                    continue
-                min_x_p = int(math.floor(min(xs_poly)))
-                max_x_p = int(math.ceil(max(xs_poly)))
-                min_z_p = int(math.floor(min(zs_poly)))
-                max_z_p = int(math.ceil(max(zs_poly)))
+            progress_lock = threading.Lock()
+            completed_count = last_block_idx
+            
+            def progress_callback(block_idx):
+                nonlocal last_block_idx, completed_count
+                completed_flags[block_idx] = True
+                with progress_lock:
+                    completed_count += 1
+                    while last_block_idx < num_blocks and completed_flags[last_block_idx]:
+                        last_block_idx += 1
+                    if completed_count % 50 == 0 or completed_count == num_blocks:
+                        print_progress("[Exporter] Rasterizing block platforms", completed_count, num_blocks)
+                        
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
+            try:
+                futures = {}
+                for idx in range(last_block_idx, num_blocks):
+                    if cancel_event.is_set():
+                        break
+                    b = blocks[idx]
+                    f = executor.submit(
+                        rasterize_single_block,
+                        b, get_mc_terrain_y, cancel_event
+                    )
+                    futures[f] = idx
+                    
+                active_futures = list(futures.keys())
+                while active_futures:
+                    if cancel_event.is_set():
+                        break
+                    done, not_done = concurrent.futures.wait(
+                        active_futures,
+                        timeout=0.2,
+                        return_when=concurrent.futures.FIRST_COMPLETED
+                    )
+                    for f in done:
+                        block_idx = futures[f]
+                        try:
+                            res = f.result()
+                            custom_blocks.update(res)
+                        except Exception as e:
+                            print(f"\n[Exporter Error] Failed to rasterize block {block_idx}: {e}")
+                        progress_callback(block_idx)
+                        active_futures.remove(f)
+            finally:
+                executor.shutdown(wait=False, cancel_futures=True)
                 
-                for x_mc in range(min_x_p, max_x_p + 1):
-                    for z_mc in range(min_z_p, max_z_p + 1):
-                        if point_in_polygon(x_mc, z_mc, poly_mc):
-                            d_boundary = distance_to_polygon_boundary(x_mc, z_mc, poly_mc)
-                            y_mc = get_mc_terrain_y(x_mc, z_mc)
-                            
-                            y_platform = y_mc + 1
-                            
-                            if d_boundary <= 2.0:
-                                # Sidewalk zone
-                                if d_boundary <= 1.0:
-                                    # Curb
-                                    block_name = "minecraft:polished_andesite"
-                                else:
-                                    # Main sidewalk
-                                    block_name = "minecraft:smooth_stone"
-                            else:
-                                # Lot interior
-                                block_name = "minecraft:light_gray_concrete"
-                                
-                            custom_blocks[(x_mc, y_platform, z_mc)] = block_name
-                            custom_blocks[(x_mc, y_mc, z_mc)] = "minecraft:dirt"
-                last_block_idx = idx + 1
             # We computed new blocks, save the cache
-            save_custom_blocks_cache(cache_path, custom_blocks, num_edges, num_blocks)
+            if not cancel_event.is_set():
+                save_custom_blocks_cache(cache_path, custom_blocks, num_edges, num_blocks)
         else:
             print("[Exporter] Block platforms rasterization already fully completed.")
                         
