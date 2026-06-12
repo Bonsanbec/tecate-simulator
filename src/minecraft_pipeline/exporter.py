@@ -393,14 +393,22 @@ def get_deterministic_choice(x, y, z, choices, weights):
             return choice
     return choices[-1]
 
-def print_progress(label, completed, total):
-    """Prints a highly efficient text-based progress bar on a single line."""
+def print_progress(label, completed, total, start_time=None):
+    """Prints a highly efficient text-based progress bar on a single line with optional speed indicator."""
     if total <= 0:
         return
     pct = int(100 * completed / total)
     filled = int(30 * completed / total)
     bar = "=" * filled + " " * (30 - filled)
-    sys.stdout.write(f"\r{label}: [{bar}] {pct}% ({completed}/{total})")
+    
+    speed_str = ""
+    if start_time is not None:
+        elapsed = time.time() - start_time
+        if elapsed > 0.05 and completed > 0:
+            speed = completed / elapsed
+            speed_str = f" @ {speed:.1f} items/s"
+            
+    sys.stdout.write(f"\r{label}: [{bar}] {pct}% ({completed}/{total}){speed_str}")
     sys.stdout.flush()
     if completed >= total:
         sys.stdout.write("\n")
@@ -630,12 +638,13 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         num_edges = len(edges)
         if last_edge_idx < num_edges:
             print(f"[Exporter] Rasterizing road network starting from index {last_edge_idx}...")
+            t_start_road = time.time()
             for idx in range(last_edge_idx, num_edges):
                 if cancel_event.is_set():
                     raise KeyboardInterrupt()
                 ed = edges[idx]
                 if (idx + 1) % 20 == 0 or idx + 1 == num_edges:
-                    print_progress("[Exporter] Rasterizing road network", idx + 1, num_edges)
+                    print_progress("[Exporter] Rasterizing road network", idx + 1, num_edges, t_start_road)
                 u_nd = node_map.get(ed["u"])
                 v_nd = node_map.get(ed["v"])
                 if u_nd and v_nd:
@@ -744,6 +753,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         if last_block_idx < num_blocks:
             workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
             print(f"[Exporter] Rasterizing block platforms in parallel using {workers} threads...")
+            t_start_blocks = time.time()
             
             completed_flags = [False] * num_blocks
             for i in range(last_block_idx):
@@ -760,7 +770,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                     while last_block_idx < num_blocks and completed_flags[last_block_idx]:
                         last_block_idx += 1
                     if completed_count % 50 == 0 or completed_count == num_blocks:
-                        print_progress("[Exporter] Rasterizing block platforms", completed_count, num_blocks)
+                        print_progress("[Exporter] Rasterizing block platforms", completed_count, num_blocks, t_start_blocks)
                         
             executor = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
             try:
@@ -855,7 +865,8 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             completed_regions = 0
             total_regions = len(futures)
             if total_regions > 0:
-                print_progress("[Exporter] Generating region MCA files", 0, total_regions)
+                t_start_regions = time.time()
+                print_progress("[Exporter] Generating region MCA files", 0, total_regions, t_start_regions)
                 active_futures = list(futures.keys())
                 while active_futures:
                     if cancel_event.is_set():
@@ -872,7 +883,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                         except Exception as e:
                             print(f"\n[Exporter Error] Failed to generate region r.{rx}.{rz}: {e}")
                         completed_regions += 1
-                        print_progress("[Exporter] Generating region MCA files", completed_regions, total_regions)
+                        print_progress("[Exporter] Generating region MCA files", completed_regions, total_regions, t_start_regions)
                         active_futures.remove(future)
             else:
                 print("[Exporter] All regions are already generated and valid. Nothing to do.")
