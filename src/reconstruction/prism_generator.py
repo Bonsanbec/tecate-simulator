@@ -2236,6 +2236,7 @@ class UrbanBlockReconstructor:
             captured_url = f"https://www.google.com/maps?layer=c&cbll={cam_lat},{cam_lon}&panoid={pano_id}&cbp=11,{heading:.2f},,0,0"
 
             # Save caches thread-safely
+            with self.cache_lock:
                 self.panoramas_cache[pano_id] = {
                     "latitude": cam_lat,
                     "longitude": cam_lon,
