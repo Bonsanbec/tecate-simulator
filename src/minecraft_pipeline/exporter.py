@@ -662,7 +662,7 @@ def print_progress(label, completed, total, start_time=None):
         sys.stdout.write("\n")
         sys.stdout.flush()
 
-def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache, cancel_event=None):
+def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache, cancel_event=None, min_s_y=-4, max_s_y=20):
     """Generates MCA chunks for a single region (runs in worker thread)."""
     region = MCARegion(rx, rz)
     
@@ -715,7 +715,7 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
         has_custom = bool(chunk_dict)
         
         sections_nbt_list = []
-        for s_y in range(-4, 20):
+        for s_y in range(min_s_y, max_s_y):
             y_min_sec = s_y * 16
             palette_map = {"minecraft:air": 0}
             palette_list = ["minecraft:air"]
@@ -781,7 +781,7 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
             NBT(TAG_INT, "DataVersion", 3463),
             NBT(TAG_INT, "xPos", cx_global),
             NBT(TAG_INT, "zPos", cz_global),
-            NBT(TAG_INT, "yPos", -4),
+            NBT(TAG_INT, "yPos", min_s_y),
             NBT(TAG_STRING, "Status", "full"),
             NBT(TAG_LIST, "sections", (TAG_COMPOUND, sections_nbt_list))
         ])
@@ -1118,6 +1118,18 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         sorted_regions = sorted(regions.items(), key=region_distance)
         print(f"[Exporter] Prioritized {len(sorted_regions)} regions by geographic proximity to city center.")
         
+        # Determine the vertical range of the world dynamically from the GLB terrain vertices
+        glb_min_y = float(interpolator.y_pts.min())
+        glb_max_y = float(interpolator.y_pts.max())
+        
+        min_mc_y = glb_min_y - y_offset
+        max_mc_y = glb_max_y - y_offset
+        
+        min_s_y = int(math.floor(min_mc_y / 16.0))
+        max_s_y = int(math.ceil(max_mc_y / 16.0))
+        
+        print(f"[Exporter] Dynamic world height range: Y = [{min_s_y * 16}, {max_s_y * 16}] (Sections: {min_s_y} to {max_s_y})")
+
         regions_to_generate = []
         skipped_regions = 0
         for (rx, rz), pts in sorted_regions:
@@ -1144,7 +1156,8 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 mca_path = os.path.join(region_dir, f"r.{rx}.{rz}.mca")
                 f = executor.submit(
                     export_single_region,
-                    rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache, cancel_event
+                    rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache,
+                    cancel_event, min_s_y, max_s_y
                 )
                 futures[f] = (rx, rz)
                 
@@ -1269,6 +1282,18 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         
         level_root = NBT(TAG_COMPOUND, "", [level_data_nbt])
         save_gzip(level_root, level_dat_path)
+        
+        # Copy the Higher Heights datapack into the world's datapacks directory
+        import shutil
+        datapacks_dir = os.path.join(world_dir, "datapacks")
+        os.makedirs(datapacks_dir, exist_ok=True)
+        
+        for item in os.listdir(output_dir):
+            if item.endswith(".zip") and "HigherHeights" in item:
+                src_path = os.path.join(output_dir, item)
+                dst_path = os.path.join(datapacks_dir, item)
+                shutil.copy2(src_path, dst_path)
+                print(f"[Exporter] Activated Higher Heights datapack: {item}")
         
         # Calculate final merged bounding box BBox
         final_min_x = min_x
