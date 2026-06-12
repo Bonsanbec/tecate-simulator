@@ -328,14 +328,10 @@ def test_rasterize_single_block():
     
     blocks = rasterize_single_block(b, mock_get_terrain_y, cancel_event)
     
-    # Check that platforms are placed at Y=13, dirt at Y=12
-    assert (5, 13, -5) in blocks
-    assert blocks[(5, 13, -5)] == "minecraft:light_gray_concrete"
-    assert blocks[(5, 12, -5)] == "minecraft:dirt"
-    
-    # Curb/Sidewalk at the boundary
-    assert (1, 13, -1) in blocks
-    assert blocks[(1, 13, -1)] in ["minecraft:polished_andesite", "minecraft:smooth_stone"]
+    # Check that platforms are placed at Y=13, and points with d_boundary > 1.0 are skipped
+    assert (1, 13, -9) in blocks
+    assert blocks[(1, 13, -9)] == "minecraft:yellow_concrete"
+    assert (5, 13, -5) not in blocks
 
 def test_rasterize_single_block_batch_heights():
     """Verifies that rasterize_single_block correctly accepts interpolator and caches height values in batch."""
@@ -376,8 +372,9 @@ def test_rasterize_single_block_batch_heights():
         interpolator=interpolator, y_offset=230, height_cache=height_cache
     )
     
-    assert (5, -217, -5) in blocks
-    assert blocks[(5, -217, -5)] == "minecraft:light_gray_concrete"
+    assert (1, -217, -9) in blocks
+    assert blocks[(1, -217, -9)] == "minecraft:yellow_concrete"
+    assert (5, -217, -5) not in blocks
     assert interpolator.batch_queried_count > 0
     assert interpolator.queried_count == 0
 
