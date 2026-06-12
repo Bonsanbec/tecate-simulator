@@ -402,8 +402,8 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         ]
         corner_heights = [interpolator.query_height(c[0], -c[1]) for c in active_corners]
         min_height = min(corner_heights)
-        y_offset = int(math.floor(min_height)) - 10
-        print(f"[Exporter] Minimum terrain height: {min_height:.2f}m. Set vertical offset Y_offset = {y_offset}m.")
+        y_offset = int(math.floor(min_height)) + 60
+        print(f"[Exporter] Minimum terrain height: {min_height:.2f}m. Set vertical offset Y_offset = {y_offset}m (baseline Y = -60).")
         
         # Define height resolver using pre-built cell interpolators
         def get_mc_terrain_y(x_mc, z_mc):
