@@ -310,7 +310,7 @@ def test_custom_blocks_cache_roundtrip(tmp_path):
     loaded_blocks, le_idx, lb_idx, loaded_completed = load_custom_blocks_cache(cache_path)
     
     # Assert correctness
-    assert loaded_blocks == custom_blocks
+    assert dict(loaded_blocks.items()) == custom_blocks
     assert le_idx == last_edge_idx
     assert lb_idx == last_block_idx
     assert loaded_completed == completed_block_indices
@@ -380,6 +380,64 @@ def test_rasterize_single_block_batch_heights():
     assert blocks[(5, -217, -5)] == "minecraft:light_gray_concrete"
     assert interpolator.batch_queried_count > 0
     assert interpolator.queried_count == 0
+
+def test_voxel_map_operations():
+    """Verifies that VoxelMap behaves exactly equivalent to a standard Python dictionary for custom block storage."""
+    from src.minecraft_pipeline.exporter import VoxelMap
+    import numpy as np
+    
+    x = np.array([5, 10, 20, 25], dtype=np.int32)
+    y = np.array([60, 60, 61, 62], dtype=np.int32)
+    z = np.array([5, 10, 20, 40], dtype=np.int32)
+    
+    block_ids = np.array([0, 1, 0, 2], dtype=np.uint8)
+    palette = ["minecraft:dirt", "minecraft:stone", "minecraft:grass_block"]
+    
+    voxel_map = VoxelMap(x, y, z, block_ids, palette)
+    
+    assert len(voxel_map) == 4
+    
+    chunk_0_0 = voxel_map.get_chunk_dict(0, 0)
+    assert chunk_0_0 == {
+        (5, 60, 5): "minecraft:dirt",
+        (10, 60, 10): "minecraft:stone"
+    }
+    
+    chunk_1_1 = voxel_map.get_chunk_dict(1, 1)
+    assert chunk_1_1 == {
+        (20, 61, 20): "minecraft:dirt"
+    }
+    
+    chunk_1_2 = voxel_map.get_chunk_dict(1, 2)
+    assert chunk_1_2 == {
+        (25, 62, 40): "minecraft:grass_block"
+    }
+    
+    assert voxel_map.get_chunk_dict(5, 5) == {}
+    
+    new_blocks = {
+        (8, 60, 8): "minecraft:glass",
+        (30, 63, 30): "minecraft:yellow_wool"
+    }
+    voxel_map.update(new_blocks)
+    
+    assert len(voxel_map) == 6
+    
+    chunk_0_0_updated = voxel_map.get_chunk_dict(0, 0)
+    assert chunk_0_0_updated[(8, 60, 8)] == "minecraft:glass"
+    assert len(chunk_0_0_updated) == 3
+    
+    chunk_1_1_updated = voxel_map.get_chunk_dict(1, 1)
+    assert chunk_1_1_updated[(30, 63, 30)] == "minecraft:yellow_wool"
+    assert len(chunk_1_1_updated) == 2
+    
+    items = list(voxel_map.items())
+    assert len(items) == 6
+    coords = [item[0] for item in items]
+    assert (5, 60, 5) in coords
+    assert (8, 60, 8) in coords
+    assert (30, 63, 30) in coords
+
 
 
 
