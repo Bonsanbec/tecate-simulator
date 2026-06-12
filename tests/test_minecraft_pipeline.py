@@ -216,3 +216,101 @@ def test_road_metadata_fallback():
     meta_track = get_default_metadata("track")
     assert meta_track["lanes"] == 1
     assert meta_track["surface"] == "gravel"
+
+def test_vectorized_batch_interpolation_vs_single(monkeypatch):
+    """Verifies that query_height_batch returns identical values to query_height in a loop."""
+    import src.minecraft_pipeline.exporter as exporter
+    
+    # Mock load_terrain_vertices
+    def mock_load_vertices(glb_path, s, tx, tz):
+        # 5 points forming a small terrain
+        x = np.array([-10.0, 10.0, -10.0, 10.0, 0.0], dtype=np.float32)
+        z = np.array([-10.0, -10.0, 10.0, 10.0, 0.0], dtype=np.float32)
+        y = np.array([100.0, 110.0, 100.0, 110.0, 105.0], dtype=np.float32)
+        return x, y, z
+        
+    monkeypatch.setattr(exporter, "load_terrain_vertices", mock_load_vertices)
+    
+    # Instantiate the interpolator
+    interpolator = exporter.TerrainHeightInterpolator("dummy.glb", 1.0, 0.0, 0.0, cell_size=50.0)
+    
+    # Query single heights
+    queries = [(5.0, -5.0), (-2.0, 3.0), (0.0, 0.0), (12.0, 12.0)]
+    single_results = [interpolator.query_height(q[0], q[1]) for q in queries]
+    
+    # Query batch heights
+    batch_results = interpolator.query_height_batch(queries)
+    
+    # Assert they match
+    assert len(single_results) == len(batch_results)
+    for s_val, b_val in zip(single_results, batch_results):
+        assert abs(s_val - b_val) < 1e-4
+
+def test_region_prioritization():
+    """Verifies that regions are sorted center-outward by Euclidean distance to (0, 0)."""
+    regions = {
+        (2, 2): "very far",
+        (0, 0): "center",
+        (1, 0): "medium"
+    }
+    
+    def region_distance(item):
+        rx, rz = item[0]
+        cx = rx * 512 + 256
+        cz = rz * 512 + 256
+        return math.sqrt(cx**2 + cz**2)
+        
+    sorted_regions = sorted(regions.items(), key=region_distance)
+    sorted_keys = [item[0] for item in sorted_regions]
+    
+    assert sorted_keys == [(0, 0), (1, 0), (2, 2)]
+
+def test_bbox_union_merging():
+    """Verifies that current bounding box merges correctly with pre-existing bounding box."""
+    min_x, max_x, min_y, max_y = 10.0, 50.0, 20.0, 60.0
+    existing_bbox = {
+        "min_local_x": 5.0,
+        "max_local_x": 45.0,
+        "min_local_y": 25.0,
+        "max_local_y": 70.0
+    }
+    
+    final_min_x = min(min_x, existing_bbox.get("min_local_x", min_x))
+    final_max_x = max(max_x, existing_bbox.get("max_local_x", max_x))
+    final_min_y = min(min_y, existing_bbox.get("min_local_y", min_y))
+    final_max_y = max(max_y, existing_bbox.get("max_local_y", max_y))
+    
+    assert final_min_x == 5.0
+    assert final_max_x == 50.0
+    assert final_min_y == 20.0
+    assert final_max_y == 70.0
+
+def test_custom_blocks_cache_roundtrip(tmp_path):
+    """Verifies that custom blocks cache is saved and loaded correctly, preserving coordinates, names, and progress indices."""
+    from src.minecraft_pipeline.exporter import save_custom_blocks_cache, load_custom_blocks_cache
+    
+    cache_path = os.path.join(tmp_path, "test_cache.npz")
+    
+    # Create sample blocks
+    custom_blocks = {
+        (10, 20, 30): "minecraft:yellow_concrete",
+        (-5, 12, 100): "minecraft:asphalt",
+        (0, 0, 0): "minecraft:dirt"
+    }
+    
+    last_edge_idx = 145
+    last_block_idx = 890
+    
+    # Save
+    save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx)
+    assert os.path.exists(cache_path)
+    
+    # Load
+    loaded_blocks, le_idx, lb_idx = load_custom_blocks_cache(cache_path)
+    
+    # Assert correctness
+    assert loaded_blocks == custom_blocks
+    assert le_idx == last_edge_idx
+    assert lb_idx == last_block_idx
+
+

@@ -6,11 +6,75 @@ import sys
 import threading
 import concurrent.futures
 import hashlib
+import time
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from .nbt import NBT, TAG_COMPOUND, TAG_LIST, TAG_STRING, TAG_INT, TAG_LONG, TAG_BYTE, TAG_DOUBLE, TAG_LONG_ARRAY, save_gzip
 from .mca import MCARegion, pack_block_states
 from .road_metadata_cache import get_edge_key, extract_and_cache_road_metadata, get_default_metadata
+
+def save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx):
+    try:
+        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+        palette = list(set(custom_blocks.values()))
+        palette_map = {name: idx for idx, name in enumerate(palette)}
+        
+        n = len(custom_blocks)
+        x_arr = np.empty(n, dtype=np.int32)
+        y_arr = np.empty(n, dtype=np.int32)
+        z_arr = np.empty(n, dtype=np.int32)
+        block_ids = np.empty(n, dtype=np.uint8)
+        
+        for idx, ((x, y, z), name) in enumerate(custom_blocks.items()):
+            x_arr[idx] = x
+            y_arr[idx] = y
+            z_arr[idx] = z
+            block_ids[idx] = palette_map[name]
+            
+        np.savez_compressed(
+            cache_path,
+            x=x_arr,
+            y=y_arr,
+            z=z_arr,
+            block_ids=block_ids,
+            palette=np.array(palette),
+            last_edge_idx=np.array(last_edge_idx),
+            last_block_idx=np.array(last_block_idx)
+        )
+        print(f"[Exporter] Cache saved successfully: {cache_path} (edge progress: {last_edge_idx}, block progress: {last_block_idx})")
+    except Exception as e:
+        print(f"[Exporter Warning] Failed to save custom blocks cache: {e}")
+
+def load_custom_blocks_cache(cache_path):
+    if not os.path.exists(cache_path):
+        return {}, 0, 0
+        
+    print(f"[Exporter] Loading pre-rasterized geometry from cache: {cache_path}")
+    start_time = time.time()
+    try:
+        with np.load(cache_path) as data:
+            x_arr = data['x']
+            y_arr = data['y']
+            z_arr = data['z']
+            block_ids = data['block_ids']
+            palette = data['palette']
+            last_edge_idx = int(data.get('last_edge_idx', 0))
+            last_block_idx = int(data.get('last_block_idx', 0))
+            
+        x_list = x_arr.tolist()
+        y_list = y_arr.tolist()
+        z_list = z_arr.tolist()
+        block_ids_list = block_ids.tolist()
+        palette_list = [str(p) for p in palette]
+        
+        palette_map = [palette_list[bid] for bid in block_ids_list]
+        keys = list(zip(x_list, y_list, z_list))
+        custom_blocks = dict(zip(keys, palette_map))
+        print(f"[Exporter] Loaded {len(custom_blocks)} custom blocks from cache in {time.time() - start_time:.2f} seconds (progress: edge {last_edge_idx}, block {last_block_idx}).")
+        return custom_blocks, last_edge_idx, last_block_idx
+    except Exception as e:
+        print(f"[Exporter Warning] Failed to load custom blocks cache: {e}. Re-rasterizing from scratch...")
+        return {}, 0, 0
 
 class TerrainHeightCache:
     """
@@ -172,6 +236,54 @@ class TerrainHeightInterpolator:
             
         return float(h)
 
+    def query_height_batch(self, coords):
+        """
+        Performs batch queries of coordinates (x, z), grouping them by cell to do
+        highly efficient vectorized cell-based interpolations in SciPy.
+        """
+        coords_arr = np.array(coords, dtype=np.float32)
+        results = np.empty(len(coords_arr), dtype=np.float32)
+        if len(coords_arr) == 0:
+            return results
+            
+        cell_groups = {}
+        for idx, (x, z) in enumerate(coords_arr):
+            cx = int(math.floor(x / self.cell_size))
+            cz = int(math.floor(z / self.cell_size))
+            cell_groups.setdefault((cx, cz), []).append(idx)
+            
+        for (cx, cz), indices in cell_groups.items():
+            lin_interp, near_interp = self.get_interpolator(cx, cz)
+            cell_coords = coords_arr[indices]
+            
+            if near_interp is None:
+                results[indices] = 400.0
+                continue
+                
+            cell_h = np.empty(len(indices), dtype=np.float32)
+            cell_h.fill(np.nan)
+            
+            if lin_interp is not None:
+                try:
+                    cell_h = lin_interp(cell_coords)
+                except Exception:
+                    try:
+                        cell_h = lin_interp(cell_coords[:, 0], cell_coords[:, 1])
+                    except Exception:
+                        pass
+                        
+            nan_mask = np.isnan(cell_h)
+            if np.any(nan_mask):
+                try:
+                    near_h = near_interp(cell_coords[nan_mask])
+                except Exception:
+                    near_h = near_interp(cell_coords[nan_mask, 0], cell_coords[nan_mask, 1])
+                cell_h[nan_mask] = near_h
+                
+            results[indices] = cell_h
+            
+        return results
+
 def draw_line_3d(x1, y1, z1, x2, y2, z2):
     pts = []
     dx = x2 - x1
@@ -244,7 +356,20 @@ def get_deterministic_choice(x, y, z, choices, weights):
             return choice
     return choices[-1]
 
-def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache):
+def print_progress(label, completed, total):
+    """Prints a highly efficient text-based progress bar on a single line."""
+    if total <= 0:
+        return
+    pct = int(100 * completed / total)
+    filled = int(30 * completed / total)
+    bar = "=" * filled + " " * (30 - filled)
+    sys.stdout.write(f"\r{label}: [{bar}] {pct}% ({completed}/{total})")
+    sys.stdout.flush()
+    if completed >= total:
+        sys.stdout.write("\n")
+        sys.stdout.flush()
+
+def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache, cancel_event=None):
     """Generates MCA chunks for a single region (runs in worker thread)."""
     region = MCARegion(rx, rz)
     
@@ -261,7 +386,28 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
                 if 0 <= ccx < 32 and 0 <= ccz < 32:
                     region_chunks.add((ccx, ccz))
                     
+    # Pre-resolve all terrain heights for the region in batch to optimize SciPy calls
+    missing_queries = []
     for (cx_local, cz_local) in region_chunks:
+        cx_global = rx * 32 + cx_local
+        cz_global = rz * 32 + cz_local
+        for dx in range(16):
+            for dz in range(16):
+                x_val = cx_global * 16 + dx
+                z_val = cz_global * 16 + dz
+                if height_cache.get(x_val, z_val) is None:
+                    missing_queries.append((x_val, -z_val))
+                    
+    if missing_queries:
+        batch_heights = interpolator.query_height_batch(missing_queries)
+        for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
+            z_val = -mz_q
+            cached_h = int(round(h_real)) - y_offset
+            height_cache.set(x_q, z_val, cached_h)
+                    
+    for (cx_local, cz_local) in region_chunks:
+        if cancel_event is not None and cancel_event.is_set():
+            return
         cx_global = rx * 32 + cx_local
         cz_global = rz * 32 + cz_local
         
@@ -352,14 +498,30 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
     world_dir = os.path.join(output_dir, "TecateWorld")
     region_dir = os.path.join(world_dir, "region")
     
+    # Load existing metadata if available for incremental consistency
+    metadata_path = os.path.join(world_dir, "tecate_metadata.json")
+    existing_metadata = None
+    y_offset_override = None
+    existing_bbox = None
+    if os.path.exists(metadata_path):
+        try:
+            with open(metadata_path, 'r', encoding='utf-8') as f:
+                existing_metadata = json.load(f)
+            y_offset_override = existing_metadata.get("vertical_offset")
+            existing_bbox = existing_metadata.get("bbox")
+            print(f"[Exporter] Loaded existing metadata. Reusing vertical offset Y_offset = {y_offset_override}m.")
+        except Exception as e:
+            print(f"[Exporter Warning] Failed to load existing metadata: {e}")
+            
     s = 0.84277856
     tx = 28057.9043
     tz = 16614.8854
     
+    cancel_event = threading.Event()
     height_cache = TerrainHeightCache()
     
     # Pre-define helper as None to prevent UnboundLocalError during early Ctrl+C
-    get_mc_terrain_y = None
+    resolver_ready = False
     y_offset = 0
     min_x, max_x, min_y, max_y = 0.0, 0.0, 0.0, 0.0
     
@@ -402,8 +564,11 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         ]
         corner_heights = [interpolator.query_height(c[0], -c[1]) for c in active_corners]
         min_height = min(corner_heights)
-        y_offset = int(math.floor(min_height)) + 60
-        print(f"[Exporter] Minimum terrain height: {min_height:.2f}m. Set vertical offset Y_offset = {y_offset}m (baseline Y = -60).")
+        if y_offset_override is not None:
+            y_offset = y_offset_override
+        else:
+            y_offset = int(math.floor(min_height)) + 60
+            print(f"[Exporter] Minimum terrain height: {min_height:.2f}m. Set vertical offset Y_offset = {y_offset}m (baseline Y = -60).")
         
         # Define height resolver using pre-built cell interpolators
         def get_mc_terrain_y(x_mc, z_mc):
@@ -413,152 +578,179 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 h = int(round(h_real)) - y_offset
                 height_cache.set(x_mc, z_mc, h)
             return h
+        
+        resolver_ready = True
     
         print("[Exporter] Rasterizing road networks and custom block lot platforms...")
-        custom_blocks = {}
+        cache_path = os.path.join(output_dir, "custom_blocks_cache.npz")
+        custom_blocks, last_edge_idx, last_block_idx = load_custom_blocks_cache(cache_path)
         
         # A. Rasterize road graph (first, so block platforms can overwrite/clip them)
         nodes = road_graph.get("nodes", [])
         edges = road_graph.get("edges", [])
         node_map = {nd["id"]: nd for nd in nodes}
         
-        for ed in edges:
-            u_nd = node_map.get(ed["u"])
-            v_nd = node_map.get(ed["v"])
-            if u_nd and v_nd:
-                x1, z1 = u_nd["x"], -u_nd["y"]
-                x2, z2 = v_nd["x"], -v_nd["y"]
-                
-                key = get_edge_key(ed["u"], ed["v"])
-                meta = edge_metadata.get(key, {})
-                hw = meta.get("highway", "residential")
-                lanes = meta.get("lanes", 2)
-                width = meta.get("width", 6.0)
-                surface = meta.get("surface", "asphalt")
-                
-                is_rural = (surface in ["gravel", "dirt", "earth", "ground", "sand", "grass"]) or (hw in ["track", "path", "bridleway"])
-                
-                dx = x2 - x1
-                dz = z2 - z1
-                dist = math.sqrt(dx*dx + dz*dz)
-                if dist < 1e-5:
-                    continue
+        num_edges = len(edges)
+        if last_edge_idx < num_edges:
+            print(f"[Exporter] Rasterizing road network starting from index {last_edge_idx}...")
+            for idx in range(last_edge_idx, num_edges):
+                if cancel_event.is_set():
+                    raise KeyboardInterrupt()
+                ed = edges[idx]
+                if (idx + 1) % 20 == 0 or idx + 1 == num_edges:
+                    print_progress("[Exporter] Rasterizing road network", idx + 1, num_edges)
+                u_nd = node_map.get(ed["u"])
+                v_nd = node_map.get(ed["v"])
+                if u_nd and v_nd:
+                    x1, z1 = u_nd["x"], -u_nd["y"]
+                    x2, z2 = v_nd["x"], -v_nd["y"]
                     
-                perp_x = -dz / dist
-                perp_z = dx / dist
-                
-                # Add padding to ensure road overlaps block boundaries and gets clipped perfectly
-                w_adjusted = width + 3
-                half_w = w_adjusted / 2.0
-                
-                steps = int(math.ceil(dist * 2))
-                for step in range(steps + 1):
-                    t = step / steps
-                    cx = x1 + t * dx
-                    cz = z1 + t * dz
+                    key = get_edge_key(ed["u"], ed["v"])
+                    meta = edge_metadata.get(key, {})
+                    hw = meta.get("highway", "residential")
+                    lanes = meta.get("lanes", 2)
+                    width = meta.get("width", 6.0)
+                    surface = meta.get("surface", "asphalt")
                     
-                    dist_along = t * dist
-                    is_near_intersection = (dist_along < 4.0) or ((dist - dist_along) < 4.0)
+                    is_rural = (surface in ["gravel", "dirt", "earth", "ground", "sand", "grass"]) or (hw in ["track", "path", "bridleway"])
                     
-                    d_min = int(math.floor(-half_w))
-                    d_max = int(math.ceil(half_w))
-                    for d in range(d_min, d_max + 1):
-                        px = cx + d * perp_x
-                        pz = cz + d * perp_z
+                    dx = x2 - x1
+                    dz = z2 - z1
+                    dist = math.sqrt(dx*dx + dz*dz)
+                    if dist < 1e-5:
+                        continue
                         
-                        x_mc = int(round(px))
-                        z_mc = int(round(pz))
-                        y_mc = get_mc_terrain_y(x_mc, z_mc)
+                    perp_x = -dz / dist
+                    perp_z = dx / dist
+                    
+                    # Add padding to ensure road overlaps block boundaries and gets clipped perfectly
+                    w_adjusted = width + 3
+                    half_w = w_adjusted / 2.0
+                    
+                    steps = int(math.ceil(dist * 2))
+                    for step in range(steps + 1):
+                        t = step / steps
+                        cx = x1 + t * dx
+                        cz = z1 + t * dz
                         
-                        if is_rural:
-                            # Rural/historical road materials
-                            choices = [
-                                "minecraft:gravel",
-                                "minecraft:cobblestone",
-                                "minecraft:coarse_dirt",
-                                "minecraft:andesite",
-                                "minecraft:mossy_cobblestone"
-                            ]
-                            weights = [0.5, 0.25, 0.15, 0.05, 0.05]
-                            block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
+                        dist_along = t * dist
+                        is_near_intersection = (dist_along < 4.0) or ((dist - dist_along) < 4.0)
+                        
+                        d_min = int(math.floor(-half_w))
+                        d_max = int(math.ceil(half_w))
+                        for d in range(d_min, d_max + 1):
+                            px = cx + d * perp_x
+                            pz = cz + d * perp_z
                             
-                            # Roadside vegetation just outside the boundary
-                            if abs(d) == d_max:
-                                veg_x = int(round(cx + (d + (1 if d > 0 else -1)) * perp_x))
-                                veg_z = int(round(cz + (d + (1 if d > 0 else -1)) * perp_z))
-                                veg_y = get_mc_terrain_y(veg_x, veg_z)
-                                
-                                veg_choices = [None, "minecraft:short_grass", "minecraft:fern", "minecraft:dandelion", "minecraft:poppy"]
-                                veg_weights = [0.8, 0.1, 0.05, 0.025, 0.025]
-                                veg_block = get_deterministic_choice(veg_x, veg_y, veg_z, veg_choices, veg_weights)
-                                if veg_block:
-                                    custom_blocks[(veg_x, veg_y + 1, veg_z)] = veg_block
-                        else:
-                            # Modern asphalt road materials
-                            is_marking = False
-                            block_name = None
+                            x_mc = int(round(px))
+                            z_mc = int(round(pz))
+                            y_mc = get_mc_terrain_y(x_mc, z_mc)
                             
-                            # Center yellow line
-                            if lanes == 2 and abs(d) < 0.5 and not is_near_intersection:
-                                if int(math.floor(dist_along)) % 4 < 2:
-                                    block_name = "minecraft:yellow_concrete"
-                                    is_marking = True
-                                    
-                            # Side white lines
-                            edge_d = max(1.0, math.floor(width / 2.0) - 1.0)
-                            if not is_marking and abs(abs(d) - edge_d) < 0.5 and not is_near_intersection:
-                                block_name = "minecraft:white_concrete"
-                                is_marking = True
-                                
-                            if not is_marking:
+                            if is_rural:
+                                # Rural/historical road materials
                                 choices = [
-                                    "minecraft:gray_concrete_powder",
-                                    "minecraft:black_concrete_powder",
-                                    "minecraft:smooth_basalt",
-                                    "minecraft:cobbled_deepslate",
-                                    "minecraft:coal_block"
+                                    "minecraft:gravel",
+                                    "minecraft:cobblestone",
+                                    "minecraft:coarse_dirt",
+                                    "minecraft:andesite",
+                                    "minecraft:mossy_cobblestone"
                                 ]
-                                weights = [0.6, 0.25, 0.05, 0.05, 0.05]
+                                weights = [0.5, 0.25, 0.15, 0.05, 0.05]
                                 block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
                                 
-                        custom_blocks[(x_mc, y_mc, z_mc)] = block_name
+                                # Roadside vegetation just outside the boundary
+                                if abs(d) == d_max:
+                                    veg_x = int(round(cx + (d + (1 if d > 0 else -1)) * perp_x))
+                                    veg_z = int(round(cz + (d + (1 if d > 0 else -1)) * perp_z))
+                                    veg_y = get_mc_terrain_y(veg_x, veg_z)
+                                    
+                                    veg_choices = [None, "minecraft:short_grass", "minecraft:fern", "minecraft:dandelion", "minecraft:poppy"]
+                                    veg_weights = [0.8, 0.1, 0.05, 0.025, 0.025]
+                                    veg_block = get_deterministic_choice(veg_x, veg_y, veg_z, veg_choices, veg_weights)
+                                    if veg_block:
+                                        custom_blocks[(veg_x, veg_y + 1, veg_z)] = veg_block
+                            else:
+                                # Modern asphalt road materials
+                                is_marking = False
+                                block_name = None
+                                
+                                # Center yellow line
+                                if lanes == 2 and abs(d) < 0.5 and not is_near_intersection:
+                                    if int(math.floor(dist_along)) % 4 < 2:
+                                        block_name = "minecraft:yellow_concrete"
+                                        is_marking = True
+                                        
+                                # Side white lines
+                                edge_d = max(1.0, math.floor(width / 2.0) - 1.0)
+                                if not is_marking and abs(abs(d) - edge_d) < 0.5 and not is_near_intersection:
+                                    block_name = "minecraft:white_concrete"
+                                    is_marking = True
+                                    
+                                if not is_marking:
+                                    choices = [
+                                        "minecraft:gray_concrete_powder",
+                                        "minecraft:black_concrete_powder",
+                                        "minecraft:smooth_basalt",
+                                        "minecraft:cobbled_deepslate",
+                                        "minecraft:coal_block"
+                                    ]
+                                    weights = [0.6, 0.25, 0.05, 0.05, 0.05]
+                                    block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
+                                    
+                            custom_blocks[(x_mc, y_mc, z_mc)] = block_name
+                last_edge_idx = idx + 1
+        else:
+            print("[Exporter] Road network rasterization already fully completed.")
                         
         # B. Rasterize block lots (manzanas) with perimetral sidewalks (overwriting road overlaps)
-        for idx, b in enumerate(blocks):
-            poly = b["polygon"]
-            poly_mc = [[pt[0], -pt[1]] for pt in poly]
-            
-            xs_poly = [pt[0] for pt in poly_mc]
-            zs_poly = [pt[1] for pt in poly_mc]
-            if not xs_poly or not zs_poly:
-                continue
-            min_x_p = int(math.floor(min(xs_poly)))
-            max_x_p = int(math.ceil(max(xs_poly)))
-            min_z_p = int(math.floor(min(zs_poly)))
-            max_z_p = int(math.ceil(max(zs_poly)))
-            
-            for x_mc in range(min_x_p, max_x_p + 1):
-                for z_mc in range(min_z_p, max_z_p + 1):
-                    if point_in_polygon(x_mc, z_mc, poly_mc):
-                        d_boundary = distance_to_polygon_boundary(x_mc, z_mc, poly_mc)
-                        y_mc = get_mc_terrain_y(x_mc, z_mc)
-                        
-                        y_platform = y_mc + 1
-                        
-                        if d_boundary <= 2.0:
-                            # Sidewalk zone
-                            if d_boundary <= 1.0:
-                                # Curb
-                                block_name = "minecraft:polished_andesite"
-                            else:
-                                # Main sidewalk
-                                block_name = "minecraft:smooth_stone"
-                        else:
-                            # Lot interior
-                            block_name = "minecraft:light_gray_concrete"
+        num_blocks = len(blocks)
+        if last_block_idx < num_blocks:
+            print(f"[Exporter] Rasterizing block platforms starting from index {last_block_idx}...")
+            for idx in range(last_block_idx, num_blocks):
+                if cancel_event.is_set():
+                    raise KeyboardInterrupt()
+                b = blocks[idx]
+                if (idx + 1) % 50 == 0 or idx + 1 == num_blocks:
+                    print_progress("[Exporter] Rasterizing block platforms", idx + 1, num_blocks)
+                poly = b["polygon"]
+                poly_mc = [[pt[0], -pt[1]] for pt in poly]
+                
+                xs_poly = [pt[0] for pt in poly_mc]
+                zs_poly = [pt[1] for pt in poly_mc]
+                if not xs_poly or not zs_poly:
+                    continue
+                min_x_p = int(math.floor(min(xs_poly)))
+                max_x_p = int(math.ceil(max(xs_poly)))
+                min_z_p = int(math.floor(min(zs_poly)))
+                max_z_p = int(math.ceil(max(zs_poly)))
+                
+                for x_mc in range(min_x_p, max_x_p + 1):
+                    for z_mc in range(min_z_p, max_z_p + 1):
+                        if point_in_polygon(x_mc, z_mc, poly_mc):
+                            d_boundary = distance_to_polygon_boundary(x_mc, z_mc, poly_mc)
+                            y_mc = get_mc_terrain_y(x_mc, z_mc)
                             
-                        custom_blocks[(x_mc, y_platform, z_mc)] = block_name
-                        custom_blocks[(x_mc, y_mc, z_mc)] = "minecraft:dirt"
+                            y_platform = y_mc + 1
+                            
+                            if d_boundary <= 2.0:
+                                # Sidewalk zone
+                                if d_boundary <= 1.0:
+                                    # Curb
+                                    block_name = "minecraft:polished_andesite"
+                                else:
+                                    # Main sidewalk
+                                    block_name = "minecraft:smooth_stone"
+                            else:
+                                # Lot interior
+                                block_name = "minecraft:light_gray_concrete"
+                                
+                            custom_blocks[(x_mc, y_platform, z_mc)] = block_name
+                            custom_blocks[(x_mc, y_mc, z_mc)] = "minecraft:dirt"
+                last_block_idx = idx + 1
+            # We computed new blocks, save the cache
+            save_custom_blocks_cache(cache_path, custom_blocks, num_edges, num_blocks)
+        else:
+            print("[Exporter] Block platforms rasterization already fully completed.")
                         
         print(f"[Exporter] Rasterized {len(custom_blocks)} custom geometry blocks.")
         
@@ -570,36 +762,105 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             
         os.makedirs(region_dir, exist_ok=True)
         
-        workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
-        print(f"[Exporter] Generating chunks for {len(regions)} regions using {workers} parallel threads...")
+        # Prioritize regions by proximity to Parque Hidalgo (0, 0)
+        def region_distance(item):
+            rx, rz = item[0]
+            cx = rx * 512 + 256
+            cz = rz * 512 + 256
+            return math.sqrt(cx**2 + cz**2)
+            
+        sorted_regions = sorted(regions.items(), key=region_distance)
+        print(f"[Exporter] Prioritized {len(sorted_regions)} regions by geographic proximity to city center.")
         
-        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+        regions_to_generate = []
+        skipped_regions = 0
+        for (rx, rz), pts in sorted_regions:
+            mca_path = os.path.join(region_dir, f"r.{rx}.{rz}.mca")
+            if os.path.exists(mca_path):
+                try:
+                    test_reg = MCARegion.load(mca_path, rx, rz)
+                    if len(test_reg.chunks) > 0:
+                        skipped_regions += 1
+                        continue
+                except Exception:
+                    print(f"[Exporter Warning] Region r.{rx}.{rz}.mca on disk is corrupted. Re-generating...")
+            regions_to_generate.append(((rx, rz), pts))
+            
+        if skipped_regions > 0:
+            print(f"[Exporter] Incremental export: skipped {skipped_regions} already generated valid region files.")
+            
+        workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
+        
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
+        try:
             futures = {}
-            for (rx, rz), pts in regions.items():
+            for (rx, rz), pts in regions_to_generate:
                 mca_path = os.path.join(region_dir, f"r.{rx}.{rz}.mca")
                 f = executor.submit(
                     export_single_region,
-                    rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache
+                    rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache, cancel_event
                 )
                 futures[f] = (rx, rz)
                 
-            for future in concurrent.futures.as_completed(futures):
-                rx, rz = futures[future]
+            completed_regions = 0
+            total_regions = len(futures)
+            if total_regions > 0:
+                print_progress("[Exporter] Generating region MCA files", 0, total_regions)
+                active_futures = list(futures.keys())
+                while active_futures:
+                    if cancel_event.is_set():
+                        break
+                    done, not_done = concurrent.futures.wait(
+                        active_futures,
+                        timeout=0.2,
+                        return_when=concurrent.futures.FIRST_COMPLETED
+                    )
+                    for future in done:
+                        rx, rz = futures[future]
+                        try:
+                            future.result()
+                        except Exception as e:
+                            print(f"\n[Exporter Error] Failed to generate region r.{rx}.{rz}: {e}")
+                        completed_regions += 1
+                        print_progress("[Exporter] Generating region MCA files", completed_regions, total_regions)
+                        active_futures.remove(future)
+            else:
+                print("[Exporter] All regions are already generated and valid. Nothing to do.")
+        finally:
+            executor.shutdown(wait=False, cancel_futures=True)
+                
+        # Exit validation of ALL active regions
+        print("[Exporter] Validating all region files on disk...")
+        corrupted_regions = 0
+        for (rx, rz), _ in sorted_regions:
+            mca_path = os.path.join(region_dir, f"r.{rx}.{rz}.mca")
+            if os.path.exists(mca_path):
                 try:
-                    future.result()
+                    test_reg = MCARegion.load(mca_path, rx, rz)
+                    if len(test_reg.chunks) == 0:
+                        raise ValueError("No chunks found in region file")
                 except Exception as e:
-                    print(f"[Exporter Error] Failed to generate region r.{rx}.{rz}: {e}")
+                    print(f"[Exporter Error] Region file r.{rx}.{rz}.mca is corrupted: {e}")
+                    corrupted_regions += 1
                     
+        if corrupted_regions == 0:
+            print("[Exporter] Validation SUCCESS: All region files are valid.")
+        else:
+            print(f"[Exporter Warning] Validation finished: {corrupted_regions} region files are corrupted.")
+            
     except KeyboardInterrupt:
         print("\n[Exporter] Ctrl+C interrupt detected! Saving checkpoint and cache to disk...")
+        cancel_event.set()
         if 'executor' in locals():
             executor.shutdown(wait=False, cancel_futures=True)
+        if 'cache_path' in locals() and 'custom_blocks' in locals() and custom_blocks:
+            save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx)
             
     # Always save height cache
     height_cache.save()
     
     # 5. Write level.dat and metadata if we calculated y_offset and resolver
-    if get_mc_terrain_y is not None:
+    if resolver_ready:
         print("[Exporter] Finalizing level.dat settings...")
         level_dat_path = os.path.join(world_dir, "level.dat")
         spawn_y = get_mc_terrain_y(0, 0) + 2
@@ -627,15 +888,26 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         level_root = NBT(TAG_COMPOUND, "", [level_data_nbt])
         save_gzip(level_root, level_dat_path)
         
+        # Calculate final merged bounding box BBox
+        final_min_x = min_x
+        final_max_x = max_x
+        final_min_y = min_y
+        final_max_y = max_y
+        if existing_bbox is not None:
+            final_min_x = min(final_min_x, existing_bbox.get("min_local_x", final_min_x))
+            final_max_x = max(final_max_x, existing_bbox.get("max_local_x", final_max_x))
+            final_min_y = min(final_min_y, existing_bbox.get("min_local_y", final_min_y))
+            final_max_y = max(final_max_y, existing_bbox.get("max_local_y", final_max_y))
+            
         # 6. Save metadata file
         metadata_path = os.path.join(world_dir, "tecate_metadata.json")
         metadata = {
             "vertical_offset": y_offset,
             "bbox": {
-                "min_local_x": min_x,
-                "max_local_x": max_x,
-                "min_local_y": min_y,
-                "max_local_y": max_y
+                "min_local_x": final_min_x,
+                "max_local_x": final_max_x,
+                "min_local_y": final_min_y,
+                "max_local_y": final_max_y
             },
             "terrain_alignment": {
                 "scale": s,
