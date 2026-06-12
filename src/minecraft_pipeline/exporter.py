@@ -1001,9 +1001,34 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             
     except KeyboardInterrupt:
         print("\n[Exporter] Ctrl+C interrupt detected! Saving checkpoint and cache to disk...")
+        
+        # Harvest completed blocks if interrupted during block platform loop
+        if 'futures' in locals() and futures:
+            try:
+                first_val = next(iter(futures.values()))
+                if isinstance(first_val, int):  # We are in the block platforms loop
+                    done_futures = [f for f in futures.keys() if f.done()]
+                    
+                    # Merge completed block results
+                    for f in done_futures:
+                        b_idx = futures[f]
+                        try:
+                            res = f.result()
+                            custom_blocks.update(res)
+                            completed_flags[b_idx] = True
+                        except Exception:
+                            pass
+                            
+                    # Advance last_block_idx based on the newly merged contiguous prefix
+                    while last_block_idx < num_blocks and completed_flags[last_block_idx]:
+                        last_block_idx += 1
+            except Exception:
+                pass
+                
         cancel_event.set()
         if 'executor' in locals():
             executor.shutdown(wait=False, cancel_futures=True)
+            
         if 'cache_path' in locals() and 'custom_blocks' in locals() and custom_blocks:
             save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx)
             
