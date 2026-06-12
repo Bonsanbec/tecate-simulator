@@ -898,6 +898,9 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             progress_lock = threading.Lock()
             completed_count = last_block_idx
             
+            # Print initial progress bar immediately
+            print_progress("[Exporter] Rasterizing block platforms", completed_count, num_blocks, t_start_blocks)
+            
             def progress_callback(block_idx):
                 nonlocal last_block_idx, completed_count
                 completed_flags[block_idx] = True
