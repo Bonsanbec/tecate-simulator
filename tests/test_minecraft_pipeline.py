@@ -172,3 +172,47 @@ def test_nbt_list_of_compounds():
     assert items[0].value[0].name == "Name"
     assert items[0].value[0].value == "BlockA"
     assert items[1].value[0].value == "BlockB"
+
+def test_geometric_helpers():
+    """Tests point_in_polygon and distance_to_polygon_boundary functions."""
+    from src.minecraft_pipeline.exporter import point_in_polygon, distance_to_polygon_boundary, get_deterministic_choice
+    
+    # 10x10 square polygon
+    poly = [[0, 0], [10, 0], [10, 10], [0, 10]]
+    
+    # Inside points
+    assert point_in_polygon(5, 5, poly) is True
+    assert point_in_polygon(1, 1, poly) is True
+    
+    # Outside points
+    assert point_in_polygon(-1, 5, poly) is False
+    assert point_in_polygon(5, 11, poly) is False
+    
+    # Distance to boundary
+    assert abs(distance_to_polygon_boundary(5, 0, poly) - 0.0) < 1e-5
+    assert abs(distance_to_polygon_boundary(5, 5, poly) - 5.0) < 1e-5
+    assert abs(distance_to_polygon_boundary(5, 2, poly) - 2.0) < 1e-5
+    
+    # Deterministic choice
+    choices = ["A", "B", "C"]
+    weights = [0.7, 0.2, 0.1]
+    choice1 = get_deterministic_choice(10, 20, 30, choices, weights)
+    choice2 = get_deterministic_choice(10, 20, 30, choices, weights)
+    assert choice1 == choice2
+    assert choice1 in choices
+
+def test_road_metadata_fallback():
+    """Tests road metadata cache defaults and helper functions."""
+    from src.minecraft_pipeline.road_metadata_cache import get_edge_key, get_default_metadata
+    
+    assert get_edge_key("123", "456") == "123,456"
+    assert get_edge_key("456", "123") == "123,456"
+    
+    meta_primary = get_default_metadata("primary")
+    assert meta_primary["lanes"] == 2
+    assert meta_primary["width"] == 10.0
+    assert meta_primary["surface"] == "asphalt"
+    
+    meta_track = get_default_metadata("track")
+    assert meta_track["lanes"] == 1
+    assert meta_track["surface"] == "gravel"

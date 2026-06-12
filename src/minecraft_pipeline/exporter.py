@@ -5,10 +5,12 @@ import struct
 import sys
 import threading
 import concurrent.futures
+import hashlib
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from .nbt import NBT, TAG_COMPOUND, TAG_LIST, TAG_STRING, TAG_INT, TAG_LONG, TAG_BYTE, TAG_DOUBLE, TAG_LONG_ARRAY, save_gzip
 from .mca import MCARegion, pack_block_states
+from .road_metadata_cache import get_edge_key, extract_and_cache_road_metadata, get_default_metadata
 
 class TerrainHeightCache:
     """
@@ -188,6 +190,60 @@ def draw_line_3d(x1, y1, z1, x2, y2, z2):
         pts.append((int(round(x)), int(round(y)), int(round(z))))
     return list(set(pts))
 
+def point_in_polygon(x, z, polygon):
+    inside = False
+    n = len(polygon)
+    if n == 0:
+        return False
+    p1x, p1z = polygon[0]
+    for i in range(n + 1):
+        p2x, p2z = polygon[i % n]
+        if z > min(p1z, p2z):
+            if z <= max(p1z, p2z):
+                if x <= max(p1x, p2x):
+                    if p1z != p2z:
+                        xinters = (z - p1z) * (p2x - p1x) / (p2z - p1z) + p1x
+                    if p1x == p2x or x <= xinters:
+                        inside = not inside
+        p1x, p1z = p2x, p2z
+    return inside
+
+def distance_to_polygon_boundary(x, z, polygon):
+    min_dist = float('inf')
+    n = len(polygon)
+    if n == 0:
+        return 0.0
+    for i in range(n):
+        ax, az = polygon[i]
+        bx, bz = polygon[(i + 1) % n]
+        dx = bx - ax
+        dz = bz - az
+        len2 = dx*dx + dz*dz
+        if len2 < 1e-8:
+            dist = math.sqrt((x - ax)**2 + (z - az)**2)
+        else:
+            t = ((x - ax) * dx + (z - az) * dz) / len2
+            t = max(0.0, min(1.0, t))
+            proj_x = ax + t * dx
+            proj_z = az + t * dz
+            dist = math.sqrt((x - proj_x)**2 + (z - proj_z)**2)
+        if dist < min_dist:
+            min_dist = dist
+    return min_dist
+
+def get_deterministic_choice(x, y, z, choices, weights):
+    """Deterministically selects a choice based on coordinates hash."""
+    hash_str = f"{x},{y},{z}"
+    val = int(hashlib.md5(hash_str.encode()).hexdigest(), 16)
+    normalized = (val % 1000) / 1000.0
+    
+    cumulative = 0.0
+    for choice, weight in zip(choices, weights):
+        cumulative += weight
+        if normalized <= cumulative:
+            return choice
+    return choices[-1]
+
 def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache):
     """Generates MCA chunks for a single region (runs in worker thread)."""
     region = MCARegion(rx, rz)
@@ -315,6 +371,12 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         blocks = data.get("blocks", [])
         road_graph = data.get("road_graph", {})
         
+        # Extract and cache road metadata
+        export_dir = os.path.dirname(reconstruction_json_path)
+        road_metadata_path = os.path.join(export_dir, "road_metadata.json")
+        road_metadata = extract_and_cache_road_metadata(reconstruction_json_path, road_metadata_path)
+        edge_metadata = road_metadata.get("edges", {})
+        
         interpolator = TerrainHeightInterpolator(glb_path, s, tx, tz)
         
         print("[Exporter] Calculating active area bounds...")
@@ -352,44 +414,10 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 height_cache.set(x_mc, z_mc, h)
             return h
     
-        print("[Exporter] Rasterizing building wireframes and road networks...")
+        print("[Exporter] Rasterizing road networks and custom block lot platforms...")
         custom_blocks = {}
         
-        # A. Rasterize building blocks
-        for idx, b in enumerate(blocks):
-            poly = b["polygon"]
-            height = int(round(b["height_meters"]))
-            num_verts = len(poly) - 1
-            
-            vert_coords = []
-            for pt in poly[:-1]:
-                x_mc = int(round(pt[0]))
-                z_mc = int(round(-pt[1]))
-                y_mc = get_mc_terrain_y(x_mc, z_mc)
-                vert_coords.append((x_mc, y_mc, z_mc))
-                
-            for i in range(num_verts):
-                p1 = vert_coords[i]
-                p2 = vert_coords[(i + 1) % num_verts]
-                line_pts = draw_line_3d(p1[0], 0, p1[2], p2[0], 0, p2[2])
-                for lp in line_pts:
-                    x_mc, z_mc = lp[0], lp[2]
-                    y_mc = get_mc_terrain_y(x_mc, z_mc)
-                    custom_blocks[(x_mc, y_mc, z_mc)] = "minecraft:yellow_concrete"
-    
-            for i in range(num_verts):
-                p = vert_coords[i]
-                for y_step in range(p[1], p[1] + height + 1):
-                    custom_blocks[(p[0], y_step, p[2])] = "minecraft:red_concrete"
-                    
-            for i in range(num_verts):
-                p1 = vert_coords[i]
-                p2 = vert_coords[(i + 1) % num_verts]
-                line_pts = draw_line_3d(p1[0], p1[1] + height, p1[2], p2[0], p2[1] + height, p2[2])
-                for lp in line_pts:
-                    custom_blocks[lp] = "minecraft:light_blue_concrete"
-    
-        # B. Rasterize road graph
+        # A. Rasterize road graph (first, so block platforms can overwrite/clip them)
         nodes = road_graph.get("nodes", [])
         edges = road_graph.get("edges", [])
         node_map = {nd["id"]: nd for nd in nodes}
@@ -398,15 +426,140 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             u_nd = node_map.get(ed["u"])
             v_nd = node_map.get(ed["v"])
             if u_nd and v_nd:
-                x1, z1 = int(round(u_nd["x"])), int(round(-u_nd["y"]))
-                x2, z2 = int(round(v_nd["x"])), int(round(-v_nd["y"]))
+                x1, z1 = u_nd["x"], -u_nd["y"]
+                x2, z2 = v_nd["x"], -v_nd["y"]
                 
-                line_pts = draw_line_3d(x1, 0, z1, x2, 0, z2)
-                for lp in line_pts:
-                    x_mc, z_mc = lp[0], lp[2]
-                    y_mc = get_mc_terrain_y(x_mc, z_mc)
-                    custom_blocks[(x_mc, y_mc, z_mc)] = "minecraft:gray_concrete"
+                key = get_edge_key(ed["u"], ed["v"])
+                meta = edge_metadata.get(key, {})
+                hw = meta.get("highway", "residential")
+                lanes = meta.get("lanes", 2)
+                width = meta.get("width", 6.0)
+                surface = meta.get("surface", "asphalt")
+                
+                is_rural = (surface in ["gravel", "dirt", "earth", "ground", "sand", "grass"]) or (hw in ["track", "path", "bridleway"])
+                
+                dx = x2 - x1
+                dz = z2 - z1
+                dist = math.sqrt(dx*dx + dz*dz)
+                if dist < 1e-5:
+                    continue
                     
+                perp_x = -dz / dist
+                perp_z = dx / dist
+                
+                # Add padding to ensure road overlaps block boundaries and gets clipped perfectly
+                w_adjusted = width + 3
+                half_w = w_adjusted / 2.0
+                
+                steps = int(math.ceil(dist * 2))
+                for step in range(steps + 1):
+                    t = step / steps
+                    cx = x1 + t * dx
+                    cz = z1 + t * dz
+                    
+                    dist_along = t * dist
+                    is_near_intersection = (dist_along < 4.0) or ((dist - dist_along) < 4.0)
+                    
+                    d_min = int(math.floor(-half_w))
+                    d_max = int(math.ceil(half_w))
+                    for d in range(d_min, d_max + 1):
+                        px = cx + d * perp_x
+                        pz = cz + d * perp_z
+                        
+                        x_mc = int(round(px))
+                        z_mc = int(round(pz))
+                        y_mc = get_mc_terrain_y(x_mc, z_mc)
+                        
+                        if is_rural:
+                            # Rural/historical road materials
+                            choices = [
+                                "minecraft:gravel",
+                                "minecraft:cobblestone",
+                                "minecraft:coarse_dirt",
+                                "minecraft:andesite",
+                                "minecraft:mossy_cobblestone"
+                            ]
+                            weights = [0.5, 0.25, 0.15, 0.05, 0.05]
+                            block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
+                            
+                            # Roadside vegetation just outside the boundary
+                            if abs(d) == d_max:
+                                veg_x = int(round(cx + (d + (1 if d > 0 else -1)) * perp_x))
+                                veg_z = int(round(cz + (d + (1 if d > 0 else -1)) * perp_z))
+                                veg_y = get_mc_terrain_y(veg_x, veg_z)
+                                
+                                veg_choices = [None, "minecraft:short_grass", "minecraft:fern", "minecraft:dandelion", "minecraft:poppy"]
+                                veg_weights = [0.8, 0.1, 0.05, 0.025, 0.025]
+                                veg_block = get_deterministic_choice(veg_x, veg_y, veg_z, veg_choices, veg_weights)
+                                if veg_block:
+                                    custom_blocks[(veg_x, veg_y + 1, veg_z)] = veg_block
+                        else:
+                            # Modern asphalt road materials
+                            is_marking = False
+                            block_name = None
+                            
+                            # Center yellow line
+                            if lanes == 2 and abs(d) < 0.5 and not is_near_intersection:
+                                if int(math.floor(dist_along)) % 4 < 2:
+                                    block_name = "minecraft:yellow_concrete"
+                                    is_marking = True
+                                    
+                            # Side white lines
+                            edge_d = max(1.0, math.floor(width / 2.0) - 1.0)
+                            if not is_marking and abs(abs(d) - edge_d) < 0.5 and not is_near_intersection:
+                                block_name = "minecraft:white_concrete"
+                                is_marking = True
+                                
+                            if not is_marking:
+                                choices = [
+                                    "minecraft:gray_concrete_powder",
+                                    "minecraft:black_concrete_powder",
+                                    "minecraft:smooth_basalt",
+                                    "minecraft:cobbled_deepslate",
+                                    "minecraft:coal_block"
+                                ]
+                                weights = [0.6, 0.25, 0.05, 0.05, 0.05]
+                                block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
+                                
+                        custom_blocks[(x_mc, y_mc, z_mc)] = block_name
+                        
+        # B. Rasterize block lots (manzanas) with perimetral sidewalks (overwriting road overlaps)
+        for idx, b in enumerate(blocks):
+            poly = b["polygon"]
+            poly_mc = [[pt[0], -pt[1]] for pt in poly]
+            
+            xs_poly = [pt[0] for pt in poly_mc]
+            zs_poly = [pt[1] for pt in poly_mc]
+            if not xs_poly or not zs_poly:
+                continue
+            min_x_p = int(math.floor(min(xs_poly)))
+            max_x_p = int(math.ceil(max(xs_poly)))
+            min_z_p = int(math.floor(min(zs_poly)))
+            max_z_p = int(math.ceil(max(zs_poly)))
+            
+            for x_mc in range(min_x_p, max_x_p + 1):
+                for z_mc in range(min_z_p, max_z_p + 1):
+                    if point_in_polygon(x_mc, z_mc, poly_mc):
+                        d_boundary = distance_to_polygon_boundary(x_mc, z_mc, poly_mc)
+                        y_mc = get_mc_terrain_y(x_mc, z_mc)
+                        
+                        y_platform = y_mc + 1
+                        
+                        if d_boundary <= 2.0:
+                            # Sidewalk zone
+                            if d_boundary <= 1.0:
+                                # Curb
+                                block_name = "minecraft:polished_andesite"
+                            else:
+                                # Main sidewalk
+                                block_name = "minecraft:smooth_stone"
+                        else:
+                            # Lot interior
+                            block_name = "minecraft:light_gray_concrete"
+                            
+                        custom_blocks[(x_mc, y_platform, z_mc)] = block_name
+                        custom_blocks[(x_mc, y_mc, z_mc)] = "minecraft:dirt"
+                        
         print(f"[Exporter] Rasterized {len(custom_blocks)} custom geometry blocks.")
         
         regions = {}
