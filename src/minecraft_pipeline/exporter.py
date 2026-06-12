@@ -78,7 +78,21 @@ def load_custom_blocks_cache(cache_path):
         y_list = y_arr.tolist()
         z_list = z_arr.tolist()
         block_ids_list = block_ids.tolist()
-        palette_list = [str(p) for p in palette]
+        
+        # Self-healing byte string decoder to prevent nested "b'b'...'" string issues
+        palette_list = []
+        for p in palette:
+            if isinstance(p, bytes):
+                val = p.decode('utf-8')
+            elif hasattr(p, 'decode'):
+                val = p.decode('utf-8')
+            else:
+                val = str(p)
+                
+            # If the string got double-stringified as "b'minecraft:...'"
+            while (val.startswith("b'") and val.endswith("'")) or (val.startswith('b"') and val.endswith('"')):
+                val = val[2:-1]
+            palette_list.append(val)
         
         palette_map = [palette_list[bid] for bid in block_ids_list]
         keys = list(zip(x_list, y_list, z_list))
@@ -357,7 +371,7 @@ def draw_line_3d(x1, y1, z1, x2, y2, z2):
     return list(set(pts))
 
 @njit(nogil=True)
-def point_in_polygon(x, z, polygon):
+def _point_in_polygon_jit(x, z, polygon):
     inside = False
     n = len(polygon)
     if n == 0:
@@ -375,8 +389,31 @@ def point_in_polygon(x, z, polygon):
         p1x, p1z = p2x, p2z
     return inside
 
+def point_in_polygon(x, z, polygon):
+    if HAS_NUMBA:
+        if not isinstance(polygon, np.ndarray):
+            polygon = np.array(polygon, dtype=np.float64)
+        return _point_in_polygon_jit(float(x), float(z), polygon)
+    
+    inside = False
+    n = len(polygon)
+    if n == 0:
+        return False
+    p1x, p1z = polygon[0]
+    for i in range(n + 1):
+        p2x, p2z = polygon[i % n]
+        if z > min(p1z, p2z):
+            if z <= max(p1z, p2z):
+                if x <= max(p1x, p2x):
+                    if p1z != p2z:
+                        xinters = (z - p1z) * (p2x - p1x) / (p2z - p1z) + p1x
+                    if p1x == p2x or x <= xinters:
+                        inside = not inside
+        p1x, p1z = p2x, p2z
+    return inside
+
 @njit(nogil=True)
-def distance_to_polygon_boundary(x, z, polygon):
+def _distance_to_polygon_boundary_jit(x, z, polygon):
     min_dist = float('inf')
     n = len(polygon)
     if n == 0:
@@ -384,6 +421,34 @@ def distance_to_polygon_boundary(x, z, polygon):
     for i in range(n):
         ax, az = polygon[i][0], polygon[i][1]
         bx, bz = polygon[(i + 1) % n][0], polygon[(i + 1) % n][1]
+        dx = bx - ax
+        dz = bz - az
+        len2 = dx*dx + dz*dz
+        if len2 < 1e-8:
+            dist = math.sqrt((x - ax)**2 + (z - az)**2)
+        else:
+            t = ((x - ax) * dx + (z - az) * dz) / len2
+            t = max(0.0, min(1.0, t))
+            proj_x = ax + t * dx
+            proj_z = az + t * dz
+            dist = math.sqrt((x - proj_x)**2 + (z - proj_z)**2)
+        if dist < min_dist:
+            min_dist = dist
+    return min_dist
+
+def distance_to_polygon_boundary(x, z, polygon):
+    if HAS_NUMBA:
+        if not isinstance(polygon, np.ndarray):
+            polygon = np.array(polygon, dtype=np.float64)
+        return _distance_to_polygon_boundary_jit(float(x), float(z), polygon)
+        
+    min_dist = float('inf')
+    n = len(polygon)
+    if n == 0:
+        return 0.0
+    for i in range(n):
+        ax, az = polygon[i]
+        bx, bz = polygon[(i + 1) % n]
         dx = bx - ax
         dz = bz - az
         len2 = dx*dx + dz*dz
@@ -648,6 +713,8 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         print("[Exporter] Rasterizing road networks and custom block lot platforms...")
         cache_path = os.path.join(output_dir, "custom_blocks_cache.npz")
         custom_blocks, last_edge_idx, last_block_idx = load_custom_blocks_cache(cache_path)
+        initial_edge_idx = last_edge_idx
+        initial_block_idx = last_block_idx
         
         # A. Rasterize road graph (first, so block platforms can overwrite/clip them)
         nodes = road_graph.get("nodes", [])
@@ -826,10 +893,14 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 executor.shutdown(wait=False, cancel_futures=True)
                 
             # We computed new blocks, save the cache
-            if not cancel_event.is_set():
-                save_custom_blocks_cache(cache_path, custom_blocks, num_edges, num_blocks)
+            pass
         else:
             print("[Exporter] Block platforms rasterization already fully completed.")
+            
+        # Unified Cache Saving: Save if any new road edges or blocks were rasterized
+        if not cancel_event.is_set():
+            if last_edge_idx > initial_edge_idx or last_block_idx > initial_block_idx:
+                save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx)
                         
         print(f"[Exporter] Rasterized {len(custom_blocks)} custom geometry blocks.")
         
