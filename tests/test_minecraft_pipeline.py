@@ -313,4 +313,27 @@ def test_custom_blocks_cache_roundtrip(tmp_path):
     assert le_idx == last_edge_idx
     assert lb_idx == last_block_idx
 
+def test_rasterize_single_block():
+    """Verifies that rasterize_single_block correctly assigns platform, sidewalk, and curb heights."""
+    from src.minecraft_pipeline.exporter import rasterize_single_block
+    import threading
+    
+    b = {"polygon": [[0, 0], [10, 0], [10, 10], [0, 10]]}
+    def mock_get_terrain_y(x, z):
+        return 12
+        
+    cancel_event = threading.Event()
+    
+    blocks = rasterize_single_block(b, mock_get_terrain_y, cancel_event)
+    
+    # Check that platforms are placed at Y=13, dirt at Y=12
+    assert (5, 13, -5) in blocks
+    assert blocks[(5, 13, -5)] == "minecraft:light_gray_concrete"
+    assert blocks[(5, 12, -5)] == "minecraft:dirt"
+    
+    # Curb/Sidewalk at the boundary
+    assert (1, 13, -1) in blocks
+    assert blocks[(1, 13, -1)] in ["minecraft:polished_andesite", "minecraft:smooth_stone"]
+
+
 
