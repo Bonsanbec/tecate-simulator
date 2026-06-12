@@ -127,7 +127,7 @@ def test_geometric_terrain_subtraction():
     # Blocks to check:
     # 1. grass_block at Y=12 -> should be ignored (base terrain)
     # 2. stone at Y=10 -> should be ignored (base terrain)
-    # 3. yellow_concrete at Y=12 -> should be preserved (building block)
+    # 3. smooth_stone at Y=12 -> should be preserved (building block)
     # 4. stone at Y=15 -> should be preserved (above terrain)
     
     y_terrain = 12
@@ -137,7 +137,7 @@ def test_geometric_terrain_subtraction():
     test_cases = [
         ("minecraft:grass_block", 12, False),
         ("minecraft:stone", 10, False),
-        ("minecraft:yellow_concrete", 12, True),
+        ("minecraft:smooth_stone", 12, True),
         ("minecraft:stone", 15, True),
         ("minecraft:oak_planks", 8, True),
     ]
@@ -293,7 +293,7 @@ def test_custom_blocks_cache_roundtrip(tmp_path):
     
     # Create sample blocks
     custom_blocks = {
-        (10, 20, 30): "minecraft:yellow_concrete",
+        (10, 20, 30): "minecraft:smooth_stone",
         (-5, 12, 100): "minecraft:asphalt",
         (0, 0, 0): "minecraft:dirt"
     }
@@ -330,7 +330,7 @@ def test_rasterize_single_block():
     
     # Check that platforms are placed at Y=13, and points with d_boundary > 1.0 are skipped
     assert (1, 13, -9) in blocks
-    assert blocks[(1, 13, -9)] == "minecraft:yellow_concrete"
+    assert blocks[(1, 13, -9)] == "minecraft:smooth_stone"
     assert (5, 13, -5) not in blocks
 
 def test_rasterize_single_block_batch_heights():
@@ -373,7 +373,7 @@ def test_rasterize_single_block_batch_heights():
     )
     
     assert (1, -217, -9) in blocks
-    assert blocks[(1, -217, -9)] == "minecraft:yellow_concrete"
+    assert blocks[(1, -217, -9)] == "minecraft:smooth_stone"
     assert (5, -217, -5) not in blocks
     assert interpolator.batch_queried_count > 0
     assert interpolator.queried_count == 0
