@@ -29,7 +29,10 @@ except ImportError:
 def save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_block_idx, completed_block_indices=None):
     try:
         os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-        palette = list(set(custom_blocks.values()))
+        if isinstance(custom_blocks, VoxelMap):
+            palette = list(custom_blocks.palette)
+        else:
+            palette = list(set(custom_blocks.values()))
         palette_map = {name: idx for idx, name in enumerate(palette)}
         
         n = len(custom_blocks)
