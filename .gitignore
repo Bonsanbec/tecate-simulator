@@ -19,3 +19,4 @@ export/geometry.bin
 *.gltf
 .env
 /godot_project/.godot
+export/minecraft_world/HigherHeightsUltimate4064_26.1.zip
