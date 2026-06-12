@@ -667,17 +667,9 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
     region = MCARegion(rx, rz)
     
     region_chunks = set()
-    for pt in pts:
-        cx = int(math.floor(pt[0] / 16.0))
-        cz = int(math.floor(pt[2] / 16.0))
-        cx_local = cx % 32
-        cz_local = cz % 32
-        for dcz in [-1, 0, 1]:
-            for dcx in [-1, 0, 1]:
-                ccx = (cx_local + dcx)
-                ccz = (cz_local + dcz)
-                if 0 <= ccx < 32 and 0 <= ccz < 32:
-                    region_chunks.add((ccx, ccz))
+    for cx_local in range(32):
+        for cz_local in range(32):
+            region_chunks.add((cx_local, cz_local))
                     
     # Pre-resolve all terrain heights for the region in batch to optimize SciPy calls
     missing_queries = []
@@ -1092,27 +1084,19 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                         
         print(f"[Exporter] Rasterized {len(custom_blocks)} custom geometry blocks.")
         
-        # Define all chunks in the active merged bounding box to generate the terrain fully
-        min_cx = int(math.floor(final_min_x / 16.0))
-        max_cx = int(math.ceil(final_max_x / 16.0))
-        min_cz = int(math.floor(-final_max_y / 16.0))
-        max_cz = int(math.ceil(-final_min_y / 16.0))
-        
-        # Also include any custom blocks that might lie outside the bounding box
-        for (x, y, z) in custom_blocks.keys():
-            cx = int(math.floor(x / 16.0))
-            cz = int(math.floor(z / 16.0))
-            min_cx = min(min_cx, cx)
-            max_cx = max(max_cx, cx)
-            min_cz = min(min_cz, cz)
-            max_cz = max(max_cz, cz)
-            
+        # Determine active chunk coordinates containing custom blocks
+        if hasattr(custom_blocks, 'chunk_slices') and hasattr(custom_blocks, 'new_blocks_by_chunk'):
+            active_chunks = set(custom_blocks.chunk_slices.keys()) | set(custom_blocks.new_blocks_by_chunk.keys())
+        else:
+            active_chunks = set()
+            for (x, y, z) in custom_blocks.keys():
+                active_chunks.add((int(math.floor(x / 16.0)), int(math.floor(z / 16.0))))
+                
         regions = {}
-        for cx in range(min_cx, max_cx + 1):
-            for cz in range(min_cz, max_cz + 1):
-                rx = int(math.floor(cx / 32.0))
-                rz = int(math.floor(cz / 32.0))
-                regions.setdefault((rx, rz), []).append((cx * 16 + 8, 0, cz * 16 + 8))
+        for (cx, cz) in active_chunks:
+            rx = int(math.floor(cx / 32.0))
+            rz = int(math.floor(cz / 32.0))
+            regions.setdefault((rx, rz), []).append((cx * 16 + 8, 0, cz * 16 + 8))
             
         os.makedirs(region_dir, exist_ok=True)
         
