@@ -246,16 +246,20 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None,
     # 2. Pre-resolve missing heights in batch if interpolator and height_cache are provided
     if interpolator is not None and height_cache is not None:
         missing_queries = []
-        for x_mc, z_mc in zip(xs_in, zs_in):
-            if height_cache.get(x_mc, z_mc) is None:
-                missing_queries.append((x_mc, -z_mc))
+        cache_dict = height_cache.cache
+        with height_cache.lock:
+            for x_mc, z_mc in zip(xs_in, zs_in):
+                if (x_mc, z_mc) not in cache_dict:
+                    missing_queries.append((x_mc, -z_mc))
                 
         if missing_queries:
             batch_heights = interpolator.query_height_batch(missing_queries)
-            for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
-                z_val = -mz_q
-                cached_h = int(round(h_real)) - y_offset
-                height_cache.set(x_q, z_val, cached_h)
+            with height_cache.lock:
+                for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
+                    z_val = -mz_q
+                    cached_h = int(round(h_real)) - y_offset
+                    height_cache.cache[(x_q, z_val)] = cached_h
+                height_cache.changed = True
                 
     # 3. Generate block platforms
     inside_set = set(zip(xs_in, zs_in))
@@ -1810,18 +1814,21 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 
                 # Identify missing heights
                 missing_queries = []
+                cache_dict = height_cache.cache
                 for x_mc, z_mc in unique_coords:
-                    if height_cache.get(x_mc, z_mc) is None:
+                    if (x_mc, z_mc) not in cache_dict:
                         missing_queries.append((x_mc, -z_mc))
                         
                 if missing_queries:
                     print(f"[Exporter] Batch querying {len(missing_queries)} missing heights for roads...")
                     t_q_start = time.time()
                     batch_heights = interpolator.query_height_batch(missing_queries)
-                    for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
-                        z_val = -mz_q
-                        cached_h = int(round(h_real)) - y_offset
-                        height_cache.set(x_q, z_val, cached_h)
+                    with height_cache.lock:
+                        for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
+                            z_val = -mz_q
+                            cached_h = int(round(h_real)) - y_offset
+                            height_cache.cache[(x_q, z_val)] = cached_h
+                        height_cache.changed = True
                     print(f"[Exporter] Batch height queries completed in {time.time() - t_q_start:.2f}s.")
                     
             # Copy height cache to a standard lock-free dictionary for worker threads
