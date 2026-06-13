@@ -78,3 +78,69 @@ def test_resolve_road_properties_fallback():
     assert props2["width"] == 8.0
     assert props2["lanes"] == 2
     assert props2["marking_type"] == "calle"
+
+def test_generate_street_signs():
+    from src.minecraft_pipeline.exporter import generate_street_signs, VoxelMap
+    import numpy as np
+    
+    # Mock road graph
+    road_graph = {
+        "nodes": [
+            {"id": "n1", "x": 0.0, "y": 0.0},
+            {"id": "n2", "x": 20.0, "y": 0.0},
+            {"id": "n3", "x": 0.0, "y": 20.0},
+            {"id": "n4", "x": 0.0, "y": -20.0}
+        ],
+        "edges": [
+            {"u": "n1", "v": "n2"},
+            {"u": "n1", "v": "n3"},
+            {"u": "n1", "v": "n4"}
+        ]
+    }
+    
+    # Mock edge metadata
+    edge_metadata = {
+        "n1,n2": {"name": "Avenida Juarez", "highway": "primary"},
+        "n1,n3": {"name": "Calle Libertad", "highway": "residential"},
+        "n1,n4": {"name": "Calle Libertad", "highway": "residential"}
+    }
+    
+    # Mock node heights
+    node_heights = {"n1": 64, "n2": 64, "n3": 64, "n4": 64}
+    
+    # Mock custom blocks (VoxelMap)
+    x_arr = np.array([], dtype=np.int32)
+    y_arr = np.array([], dtype=np.int32)
+    z_arr = np.array([], dtype=np.int32)
+    block_ids = np.array([], dtype=np.int32)
+    custom_blocks = VoxelMap(x_arr, y_arr, z_arr, block_ids, [])
+    
+    # Mock get_mc_terrain_y
+    def get_mc_terrain_y(x, z):
+        return 64
+        
+    generate_street_signs(
+        road_graph=road_graph,
+        edge_metadata=edge_metadata,
+        node_heights=node_heights,
+        y_offset=0,
+        custom_blocks=custom_blocks,
+        get_mc_terrain_y=get_mc_terrain_y
+    )
+    
+    # Check that fence blocks and signs are generated
+    assert len(custom_blocks.new_blocks_by_chunk) > 0
+    
+    # Verify that at least one sign was created with correct text
+    has_pale_oak_fence = False
+    has_wall_sign = False
+    for chunk_dict in custom_blocks.new_blocks_by_chunk.values():
+        for coord, block_name in chunk_dict.items():
+            if "pale_oak_fence" in block_name:
+                has_pale_oak_fence = True
+            if "pale_oak_wall_sign" in block_name:
+                has_wall_sign = True
+                
+    assert has_pale_oak_fence
+    assert has_wall_sign
+    assert len(custom_blocks.block_entities) > 0
