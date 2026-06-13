@@ -657,10 +657,11 @@ class TerrainClassificationIndex:
                 poly["bbox_area"] = 99999999.0
                 poly["bbox"] = (0.0, 0.0, 0.0, 0.0)
                 continue
-            xs = [pt[0] for pt in vertices]
-            zs = [pt[1] for pt in vertices]
-            min_x, max_x = min(xs), max(xs)
-            min_z, max_z = min(zs), max(zs)
+            poly["vertices"] = np.array(vertices, dtype=np.float64)
+            xs = poly["vertices"][:, 0]
+            zs = poly["vertices"][:, 1]
+            min_x, max_x = float(xs.min()), float(xs.max())
+            min_z, max_z = float(zs.min()), float(zs.max())
             poly["bbox"] = (min_x, max_x, min_z, max_z)
             poly["bbox_area"] = (max_x - min_x) * (max_z - min_z)
             
@@ -1020,6 +1021,215 @@ def get_deterministic_choice(x, y, z, choices, weights):
             return choice
     return choices[-1]
 
+@njit(nogil=True)
+def count_road_points_jit(endpoints, widths):
+    total = 0
+    n = len(endpoints)
+    for i in range(n):
+        x1 = endpoints[i, 0]
+        z1 = endpoints[i, 1]
+        x2 = endpoints[i, 2]
+        z2 = endpoints[i, 3]
+        width = widths[i]
+        
+        dx = x2 - x1
+        dz = z2 - z1
+        dist = math.sqrt(dx*dx + dz*dz)
+        if dist < 1e-5:
+            continue
+        
+        w_adjusted = width + 3.0
+        half_w = w_adjusted / 2.0
+        steps = int(math.ceil(dist * 2.0))
+        d_min = int(math.floor(-half_w))
+        d_max = int(math.ceil(half_w))
+        
+        total += (steps + 1) * (d_max - d_min + 1)
+    return total
+
+@njit(nogil=True)
+def generate_road_coords_fill_jit(endpoints, widths, coords):
+    idx_out = 0
+    n = len(endpoints)
+    for i in range(n):
+        x1 = endpoints[i, 0]
+        z1 = endpoints[i, 1]
+        x2 = endpoints[i, 2]
+        z2 = endpoints[i, 3]
+        width = widths[i]
+        
+        dx = x2 - x1
+        dz = z2 - z1
+        dist = math.sqrt(dx*dx + dz*dz)
+        if dist < 1e-5:
+            continue
+            
+        perp_x = -dz / dist
+        perp_z = dx / dist
+        
+        w_adjusted = width + 3.0
+        half_w = w_adjusted / 2.0
+        steps = int(math.ceil(dist * 2.0))
+        d_min = int(math.floor(-half_w))
+        d_max = int(math.ceil(half_w))
+        
+        for step in range(steps + 1):
+            t = step / steps
+            cx = x1 + t * dx
+            cz = z1 + t * dz
+            for d in range(d_min, d_max + 1):
+                px = cx + d * perp_x
+                pz = cz + d * perp_z
+                coords[idx_out, 0] = int(round(px))
+                coords[idx_out, 1] = int(round(pz))
+                idx_out += 1
+    return idx_out
+
+@njit(nogil=True)
+def query_water_chunk_jit(x_min, z_min, triangles, results_y, results_found):
+    for dz in range(16):
+        z_val = z_min + dz
+        for dx in range(16):
+            x_val = x_min + dx
+            idx = dz * 16 + dx
+            
+            highest_y = -9999.0
+            found = False
+            
+            for t_idx in range(len(triangles)):
+                a_x = triangles[t_idx, 0, 0]
+                a_y = triangles[t_idx, 0, 1]
+                a_z = triangles[t_idx, 0, 2]
+                
+                b_x = triangles[t_idx, 1, 0]
+                b_y = triangles[t_idx, 1, 1]
+                b_z = triangles[t_idx, 1, 2]
+                
+                c_x = triangles[t_idx, 2, 0]
+                c_y = triangles[t_idx, 2, 1]
+                c_z = triangles[t_idx, 2, 2]
+                
+                v0x, v0z = c_x - a_x, c_z - a_z
+                v1x, v1z = b_x - a_x, b_z - a_z
+                v2x, v2z = float(x_val) - a_x, float(z_val) - a_z
+                
+                denom = v0x * v0x + v0z * v0z
+                dot00 = denom
+                dot01 = v0x * v1x + v0z * v1z
+                dot02 = v0x * v2x + v0z * v2z
+                dot11 = v1x * v1x + v1z * v1z
+                dot12 = v1x * v2x + v1z * v2z
+                
+                denom = dot00 * dot11 - dot01 * dot01
+                if abs(denom) < 1e-8:
+                    continue
+                    
+                invDenom = 1.0 / denom
+                u = (dot11 * dot02 - dot01 * dot12) * invDenom
+                v = (dot00 * dot12 - dot01 * dot02) * invDenom
+                
+                if (u >= -1e-5) and (v >= -1e-5) and (u + v <= 1.0 + 1e-5):
+                    y_val = a_y + u * (c_y - a_y) + v * (b_y - a_y)
+                    if y_val > highest_y:
+                        highest_y = y_val
+                    found = True
+                    
+            if found:
+                results_y[idx] = highest_y
+                results_found[idx] = True
+
+@njit(nogil=True)
+def fill_chunk_jit(min_s_y, max_s_y, cx_global, cz_global, local_heights, local_water, local_classes_int, custom_coords, custom_block_ids, num_custom):
+    num_sections = max_s_y - min_s_y
+    # Array to store block IDs for each section
+    result = np.zeros((num_sections, 4096), dtype=np.int32)
+    
+    # 1. Fill default terrain for each section
+    for s_idx in range(num_sections):
+        s_y = min_s_y + s_idx
+        y_min_sec = s_y * 16
+        for dy in range(16):
+            y_val = y_min_sec + dy
+            for dz in range(16):
+                z_val = cz_global * 16 + dz
+                for dx in range(16):
+                    x_val = cx_global * 16 + dx
+                    idx = dz * 16 + dx
+                    
+                    y_terrain = local_heights[idx]
+                    y_water_mc = local_water[idx]
+                    resolved_class = local_classes_int[idx]
+                    
+                    block_id = 0 # minecraft:air
+                    
+                    if y_water_mc >= -9998 and y_val <= y_water_mc:
+                        if y_val < y_terrain:
+                            if y_val < y_terrain - 3:
+                                block_id = 1 # stone
+                            else:
+                                block_id = 2 # dirt
+                        elif y_val == y_terrain:
+                            block_id = 3 # sand
+                        else:
+                            block_id = 4 # water
+                    else:
+                        if resolved_class == 1: # paved
+                            if y_val < y_terrain:
+                                block_id = 1 # stone
+                            elif y_val == y_terrain:
+                                # paved choices: 6, 7, 8
+                                h = (int(x_val) * 73856093) ^ (int(y_val) * 19349663) ^ (int(z_val) * 83492791)
+                                normalized = (abs(h) & 0xFFFF) / 65536.0
+                                if normalized <= 0.6:
+                                    block_id = 6
+                                elif normalized <= 0.9:
+                                    block_id = 7
+                                else:
+                                    block_id = 8
+                        elif resolved_class == 2: # dirt
+                            if y_val < y_terrain - 3:
+                                block_id = 1 # stone
+                            elif y_val < y_terrain:
+                                block_id = 2 # dirt
+                            elif y_val == y_terrain:
+                                # dirt choices: 9, 2, 10
+                                h = (int(x_val) * 73856093) ^ (int(y_val) * 19349663) ^ (int(z_val) * 83492791)
+                                normalized = (abs(h) & 0xFFFF) / 65536.0
+                                if normalized <= 0.6:
+                                    block_id = 9
+                                elif normalized <= 0.9:
+                                    block_id = 2
+                                else:
+                                    block_id = 10
+                        else: # grass
+                            if y_val < y_terrain - 3:
+                                block_id = 1
+                            elif y_val < y_terrain:
+                                block_id = 2
+                            elif y_val == y_terrain:
+                                block_id = 5 # grass_block
+                                
+                    flat_idx = dy * 256 + dz * 16 + dx
+                    result[s_idx, flat_idx] = block_id
+                    
+    # 2. Overwrite with custom blocks
+    for i in range(num_custom):
+        cx_c, cy_c, cz_c = custom_coords[i, 0], custom_coords[i, 1], custom_coords[i, 2]
+        # Coordinates are absolute. Let's convert to chunk-local
+        dx = cx_c - cx_global * 16
+        dz = cz_c - cz_global * 16
+        y_val = cy_c
+        
+        s_y = y_val // 16
+        dy = y_val % 16
+        
+        s_idx = s_y - min_s_y
+        if 0 <= s_idx < num_sections:
+            flat_idx = dy * 256 + dz * 16 + dx
+            result[s_idx, flat_idx] = custom_block_ids[i]
+            
+    return result
+
 def print_progress(label, completed, total, start_time=None):
     """Prints a highly efficient text-based progress bar on a single line with optional speed indicator."""
     if total <= 0:
@@ -1126,174 +1336,159 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
                 has_chunk_class = True
         
         # Pre-lookup all 256 heights, water, and class properties for this chunk
-        local_heights = [0] * 256
-        local_water = [None] * 256
-        local_classes = [None] * 256
+        local_heights = np.zeros(256, dtype=np.int32)
+        local_water = np.full(256, -9999, dtype=np.int32)
+        local_classes_int = np.zeros(256, dtype=np.int32) # 0: grass, 1: paved, 2: dirt
         
+        local_water_y = np.zeros(256, dtype=np.float64)
+        local_water_found = np.zeros(256, dtype=np.bool_)
+        
+        if has_chunk_water:
+            tri_arr = np.array(chunk_triangles, dtype=np.float64)
+            query_water_chunk_jit(cx_global * 16, cz_global * 16, tri_arr, local_water_y, local_water_found)
+            
         for dz in range(16):
             z_val = cz_global * 16 + dz
             for dx in range(16):
                 x_val = cx_global * 16 + dx
+                idx = dz * 16 + dx
+                
                 cached_h = height_cache.get(x_val, z_val)
                 if cached_h is None:
                     h_real = interpolator.query_height(x_val, -z_val)
                     cached_h = int(round(h_real)) - y_offset
                     height_cache.set(x_val, z_val, cached_h)
                 
-                is_water = False
-                y_water_mc = 0
-                if has_chunk_water:
-                    highest_y = -9999.0
-                    found = False
-                    for a, b, c in chunk_triangles:
-                        v0x, v0z = c[0] - a[0], c[2] - a[2]
-                        v1x, v1z = b[0] - a[0], b[2] - a[2]
-                        v2x, v2z = x_val - a[0], z_val - a[2]
+                y_water_mc = -9999
+                if has_chunk_water and local_water_found[idx]:
+                    y_water_mc = int(round(local_water_y[idx])) - y_offset
+                    if cached_h >= y_water_mc - 2:
+                        cached_h = y_water_mc - 3
+                        height_cache.set(x_val, z_val, cached_h)
                         
-                        denom = v0x * v0x + v0z * v0z
-                        dot00 = denom
-                        dot01 = v0x * v1x + v0z * v1z
-                        dot02 = v0x * v2x + v0z * v2z
-                        dot11 = v1x * v1x + v1z * v1z
-                        dot12 = v1x * v2x + v1z * v2z
-                        
-                        denom = dot00 * dot11 - dot01 * dot01
-                        if abs(denom) < 1e-8:
-                            continue
-                            
-                        invDenom = 1.0 / denom
-                        u = (dot11 * dot02 - dot01 * dot12) * invDenom
-                        v = (dot00 * dot12 - dot01 * dot02) * invDenom
-                        
-                        if (u >= -1e-5) and (v >= -1e-5) and (u + v <= 1.0 + 1e-5):
-                            y_val = a[1] + u * (c[1] - a[1]) + v * (b[1] - a[1])
-                            if y_val > highest_y:
-                                highest_y = y_val
-                            found = True
-                            
-                    if found:
-                        is_water = True
-                        y_water_mc = int(round(highest_y)) - y_offset
-                        # Carve terrain so it is at least 3 blocks below the water surface
-                        if cached_h >= y_water_mc - 2:
-                            cached_h = y_water_mc - 3
-                            height_cache.set(x_val, z_val, cached_h)
-                            
-                resolved_class = "grass"
+                resolved_class_int = 0 # grass
                 if has_chunk_class:
                     for poly in chunk_polygons:
                         min_x, max_x, min_z, max_z = poly["bbox"]
                         if x_val < min_x or x_val > max_x or z_val < min_z or z_val > max_z:
                             continue
-                        if classification_index.point_in_poly(x_val, z_val, poly["vertices"]):
-                            resolved_class = poly["class"]
+                        if _point_in_polygon_jit(float(x_val), float(z_val), poly["vertices"]):
+                            c = poly["class"]
+                            if c == "paved":
+                                resolved_class_int = 1
+                            elif c == "dirt":
+                                resolved_class_int = 2
                             break
                             
-                local_heights[dz * 16 + dx] = cached_h
-                if is_water:
-                    local_water[dz * 16 + dx] = y_water_mc
-                local_classes[dz * 16 + dx] = resolved_class
+                local_heights[idx] = cached_h
+                local_water[idx] = y_water_mc
+                local_classes_int[idx] = resolved_class_int
                 
-        has_custom = bool(chunk_dict)
+        # Prepare custom blocks arrays for Numba
+        chunk_dict = custom_blocks.get_chunk_dict(cx_global, cz_global) if hasattr(custom_blocks, 'get_chunk_dict') else custom_blocks
         
-        sections_nbt_list = []
-        for s_y in range(min_s_y, max_s_y):
-            y_min_sec = s_y * 16
-            palette_map = {"minecraft:air": 0}
-            palette_list = ["minecraft:air"]
-            block_indices = [0] * 4096
-            has_non_air = False
+        STANDARD_BLOCKS = [
+            "minecraft:air",                 # 0
+            "minecraft:stone",               # 1
+            "minecraft:dirt",                # 2
+            "minecraft:sand",                # 3
+            "minecraft:water",               # 4
+            "minecraft:grass_block",         # 5
+            "minecraft:andesite",            # 6
+            "minecraft:polished_andesite",   # 7
+            "minecraft:stone_bricks",        # 8
+            "minecraft:coarse_dirt",         # 9
+            "minecraft:gravel",              # 10
+        ]
+        
+        palette_map = {name: idx for idx, name in enumerate(STANDARD_BLOCKS)}
+        chunk_palette = list(STANDARD_BLOCKS)
+        chunk_palette_map = dict(palette_map)
+        
+        custom_coords_list = []
+        custom_ids_list = []
+        
+        for (x_val, y_val, z_val), block_name in chunk_dict.items():
+            if y_val < min_s_y * 16 or y_val > max_s_y * 16 + 15:
+                continue
+            if block_name not in chunk_palette_map:
+                chunk_palette_map[block_name] = len(chunk_palette)
+                chunk_palette.append(block_name)
+            custom_coords_list.append((x_val, y_val, z_val))
+            custom_ids_list.append(chunk_palette_map[block_name])
             
-            for dy in range(16):
-                y_val = y_min_sec + dy
-                for dz in range(16):
-                    z_val = cz_global * 16 + dz
-                    for dx in range(16):
-                        x_val = cx_global * 16 + dx
-                        
-                        block_name = chunk_dict.get((x_val, y_val, z_val)) if has_custom else None
-                        if block_name is None:
-                            y_terrain = local_heights[dz * 16 + dx]
-                            y_water_mc = local_water[dz * 16 + dx]
-                            resolved_class = local_classes[dz * 16 + dx]
-                            
-                            if y_water_mc is not None and y_val <= y_water_mc:
-                                if y_val < y_terrain:
-                                    if y_val < y_terrain - 3:
-                                        block_name = "minecraft:stone"
-                                    else:
-                                        block_name = "minecraft:dirt"
-                                elif y_val == y_terrain:
-                                    block_name = "minecraft:sand"
-                                else:
-                                    block_name = "minecraft:water"
-                            else:
-                                if resolved_class == "paved":
-                                    if y_val < y_terrain:
-                                        block_name = "minecraft:stone"
-                                    elif y_val == y_terrain:
-                                        choices = ["minecraft:andesite", "minecraft:polished_andesite", "minecraft:stone_bricks"]
-                                        weights = [0.6, 0.3, 0.1]
-                                        block_name = get_deterministic_choice(x_val, y_val, z_val, choices, weights)
-                                    else:
-                                        block_name = "minecraft:air"
-                                elif resolved_class == "dirt":
-                                    if y_val < y_terrain - 3:
-                                        block_name = "minecraft:stone"
-                                    elif y_val < y_terrain:
-                                        block_name = "minecraft:dirt"
-                                    elif y_val == y_terrain:
-                                        choices = ["minecraft:coarse_dirt", "minecraft:dirt", "minecraft:gravel"]
-                                        weights = [0.6, 0.3, 0.1]
-                                        block_name = get_deterministic_choice(x_val, y_val, z_val, choices, weights)
-                                    else:
-                                        block_name = "minecraft:air"
-                                else:
-                                    if y_val < y_terrain - 3:
-                                        block_name = "minecraft:stone"
-                                    elif y_val < y_terrain:
-                                        block_name = "minecraft:dirt"
-                                    elif y_val == y_terrain:
-                                        block_name = "minecraft:grass_block"
-                                    else:
-                                        block_name = "minecraft:air"
-                                
-                        if block_name != "minecraft:air":
-                            has_non_air = True
-                            
-                        p_idx = palette_map.get(block_name)
-                        if p_idx is None:
-                            p_idx = len(palette_list)
-                            palette_map[block_name] = p_idx
-                            palette_list.append(block_name)
-                            
-                        flat_idx = dy * 256 + dz * 16 + dx
-                        block_indices[flat_idx] = p_idx
-                        
-            if has_non_air:
-                palette_comp_list = [
-                    NBT(TAG_COMPOUND, value=[NBT(TAG_STRING, "Name", name)])
-                    for name in palette_list
-                ]
-                block_states_comp = [
-                    NBT(TAG_LIST, "palette", (TAG_COMPOUND, palette_comp_list))
-                ]
-                if len(palette_list) > 1:
-                    bits_per_block = max(4, int(math.ceil(math.log2(len(palette_list)))))
-                    longs = pack_block_states(block_indices, bits_per_block)
-                    block_states_comp.append(NBT(TAG_LONG_ARRAY, "data", longs))
-                    
-                biomes_comp = NBT(TAG_COMPOUND, "biomes", [
-                    NBT(TAG_LIST, "palette", (TAG_STRING, ["minecraft:plains"]))
-                ])
+        num_custom = len(custom_coords_list)
+        if num_custom > 0:
+            custom_coords = np.array(custom_coords_list, dtype=np.int32)
+            custom_block_ids = np.array(custom_ids_list, dtype=np.int32)
+        else:
+            custom_coords = np.zeros((0, 3), dtype=np.int32)
+            custom_block_ids = np.zeros(0, dtype=np.int32)
+            
+        # Compile/run block states generation in JIT
+        chunk_blocks_result = fill_chunk_jit(
+            min_s_y=min_s_y,
+            max_s_y=max_s_y,
+            cx_global=cx_global,
+            cz_global=cz_global,
+            local_heights=local_heights,
+            local_water=local_water,
+            local_classes_int=local_classes_int,
+            custom_coords=custom_coords,
+            custom_block_ids=custom_block_ids,
+            num_custom=num_custom
+        )
+        
+        # Translate dynamic JIT block IDs back to NBT palettes per section
+        num_sections = max_s_y - min_s_y
+        sections_nbt_list = []
+        for s_idx in range(num_sections):
+            s_y = min_s_y + s_idx
+            block_indices = chunk_blocks_result[s_idx]
+            
+            # Find unique IDs present in block_indices
+            unique_ids = np.unique(block_indices)
+            
+            # If the only unique ID is 0, then the section is all air, so we can omit it
+            if len(unique_ids) == 1 and unique_ids[0] == 0:
+                continue
                 
-                section_comp = NBT(TAG_COMPOUND, value=[
-                    NBT(TAG_BYTE, "Y", s_y),
-                    NBT(TAG_COMPOUND, "block_states", block_states_comp),
-                    biomes_comp
-                ])
-                sections_nbt_list.append(section_comp)
+            # Build local section palette
+            local_palette_list = []
+            local_palette_map = {}
+            for block_id in unique_ids:
+                name = chunk_palette[block_id]
+                local_palette_map[block_id] = len(local_palette_list)
+                local_palette_list.append(name)
                 
+            # Map index array to local palette IDs
+            mapped_indices = np.empty(4096, dtype=np.int32)
+            for idx in range(4096):
+                mapped_indices[idx] = local_palette_map[block_indices[idx]]
+                
+            palette_comp_list = [
+                NBT(TAG_COMPOUND, value=[NBT(TAG_STRING, "Name", name)])
+                for name in local_palette_list
+            ]
+            block_states_comp = [
+                NBT(TAG_LIST, "palette", (TAG_COMPOUND, palette_comp_list))
+            ]
+            if len(local_palette_list) > 1:
+                bits_per_block = max(4, int(math.ceil(math.log2(len(local_palette_list)))))
+                longs = pack_block_states(mapped_indices.tolist(), bits_per_block)
+                block_states_comp.append(NBT(TAG_LONG_ARRAY, "data", longs))
+                
+            biomes_comp = NBT(TAG_COMPOUND, "biomes", [
+                NBT(TAG_LIST, "palette", (TAG_STRING, ["minecraft:plains"]))
+            ])
+            
+            section_comp = NBT(TAG_COMPOUND, value=[
+                NBT(TAG_BYTE, "Y", s_y),
+                NBT(TAG_COMPOUND, "block_states", block_states_comp),
+                biomes_comp
+            ])
+            sections_nbt_list.append(section_comp)
+            
         chunk_nbt = NBT(TAG_COMPOUND, "", [
             NBT(TAG_INT, "DataVersion", 3463),
             NBT(TAG_INT, "xPos", cx_global),
@@ -1306,6 +1501,158 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
         
     region.save(mca_path)
     print(f"[Exporter] Saved region file: {mca_path}")
+
+def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, fast_height_cache, y_offset):
+    local_custom_blocks = {}
+    for ed in chunk_edges:
+        u_nd = node_map.get(ed["u"])
+        v_nd = node_map.get(ed["v"])
+        if not u_nd or not v_nd:
+            continue
+        x1, z1 = u_nd["x"], -u_nd["y"]
+        x2, z2 = v_nd["x"], -v_nd["y"]
+        
+        key = get_edge_key(ed["u"], ed["v"])
+        meta = edge_metadata.get(key, {})
+        hw = meta.get("highway", "residential")
+        name = meta.get("name", "")
+        bridge = meta.get("bridge", "")
+        layer = meta.get("layer", "")
+        is_bridge = (bridge == "yes") or (layer != "" and layer != "0" and not layer.startswith("-"))
+        
+        road_props = resolve_road_properties(name, hw)
+        width = road_props["width"]
+        surface = road_props["surface"]
+        is_rural = road_props["is_rural"]
+        marking_type = road_props["marking_type"]
+        
+        dx = x2 - x1
+        dz = z2 - z1
+        dist = math.sqrt(dx*dx + dz*dz)
+        if dist < 1e-5:
+            continue
+            
+        perp_x = -dz / dist
+        perp_z = dx / dist
+        
+        # Add padding to ensure road overlaps block boundaries and gets clipped perfectly
+        w_adjusted = width + 3
+        half_w = w_adjusted / 2.0
+        
+        steps = int(math.ceil(dist * 2))
+        for step in range(steps + 1):
+            t = step / steps
+            cx = x1 + t * dx
+            cz = z1 + t * dz
+            
+            dist_along = t * dist
+            is_near_intersection = (dist_along < 4.0) or ((dist - dist_along) < 4.0)
+            
+            d_min = int(math.floor(-half_w))
+            d_max = int(math.ceil(half_w))
+            for d in range(d_min, d_max + 1):
+                px = cx + d * perp_x
+                pz = cz + d * perp_z
+                
+                x_mc = int(round(px))
+                z_mc = int(round(pz))
+                
+                # Lock-free lookup in the fast height cache
+                y_mc = fast_height_cache.get((x_mc, z_mc))
+                if y_mc is None:
+                    y_mc = 400 - y_offset
+                
+                if is_rural:
+                    # Rural/historical road materials
+                    choices = [
+                        "minecraft:gravel",
+                        "minecraft:cobblestone",
+                        "minecraft:coarse_dirt",
+                        "minecraft:andesite",
+                        "minecraft:mossy_cobblestone"
+                    ]
+                    weights = [0.5, 0.25, 0.15, 0.05, 0.05]
+                    block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
+                    
+                    # Roadside vegetation just outside the boundary
+                    if not is_bridge and abs(d) == d_max:
+                        veg_x = int(round(cx + (d + (1 if d > 0 else -1)) * perp_x))
+                        veg_z = int(round(cz + (d + (1 if d > 0 else -1)) * perp_z))
+                        veg_y = fast_height_cache.get((veg_x, veg_z))
+                        if veg_y is None:
+                            veg_y = 400 - y_offset
+                        
+                        veg_choices = [None, "minecraft:short_grass", "minecraft:fern", "minecraft:dandelion", "minecraft:poppy"]
+                        veg_weights = [0.8, 0.1, 0.05, 0.025, 0.025]
+                        veg_block = get_deterministic_choice(veg_x, veg_y, veg_z, veg_choices, veg_weights)
+                        if veg_block:
+                            local_custom_blocks[(veg_x, veg_y + 1, veg_z)] = veg_block
+                else:
+                    # Modern asphalt road materials
+                    is_marking = False
+                    block_name = None
+                    
+                    # Center markings
+                    if marking_type in ["highway", "boulevard", "avenida"]:
+                        if abs(d) < 0.5 and not is_near_intersection:
+                            if marking_type == "highway":
+                                # Solid double yellow line
+                                block_name = "minecraft:yellow_concrete"
+                                is_marking = True
+                            else:
+                                # Dashed yellow line
+                                if int(math.floor(dist_along)) % 4 < 2:
+                                    block_name = "minecraft:yellow_concrete"
+                                    is_marking = True
+                                    
+                    elif marking_type == "calle":
+                        if abs(d) < 0.5 and not is_near_intersection:
+                            # Dashed white line
+                            if int(math.floor(dist_along)) % 4 < 2:
+                                block_name = "minecraft:white_concrete"
+                                is_marking = True
+                                
+                    # Boulevard lane divider markings (dashed white)
+                    if not is_marking and marking_type == "boulevard" and not is_near_intersection:
+                        if abs(abs(d) - 3.5) < 0.5:
+                            if int(math.floor(dist_along)) % 4 < 2:
+                                block_name = "minecraft:white_concrete"
+                                is_marking = True
+                                
+                    # Side markings
+                    if not is_marking and marking_type in ["highway", "boulevard", "avenida"] and not is_near_intersection:
+                        edge_d = max(1.0, math.floor(width / 2.0) - 1.0)
+                        if abs(abs(d) - edge_d) < 0.5:
+                            block_name = "minecraft:white_concrete"
+                            is_marking = True
+                            
+                    if not is_marking:
+                        if surface == "asphalt_clean":
+                            choices = ["minecraft:gray_concrete", "minecraft:black_concrete"]
+                            weights = [0.8, 0.2]
+                        elif surface == "asphalt_light":
+                            choices = ["minecraft:gray_concrete_powder", "minecraft:andesite", "minecraft:gravel"]
+                            weights = [0.7, 0.2, 0.1]
+                        else:
+                            choices = [
+                                "minecraft:gray_concrete_powder",
+                                "minecraft:black_concrete_powder",
+                                "minecraft:smooth_basalt",
+                                "minecraft:cobbled_deepslate",
+                                "minecraft:coal_block"
+                            ]
+                            weights = [0.6, 0.25, 0.05, 0.05, 0.05]
+                        block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
+                        
+                if is_bridge:
+                    y_road = y_mc + 6
+                    local_custom_blocks[(x_mc, y_road, z_mc)] = block_name
+                    if (d == d_min or d == d_max) and (step % 8 == 0):
+                        for y_pil in range(y_mc, y_road):
+                            local_custom_blocks[(x_mc, y_pil, z_mc)] = "minecraft:cobblestone"
+                else:
+                    local_custom_blocks[(x_mc, y_mc, z_mc)] = block_name
+    return local_custom_blocks
 
 def export_world(reconstruction_json_path, glb_path, output_dir, parallel_workers=0):
     world_dir = os.path.join(output_dir, "TecateWorld")
@@ -1418,14 +1765,16 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         
         num_edges = len(edges)
         if last_edge_idx < num_edges:
-            print(f"[Exporter] Rasterizing road network starting from index {last_edge_idx}...")
-            t_start_road = time.time()
+            print(f"[Exporter] Pre-calculating coordinates for road network starting from index {last_edge_idx}...")
+            t_start_pre = time.time()
+            
+            # Gather endpoints and widths for JIT coordinate generation
+            endpoints_list = []
+            widths_list = []
+            valid_edge_indices = []
+            
             for idx in range(last_edge_idx, num_edges):
-                if cancel_event.is_set():
-                    raise KeyboardInterrupt()
                 ed = edges[idx]
-                if (idx + 1) % 20 == 0 or idx + 1 == num_edges:
-                    print_progress("[Exporter] Rasterizing road network", idx + 1, num_edges, t_start_road)
                 u_nd = node_map.get(ed["u"])
                 v_nd = node_map.get(ed["v"])
                 if u_nd and v_nd:
@@ -1436,138 +1785,79 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                     meta = edge_metadata.get(key, {})
                     hw = meta.get("highway", "residential")
                     name = meta.get("name", "")
-                    bridge = meta.get("bridge", "")
-                    layer = meta.get("layer", "")
-                    is_bridge = (bridge == "yes") or (layer != "" and layer != "0" and not layer.startswith("-"))
-                    
                     road_props = resolve_road_properties(name, hw)
                     width = road_props["width"]
-                    lanes = road_props["lanes"]
-                    surface = road_props["surface"]
-                    is_rural = road_props["is_rural"]
-                    marking_type = road_props["marking_type"]
                     
-                    dx = x2 - x1
-                    dz = z2 - z1
-                    dist = math.sqrt(dx*dx + dz*dz)
-                    if dist < 1e-5:
-                        continue
-                        
-                    perp_x = -dz / dist
-                    perp_z = dx / dist
+                    endpoints_list.append([x1, z1, x2, z2])
+                    widths_list.append(width)
+                    valid_edge_indices.append(idx)
                     
-                    # Add padding to ensure road overlaps block boundaries and gets clipped perfectly
-                    w_adjusted = width + 3
-                    half_w = w_adjusted / 2.0
+            if endpoints_list:
+                endpoints_arr = np.array(endpoints_list, dtype=np.float64)
+                widths_arr = np.array(widths_list, dtype=np.float64)
+                
+                # Count total coordinates in compiled code
+                total_pts = count_road_points_jit(endpoints_arr, widths_arr)
+                coords_arr = np.empty((total_pts, 2), dtype=np.int32)
+                
+                # Fill coordinates in compiled code
+                filled_pts = generate_road_coords_fill_jit(endpoints_arr, widths_arr, coords_arr)
+                coords_arr = coords_arr[:filled_pts]
+                
+                # Get unique coordinates
+                unique_coords = np.unique(coords_arr, axis=0)
+                print(f"[Exporter] Pre-calculated {len(unique_coords)} unique road coordinate columns in {time.time() - t_start_pre:.2f}s.")
+                
+                # Identify missing heights
+                missing_queries = []
+                for x_mc, z_mc in unique_coords:
+                    if height_cache.get(x_mc, z_mc) is None:
+                        missing_queries.append((x_mc, -z_mc))
+                        
+                if missing_queries:
+                    print(f"[Exporter] Batch querying {len(missing_queries)} missing heights for roads...")
+                    t_q_start = time.time()
+                    batch_heights = interpolator.query_height_batch(missing_queries)
+                    for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
+                        z_val = -mz_q
+                        cached_h = int(round(h_real)) - y_offset
+                        height_cache.set(x_q, z_val, cached_h)
+                    print(f"[Exporter] Batch height queries completed in {time.time() - t_q_start:.2f}s.")
                     
-                    steps = int(math.ceil(dist * 2))
-                    for step in range(steps + 1):
-                        t = step / steps
-                        cx = x1 + t * dx
-                        cz = z1 + t * dz
-                        
-                        dist_along = t * dist
-                        is_near_intersection = (dist_along < 4.0) or ((dist - dist_along) < 4.0)
-                        
-                        d_min = int(math.floor(-half_w))
-                        d_max = int(math.ceil(half_w))
-                        for d in range(d_min, d_max + 1):
-                            px = cx + d * perp_x
-                            pz = cz + d * perp_z
-                            
-                            x_mc = int(round(px))
-                            z_mc = int(round(pz))
-                            y_mc = get_mc_terrain_y(x_mc, z_mc)
-                            
-                            if is_rural:
-                                # Rural/historical road materials
-                                choices = [
-                                    "minecraft:gravel",
-                                    "minecraft:cobblestone",
-                                    "minecraft:coarse_dirt",
-                                    "minecraft:andesite",
-                                    "minecraft:mossy_cobblestone"
-                                ]
-                                weights = [0.5, 0.25, 0.15, 0.05, 0.05]
-                                block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
-                                
-                                # Roadside vegetation just outside the boundary
-                                if not is_bridge and abs(d) == d_max:
-                                    veg_x = int(round(cx + (d + (1 if d > 0 else -1)) * perp_x))
-                                    veg_z = int(round(cz + (d + (1 if d > 0 else -1)) * perp_z))
-                                    veg_y = get_mc_terrain_y(veg_x, veg_z)
-                                    
-                                    veg_choices = [None, "minecraft:short_grass", "minecraft:fern", "minecraft:dandelion", "minecraft:poppy"]
-                                    veg_weights = [0.8, 0.1, 0.05, 0.025, 0.025]
-                                    veg_block = get_deterministic_choice(veg_x, veg_y, veg_z, veg_choices, veg_weights)
-                                    if veg_block:
-                                        custom_blocks[(veg_x, veg_y + 1, veg_z)] = veg_block
-                            else:
-                                # Modern asphalt road materials
-                                is_marking = False
-                                block_name = None
-                                
-                                # Center markings
-                                if marking_type in ["highway", "boulevard", "avenida"]:
-                                    if abs(d) < 0.5 and not is_near_intersection:
-                                        if marking_type == "highway":
-                                            # Solid double yellow line
-                                            block_name = "minecraft:yellow_concrete"
-                                            is_marking = True
-                                        else:
-                                            # Dashed yellow line
-                                            if int(math.floor(dist_along)) % 4 < 2:
-                                                block_name = "minecraft:yellow_concrete"
-                                                is_marking = True
-                                                
-                                elif marking_type == "calle":
-                                    if abs(d) < 0.5 and not is_near_intersection:
-                                        # Dashed white line
-                                        if int(math.floor(dist_along)) % 4 < 2:
-                                            block_name = "minecraft:white_concrete"
-                                            is_marking = True
-                                            
-                                # Boulevard lane divider markings (dashed white)
-                                if not is_marking and marking_type == "boulevard" and not is_near_intersection:
-                                    if abs(abs(d) - 3.5) < 0.5:
-                                        if int(math.floor(dist_along)) % 4 < 2:
-                                            block_name = "minecraft:white_concrete"
-                                            is_marking = True
-                                            
-                                # Side markings
-                                if not is_marking and marking_type in ["highway", "boulevard", "avenida"] and not is_near_intersection:
-                                    edge_d = max(1.0, math.floor(width / 2.0) - 1.0)
-                                    if abs(abs(d) - edge_d) < 0.5:
-                                        block_name = "minecraft:white_concrete"
-                                        is_marking = True
-                                        
-                                if not is_marking:
-                                    if surface == "asphalt_clean":
-                                        choices = ["minecraft:gray_concrete", "minecraft:black_concrete"]
-                                        weights = [0.8, 0.2]
-                                    elif surface == "asphalt_light":
-                                        choices = ["minecraft:gray_concrete_powder", "minecraft:andesite", "minecraft:gravel"]
-                                        weights = [0.7, 0.2, 0.1]
-                                    else:
-                                        choices = [
-                                            "minecraft:gray_concrete_powder",
-                                            "minecraft:black_concrete_powder",
-                                            "minecraft:smooth_basalt",
-                                            "minecraft:cobbled_deepslate",
-                                            "minecraft:coal_block"
-                                        ]
-                                        weights = [0.6, 0.25, 0.05, 0.05, 0.05]
-                                    block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
-                                    
-                            if is_bridge:
-                                y_road = y_mc + 6
-                                custom_blocks[(x_mc, y_road, z_mc)] = block_name
-                                if (d == d_min or d == d_max) and (step % 8 == 0):
-                                    for y_pil in range(y_mc, y_road):
-                                        custom_blocks[(x_mc, y_pil, z_mc)] = "minecraft:cobblestone"
-                            else:
-                                custom_blocks[(x_mc, y_mc, z_mc)] = block_name
-                last_edge_idx = idx + 1
+            # Copy height cache to a standard lock-free dictionary for worker threads
+            fast_height_cache = dict(height_cache.cache)
+            
+            # Parallelize road rasterization using ThreadPoolExecutor
+            workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
+            print(f"[Exporter] Rasterizing road network in parallel using {workers} threads...")
+            t_start_road = time.time()
+            
+            # Divide remaining edges into chunks for threads
+            remaining_edges = edges[last_edge_idx:]
+            chunk_size = max(1, len(remaining_edges) // (workers * 4))
+            edge_chunks = [remaining_edges[i:i + chunk_size] for i in range(0, len(remaining_edges), chunk_size)]
+            
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
+            try:
+                futures = [
+                    executor.submit(
+                        rasterize_roads_worker,
+                        chunk, node_map, edge_metadata, fast_height_cache, y_offset
+                    )
+                    for chunk in edge_chunks
+                ]
+                
+                completed = 0
+                for f in concurrent.futures.as_completed(futures):
+                    res = f.result()
+                    custom_blocks.update(res)
+                    completed += 1
+                    print_progress("[Exporter] Rasterizing road network chunks", completed, len(futures), t_start_road)
+            finally:
+                executor.shutdown(wait=False)
+                
+            last_edge_idx = num_edges
+            print(f"[Exporter] Road network rasterization completed in {time.time() - t_start_road:.2f}s.")
         else:
             print("[Exporter] Road network rasterization already fully completed.")
                         
