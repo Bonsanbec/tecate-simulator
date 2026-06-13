@@ -297,7 +297,7 @@ def get_file_info(filepath):
     stat = os.stat(filepath)
     return stat.st_mtime, stat.st_size
 
-def import_world(fresh_world_dir, modified_world_dir, glb_path=None, output_dir="export/minecraft_world", cache_path=None, parallel_workers=0):
+def import_world(fresh_world_dir, modified_world_dir, output_dir="export/minecraft_world", parallel_workers=None):
     metadata_path = os.path.join(modified_world_dir, "tecate_metadata.json")
     if not os.path.exists(metadata_path):
         metadata_path = os.path.join(fresh_world_dir, "tecate_metadata.json")
@@ -363,7 +363,7 @@ def import_world(fresh_world_dir, modified_world_dir, glb_path=None, output_dir=
             
     print(f"[Importer] {len(regions_to_scan)} / {len(regions)} regions need to be scanned.")
     
-    workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
+    workers = parallel_workers if parallel_workers is not None and parallel_workers > 0 else (os.cpu_count() or 4)
     active_chunks = set()
     
     if regions_to_scan:
@@ -500,17 +500,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Minecraft World to Blender Importer")
     parser.add_argument("--fresh-world", required=True, help="Path to the fresh reference world directory")
     parser.add_argument("--modified-world", required=True, help="Path to the player-modified world directory")
-    parser.add_argument("--glb-path", default=None, help="Path to terrain GLB (ignored)")
     parser.add_argument("--output-dir", default="export/minecraft_world", help="Output directory for generated Blend/GLB models")
-    parser.add_argument("--cache-path", default=None, help="Path to custom_blocks_cache.npz (ignored)")
-    parser.add_argument("--parallel", type=int, default=0, help="Number of process workers (0 = auto)")
+    parser.add_argument("--parallel", type=int, default=None, help="Number of process workers (default: max CPU cores)")
     args = parser.parse_args()
     
     import_world(
         args.fresh_world,
         args.modified_world,
-        glb_path=args.glb_path,
         output_dir=args.output_dir,
-        cache_path=args.cache_path,
         parallel_workers=args.parallel
     )
