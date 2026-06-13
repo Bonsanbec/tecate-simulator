@@ -291,6 +291,220 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None,
         
     return local_blocks
 
+def make_sign_block_entity(x, y, z, line1_text, line2_text=""):
+    """
+    Creates an NBT TAG_COMPOUND representing a sign block entity
+    with the specified street name text on its front face.
+    """
+    l1 = json.dumps({"text": line1_text})
+    l2 = json.dumps({"text": line2_text})
+    
+    front_text = NBT(TAG_COMPOUND, "front_text", [
+        NBT(TAG_LIST, "messages", (TAG_STRING, [
+            l1,
+            l2,
+            '{"text": ""}',
+            '{"text": ""}'
+        ])),
+        NBT(TAG_STRING, "color", "black"),
+        NBT(TAG_BYTE, "glow", 0)
+    ])
+    
+    return NBT(TAG_COMPOUND, "", [
+        NBT(TAG_STRING, "id", "minecraft:sign"),
+        NBT(TAG_INT, "x", int(x)),
+        NBT(TAG_INT, "y", int(y)),
+        NBT(TAG_INT, "z", int(z)),
+        front_text
+    ])
+
+def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, custom_blocks, get_mc_terrain_y):
+    """
+    Procedurally places street name signs at intersections based on priority,
+    street names, hierarchies, and setback geometry.
+    """
+    nodes = road_graph.get("nodes", [])
+    edges = road_graph.get("edges", [])
+    node_map = {nd["id"]: nd for nd in nodes}
+    
+    adj = {}
+    for ed in edges:
+        u, v = ed["u"], ed["v"]
+        adj.setdefault(u, []).append(ed)
+        adj.setdefault(v, []).append(ed)
+        
+    print(f"[Exporter] Generating street name signs for {len(nodes)} road nodes...")
+    
+    if not hasattr(custom_blocks, 'block_entities'):
+        custom_blocks.block_entities = {}
+        
+    sign_count = 0
+    
+    for n_id, connected_edges in adj.items():
+        n_nd = node_map.get(n_id)
+        if not n_nd:
+            continue
+            
+        x_node = n_nd["x"]
+        z_node = -n_nd["y"]
+        
+        street_info = {}
+        for ed in connected_edges:
+            key = get_edge_key(ed["u"], ed["v"])
+            meta = edge_metadata.get(key, {})
+            name = meta.get("name", "")
+            hw = meta.get("highway", "residential")
+            
+            road_props = resolve_road_properties(name, hw)
+            width = road_props["width"]
+            
+            name_norm = (name or "").lower().strip()
+            is_expressway = ("carr" in name_norm or "carretera" in name_norm or "autop" in name_norm or "autopista" in name_norm or hw in ["motorway", "motorway_link", "trunk", "trunk_link"])
+            is_blvd = ("blvd" in name_norm or "boulevard" in name_norm or "blvrd" in name_norm)
+            is_avenida = ("av" in name_norm or "avenida" in name_norm or "paseo" in name_norm)
+            is_calle = ("calle" in name_norm or "callejón" in name_norm or "privada" in name_norm or "calzada" in name_norm)
+            
+            if is_expressway or is_blvd:
+                level = 3
+            elif is_avenida:
+                level = 2
+            elif is_calle:
+                level = 1
+            else:
+                level = 0
+                
+            key_name = name if name else f"Unnamed_{n_id}"
+            
+            if key_name not in street_info:
+                street_info[key_name] = (level, width, [])
+            street_info[key_name][2].append(ed)
+            
+        distinct_names = [k for k in street_info.keys() if not k.startswith("Unnamed_")]
+        
+        if len(distinct_names) < 2:
+            continue
+            
+        max_level = max(street_info[name][0] for name in distinct_names)
+        is_priority = max_level >= 2
+        
+        street_vectors = []
+        for ed in connected_edges:
+            key = get_edge_key(ed["u"], ed["v"])
+            meta = edge_metadata.get(key, {})
+            name = meta.get("name", "")
+            if not name:
+                continue
+                
+            level, width, _ = street_info[name]
+            
+            other_id = ed["v"] if ed["u"] == n_id else ed["u"]
+            other_nd = node_map.get(other_id)
+            if other_nd:
+                ox, oz = other_nd["x"], -other_nd["y"]
+                dx = ox - x_node
+                dz = oz - z_node
+                length = math.sqrt(dx*dx + dz*dz)
+                if length > 1e-3:
+                    street_vectors.append({
+                        "name": name,
+                        "level": level,
+                        "width": width,
+                        "x": dx / length,
+                        "z": dz / length,
+                        "angle": math.atan2(dz, dx)
+                    })
+                
+        if len(street_vectors) < 2:
+            continue
+            
+        street_vectors.sort(key=lambda item: item["angle"])
+        num_vecs = len(street_vectors)
+        
+        corners_to_place = range(num_vecs) if is_priority else [0]
+        
+        for idx in corners_to_place:
+            v1 = street_vectors[idx]
+            v2 = street_vectors[(idx + 1) % num_vecs]
+            
+            a1 = v1["angle"]
+            a2 = v2["angle"]
+            diff = a2 - a1
+            if diff < 0:
+                diff += 2 * math.pi
+            if diff > math.pi:
+                a_mid = a1 + (diff - 2 * math.pi) / 2.0
+            else:
+                a_mid = a1 + diff / 2.0
+                
+            w1 = v1["width"]
+            w2 = v2["width"]
+            
+            cos_mid = math.cos(a_mid)
+            sin_mid = math.sin(a_mid)
+            
+            p1_x, p1_z = -v1["z"], v1["x"]
+            p2_x, p2_z = -v2["z"], v2["x"]
+            
+            proj1 = abs(cos_mid * p1_x + sin_mid * p1_z)
+            proj2 = abs(cos_mid * p2_x + sin_mid * p2_z)
+            
+            d1 = (w1 / 2.0 + 1.5) / max(0.2, proj1)
+            d2 = (w2 / 2.0 + 1.5) / max(0.2, proj2)
+            
+            r = max(d1, d2)
+            r = min(r, max(w1, w2) + 2.0)
+            
+            x_sign = int(round(x_node + r * cos_mid))
+            z_sign = int(round(z_node + r * sin_mid))
+            
+            y_sign = get_mc_terrain_y(x_sign, z_sign)
+            
+            custom_blocks[(x_sign, y_sign + 1, z_sign)] = "minecraft:pale_oak_fence"
+            custom_blocks[(x_sign, y_sign + 2, z_sign)] = "minecraft:pale_oak_fence"
+            
+            def get_facing_direction(vx, vz):
+                px, pz = -vz, vx
+                cardinals = [
+                    ("north", 0.0, -1.0),
+                    ("south", 0.0, 1.0),
+                    ("east", 1.0, 0.0),
+                    ("west", -1.0, 0.0)
+                ]
+                best_face = "north"
+                max_dot = -99.0
+                for face, cx, cz in cardinals:
+                    dot = px * cx + pz * cz
+                    if dot > max_dot:
+                        max_dot = dot
+                        best_face = face
+                return best_face
+                
+            face_v1 = get_facing_direction(v1["x"], v1["z"])
+            face_v2 = get_facing_direction(v2["x"], v2["z"])
+            
+            offsets = {
+                "north": (0, 0, -1),
+                "south": (0, 0, 1),
+                "east": (1, 0, 0),
+                "west": (-1, 0, 0)
+            }
+            
+            off_x, off_y, off_z = offsets[face_v1]
+            bx1, by1, bz1 = x_sign + off_x, y_sign + 2, z_sign + off_z
+            custom_blocks[(bx1, by1, bz1)] = f"minecraft:pale_oak_wall_sign[facing={face_v1}]"
+            custom_blocks.block_entities[(bx1, by1, bz1)] = make_sign_block_entity(bx1, by1, bz1, v1["name"])
+            
+            if v2["name"] != v1["name"]:
+                off_x2, off_y2, off_z2 = offsets[face_v2]
+                bx2, by2, bz2 = x_sign + off_x2, y_sign + 2, z_sign + off_z2
+                if (bx2, by2, bz2) not in custom_blocks:
+                    custom_blocks[(bx2, by2, bz2)] = f"minecraft:pale_oak_wall_sign[facing={face_v2}]"
+                    custom_blocks.block_entities[(bx2, by2, bz2)] = make_sign_block_entity(bx2, by2, bz2, v2["name"])
+                    
+            sign_count += 1
+            
+    print(f"[Exporter] Successfully generated {sign_count} street name sign posts.")
+
 class TerrainHeightCache:
     """
     A thread-safe caching system for terrain height lookups to avoid
@@ -1915,6 +2129,31 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 )
                         
         print(f"[Exporter] Rasterized {len(custom_blocks)} custom geometry blocks.")
+        
+        # C. Generate street name signs at intersections
+        if not cancel_event.is_set():
+            if 'node_heights' not in locals():
+                node_coords = []
+                node_ids = []
+                for nd in nodes:
+                    node_coords.append((nd["x"], -nd["y"]))
+                    node_ids.append(nd["id"])
+                print(f"[Exporter] Node heights not in memory. Batch querying {len(node_coords)} road nodes for sign generation...")
+                t_node_start = time.time()
+                node_heights_raw = interpolator.query_height_batch(node_coords)
+                node_heights = {}
+                for nd_id, h_raw in zip(node_ids, node_heights_raw):
+                    node_heights[nd_id] = int(round(h_raw)) - y_offset
+                print(f"[Exporter] Node height queries completed in {time.time() - t_node_start:.2f}s.")
+                
+            generate_street_signs(
+                road_graph=road_graph,
+                edge_metadata=edge_metadata,
+                node_heights=node_heights,
+                y_offset=y_offset,
+                custom_blocks=custom_blocks,
+                get_mc_terrain_y=get_mc_terrain_y
+            )
         
         # Determine active chunk coordinates containing custom blocks
         if hasattr(custom_blocks, 'chunk_slices') and hasattr(custom_blocks, 'new_blocks_by_chunk'):
