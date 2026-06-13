@@ -545,10 +545,10 @@ def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, cus
             if not is_near_large_manzana(x_sign, z_sign):
                 continue
                 
-            # Proximity de-duplication: skip if any pole is within 10.0m
+            # Proximity de-duplication: skip if any pole is within 5.0m
             too_close = False
             for px, pz in placed_poles:
-                if math.sqrt((x_sign - px)**2 + (z_sign - pz)**2) < 10.0:
+                if math.sqrt((x_sign - px)**2 + (z_sign - pz)**2) < 5.0:
                     too_close = True
                     break
             if too_close:
