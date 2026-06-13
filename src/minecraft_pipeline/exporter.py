@@ -1815,18 +1815,6 @@ def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y
                     ]
                     weights = [0.5, 0.25, 0.15, 0.05, 0.05]
                     block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
-                    
-                    # Roadside vegetation just outside the boundary
-                    if not is_bridge and abs(d) == d_max:
-                        veg_x = int(round(cx + (d + (1 if d > 0 else -1)) * perp_x))
-                        veg_z = int(round(cz + (d + (1 if d > 0 else -1)) * perp_z))
-                        veg_y = y_mc
-                        
-                        veg_choices = [None, "minecraft:short_grass", "minecraft:fern", "minecraft:dandelion", "minecraft:poppy"]
-                        veg_weights = [0.8, 0.1, 0.05, 0.025, 0.025]
-                        veg_block = get_deterministic_choice(veg_x, veg_y, veg_z, veg_choices, veg_weights)
-                        if veg_block:
-                            local_custom_blocks[(veg_x, veg_y + 1, veg_z)] = veg_block
                 else:
                     # Modern asphalt road materials
                     is_marking = False
