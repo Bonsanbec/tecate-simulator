@@ -347,6 +347,265 @@ def load_terrain_vertices(glb_path, s, tx, tz):
         
         return x_godot, y_godot, z_godot
 
+def resolve_road_properties(name, highway_type):
+    """
+    Heuristically resolves road properties (width, lanes, surface, markings, etc.)
+    based on the road name prefix and OSM highway classification.
+    """
+    hw = highway_type or "residential"
+    name_norm = (name or "").lower().strip()
+    
+    # 1. Expressways/Highways
+    is_expressway = (
+        "carr" in name_norm or 
+        "carretera" in name_norm or 
+        "autop" in name_norm or 
+        "autopista" in name_norm or 
+        hw in ["motorway", "motorway_link", "trunk", "trunk_link"]
+    )
+    
+    # 2. Boulevards
+    is_blvd = (
+        "blvd" in name_norm or 
+        "boulevard" in name_norm or 
+        "blvrd" in name_norm
+    )
+    
+    # 3. Avenidas / Avenues
+    is_avenida = (
+        "av" in name_norm or 
+        "avenida" in name_norm or 
+        "paseo" in name_norm
+    )
+    
+    # 4. Streets / Calles
+    is_calle = (
+        "calle" in name_norm or 
+        "callejón" in name_norm or
+        "privada" in name_norm or
+        "calzada" in name_norm
+    )
+    
+    # 5. Unnamed minor roads / services
+    is_unnamed_minor = (
+        not name_norm and
+        hw in ["unclassified", "service", "living_street", "track", "path", "bridleway"]
+    )
+    
+    if is_expressway:
+        width = 12.0
+        lanes = 4
+        surface = "asphalt"
+        is_rural = False
+        marking_type = "highway"
+    elif is_blvd:
+        width = 14.0
+        lanes = 4
+        surface = "asphalt_clean"
+        is_rural = False
+        marking_type = "boulevard"
+    elif is_avenida:
+        width = 9.0
+        lanes = 2
+        surface = "asphalt"
+        is_rural = False
+        marking_type = "avenida"
+    elif is_unnamed_minor:
+        width = 4.0
+        lanes = 1
+        surface = "gravel"
+        is_rural = True
+        marking_type = "none"
+    elif is_calle:
+        width = 6.0
+        lanes = 2
+        surface = "asphalt_light"
+        is_rural = False
+        marking_type = "calle"
+    else:
+        # Fallback default
+        if hw in ["primary", "primary_link"]:
+            width = 10.0
+            lanes = 2
+            surface = "asphalt"
+            is_rural = False
+            marking_type = "avenida"
+        elif hw in ["secondary", "secondary_link"]:
+            width = 8.0
+            lanes = 2
+            surface = "asphalt"
+            is_rural = False
+            marking_type = "calle"
+        elif hw in ["tertiary", "tertiary_link"]:
+            width = 7.0
+            lanes = 2
+            surface = "asphalt"
+            is_rural = False
+            marking_type = "calle"
+        else:
+            width = 6.0
+            lanes = 2
+            surface = "asphalt"
+            is_rural = False
+            marking_type = "calle"
+            
+    return {
+        "width": width,
+        "lanes": lanes,
+        "surface": surface,
+        "is_rural": is_rural,
+        "marking_type": marking_type
+    }
+
+class TerrainWaterInterpolator:
+    """
+    Parses and indexes water meshes (nodes starting with 'water_') from the GLB.
+    Builds a cell-based spatial index of 2D projected water triangles for fast O(1) query.
+    """
+    def __init__(self, glb_path, s, tx, tz, cell_size=200.0):
+        self.cell_size = cell_size
+        self.grid = {}
+        self.triangles = []
+        
+        if not os.path.exists(glb_path):
+            print(f"[WaterInterpolator Warning] GLB not found: {glb_path}")
+            return
+            
+        print("[WaterInterpolator] Parsing water meshes from GLB...")
+        with open(glb_path, "rb") as f:
+            header = f.read(12)
+            magic, version, length = struct.unpack('<III', header)
+            if magic != 0x46546c67:
+                raise ValueError("Invalid GLB magic number")
+                
+            chunk_header = f.read(8)
+            chunk_length, chunk_type = struct.unpack('<II', chunk_header)
+            json_bytes = f.read(chunk_length)
+            gltf = json.loads(json_bytes.decode('utf-8'))
+            
+            f.seek(12 + 8 + chunk_length)
+            chunk1_header = f.read(8)
+            chunk1_len, chunk1_type = struct.unpack('<II', chunk1_header)
+            binary_data = f.read(chunk1_len)
+            
+        # Find all water nodes
+        water_nodes = []
+        for idx, node in enumerate(gltf.get('nodes', [])):
+            name = node.get('name', '')
+            if name.startswith('water_'):
+                water_nodes.append((name, node.get('mesh')))
+                
+        for name, mesh_idx in water_nodes:
+            if mesh_idx is None:
+                continue
+            mesh = gltf['meshes'][mesh_idx]
+            prim = mesh['primitives'][0]
+            
+            # Position accessor
+            pos_idx = prim['attributes']['POSITION']
+            pos_acc = gltf['accessors'][pos_idx]
+            pos_bv = gltf['bufferViews'][pos_acc['bufferView']]
+            pos_offset = pos_bv.get('byteOffset', 0) + pos_acc.get('byteOffset', 0)
+            pos_count = pos_acc['count']
+            positions = np.frombuffer(binary_data[pos_offset:pos_offset + pos_count * 12], dtype=np.float32).reshape(pos_count, 3)
+            
+            # Project vertices to MC space
+            pts_mc = []
+            for idx in range(pos_count):
+                x_mc = s * positions[idx, 0] + tx
+                z_mc = s * (-positions[idx, 2]) + tz
+                y_mc = s * positions[idx, 1]
+                pts_mc.append((x_mc, y_mc, z_mc))
+                
+            # Indices accessor
+            indices_idx = prim.get('indices')
+            if indices_idx is not None:
+                ind_acc = gltf['accessors'][indices_idx]
+                ind_bv = gltf['bufferViews'][ind_acc['bufferView']]
+                ind_offset = ind_bv.get('byteOffset', 0) + ind_acc.get('byteOffset', 0)
+                ind_count = ind_acc['count']
+                component_type = ind_acc['componentType']
+                
+                dtype = np.uint16 if component_type == 5123 else np.uint32
+                item_size = 2 if component_type == 5123 else 4
+                indices = np.frombuffer(binary_data[ind_offset:ind_offset + ind_count * item_size], dtype=dtype)
+                
+                for idx in range(0, len(indices), 3):
+                    if idx + 2 < len(indices):
+                        a = pts_mc[indices[idx]]
+                        b = pts_mc[indices[idx+1]]
+                        c = pts_mc[indices[idx+2]]
+                        self.triangles.append((a, b, c))
+            else:
+                for idx in range(0, len(pts_mc), 3):
+                    if idx + 2 < len(pts_mc):
+                        a = pts_mc[idx]
+                        b = pts_mc[idx+1]
+                        c = pts_mc[idx+2]
+                        self.triangles.append((a, b, c))
+                        
+        # Index triangles in spatial grid
+        print(f"[WaterInterpolator] Loaded {len(self.triangles)} water triangles. Building spatial grid...")
+        for tri_idx, (a, b, c) in enumerate(self.triangles):
+            min_x = min(a[0], b[0], c[0])
+            max_x = max(a[0], b[0], c[0])
+            min_z = min(a[2], b[2], c[2])
+            max_z = max(a[2], b[2], c[2])
+            
+            c_x_min = int(math.floor(min_x / cell_size))
+            c_x_max = int(math.floor(max_x / cell_size))
+            c_z_min = int(math.floor(min_z / cell_size))
+            c_z_max = int(math.floor(max_z / cell_size))
+            
+            for cx in range(c_x_min, c_x_max + 1):
+                for cz in range(c_z_min, c_z_max + 1):
+                    self.grid.setdefault((cx, cz), []).append(tri_idx)
+        print(f"[WaterInterpolator] Spatial grid indexed in {len(self.grid)} cells.")
+
+    def query_water(self, px, pz):
+        """
+        Checks if the 2D point (px, pz) lies inside any water triangle.
+        Returns (is_water, y_water) where y_water is the barycentrically interpolated height.
+        """
+        cx = int(math.floor(px / self.cell_size))
+        cz = int(math.floor(pz / self.cell_size))
+        tri_indices = self.grid.get((cx, cz), [])
+        
+        highest_y = -9999.0
+        found = False
+        
+        for tri_idx in tri_indices:
+            a, b, c = self.triangles[tri_idx]
+            
+            v0x, v0z = c[0] - a[0], c[2] - a[2]
+            v1x, v1z = b[0] - a[0], b[2] - a[2]
+            v2x, v2z = px - a[0], pz - a[2]
+            
+            denom = v0x * v0x + v0z * v0z
+            dot00 = denom
+            dot01 = v0x * v1x + v0z * v1z
+            dot02 = v0x * v2x + v0z * v2z
+            dot11 = v1x * v1x + v1z * v1z
+            dot12 = v1x * v2x + v1z * v2z
+            
+            denom = dot00 * dot11 - dot01 * dot01
+            if abs(denom) < 1e-8:
+                continue
+                
+            invDenom = 1.0 / denom
+            u = (dot11 * dot02 - dot01 * dot12) * invDenom
+            v = (dot00 * dot12 - dot01 * dot02) * invDenom
+            
+            if (u >= -1e-5) and (v >= -1e-5) and (u + v <= 1.0 + 1e-5):
+                y_val = a[1] + u * (c[1] - a[1]) + v * (b[1] - a[1])
+                if y_val > highest_y:
+                    highest_y = y_val
+                found = True
+                
+        if found:
+            return True, highest_y
+        return False, 0.0
+
 class TerrainHeightInterpolator:
     """
     Uses a 2D spatial grid index to lazily build and cache local Delaunay interpolators
@@ -471,17 +730,19 @@ class TerrainHeightInterpolator:
 
 # Process-local globals for multiprocessing workers
 _worker_interpolator = None
+_worker_water_interpolator = None
 _worker_custom_blocks = None
 _worker_y_offset = None
 
 def init_worker_process(glb_path, s, tx, tz, custom_blocks, y_offset):
-    global _worker_interpolator, _worker_custom_blocks, _worker_y_offset
+    global _worker_interpolator, _worker_water_interpolator, _worker_custom_blocks, _worker_y_offset
     _worker_interpolator = TerrainHeightInterpolator(glb_path, s, tx, tz)
+    _worker_water_interpolator = TerrainWaterInterpolator(glb_path, s, tx, tz)
     _worker_custom_blocks = custom_blocks
     _worker_y_offset = y_offset
 
 def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y):
-    global _worker_interpolator, _worker_custom_blocks, _worker_y_offset
+    global _worker_interpolator, _worker_water_interpolator, _worker_custom_blocks, _worker_y_offset
     
     # Process-local cache for height coordinates
     local_cache = TerrainHeightCache()
@@ -493,6 +754,7 @@ def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y
         mca_path=mca_path,
         custom_blocks=_worker_custom_blocks,
         interpolator=_worker_interpolator,
+        water_interpolator=_worker_water_interpolator,
         y_offset=_worker_y_offset,
         height_cache=local_cache,
         cancel_event=None,
@@ -681,7 +943,8 @@ def print_progress(label, completed, total, start_time=None):
         sys.stdout.write("\n")
         sys.stdout.flush()
 
-def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache, cancel_event=None, min_s_y=-4, max_s_y=20):
+def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache, 
+                         water_interpolator=None, cancel_event=None, min_s_y=-4, max_s_y=20):
     """Generates MCA chunks for a single region (runs in worker thread)."""
     region = MCARegion(rx, rz)
     
@@ -718,8 +981,9 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
         # Load small chunk dictionary on demand to avoid OOM
         chunk_dict = custom_blocks.get_chunk_dict(cx_global, cz_global) if hasattr(custom_blocks, 'get_chunk_dict') else custom_blocks
         
-        # Pre-lookup all 256 heights for this chunk to avoid lock contention
+        # Pre-lookup all 256 heights and water properties for this chunk to avoid lock contention
         local_heights = [0] * 256
+        local_water = [None] * 256
         for dz in range(16):
             z_val = cz_global * 16 + dz
             for dx in range(16):
@@ -729,7 +993,22 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
                     h_real = interpolator.query_height(x_val, -z_val)
                     cached_h = int(round(h_real)) - y_offset
                     height_cache.set(x_val, z_val, cached_h)
+                
+                is_water = False
+                y_water_mc = 0
+                if water_interpolator is not None:
+                    has_w, y_w_real = water_interpolator.query_water(x_val, z_val)
+                    if has_w:
+                        is_water = True
+                        y_water_mc = int(round(y_w_real)) - y_offset
+                        # Carve terrain so it is at least 3 blocks below the water surface
+                        if cached_h >= y_water_mc - 2:
+                            cached_h = y_water_mc - 3
+                            height_cache.set(x_val, z_val, cached_h)
+                            
                 local_heights[dz * 16 + dx] = cached_h
+                if is_water:
+                    local_water[dz * 16 + dx] = y_water_mc
                 
         has_custom = bool(chunk_dict)
         
@@ -751,14 +1030,27 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
                         block_name = chunk_dict.get((x_val, y_val, z_val)) if has_custom else None
                         if block_name is None:
                             y_terrain = local_heights[dz * 16 + dx]
-                            if y_val < y_terrain - 3:
-                                block_name = "minecraft:stone"
-                            elif y_val < y_terrain:
-                                block_name = "minecraft:dirt"
-                            elif y_val == y_terrain:
-                                block_name = "minecraft:grass_block"
+                            y_water_mc = local_water[dz * 16 + dx]
+                            
+                            if y_water_mc is not None and y_val <= y_water_mc:
+                                if y_val < y_terrain:
+                                    if y_val < y_terrain - 3:
+                                        block_name = "minecraft:stone"
+                                    else:
+                                        block_name = "minecraft:dirt"
+                                elif y_val == y_terrain:
+                                    block_name = "minecraft:sand"
+                                else:
+                                    block_name = "minecraft:water"
                             else:
-                                block_name = "minecraft:air"
+                                if y_val < y_terrain - 3:
+                                    block_name = "minecraft:stone"
+                                elif y_val < y_terrain:
+                                    block_name = "minecraft:dirt"
+                                elif y_val == y_terrain:
+                                    block_name = "minecraft:grass_block"
+                                else:
+                                    block_name = "minecraft:air"
                                 
                         if block_name != "minecraft:air":
                             has_non_air = True
@@ -936,14 +1228,17 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                     key = get_edge_key(ed["u"], ed["v"])
                     meta = edge_metadata.get(key, {})
                     hw = meta.get("highway", "residential")
-                    lanes = meta.get("lanes", 2)
-                    width = meta.get("width", 6.0)
-                    surface = meta.get("surface", "asphalt")
+                    name = meta.get("name", "")
                     bridge = meta.get("bridge", "")
                     layer = meta.get("layer", "")
                     is_bridge = (bridge == "yes") or (layer != "" and layer != "0" and not layer.startswith("-"))
                     
-                    is_rural = (surface in ["gravel", "dirt", "earth", "ground", "sand", "grass"]) or (hw in ["track", "path", "bridleway"])
+                    road_props = resolve_road_properties(name, hw)
+                    width = road_props["width"]
+                    lanes = road_props["lanes"]
+                    surface = road_props["surface"]
+                    is_rural = road_props["is_rural"]
+                    marking_type = road_props["marking_type"]
                     
                     dx = x2 - x1
                     dz = z2 - z1
@@ -1005,27 +1300,56 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                                 is_marking = False
                                 block_name = None
                                 
-                                # Center yellow line
-                                if lanes == 2 and abs(d) < 0.5 and not is_near_intersection:
-                                    if int(math.floor(dist_along)) % 4 < 2:
-                                        block_name = "minecraft:yellow_concrete"
+                                # Center markings
+                                if marking_type in ["highway", "boulevard", "avenida"]:
+                                    if abs(d) < 0.5 and not is_near_intersection:
+                                        if marking_type == "highway":
+                                            # Solid double yellow line
+                                            block_name = "minecraft:yellow_concrete"
+                                            is_marking = True
+                                        else:
+                                            # Dashed yellow line
+                                            if int(math.floor(dist_along)) % 4 < 2:
+                                                block_name = "minecraft:yellow_concrete"
+                                                is_marking = True
+                                                
+                                elif marking_type == "calle":
+                                    if abs(d) < 0.5 and not is_near_intersection:
+                                        # Dashed white line
+                                        if int(math.floor(dist_along)) % 4 < 2:
+                                            block_name = "minecraft:white_concrete"
+                                            is_marking = True
+                                            
+                                # Boulevard lane divider markings (dashed white)
+                                if not is_marking and marking_type == "boulevard" and not is_near_intersection:
+                                    if abs(abs(d) - 3.5) < 0.5:
+                                        if int(math.floor(dist_along)) % 4 < 2:
+                                            block_name = "minecraft:white_concrete"
+                                            is_marking = True
+                                            
+                                # Side markings
+                                if not is_marking and marking_type in ["highway", "boulevard", "avenida"] and not is_near_intersection:
+                                    edge_d = max(1.0, math.floor(width / 2.0) - 1.0)
+                                    if abs(abs(d) - edge_d) < 0.5:
+                                        block_name = "minecraft:white_concrete"
                                         is_marking = True
                                         
-                                # Side white lines
-                                edge_d = max(1.0, math.floor(width / 2.0) - 1.0)
-                                if not is_marking and abs(abs(d) - edge_d) < 0.5 and not is_near_intersection:
-                                    block_name = "minecraft:white_concrete"
-                                    is_marking = True
-                                    
                                 if not is_marking:
-                                    choices = [
-                                        "minecraft:gray_concrete_powder",
-                                        "minecraft:black_concrete_powder",
-                                        "minecraft:smooth_basalt",
-                                        "minecraft:cobbled_deepslate",
-                                        "minecraft:coal_block"
-                                    ]
-                                    weights = [0.6, 0.25, 0.05, 0.05, 0.05]
+                                    if surface == "asphalt_clean":
+                                        choices = ["minecraft:gray_concrete", "minecraft:black_concrete"]
+                                        weights = [0.8, 0.2]
+                                    elif surface == "asphalt_light":
+                                        choices = ["minecraft:gray_concrete_powder", "minecraft:andesite", "minecraft:gravel"]
+                                        weights = [0.7, 0.2, 0.1]
+                                    else:
+                                        choices = [
+                                            "minecraft:gray_concrete_powder",
+                                            "minecraft:black_concrete_powder",
+                                            "minecraft:smooth_basalt",
+                                            "minecraft:cobbled_deepslate",
+                                            "minecraft:coal_block"
+                                        ]
+                                        weights = [0.6, 0.25, 0.05, 0.05, 0.05]
                                     block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
                                     
                             if is_bridge:
