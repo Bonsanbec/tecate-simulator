@@ -1,12 +1,23 @@
 #!/bin/bash
-# Activate virtual environment
-source venv/bin/activate
+# Exit on error
+set -e
 
-# Set PYTHONPATH to the current directory
-export PYTHONPATH=.
+# Change directory to the root of the project
+cd "$(dirname "$0")"
 
-# Execute the minecraft exporter pipeline
-./venv/bin/python -m src.minecraft_pipeline.exporter \
-  --import-json export/reconstruction_export.json \
-  --glb-path models/tecate/glb/tecate.glb \
-  --output-dir export/minecraft_world
+# Activate python virtual environment if it exists
+if [ -d "venv" ]; then
+    echo "Activating virtual environment..."
+    source venv/bin/activate
+elif [ -d ".venv" ]; then
+    echo "Activating virtual environment..."
+    source .venv/bin/activate
+fi
+
+echo "Running Minecraft Exporter Pipeline..."
+echo ""
+
+PYTHONPATH=. python3 -m src.minecraft_pipeline.exporter
+
+echo ""
+echo "Pipeline execution finished successfully!"

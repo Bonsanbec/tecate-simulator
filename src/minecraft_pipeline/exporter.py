@@ -1354,13 +1354,56 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         
     return world_dir
 
+def ensure_default_env(path=".env"):
+    if not os.path.exists(path):
+        import sys
+        if sys.platform == "win32":
+            userprofile = os.getenv("USERPROFILE", os.path.expanduser("~"))
+            def_mod = os.path.join(userprofile, "AppData", "Roaming", ".minecraft", "saves", "TecateWorld")
+        elif sys.platform == "darwin":
+            def_mod = os.path.expanduser("~/Library/Application Support/minecraft/saves/TecateWorld")
+        else:
+            def_mod = os.path.expanduser("~/.minecraft/saves/TecateWorld")
+            
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write("# Minecraft Importer/Exporter Environment Configuration\n")
+            f.write("IMPORT_JSON=export/reconstruction_export.json\n")
+            f.write("GLB_PATH=models/tecate/glb/tecate.glb\n")
+            f.write("FRESH_WORLD=export/minecraft_world/TecateWorld\n")
+            f.write(f"MODIFIED_WORLD={def_mod.replace('\\\\', '/')}\n")
+            f.write("OUTPUT_DIR=export/minecraft_world\n")
+            f.write("REMOTE_HOST=HakkinDavid@hakkin.tail4b53f5.ts.net\n")
+            f.write("REMOTE_PATH=~/tecate-simulator\n")
+        print(f"[Exporter] Created default configuration file: {path}")
+
+def load_env(path=".env"):
+    if os.path.exists(path):
+        with open(path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if '=' in line:
+                    k, v = line.split('=', 1)
+                    k = k.strip()
+                    v = v.strip().strip('"').strip("'")
+                    if k not in os.environ:
+                        os.environ[k] = v
+
 if __name__ == "__main__":
+    ensure_default_env()
+    load_env()
+    
     import argparse
     parser = argparse.ArgumentParser(description="Tecate to Minecraft World Exporter")
-    parser.add_argument("--import-json", default="export/reconstruction_export.json", help="Path to reconstruction_export.json")
-    parser.add_argument("--glb-path", default="models/tecate/glb/tecate.glb", help="Path to terrain GLB")
-    parser.add_argument("--output-dir", default="export/minecraft_world", help="Output directory for Minecraft saves")
+    parser.add_argument("--import-json", default=None, help="Path to reconstruction_export.json (falls back to IMPORT_JSON env var)")
+    parser.add_argument("--glb-path", default=None, help="Path to terrain GLB (falls back to GLB_PATH env var)")
+    parser.add_argument("--output-dir", default=None, help="Output directory for Minecraft saves (falls back to OUTPUT_DIR env var)")
     parser.add_argument("--parallel", type=int, default=0, help="Number of thread workers (0 = auto)")
     args = parser.parse_args()
     
-    export_world(args.import_json, args.glb_path, args.output_dir, args.parallel)
+    import_json = args.import_json or os.getenv("IMPORT_JSON") or "export/reconstruction_export.json"
+    glb_path = args.glb_path or os.getenv("GLB_PATH") or "models/tecate/glb/tecate.glb"
+    output_dir = args.output_dir or os.getenv("OUTPUT_DIR") or "export/minecraft_world"
+    
+    export_world(import_json, glb_path, output_dir, args.parallel)
