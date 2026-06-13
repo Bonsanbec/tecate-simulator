@@ -331,7 +331,7 @@ def load_terrain_vertices(glb_path, s, tx, tz):
         positions = np.frombuffer(binary_data[pos_offset:pos_offset + pos_count * 12], dtype=np.float32).reshape(pos_count, 3)
         
         x_godot = s * positions[:, 0] + tx
-        z_godot = s * positions[:, 2] + tz
+        z_godot = s * (-positions[:, 2]) + tz
         y_godot = s * positions[:, 1]
         
         return x_godot, y_godot, z_godot
@@ -817,9 +817,9 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         except Exception as e:
             print(f"[Exporter Warning] Failed to load existing metadata: {e}")
             
-    s = 0.84277856
-    tx = 28057.9043
-    tz = 16614.8854
+    s = 0.8427785648661434
+    tx = 28052.404303473268
+    tz = -16620.3853885848
     
     cancel_event = threading.Event()
     height_cache = TerrainHeightCache()

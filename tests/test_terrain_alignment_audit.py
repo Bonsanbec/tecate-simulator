@@ -26,10 +26,9 @@ def load_raw_glb_positions_helper(glb_path):
     positions = np.frombuffer(binary_data[pos_offset:pos_offset + pos_count * 12], dtype=np.float32).reshape(pos_count, 3)
     return positions[:, 0], positions[:, 1], positions[:, 2]
 
-def test_terrain_alignment_discrepancy():
+def test_terrain_alignment_correctness():
     """
-    Verifies that the current exporter constants mirror and translate the terrain
-    by about 33.2 km, while the TerrainAligner ground truth provides correct alignment.
+    Verifies that the metadata terrain alignment matches the TerrainAligner ground truth.
     """
     aligner = TerrainAligner()
     gt_align = aligner.compute_alignment()
@@ -38,58 +37,58 @@ def test_terrain_alignment_discrepancy():
     tx_gt = gt_align['translation_m'][0]
     ty_gt = gt_align['translation_m'][1]
     
-    # Exporter parameters
-    s_exp = 0.84277856
-    tx_exp = 28057.9043
-    tz_exp = 16614.8854
+    # Load alignment values from tecate_metadata.json
+    metadata_path = "export/minecraft_world/TecateWorld/tecate_metadata.json"
+    assert os.path.exists(metadata_path), "tecate_metadata.json must exist"
     
-    # Discrepancy checks
-    # Scale difference should be small
-    assert abs(s_gt - s_exp) < 0.001
+    with open(metadata_path, 'r') as f:
+        metadata = json.load(f)
+        
+    align_meta = metadata["terrain_alignment"]
+    s_meta = align_meta["scale"]
+    tx_meta = align_meta["translation_x"]
+    tz_meta = align_meta["translation_z"]
     
-    # X Translation difference should be small (< 10 meters)
-    assert abs(tx_gt - tx_exp) < 10.0
+    # Scale difference should be near 0
+    assert abs(s_gt - s_meta) < 1e-6
     
-    # Z-Axis Mirror Check:
-    # Instead of matching ty_gt (which is around -16620), tz_exp is +16614.
-    # This represents a massive shift of about 33.2 km.
-    shift_distance = abs(tz_exp - ty_gt)
-    print(f"Z-Axis translation discrepancy: {shift_distance:.1f} meters")
-    assert shift_distance > 33000.0
+    # X Translation difference should be near 0
+    assert abs(tx_gt - tx_meta) < 1e-6
+    
+    # Y/Z Translation difference should be near 0 (with correct negative sign)
+    assert abs(ty_gt - tz_meta) < 1e-6
+    assert tz_meta < 0.0
 
-def test_validation_points_error_analysis():
+def test_validation_points_corrected_elevation():
     """
-    Verifies that the elevation error at Parque Hidalgo (center of projection) is minimal,
-    but scales linearly with distance north or south due to the Z-axis mirroring.
+    Verifies that with the corrected exporter coordinates, the elevation errors
+    remain near-zero at all validation points (no linear horizontal drift error).
     """
     glb_path = "models/tecate/glb/tecate.glb"
+    metadata_path = "export/minecraft_world/TecateWorld/tecate_metadata.json"
     
+    with open(metadata_path, 'r') as f:
+        metadata = json.load(f)
+    align_meta = metadata["terrain_alignment"]
+    
+    s_active = align_meta["scale"]
+    tx_active = align_meta["translation_x"]
+    tz_active = align_meta["translation_z"]
+    
+    # Initialize active runtime interpolator
+    active_interp = TerrainHeightInterpolator(glb_path, s_active, tx_active, tz_active)
+    
+    # Ground Truth Baseline
     s_gt = 0.8427785648661434
     tx_gt = 28052.404303473268
     ty_gt = -16620.3853885848
     
-    s_exp = 0.84277856
-    tx_exp = 28057.9043
-    tz_exp = 16614.8854
-    
-    # 1. Central Point: Parque Hidalgo (Center)
-    lat_center, lon_center = TECATE_LAT_CENTER, TECATE_LON_CENTER
-    lx_c, ly_c = gps_to_local(lat_center, lon_center)
-    
-    # 2. Northern Point: US Border (approx 300m North)
-    lx_n, ly_n = gps_to_local(lat_center + 0.003, lon_center)
-    
-    # Initialize both interpolators
-    exp_interp = TerrainHeightInterpolator(glb_path, s_exp, tx_exp, tz_exp)
     gt_interp = TerrainHeightInterpolator(glb_path, s_gt, tx_gt, 0.0)
-    
-    # Manually correct GT Z coordinates
     raw_x, raw_y, raw_z = load_raw_glb_positions_helper(glb_path)
     gt_interp.x_pts = s_gt * raw_x + tx_gt
     gt_interp.y_pts = s_gt * raw_y
     gt_interp.z_pts = s_gt * (-raw_z) + ty_gt
     
-    # Clear grid cache and rebuild
     gt_interp.grid = {}
     for idx in range(len(gt_interp.x_pts)):
         cx = int(math.floor(gt_interp.x_pts[idx] / gt_interp.cell_size))
@@ -97,19 +96,24 @@ def test_validation_points_error_analysis():
         gt_interp.grid.setdefault((cx, cz), []).append(idx)
     gt_interp.interpolators = {}
     
-    # Query elevations
-    h_gt_c = gt_interp.query_height(lx_c, ly_c)
-    h_exp_c = exp_interp.query_height(lx_c, ly_c)
+    # Test points (Center, North, South, East, West)
+    lat_center, lon_center = TECATE_LAT_CENTER, TECATE_LON_CENTER
+    test_coords = [
+        ("Center", lat_center, lon_center),
+        ("North", lat_center + 0.003, lon_center),
+        ("South", lat_center - 0.005, lon_center),
+        ("East", lat_center, lon_center + 0.005),
+        ("West", lat_center, lon_center - 0.005)
+    ]
     
-    h_gt_n = gt_interp.query_height(lx_n, ly_n)
-    h_exp_n = exp_interp.query_height(lx_n, ly_n)
-    
-    # Center error should be extremely small (< 1 meter)
-    c_err = abs(h_gt_c - h_exp_c)
-    print(f"Parque Hidalgo Center Elevation Error: {c_err:.2f} meters")
-    assert c_err < 1.0
-    
-    # North error should be significant due to mirroring shift of ~600m
-    n_err = abs(h_gt_n - h_exp_n)
-    print(f"Northern Border Elevation Error: {n_err:.2f} meters")
-    assert n_err > 10.0
+    for name, lat, lon in test_coords:
+        local_x, local_y = gps_to_local(lat, lon)
+        
+        # Query elevations
+        h_gt = gt_interp.query_height(local_x, local_y)
+        h_active = active_interp.query_height(local_x, local_y)
+        
+        error = abs(h_gt - h_active)
+        print(f"Point: {name:<10} | GT Height: {h_gt:.1f}m | Active Height: {h_active:.1f}m | Error: {error:.4f}m")
+        # All errors should be under 0.1 meters
+        assert error < 0.1
