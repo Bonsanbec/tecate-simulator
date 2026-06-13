@@ -23,3 +23,5 @@ export/geometry.bin
 export/minecraft_world/HigherHeightsUltimate4064_26.1.zip
 *:Zone.Identifier
 /export/minecraft_world/resource_pack
+*.nbi
+*.nbc

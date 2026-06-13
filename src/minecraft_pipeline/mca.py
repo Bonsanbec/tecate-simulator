@@ -1,13 +1,48 @@
 import os
 import struct
 import zlib
+import numpy as np
 from .nbt import read_tag, write_tag, load_zlib, save_zlib
+
+try:
+    from numba import njit
+    HAS_NUMBA = True
+except ImportError:
+    HAS_NUMBA = False
+    def njit(*args, **kwargs):
+        def decorator(func):
+            return func
+        if len(args) == 1 and callable(args[0]):
+            return args[0]
+        return decorator
+
+@njit(nogil=True, cache=True)
+def _pack_block_states_jit(block_indices, bits_per_block):
+    blocks_per_long = 64 // bits_per_block
+    long_count = (4096 + blocks_per_long - 1) // blocks_per_long
+    longs = np.zeros(long_count, dtype=np.int64)
+    mask = (1 << bits_per_block) - 1
+    
+    for l_idx in range(long_count):
+        val = np.uint64(0)
+        for b_idx in range(blocks_per_long):
+            idx = l_idx * blocks_per_long + b_idx
+            if idx < 4096:
+                block_val = np.uint64(block_indices[idx])
+                val |= (block_val & np.uint64(mask)) << np.uint64(b_idx * bits_per_block)
+        longs[l_idx] = np.int64(val)
+    return longs
 
 def pack_block_states(block_indices, bits_per_block):
     """
     Packs 4096 block indices (integers) into 64-bit signed integers (longs)
     using the non-overlapping packing strategy used in Minecraft 1.16+.
     """
+    if HAS_NUMBA:
+        if not isinstance(block_indices, np.ndarray):
+            block_indices = np.array(block_indices, dtype=np.int32)
+        return [int(x) for x in _pack_block_states_jit(block_indices, bits_per_block)]
+        
     blocks_per_long = 64 // bits_per_block
     long_count = (4096 + blocks_per_long - 1) // blocks_per_long
     longs = []

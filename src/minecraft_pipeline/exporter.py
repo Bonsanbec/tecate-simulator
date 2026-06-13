@@ -1283,7 +1283,7 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
             for dz in range(16):
                 x_val = cx_global * 16 + dx
                 z_val = cz_global * 16 + dz
-                if height_cache.get(x_val, z_val) is None:
+                if height_cache.cache.get((x_val, z_val)) is None:
                     missing_queries.append((x_val, -z_val))
                     
     if missing_queries:
@@ -1366,11 +1366,13 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
                 x_val = cx_global * 16 + dx
                 idx = dz * 16 + dx
                 
-                cached_h = height_cache.get(x_val, z_val)
+                cached_h = height_cache.cache.get((x_val, z_val))
                 if cached_h is None:
-                    h_real = interpolator.query_height(x_val, -z_val)
-                    cached_h = int(round(h_real)) - y_offset
-                    height_cache.set(x_val, z_val, cached_h)
+                    cached_h = height_cache.get(x_val, z_val)
+                    if cached_h is None:
+                        h_real = interpolator.query_height(x_val, -z_val)
+                        cached_h = int(round(h_real)) - y_offset
+                        height_cache.set(x_val, z_val, cached_h)
                 
                 y_water_mc = -9999
                 if has_chunk_water and local_water_found[idx]:
@@ -1474,10 +1476,12 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
                 local_palette_map[block_id] = len(local_palette_list)
                 local_palette_list.append(name)
                 
-            # Map index array to local palette IDs
-            mapped_indices = np.empty(4096, dtype=np.int32)
-            for idx in range(4096):
-                mapped_indices[idx] = local_palette_map[block_indices[idx]]
+            # Map index array to local palette IDs (vectorized via numpy indexing)
+            max_id = unique_ids.max()
+            mapping_arr = np.zeros(max_id + 1, dtype=np.int32)
+            for block_id in unique_ids:
+                mapping_arr[block_id] = local_palette_map[block_id]
+            mapped_indices = mapping_arr[block_indices]
                 
             palette_comp_list = [
                 NBT(TAG_COMPOUND, value=[NBT(TAG_STRING, "Name", name)])
