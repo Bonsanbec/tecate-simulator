@@ -14,19 +14,6 @@ from .nbt import (
     read_tag
 )
 from .mca import MCARegion, unpack_block_states
-from .exporter import TerrainHeightInterpolator, TerrainHeightCache, load_custom_blocks_cache
-
-TERRAIN_BLOCKS = {
-    "minecraft:grass_block",
-    "minecraft:dirt",
-    "minecraft:stone",
-    "minecraft:deepslate",
-    "minecraft:bedrock",
-    "minecraft:sand",
-    "minecraft:gravel",
-    "minecraft:clay",
-    "minecraft:water"
-}
 
 BLOCK_COLORS = {
     "minecraft:yellow_concrete": [0.95, 0.8, 0.1],
@@ -48,15 +35,6 @@ BLOCK_COLORS = {
     "minecraft:green_concrete": [0.3, 0.4, 0.15],
     "minecraft:black_concrete": [0.08, 0.08, 0.1]
 }
-
-# Process-local globals for multiprocessing workers
-_worker_interpolator = None
-_worker_y_offset = None
-
-def init_worker_process(glb_path, s, tx, tz, y_offset):
-    global _worker_interpolator, _worker_y_offset
-    _worker_interpolator = TerrainHeightInterpolator(glb_path, s, tx, tz)
-    _worker_y_offset = y_offset
 
 def nbt_to_py(tag):
     """Converts NBT tags recursively to standard, sortable, and comparable Python structures."""
@@ -153,17 +131,10 @@ def chunk_block_states_differ(nbt1, nbt2):
         
     return False
 
-def extract_chunk_blocks_filtered(chunk_nbt, cx_global, cz_global, min_s_y, max_s_y, interpolator, y_offset):
+def extract_chunk_all_blocks(chunk_nbt, cx_global, cz_global, min_s_y, max_s_y):
+    """Extracts all non-air blocks from the chunk's sections within vertical bounds."""
     blocks = {}
     sections, _ = get_sections_and_entities(chunk_nbt)
-    
-    local_heights = [0] * 256
-    for dz in range(16):
-        z_val = cz_global * 16 + dz
-        for dx in range(16):
-            x_val = cx_global * 16 + dx
-            h_real = interpolator.query_height(x_val, -z_val)
-            local_heights[dz * 16 + dx] = int(round(h_real)) - y_offset
             
     for sec in sections:
         s_y = None
@@ -216,21 +187,12 @@ def extract_chunk_blocks_filtered(chunk_nbt, cx_global, cz_global, min_s_y, max_
                         continue
                     block_name = palette[p_idx]
                     
-                    if block_name == "minecraft:air":
-                        continue
+                    if block_name != "minecraft:air":
+                        blocks[(x_val, y_val, z_val)] = block_name
                         
-                    y_terrain = local_heights[dz * 16 + dx]
-                    
-                    if block_name in TERRAIN_BLOCKS and y_val <= y_terrain:
-                        continue
-                        
-                    blocks[(x_val, y_val, z_val)] = block_name
-                    
     return blocks
 
 def diff_single_region_process(rx, rz, fresh_mca_path, modified_mca_path, min_s_y, max_s_y):
-    global _worker_interpolator, _worker_y_offset
-    
     active_chunks = set()
     block_data = {}
     
@@ -263,7 +225,7 @@ def diff_single_region_process(rx, rz, fresh_mca_path, modified_mca_path, min_s_
             if comp_fresh == comp_modified:
                 is_changed = False
             else:
-                # Fallback to deep NBT structure comparison
+                # Fallback to deep NBT comparison
                 fresh_nbt = fresh_mca.get_chunk_nbt(cx_local, cz_local)
                 modified_nbt = modified_mca.get_chunk_nbt(cx_local, cz_local)
                 if not modified_nbt:
@@ -275,14 +237,23 @@ def diff_single_region_process(rx, rz, fresh_mca_path, modified_mca_path, min_s_
                     
         if is_changed:
             active_chunks.add((cx_global, cz_global))
+            fresh_nbt = fresh_mca.get_chunk_nbt(cx_local, cz_local) if fresh_mca else None
             modified_nbt = modified_mca.get_chunk_nbt(cx_local, cz_local)
+            
             if modified_nbt:
-                blocks = extract_chunk_blocks_filtered(
-                    modified_nbt, cx_global, cz_global, min_s_y, max_s_y,
-                    _worker_interpolator, _worker_y_offset
-                )
-                block_data.update(blocks)
+                fresh_blocks = extract_chunk_all_blocks(fresh_nbt, cx_global, cz_global, min_s_y, max_s_y) if fresh_nbt else {}
+                modified_blocks = extract_chunk_all_blocks(modified_nbt, cx_global, cz_global, min_s_y, max_s_y)
                 
+                # Compare modified blocks directly with fresh reference blocks
+                all_coords = set(fresh_blocks.keys()) | set(modified_blocks.keys())
+                for coord in all_coords:
+                    b_fresh = fresh_blocks.get(coord, "minecraft:air")
+                    b_mod = modified_blocks.get(coord, "minecraft:air")
+                    if b_mod != b_fresh:
+                        # Only export blocks added or modified (solid non-air in modified world)
+                        if b_mod != "minecraft:air":
+                            block_data[coord] = b_mod
+                            
     return active_chunks, block_data
 
 def locate_blender():
@@ -323,7 +294,7 @@ def get_file_info(filepath):
     stat = os.stat(filepath)
     return stat.st_mtime, stat.st_size
 
-def import_world(fresh_world_dir, modified_world_dir, glb_path, output_dir, cache_path=None, parallel_workers=0):
+def import_world(fresh_world_dir, modified_world_dir, glb_path=None, output_dir="export/minecraft_world", cache_path=None, parallel_workers=0):
     metadata_path = os.path.join(modified_world_dir, "tecate_metadata.json")
     if not os.path.exists(metadata_path):
         metadata_path = os.path.join(fresh_world_dir, "tecate_metadata.json")
@@ -334,18 +305,10 @@ def import_world(fresh_world_dir, modified_world_dir, glb_path, output_dir, cach
         metadata = json.load(f)
         
     y_offset = metadata["vertical_offset"]
-    align = metadata["terrain_alignment"]
-    s, tx, tz = align["scale"], align["translation_x"], align["translation_z"]
     
-    interpolator = TerrainHeightInterpolator(glb_path, s, tx, tz)
-    
-    # Dynamic heights calculation
-    glb_min_y = float(interpolator.y_pts.min())
-    glb_max_y = float(interpolator.y_pts.max())
-    min_mc_y = glb_min_y - y_offset
-    max_mc_y = glb_max_y - y_offset
-    min_s_y = int(math.floor(min_mc_y / 16.0))
-    max_s_y = int(math.ceil(max_mc_y / 16.0))
+    # Safe vertical limits covering the maximum potential range of the Higher Heights datapack
+    min_s_y = -16
+    max_s_y = 80
     
     fresh_region_dir = get_region_dir(fresh_world_dir)
     modified_region_dir = get_region_dir(modified_world_dir)
@@ -388,7 +351,7 @@ def import_world(fresh_world_dir, modified_world_dir, glb_path, output_dir, cach
         if cached_info and cached_info == [fresh_mtime, fresh_size, mod_mtime, mod_size]:
             # Reuse parsed blocks from checkpoint
             region_blocks = checkpoint.get("modified_blocks", {}).get(region_key, {})
-            # Convert string coordinates "x,y,z" back to tuples
+            # Convert string coordinates back to tuples
             final_modified_blocks[region_key] = {
                 tuple(map(int, k.split(','))): v for k, v in region_blocks.items()
             }
@@ -402,11 +365,7 @@ def import_world(fresh_world_dir, modified_world_dir, glb_path, output_dir, cach
     
     if regions_to_scan:
         print(f"[Importer] Scanning changed regions in parallel using {workers} processes...")
-        with concurrent.futures.ProcessPoolExecutor(
-            max_workers=workers,
-            initializer=init_worker_process,
-            initargs=(glb_path, s, tx, tz, y_offset)
-        ) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
             futures = {}
             for (rx, rz), fresh_path, mod_path, fm, fs, mm, ms in regions_to_scan:
                 f = executor.submit(
@@ -423,7 +382,7 @@ def import_world(fresh_world_dir, modified_world_dir, glb_path, output_dir, cach
                     active_chunks.update(chunks)
                     final_modified_blocks[region_key] = blocks
                     
-                    # Update checkpoint NBT data in-memory
+                    # Update checkpoint in-memory
                     checkpoint.setdefault("mtimes", {})[region_key] = [fm, fs, mm, ms]
                     checkpoint.setdefault("modified_blocks", {})[region_key] = {
                         f"{k[0]},{k[1]},{k[2]}": v for k, v in blocks.items()
@@ -444,36 +403,9 @@ def import_world(fresh_world_dir, modified_world_dir, glb_path, output_dir, cach
     for r_blocks in final_modified_blocks.values():
         preserved_blocks.update(r_blocks)
         
-    # Re-build active_chunks set from all modified coordinates
-    active_chunks = set()
-    for (x, y, z) in preserved_blocks.keys():
-        active_chunks.add((x // 16, z // 16))
-        
-    # 2. Merge with original roads/manzanas cache for inactive chunks
-    if not cache_path:
-        cache_path = os.path.join(os.path.dirname(modified_world_dir), "custom_blocks_cache.npz")
-        
-    custom_blocks = {}
-    if os.path.exists(cache_path):
-        custom_blocks, _, _, _ = load_custom_blocks_cache(cache_path)
-    else:
-        print(f"[Importer Warning] Original custom blocks cache not found at: {cache_path}. Running without baseline roads/manzanas.")
-        
-    if custom_blocks:
-        if hasattr(custom_blocks, 'chunk_slices') and hasattr(custom_blocks, 'new_blocks_by_chunk'):
-            original_active_chunks = set(custom_blocks.chunk_slices.keys()) | set(custom_blocks.new_blocks_by_chunk.keys())
-        else:
-            original_active_chunks = set()
-            
-        print(f"[Importer] Merging {len(original_active_chunks - active_chunks)} inactive baseline chunks from original cache...")
-        for (cx, cz) in original_active_chunks:
-            if (cx, cz) not in active_chunks:
-                chunk_blocks = custom_blocks.get_chunk_dict(cx, cz)
-                preserved_blocks.update(chunk_blocks)
-                
-    print(f"[Importer] Combined model contains {len(preserved_blocks)} non-terrain blocks.")
+    print(f"[Importer] Diff model contains {len(preserved_blocks)} player-built modification blocks.")
     
-    # 3. Perform Exposed Face Culling & Generate box list grouped by region
+    # 3. Perform Exposed Face Culling & Group by region
     print("[Importer] Optimizing voxel geometry (exposed face culling)...")
     region_data = {}
     total_culled = 0
@@ -565,17 +497,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Minecraft World to Blender Importer")
     parser.add_argument("--fresh-world", required=True, help="Path to the fresh reference world directory")
     parser.add_argument("--modified-world", required=True, help="Path to the player-modified world directory")
-    parser.add_argument("--glb-path", default="models/tecate/glb/tecate.glb", help="Path to terrain GLB")
+    parser.add_argument("--glb-path", default=None, help="Path to terrain GLB (ignored)")
     parser.add_argument("--output-dir", default="export/minecraft_world", help="Output directory for generated Blend/GLB models")
-    parser.add_argument("--cache-path", default=None, help="Path to custom_blocks_cache.npz (default: auto)")
+    parser.add_argument("--cache-path", default=None, help="Path to custom_blocks_cache.npz (ignored)")
     parser.add_argument("--parallel", type=int, default=0, help="Number of process workers (0 = auto)")
     args = parser.parse_args()
     
     import_world(
         args.fresh_world,
         args.modified_world,
-        args.glb_path,
-        args.output_dir,
+        glb_path=args.glb_path,
+        output_dir=args.output_dir,
         cache_path=args.cache_path,
         parallel_workers=args.parallel
     )
