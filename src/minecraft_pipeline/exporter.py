@@ -294,6 +294,18 @@ class TerrainHeightCache:
         self.lock = threading.Lock()
         self.cache = {}
         self.changed = False
+        
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    for k, v in data.items():
+                        parts = k.split(',')
+                        if len(parts) == 2:
+                            self.cache[(int(parts[0]), int(parts[1]))] = int(v)
+                print(f"[TerrainHeightCache] Loaded {len(self.cache)} entries from {cache_path}")
+            except Exception as e:
+                print(f"[TerrainHeightCache Warning] Failed to load cache: {e}")
 
     def get(self, x, z):
         with self.lock:
@@ -305,7 +317,18 @@ class TerrainHeightCache:
             self.changed = True
 
     def save(self):
-        pass
+        if not self.changed:
+            return
+        with self.lock:
+            try:
+                os.makedirs(os.path.dirname(self.cache_path), exist_ok=True)
+                data = {f"{k[0]},{k[1]}": v for k, v in self.cache.items()}
+                with open(self.cache_path, 'w', encoding='utf-8') as f:
+                    json.dump(data, f)
+                self.changed = False
+                print(f"[TerrainHeightCache] Saved {len(data)} entries to {self.cache_path}")
+            except Exception as e:
+                print(f"[TerrainHeightCache Warning] Failed to save cache: {e}")
 
 def load_terrain_vertices(glb_path, s, tx, tz):
     """Loads tinMesh (Mesh 1) vertices and projects them to local Cartesian space."""
@@ -986,9 +1009,9 @@ def find_inside_points(min_x, max_x, min_z, max_z, polygon):
 
 def get_deterministic_choice(x, y, z, choices, weights):
     """Deterministically selects a choice based on coordinates hash."""
-    hash_str = f"{x},{y},{z}"
-    val = int(hashlib.md5(hash_str.encode()).hexdigest(), 16)
-    normalized = (val % 1000) / 1000.0
+    # Fast non-cryptographic arithmetic hash on coordinates
+    h = (int(x) * 73856093) ^ (int(y) * 19349663) ^ (int(z) * 83492791)
+    normalized = (abs(h) & 0xFFFF) / 65536.0
     
     cumulative = 0.0
     for choice, weight in zip(choices, weights):
@@ -1308,7 +1331,8 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
     tz = -16620.3853885848
     
     cancel_event = threading.Event()
-    height_cache = TerrainHeightCache()
+    height_cache_path = os.path.join(output_dir, "terrain_height_cache.json")
+    height_cache = TerrainHeightCache(height_cache_path)
     
     # Pre-define helper as None to prevent UnboundLocalError during early Ctrl+C
     resolver_ready = False
@@ -1693,7 +1717,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         executor = concurrent.futures.ProcessPoolExecutor(
             max_workers=workers,
             initializer=init_worker_process,
-            initargs=(glb_path, s, tx, tz, custom_blocks, y_offset, classification_json_path)
+            initargs=(glb_path, s, tx, tz, custom_blocks, y_offset, classification_json_path, height_cache.cache)
         )
         try:
             futures = {}
@@ -1722,7 +1746,9 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                     for future in done:
                         rx, rz = futures[future]
                         try:
-                            future.result()
+                            res_rx, res_rz, worker_cache = future.result()
+                            height_cache.cache.update(worker_cache)
+                            height_cache.changed = True
                         except Exception as e:
                             print(f"\n[Exporter Error] Failed to generate region r.{rx}.{rz}: {e}")
                         completed_regions += 1
@@ -1732,6 +1758,8 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 print("[Exporter] All regions are already generated and valid. Nothing to do.")
         finally:
             executor.shutdown(wait=False, cancel_futures=True)
+            
+        height_cache.save()
                 
         # Exit validation of ALL active regions
         print("[Exporter] Validating all region files on disk...")
