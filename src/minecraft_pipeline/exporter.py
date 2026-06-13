@@ -92,9 +92,66 @@ class VoxelMap:
             if cz_val >= 0x80000000:
                 cz_val -= 0x100000000
             self.chunk_slices[(cx_val, cz_val)] = (start, end)
-            
         self.new_blocks_by_chunk = {}
         self._total_new_blocks = 0
+        self.block_entities = {}
+        
+    def get_region_subset(self, rx, rz):
+        """
+        Extracts a tiny VoxelMap subset containing only the custom blocks
+        and block entities belonging to the specified region (rx, rz).
+        """
+        cx_min = rx * 32
+        cx_max = cx_min + 31
+        cz_min = rz * 32
+        cz_max = cz_min + 31
+        
+        region_xs = []
+        region_ys = []
+        region_zs = []
+        region_bids = []
+        
+        for cx in range(cx_min, cx_max + 1):
+            for cz in range(cz_min, cz_max + 1):
+                slice_info = self.chunk_slices.get((cx, cz))
+                if slice_info is not None:
+                    start, end = slice_info
+                    region_xs.append(self.x_arr[start:end])
+                    region_ys.append(self.y_arr[start:end])
+                    region_zs.append(self.z_arr[start:end])
+                    region_bids.append(self.block_ids[start:end])
+                    
+        if region_xs:
+            sub_x = np.concatenate(region_xs)
+            sub_y = np.concatenate(region_ys)
+            sub_z = np.concatenate(region_zs)
+            sub_bids = np.concatenate(region_bids)
+        else:
+            sub_x = np.zeros(0, dtype=np.int32)
+            sub_y = np.zeros(0, dtype=np.int32)
+            sub_z = np.zeros(0, dtype=np.int32)
+            sub_bids = np.zeros(0, dtype=np.uint8)
+            
+        sub_palette = list(self.palette)
+        sub_voxel = VoxelMap(sub_x, sub_y, sub_z, sub_bids, sub_palette)
+        
+        for cx in range(cx_min, cx_max + 1):
+            for cz in range(cz_min, cz_max + 1):
+                new_blocks = self.new_blocks_by_chunk.get((cx, cz))
+                if new_blocks is not None:
+                    sub_voxel.new_blocks_by_chunk[(cx, cz)] = dict(new_blocks)
+                    sub_voxel._total_new_blocks += len(new_blocks)
+                    
+        if hasattr(self, 'block_entities') and self.block_entities:
+            min_x = cx_min * 16
+            max_x = min_x + 511
+            min_z = cz_min * 16
+            max_z = min_z + 511
+            for (bx, by, bz), entity_nbt in self.block_entities.items():
+                if min_x <= bx <= max_x and min_z <= bz <= max_z:
+                    sub_voxel.block_entities[(bx, by, bz)] = entity_nbt
+                    
+        return sub_voxel
         
     def __len__(self):
         return len(self.x_arr) + self._total_new_blocks
@@ -1050,21 +1107,19 @@ class TerrainHeightInterpolator:
 _worker_interpolator = None
 _worker_water_interpolator = None
 _worker_classification_index = None
-_worker_custom_blocks = None
 _worker_y_offset = None
 _worker_initial_height_cache = None
 
-def init_worker_process(glb_path, s, tx, tz, custom_blocks, y_offset, classification_json_path=None, initial_height_cache=None):
-    global _worker_interpolator, _worker_water_interpolator, _worker_classification_index, _worker_custom_blocks, _worker_y_offset, _worker_initial_height_cache
+def init_worker_process(glb_path, s, tx, tz, y_offset, classification_json_path=None, initial_height_cache=None):
+    global _worker_interpolator, _worker_water_interpolator, _worker_classification_index, _worker_y_offset, _worker_initial_height_cache
     _worker_interpolator = TerrainHeightInterpolator(glb_path, s, tx, tz)
     _worker_water_interpolator = TerrainWaterInterpolator(glb_path, s, tx, tz)
     _worker_classification_index = TerrainClassificationIndex(classification_json_path) if classification_json_path else None
-    _worker_custom_blocks = custom_blocks
     _worker_y_offset = y_offset
     _worker_initial_height_cache = initial_height_cache
 
-def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y):
-    global _worker_interpolator, _worker_water_interpolator, _worker_classification_index, _worker_custom_blocks, _worker_y_offset, _worker_initial_height_cache
+def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y, region_custom_blocks):
+    global _worker_interpolator, _worker_water_interpolator, _worker_classification_index, _worker_y_offset, _worker_initial_height_cache
     
     # Process-local cache for height coordinates
     local_cache = TerrainHeightCache()
@@ -1076,7 +1131,7 @@ def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y
         rz=rz,
         pts=pts,
         mca_path=mca_path,
-        custom_blocks=_worker_custom_blocks,
+        custom_blocks=region_custom_blocks,
         interpolator=_worker_interpolator,
         water_interpolator=_worker_water_interpolator,
         classification_index=_worker_classification_index,
@@ -2220,15 +2275,16 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         executor = concurrent.futures.ProcessPoolExecutor(
             max_workers=workers,
             initializer=init_worker_process,
-            initargs=(glb_path, s, tx, tz, custom_blocks, y_offset, classification_json_path, height_cache.cache)
+            initargs=(glb_path, s, tx, tz, y_offset, classification_json_path, height_cache.cache)
         )
         try:
             futures = {}
             for (rx, rz), pts in regions_to_generate:
                 mca_path = os.path.join(region_dir, f"r.{rx}.{rz}.mca")
+                region_custom_blocks = custom_blocks.get_region_subset(rx, rz)
                 f = executor.submit(
                     export_single_region_process_wrapper,
-                    rx, rz, pts, mca_path, min_s_y, max_s_y
+                    rx, rz, pts, mca_path, min_s_y, max_s_y, region_custom_blocks
                 )
                 futures[f] = (rx, rz)
                 
