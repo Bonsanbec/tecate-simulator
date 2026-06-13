@@ -506,10 +506,14 @@ def ensure_default_env(path=".env"):
             def_mod = os.path.expanduser("~/.minecraft/saves/TecateWorld")
             
         with open(path, 'w', encoding='utf-8') as f:
-            f.write("# Minecraft Importer Environment Configuration\n")
+            f.write("# Minecraft Importer/Exporter Environment Configuration\n")
+            f.write("IMPORT_JSON=export/reconstruction_export.json\n")
+            f.write("GLB_PATH=models/tecate/glb/tecate.glb\n")
             f.write("FRESH_WORLD=export/minecraft_world/TecateWorld\n")
             f.write(f"MODIFIED_WORLD={def_mod.replace('\\\\', '/')}\n")
             f.write("OUTPUT_DIR=export/minecraft_world\n")
+            f.write("REMOTE_HOST=HakkinDavid@hakkin.tail4b53f5.ts.net\n")
+            f.write("REMOTE_PATH=~/tecate-simulator\n")
         print(f"[Importer] Created default configuration file: {path}")
 
 def load_env(path=".env"):
