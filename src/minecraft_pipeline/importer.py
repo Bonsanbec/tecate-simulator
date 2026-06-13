@@ -252,6 +252,9 @@ def diff_single_region_process(rx, rz, fresh_mca_path, modified_mca_path, min_s_
                     if b_mod != b_fresh:
                         # Only export blocks added or modified (solid non-air in modified world)
                         if b_mod != "minecraft:air":
+                            # Ignore grass-to-dirt decay (natural Minecraft behavior under blocks/roads)
+                            if b_fresh == "minecraft:grass_block" and b_mod == "minecraft:dirt":
+                                continue
                             block_data[coord] = b_mod
                             
     return active_chunks, block_data
