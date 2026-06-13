@@ -183,7 +183,7 @@ class VoxelMap:
 
 def load_custom_blocks_cache(cache_path):
     if not os.path.exists(cache_path):
-        return {}, 0, 0, set()
+        return VoxelMap(np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.int32), []), 0, 0, set()
         
     print(f"[Exporter] Loading pre-rasterized geometry from cache: {cache_path}")
     start_time = time.time()
@@ -221,7 +221,7 @@ def load_custom_blocks_cache(cache_path):
         return custom_blocks, last_edge_idx, last_block_idx, completed_block_indices
     except Exception as e:
         print(f"[Exporter Warning] Failed to load custom blocks cache: {e}. Re-rasterizing from scratch...")
-        return {}, 0, 0, set()
+        return VoxelMap(np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.int32), np.zeros(0, dtype=np.int32), []), 0, 0, set()
 
 def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None, y_offset=0, height_cache=None):
     local_blocks = {}
