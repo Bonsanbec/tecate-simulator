@@ -53,7 +53,9 @@ def get_default_metadata(highway_type=None, name=""):
         "width": width,
         "surface": surface,
         "service": "",
-        "name": name
+        "name": name,
+        "bridge": "",
+        "layer": ""
     }
 
 def extract_and_cache_road_metadata(reconstruction_json_path, output_metadata_path):
@@ -214,7 +216,9 @@ out body;
                 "width": width if width is not None else defaults["width"],
                 "surface": matched_tags.get("surface", defaults["surface"]),
                 "service": matched_tags.get("service", ""),
-                "name": name or matched_tags.get("name", defaults["name"])
+                "name": name or matched_tags.get("name", defaults["name"]),
+                "bridge": matched_tags.get("bridge", ""),
+                "layer": matched_tags.get("layer", "")
             }
             matched_count += 1
         else:
