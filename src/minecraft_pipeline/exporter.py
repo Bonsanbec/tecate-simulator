@@ -2222,12 +2222,23 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         from src.minecraft_pipeline.terrain_classifier import extract_and_cache_terrain_classification
         extract_and_cache_terrain_classification(reconstruction_json_path, classification_json_path)
         
-        regions_data = []
-        if regions_to_generate:
-            print(f"[Exporter] Pre-resolving missing heights for {len(regions_to_generate)} regions in the main thread...")
-            t_pre_start = time.time()
-            missing_queries = []
+        workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
+        print(f"[Exporter] Generating region MCA files in parallel using {workers} processes...")
+        executor = concurrent.futures.ProcessPoolExecutor(
+            max_workers=workers
+        )
+        
+        # Populate classification index and water interpolator in the main thread once
+        classification_index = TerrainClassificationIndex(classification_json_path) if os.path.exists(classification_json_path) else None
+        water_interp = TerrainWaterInterpolator(glb_path, s, tx, tz) if os.path.exists(glb_path) else None
+        
+        try:
+            futures = {}
             for (rx, rz), pts in regions_to_generate:
+                mca_path = os.path.join(region_dir, f"r.{rx}.{rz}.mca")
+                
+                # 1. Resolve heights for this region in the main thread (dynamic query)
+                missing_queries = []
                 for cx_local in range(32):
                     for cz_local in range(32):
                         cx_global = rx * 32 + cx_local
@@ -2239,22 +2250,15 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                                 if height_cache.cache.get((x_val, z_val)) is None:
                                     missing_queries.append((x_val, -z_val))
                                     
-            if missing_queries:
-                print(f"[Exporter] Querying {len(missing_queries)} missing heights in a single batch...")
-                batch_heights = interpolator.query_height_batch(missing_queries)
-                for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
-                    z_val = -mz_q
-                    cached_h = int(round(h_real)) - y_offset
-                    height_cache.cache[(x_q, z_val)] = cached_h
-                height_cache.changed = True
-            print(f"[Exporter] Pre-resolved heights in {time.time() - t_pre_start:.2f} seconds.")
-            
-            # Populate classification index
-            classification_index = TerrainClassificationIndex(classification_json_path) if os.path.exists(classification_json_path) else None
-            
-            # Slicing datasets for workers
-            for (rx, rz), pts in regions_to_generate:
-                # 1. heights dict subset
+                if missing_queries:
+                    batch_heights = interpolator.query_height_batch(missing_queries)
+                    for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
+                        z_val = -mz_q
+                        cached_h = int(round(h_real)) - y_offset
+                        height_cache.cache[(x_q, z_val)] = cached_h
+                    height_cache.changed = True
+                    
+                # 2. Slice heights for this region
                 region_heights = {}
                 for cx_local in range(32):
                     for cz_local in range(32):
@@ -2268,9 +2272,8 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                                 if h is not None:
                                     region_heights[(x_val, z_val)] = h
                                     
-                # 2. water triangles by chunk
+                # 3. Slice water triangles by chunk for this region
                 region_water_by_chunk = {}
-                water_interp = TerrainWaterInterpolator(glb_path, s, tx, tz) if os.path.exists(glb_path) else None
                 if water_interp is not None:
                     for cx_local in range(32):
                         for cz_local in range(32):
@@ -2295,7 +2298,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                                 triangles = [water_interp.triangles[idx] for idx in overlapping_tri_idx]
                                 region_water_by_chunk[(cx_local, cz_local)] = np.array(triangles, dtype=np.float64)
                                 
-                # 3. classification polygons by chunk
+                # 4. Slice classification polygons by chunk for this region
                 region_polygons_by_chunk = {}
                 if classification_index is not None:
                     for cx_local in range(32):
@@ -2328,17 +2331,6 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                                     })
                                 region_polygons_by_chunk[(cx_local, cz_local)] = chunk_polys
                                 
-                regions_data.append(((rx, rz), pts, region_heights, region_water_by_chunk, region_polygons_by_chunk))
-        
-        workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
-        print(f"[Exporter] Generating region MCA files in parallel using {workers} processes...")
-        executor = concurrent.futures.ProcessPoolExecutor(
-            max_workers=workers
-        )
-        try:
-            futures = {}
-            for (rx, rz), pts, region_heights, region_water_by_chunk, region_polygons_by_chunk in regions_data:
-                mca_path = os.path.join(region_dir, f"r.{rx}.{rz}.mca")
                 region_custom_blocks = custom_blocks.get_region_subset(rx, rz)
                 f = executor.submit(
                     export_single_region_process_wrapper,
