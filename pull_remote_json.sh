@@ -8,8 +8,12 @@ set -euo pipefail
 
 # Load environment variables from .env if it exists
 if [ -f .env ]; then
-    # Ignore comments, empty lines, and handle Windows CR line endings gracefully
-    export $(cat .env | grep -v '^#' | sed 's/\r$//' | xargs)
+    while IFS= read -r line || [ -n "$line" ]; do
+        if [[ ! "$line" =~ ^# ]] && [[ ! "$line" =~ ^[[:space:]]*$ ]]; then
+            line="${line%$'\r'}"
+            export "$line"
+        fi
+    done < .env
 fi
 
 # 1. Determine remote host
