@@ -1,4 +1,5 @@
 import os
+import functools
 import json
 import math
 import struct
@@ -374,6 +375,7 @@ def load_terrain_vertices(glb_path, s, tx, tz):
         
         return x_godot, y_godot, z_godot
 
+@functools.lru_cache(maxsize=4096)
 def resolve_road_properties(name, highway_type):
     """
     Heuristically resolves road properties (width, lanes, surface, markings, etc.)
@@ -1506,7 +1508,7 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
     region.save(mca_path)
     print(f"[Exporter] Saved region file: {mca_path}")
 
-def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, fast_height_cache, y_offset):
+def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y_offset):
     local_custom_blocks = {}
     for ed in chunk_edges:
         u_nd = node_map.get(ed["u"])
@@ -1516,6 +1518,12 @@ def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, fast_height_cac
         x1, z1 = u_nd["x"], -u_nd["y"]
         x2, z2 = v_nd["x"], -v_nd["y"]
         
+        u_h = node_heights.get(ed["u"])
+        v_h = node_heights.get(ed["v"])
+        if u_h is None or v_h is None:
+            u_h = 400 - y_offset
+            v_h = 400 - y_offset
+            
         key = get_edge_key(ed["u"], ed["v"])
         meta = edge_metadata.get(key, {})
         hw = meta.get("highway", "residential")
@@ -1549,6 +1557,9 @@ def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, fast_height_cac
             cx = x1 + t * dx
             cz = z1 + t * dz
             
+            # Linear height interpolation along the road segment
+            y_mc = int(round(u_h + t * (v_h - u_h)))
+            
             dist_along = t * dist
             is_near_intersection = (dist_along < 4.0) or ((dist - dist_along) < 4.0)
             
@@ -1560,11 +1571,6 @@ def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, fast_height_cac
                 
                 x_mc = int(round(px))
                 z_mc = int(round(pz))
-                
-                # Lock-free lookup in the fast height cache
-                y_mc = fast_height_cache.get((x_mc, z_mc))
-                if y_mc is None:
-                    y_mc = 400 - y_offset
                 
                 if is_rural:
                     # Rural/historical road materials
@@ -1582,9 +1588,7 @@ def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, fast_height_cac
                     if not is_bridge and abs(d) == d_max:
                         veg_x = int(round(cx + (d + (1 if d > 0 else -1)) * perp_x))
                         veg_z = int(round(cz + (d + (1 if d > 0 else -1)) * perp_z))
-                        veg_y = fast_height_cache.get((veg_x, veg_z))
-                        if veg_y is None:
-                            veg_y = 400 - y_offset
+                        veg_y = y_mc
                         
                         veg_choices = [None, "minecraft:short_grass", "minecraft:fern", "minecraft:dandelion", "minecraft:poppy"]
                         veg_weights = [0.8, 0.1, 0.05, 0.025, 0.025]
@@ -1769,70 +1773,20 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         
         num_edges = len(edges)
         if last_edge_idx < num_edges:
-            print(f"[Exporter] Pre-calculating coordinates for road network starting from index {last_edge_idx}...")
-            t_start_pre = time.time()
-            
-            # Gather endpoints and widths for JIT coordinate generation
-            endpoints_list = []
-            widths_list = []
-            valid_edge_indices = []
-            
-            for idx in range(last_edge_idx, num_edges):
-                ed = edges[idx]
-                u_nd = node_map.get(ed["u"])
-                v_nd = node_map.get(ed["v"])
-                if u_nd and v_nd:
-                    x1, z1 = u_nd["x"], -u_nd["y"]
-                    x2, z2 = v_nd["x"], -v_nd["y"]
-                    
-                    key = get_edge_key(ed["u"], ed["v"])
-                    meta = edge_metadata.get(key, {})
-                    hw = meta.get("highway", "residential")
-                    name = meta.get("name", "")
-                    road_props = resolve_road_properties(name, hw)
-                    width = road_props["width"]
-                    
-                    endpoints_list.append([x1, z1, x2, z2])
-                    widths_list.append(width)
-                    valid_edge_indices.append(idx)
-                    
-            if endpoints_list:
-                endpoints_arr = np.array(endpoints_list, dtype=np.float64)
-                widths_arr = np.array(widths_list, dtype=np.float64)
+            # 1. Pre-query heights for all nodes in the road graph to allow instant linear height interpolation
+            node_coords = []
+            node_ids = []
+            for nd in nodes:
+                node_coords.append((nd["x"], -nd["y"]))
+                node_ids.append(nd["id"])
                 
-                # Count total coordinates in compiled code
-                total_pts = count_road_points_jit(endpoints_arr, widths_arr)
-                coords_arr = np.empty((total_pts, 2), dtype=np.int32)
-                
-                # Fill coordinates in compiled code
-                filled_pts = generate_road_coords_fill_jit(endpoints_arr, widths_arr, coords_arr)
-                coords_arr = coords_arr[:filled_pts]
-                
-                # Get unique coordinates
-                unique_coords = np.unique(coords_arr, axis=0)
-                print(f"[Exporter] Pre-calculated {len(unique_coords)} unique road coordinate columns in {time.time() - t_start_pre:.2f}s.")
-                
-                # Identify missing heights
-                missing_queries = []
-                cache_dict = height_cache.cache
-                for x_mc, z_mc in unique_coords:
-                    if (x_mc, z_mc) not in cache_dict:
-                        missing_queries.append((x_mc, -z_mc))
-                        
-                if missing_queries:
-                    print(f"[Exporter] Batch querying {len(missing_queries)} missing heights for roads...")
-                    t_q_start = time.time()
-                    batch_heights = interpolator.query_height_batch(missing_queries)
-                    with height_cache.lock:
-                        for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
-                            z_val = -mz_q
-                            cached_h = int(round(h_real)) - y_offset
-                            height_cache.cache[(x_q, z_val)] = cached_h
-                        height_cache.changed = True
-                    print(f"[Exporter] Batch height queries completed in {time.time() - t_q_start:.2f}s.")
-                    
-            # Copy height cache to a standard lock-free dictionary for worker threads
-            fast_height_cache = dict(height_cache.cache)
+            print(f"[Exporter] Batch querying heights for {len(node_coords)} road nodes...")
+            t_node_start = time.time()
+            node_heights_raw = interpolator.query_height_batch(node_coords)
+            node_heights = {}
+            for nd_id, h_raw in zip(node_ids, node_heights_raw):
+                node_heights[nd_id] = int(round(h_raw)) - y_offset
+            print(f"[Exporter] Node height queries completed in {time.time() - t_node_start:.2f}s.")
             
             # Parallelize road rasterization using ThreadPoolExecutor
             workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
@@ -1849,7 +1803,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 futures = [
                     executor.submit(
                         rasterize_roads_worker,
-                        chunk, node_map, edge_metadata, fast_height_cache, y_offset
+                        chunk, node_map, edge_metadata, node_heights, y_offset
                     )
                     for chunk in edge_chunks
                 ]
