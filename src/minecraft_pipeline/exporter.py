@@ -606,6 +606,78 @@ class TerrainWaterInterpolator:
             return True, highest_y
         return False, 0.0
 
+class TerrainClassificationIndex:
+    """
+    Parses and indexes classification polygons (paved, dirt, grass) from OSM.
+    Uses a 2D spatial grid for fast area-based lookup.
+    """
+    def __init__(self, json_path="export/terrain_classification.json", cell_size=200.0):
+        self.cell_size = cell_size
+        self.grid = {}
+        self.polygons = []
+        
+        if not os.path.exists(json_path):
+            print(f"[TerrainClassificationIndex Warning] File not found: {json_path}")
+            return
+            
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                self.polygons = json.load(f)
+        except Exception as e:
+            print(f"[TerrainClassificationIndex Error] Failed to read JSON: {e}")
+            return
+            
+        # Precompute bounding boxes and approximate areas
+        for poly in self.polygons:
+            vertices = poly["vertices"]
+            if not vertices:
+                poly["bbox_area"] = 99999999.0
+                poly["bbox"] = (0.0, 0.0, 0.0, 0.0)
+                continue
+            xs = [pt[0] for pt in vertices]
+            zs = [pt[1] for pt in vertices]
+            min_x, max_x = min(xs), max(xs)
+            min_z, max_z = min(zs), max(zs)
+            poly["bbox"] = (min_x, max_x, min_z, max_z)
+            poly["bbox_area"] = (max_x - min_x) * (max_z - min_z)
+            
+        # Sort polygons by bounding box area ascending so that the most specific/smallest area wins
+        self.polygons.sort(key=lambda p: p.get("bbox_area", 99999999.0))
+        
+        print(f"[TerrainClassificationIndex] Loaded {len(self.polygons)} polygons. Building spatial grid...")
+        for poly_idx, poly in enumerate(self.polygons):
+            if "bbox" not in poly:
+                continue
+            min_x, max_x, min_z, max_z = poly["bbox"]
+            
+            c_x_min = int(math.floor(min_x / cell_size))
+            c_x_max = int(math.floor(max_x / cell_size))
+            c_z_min = int(math.floor(min_z / cell_size))
+            c_z_max = int(math.floor(max_z / cell_size))
+            
+            for cx in range(c_x_min, c_x_max + 1):
+                for cz in range(c_z_min, c_z_max + 1):
+                    self.grid.setdefault((cx, cz), []).append(poly_idx)
+        print(f"[TerrainClassificationIndex] Spatial grid indexed in {len(self.grid)} cells.")
+
+    def point_in_poly(self, px, pz, vertices):
+        inside = False
+        n = len(vertices)
+        if n < 3:
+            return False
+        p1x, p1z = vertices[0]
+        for i in range(1, n + 1):
+            p2x, p2z = vertices[i % n]
+            if pz > min(p1z, p2z):
+                if pz <= max(p1z, p2z):
+                    if px <= max(p1x, p2x):
+                        if p1z != p2z:
+                            xinters = (pz - p1z) * (p2x - p1x) / (p2z - p1z) + p1x
+                        if p1x == p2x or px <= xinters:
+                            inside = not inside
+            p1x, p1z = p2x, p2z
+        return inside
+
 class TerrainHeightInterpolator:
     """
     Uses a 2D spatial grid index to lazily build and cache local Delaunay interpolators
@@ -731,18 +803,20 @@ class TerrainHeightInterpolator:
 # Process-local globals for multiprocessing workers
 _worker_interpolator = None
 _worker_water_interpolator = None
+_worker_classification_index = None
 _worker_custom_blocks = None
 _worker_y_offset = None
 
-def init_worker_process(glb_path, s, tx, tz, custom_blocks, y_offset):
-    global _worker_interpolator, _worker_water_interpolator, _worker_custom_blocks, _worker_y_offset
+def init_worker_process(glb_path, s, tx, tz, custom_blocks, y_offset, classification_json_path=None):
+    global _worker_interpolator, _worker_water_interpolator, _worker_classification_index, _worker_custom_blocks, _worker_y_offset
     _worker_interpolator = TerrainHeightInterpolator(glb_path, s, tx, tz)
     _worker_water_interpolator = TerrainWaterInterpolator(glb_path, s, tx, tz)
+    _worker_classification_index = TerrainClassificationIndex(classification_json_path) if classification_json_path else None
     _worker_custom_blocks = custom_blocks
     _worker_y_offset = y_offset
 
 def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y):
-    global _worker_interpolator, _worker_water_interpolator, _worker_custom_blocks, _worker_y_offset
+    global _worker_interpolator, _worker_water_interpolator, _worker_classification_index, _worker_custom_blocks, _worker_y_offset
     
     # Process-local cache for height coordinates
     local_cache = TerrainHeightCache()
@@ -755,6 +829,7 @@ def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y
         custom_blocks=_worker_custom_blocks,
         interpolator=_worker_interpolator,
         water_interpolator=_worker_water_interpolator,
+        classification_index=_worker_classification_index,
         y_offset=_worker_y_offset,
         height_cache=local_cache,
         cancel_event=None,
@@ -944,7 +1019,7 @@ def print_progress(label, completed, total, start_time=None):
         sys.stdout.flush()
 
 def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache, 
-                         water_interpolator=None, cancel_event=None, min_s_y=-4, max_s_y=20):
+                         water_interpolator=None, classification_index=None, cancel_event=None, min_s_y=-4, max_s_y=20):
     """Generates MCA chunks for a single region (runs in worker thread)."""
     region = MCARegion(rx, rz)
     
@@ -981,9 +1056,57 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
         # Load small chunk dictionary on demand to avoid OOM
         chunk_dict = custom_blocks.get_chunk_dict(cx_global, cz_global) if hasattr(custom_blocks, 'get_chunk_dict') else custom_blocks
         
-        # Pre-lookup all 256 heights and water properties for this chunk to avoid lock contention
+        # Area-based optimization: check overlapping water triangles for this chunk
+        has_chunk_water = False
+        chunk_triangles = []
+        if water_interpolator is not None:
+            min_x_c = cx_global * 16
+            max_x_c = min_x_c + 15
+            min_z_c = cz_global * 16
+            max_z_c = min_z_c + 15
+            
+            c_x_min = int(math.floor(min_x_c / water_interpolator.cell_size))
+            c_x_max = int(math.floor(max_x_c / water_interpolator.cell_size))
+            c_z_min = int(math.floor(min_z_c / water_interpolator.cell_size))
+            c_z_max = int(math.floor(max_z_c / water_interpolator.cell_size))
+            
+            overlapping_tri_idx = set()
+            for cx in range(c_x_min, c_x_max + 1):
+                for cz in range(c_z_min, c_z_max + 1):
+                    overlapping_tri_idx.update(water_interpolator.grid.get((cx, cz), []))
+            
+            if overlapping_tri_idx:
+                chunk_triangles = [water_interpolator.triangles[idx] for idx in overlapping_tri_idx]
+                has_chunk_water = True
+
+        # Area-based optimization: check overlapping classification polygons for this chunk
+        has_chunk_class = False
+        chunk_polygons = []
+        if classification_index is not None:
+            min_x_c = cx_global * 16
+            max_x_c = min_x_c + 15
+            min_z_c = cz_global * 16
+            max_z_c = min_z_c + 15
+            
+            c_x_min = int(math.floor(min_x_c / classification_index.cell_size))
+            c_x_max = int(math.floor(max_x_c / classification_index.cell_size))
+            c_z_min = int(math.floor(min_z_c / classification_index.cell_size))
+            c_z_max = int(math.floor(max_z_c / classification_index.cell_size))
+            
+            overlapping_poly_idx = set()
+            for cx in range(c_x_min, c_x_max + 1):
+                for cz in range(c_z_min, c_z_max + 1):
+                    overlapping_poly_idx.update(classification_index.grid.get((cx, cz), []))
+            
+            if overlapping_poly_idx:
+                chunk_polygons = [classification_index.polygons[idx] for idx in overlapping_poly_idx]
+                has_chunk_class = True
+        
+        # Pre-lookup all 256 heights, water, and class properties for this chunk
         local_heights = [0] * 256
         local_water = [None] * 256
+        local_classes = [None] * 256
+        
         for dz in range(16):
             z_val = cz_global * 16 + dz
             for dx in range(16):
@@ -996,19 +1119,57 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
                 
                 is_water = False
                 y_water_mc = 0
-                if water_interpolator is not None:
-                    has_w, y_w_real = water_interpolator.query_water(x_val, z_val)
-                    if has_w:
+                if has_chunk_water:
+                    highest_y = -9999.0
+                    found = False
+                    for a, b, c in chunk_triangles:
+                        v0x, v0z = c[0] - a[0], c[2] - a[2]
+                        v1x, v1z = b[0] - a[0], b[2] - a[2]
+                        v2x, v2z = x_val - a[0], z_val - a[2]
+                        
+                        denom = v0x * v0x + v0z * v0z
+                        dot00 = denom
+                        dot01 = v0x * v1x + v0z * v1z
+                        dot02 = v0x * v2x + v0z * v2z
+                        dot11 = v1x * v1x + v1z * v1z
+                        dot12 = v1x * v2x + v1z * v2z
+                        
+                        denom = dot00 * dot11 - dot01 * dot01
+                        if abs(denom) < 1e-8:
+                            continue
+                            
+                        invDenom = 1.0 / denom
+                        u = (dot11 * dot02 - dot01 * dot12) * invDenom
+                        v = (dot00 * dot12 - dot01 * dot02) * invDenom
+                        
+                        if (u >= -1e-5) and (v >= -1e-5) and (u + v <= 1.0 + 1e-5):
+                            y_val = a[1] + u * (c[1] - a[1]) + v * (b[1] - a[1])
+                            if y_val > highest_y:
+                                highest_y = y_val
+                            found = True
+                            
+                    if found:
                         is_water = True
-                        y_water_mc = int(round(y_w_real)) - y_offset
+                        y_water_mc = int(round(highest_y)) - y_offset
                         # Carve terrain so it is at least 3 blocks below the water surface
                         if cached_h >= y_water_mc - 2:
                             cached_h = y_water_mc - 3
                             height_cache.set(x_val, z_val, cached_h)
                             
+                resolved_class = "grass"
+                if has_chunk_class:
+                    for poly in chunk_polygons:
+                        min_x, max_x, min_z, max_z = poly["bbox"]
+                        if x_val < min_x or x_val > max_x or z_val < min_z or z_val > max_z:
+                            continue
+                        if classification_index.point_in_poly(x_val, z_val, poly["vertices"]):
+                            resolved_class = poly["class"]
+                            break
+                            
                 local_heights[dz * 16 + dx] = cached_h
                 if is_water:
                     local_water[dz * 16 + dx] = y_water_mc
+                local_classes[dz * 16 + dx] = resolved_class
                 
         has_custom = bool(chunk_dict)
         
@@ -1031,6 +1192,7 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
                         if block_name is None:
                             y_terrain = local_heights[dz * 16 + dx]
                             y_water_mc = local_water[dz * 16 + dx]
+                            resolved_class = local_classes[dz * 16 + dx]
                             
                             if y_water_mc is not None and y_val <= y_water_mc:
                                 if y_val < y_terrain:
@@ -1043,14 +1205,35 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
                                 else:
                                     block_name = "minecraft:water"
                             else:
-                                if y_val < y_terrain - 3:
-                                    block_name = "minecraft:stone"
-                                elif y_val < y_terrain:
-                                    block_name = "minecraft:dirt"
-                                elif y_val == y_terrain:
-                                    block_name = "minecraft:grass_block"
+                                if resolved_class == "paved":
+                                    if y_val < y_terrain:
+                                        block_name = "minecraft:stone"
+                                    elif y_val == y_terrain:
+                                        choices = ["minecraft:andesite", "minecraft:polished_andesite", "minecraft:stone_bricks"]
+                                        weights = [0.6, 0.3, 0.1]
+                                        block_name = get_deterministic_choice(x_val, y_val, z_val, choices, weights)
+                                    else:
+                                        block_name = "minecraft:air"
+                                elif resolved_class == "dirt":
+                                    if y_val < y_terrain - 3:
+                                        block_name = "minecraft:stone"
+                                    elif y_val < y_terrain:
+                                        block_name = "minecraft:dirt"
+                                    elif y_val == y_terrain:
+                                        choices = ["minecraft:coarse_dirt", "minecraft:dirt", "minecraft:gravel"]
+                                        weights = [0.6, 0.3, 0.1]
+                                        block_name = get_deterministic_choice(x_val, y_val, z_val, choices, weights)
+                                    else:
+                                        block_name = "minecraft:air"
                                 else:
-                                    block_name = "minecraft:air"
+                                    if y_val < y_terrain - 3:
+                                        block_name = "minecraft:stone"
+                                    elif y_val < y_terrain:
+                                        block_name = "minecraft:dirt"
+                                    elif y_val == y_terrain:
+                                        block_name = "minecraft:grass_block"
+                                    else:
+                                        block_name = "minecraft:air"
                                 
                         if block_name != "minecraft:air":
                             has_non_air = True
@@ -1500,12 +1683,17 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         if skipped_regions > 0:
             print(f"[Exporter] Incremental export: skipped {skipped_regions} already generated valid region files.")
             
+        export_dir = os.path.dirname(reconstruction_json_path)
+        classification_json_path = os.path.join(export_dir, "terrain_classification.json")
+        from src.minecraft_pipeline.terrain_classifier import extract_and_cache_terrain_classification
+        extract_and_cache_terrain_classification(reconstruction_json_path, classification_json_path)
+        
         workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
         print(f"[Exporter] Generating region MCA files in parallel using {workers} processes...")
         executor = concurrent.futures.ProcessPoolExecutor(
             max_workers=workers,
             initializer=init_worker_process,
-            initargs=(glb_path, s, tx, tz, custom_blocks, y_offset)
+            initargs=(glb_path, s, tx, tz, custom_blocks, y_offset, classification_json_path)
         )
         try:
             futures = {}
