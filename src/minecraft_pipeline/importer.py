@@ -6,12 +6,15 @@ import glob
 import shutil
 import subprocess
 import sys
-import threading
 import concurrent.futures
 import numpy as np
-from .nbt import read_tag
+from .nbt import (
+    NBT, TAG_COMPOUND, TAG_LIST, TAG_STRING, TAG_INT, TAG_LONG,
+    TAG_BYTE, TAG_DOUBLE, TAG_LONG_ARRAY, TAG_BYTE_ARRAY, TAG_INT_ARRAY, TAG_END,
+    read_tag
+)
 from .mca import MCARegion, unpack_block_states
-from .exporter import TerrainHeightInterpolator, TerrainHeightCache
+from .exporter import TerrainHeightInterpolator, TerrainHeightCache, load_custom_blocks_cache
 
 TERRAIN_BLOCKS = {
     "minecraft:grass_block",
@@ -46,6 +49,228 @@ BLOCK_COLORS = {
     "minecraft:black_concrete": [0.08, 0.08, 0.1]
 }
 
+# Process-local globals for multiprocessing workers
+_worker_interpolator = None
+_worker_y_offset = None
+
+def init_worker_process(glb_path, s, tx, tz, y_offset):
+    global _worker_interpolator, _worker_y_offset
+    _worker_interpolator = TerrainHeightInterpolator(glb_path, s, tx, tz)
+    _worker_y_offset = y_offset
+
+def nbt_to_py(tag):
+    """Converts NBT tags recursively to standard, sortable, and comparable Python structures."""
+    if not isinstance(tag, NBT):
+        return tag
+    t = tag.type
+    val = tag.value
+    if t == TAG_COMPOUND:
+        return {m.name: nbt_to_py(m) for m in sorted(val, key=lambda x: x.name or "")}
+    elif t == TAG_LIST:
+        item_type, items = val
+        return (item_type, [nbt_to_py(item) for item in items])
+    elif t in (TAG_BYTE_ARRAY, TAG_INT_ARRAY, TAG_LONG_ARRAY):
+        return tuple(val)
+    else:
+        return val
+
+def get_sections_and_entities(nbt_tag):
+    sections_list = []
+    block_entities_list = []
+    if not nbt_tag or not hasattr(nbt_tag, 'value'):
+        return sections_list, block_entities_list
+    for tag in nbt_tag.value:
+        if tag.name == "sections":
+            sections_list = tag.value[1]
+        elif tag.name == "block_entities":
+            block_entities_list = tag.value[1]
+    return sections_list, block_entities_list
+
+def is_block_states_only_air(bs_tag):
+    if not bs_tag or bs_tag.type != TAG_COMPOUND:
+        return True
+    palette = None
+    for tag in bs_tag.value:
+        if tag.name == "palette":
+            palette = tag.value[1]
+            break
+    if not palette:
+        return True
+    if len(palette) == 1:
+        first_tag = palette[0]
+        for tag in first_tag.value:
+            if tag.name == "Name" and tag.value == "minecraft:air":
+                return True
+    return False
+
+def chunk_block_states_differ(nbt1, nbt2):
+    """Detects if block states or block entities differ between two chunk NBT structures."""
+    sec1, ent1 = get_sections_and_entities(nbt1)
+    sec2, ent2 = get_sections_and_entities(nbt2)
+    
+    sec_dict1 = {}
+    for s in sec1:
+        y_val = None
+        block_states = None
+        for tag in s.value:
+            if tag.name == "Y":
+                y_val = tag.value
+            elif tag.name == "block_states":
+                block_states = tag
+        if y_val is not None:
+            sec_dict1[y_val] = block_states
+            
+    sec_dict2 = {}
+    for s in sec2:
+        y_val = None
+        block_states = None
+        for tag in s.value:
+            if tag.name == "Y":
+                y_val = tag.value
+            elif tag.name == "block_states":
+                block_states = tag
+        if y_val is not None:
+            sec_dict2[y_val] = block_states
+            
+    all_ys = set(sec_dict1.keys()) | set(sec_dict2.keys())
+    for y_val in all_ys:
+        bs1 = sec_dict1.get(y_val)
+        bs2 = sec_dict2.get(y_val)
+        
+        if (bs1 is None) != (bs2 is None):
+            non_empty_bs = bs1 if bs1 is not None else bs2
+            if not is_block_states_only_air(non_empty_bs):
+                return True
+        elif bs1 is not None and bs2 is not None:
+            if nbt_to_py(bs1) != nbt_to_py(bs2):
+                return True
+                
+    py_ent1 = sorted([nbt_to_py(e) for e in ent1], key=lambda d: (d.get("x", 0), d.get("y", 0), d.get("z", 0)))
+    py_ent2 = sorted([nbt_to_py(e) for e in ent2], key=lambda d: (d.get("x", 0), d.get("y", 0), d.get("z", 0)))
+    
+    if py_ent1 != py_ent2:
+        return True
+        
+    return False
+
+def extract_chunk_blocks_filtered(chunk_nbt, cx_global, cz_global, min_s_y, max_s_y, interpolator, y_offset):
+    blocks = {}
+    sections, _ = get_sections_and_entities(chunk_nbt)
+    
+    local_heights = [0] * 256
+    for dz in range(16):
+        z_val = cz_global * 16 + dz
+        for dx in range(16):
+            x_val = cx_global * 16 + dx
+            h_real = interpolator.query_height(x_val, -z_val)
+            local_heights[dz * 16 + dx] = int(round(h_real)) - y_offset
+            
+    for sec in sections:
+        s_y = None
+        block_states = None
+        for t in sec.value:
+            if t.name == "Y":
+                s_y = t.value
+            elif t.name == "block_states":
+                block_states = t.value
+                
+        if s_y is None or block_states is None:
+            continue
+            
+        if s_y < min_s_y or s_y >= max_s_y:
+            continue
+            
+        palette = []
+        data_longs = None
+        for t in block_states:
+            if t.name == "palette":
+                palette_tags = t.value[1]
+                for p_tag in palette_tags:
+                    for member in p_tag.value:
+                        if member.name == "Name":
+                            palette.append(member.value)
+            elif t.name == "data":
+                data_longs = t.value
+                
+        if not palette:
+            continue
+            
+        if len(palette) == 1:
+            indices = [0] * 4096
+        elif data_longs is not None:
+            bits_per_block = max(4, int(math.ceil(math.log2(len(palette)))))
+            indices = unpack_block_states(data_longs, bits_per_block)
+        else:
+            indices = [0] * 4096
+            
+        y_min_sec = s_y * 16
+        for dy in range(16):
+            y_val = y_min_sec + dy
+            for dz in range(16):
+                z_val = cz_global * 16 + dz
+                for dx in range(16):
+                    x_val = cx_global * 16 + dx
+                    flat_idx = dy * 256 + dz * 16 + dx
+                    p_idx = indices[flat_idx]
+                    if p_idx >= len(palette):
+                        continue
+                    block_name = palette[p_idx]
+                    
+                    if block_name == "minecraft:air":
+                        continue
+                        
+                    y_terrain = local_heights[dz * 16 + dx]
+                    
+                    if block_name in TERRAIN_BLOCKS and y_val <= y_terrain:
+                        continue
+                        
+                    blocks[(x_val, y_val, z_val)] = block_name
+                    
+    return blocks
+
+def diff_single_region_process(rx, rz, fresh_mca_path, modified_mca_path, min_s_y, max_s_y):
+    global _worker_interpolator, _worker_y_offset
+    
+    fresh_mca = MCARegion.load(fresh_mca_path, rx, rz) if os.path.exists(fresh_mca_path) else None
+    modified_mca = MCARegion.load(modified_mca_path, rx, rz) if os.path.exists(modified_mca_path) else None
+    
+    active_chunks = set()
+    block_data = {}
+    
+    if not modified_mca:
+        return active_chunks, block_data
+        
+    for (cx_local, cz_local), comp_modified in modified_mca.chunks.items():
+        cx_global = rx * 32 + cx_local
+        cz_global = rz * 32 + cz_local
+        
+        comp_fresh = fresh_mca.chunks.get((cx_local, cz_local)) if fresh_mca else None
+        
+        is_changed = False
+        if comp_fresh is None:
+            is_changed = True
+        else:
+            fresh_nbt = fresh_mca.get_chunk_nbt(cx_local, cz_local)
+            modified_nbt = modified_mca.get_chunk_nbt(cx_local, cz_local)
+            if not modified_nbt:
+                is_changed = (fresh_nbt is not None)
+            elif not fresh_nbt:
+                is_changed = True
+            else:
+                is_changed = chunk_block_states_differ(fresh_nbt, modified_nbt)
+                
+        if is_changed:
+            active_chunks.add((cx_global, cz_global))
+            modified_nbt = modified_mca.get_chunk_nbt(cx_local, cz_local)
+            if modified_nbt:
+                blocks = extract_chunk_blocks_filtered(
+                    modified_nbt, cx_global, cz_global, min_s_y, max_s_y,
+                    _worker_interpolator, _worker_y_offset
+                )
+                block_data.update(blocks)
+                
+    return active_chunks, block_data
+
 def locate_blender():
     """Robustly locates the Blender executable across macOS, Windows, WSL, and Linux."""
     blender_path = "blender"
@@ -71,97 +296,12 @@ def locate_blender():
         blender_path = shutil.which("blender") or "blender"
     return blender_path
 
-def import_single_region(filepath, rx, rz, interpolator, y_offset, height_cache):
-    """Parses a single region file and filters out terrain blocks (runs in a worker thread)."""
-    local_preserved = {}
-    mca = MCARegion.load(filepath, rx, rz)
-    
-    for (cx_local, cz_local), compressed in mca.chunks.items():
-        cx_global = rx * 32 + cx_local
-        cz_global = rz * 32 + cz_local
-        
-        chunk_nbt = mca.get_chunk_nbt(cx_local, cz_local)
-        if not chunk_nbt:
-            continue
-            
-        sections = []
-        for tag in chunk_nbt.value:
-            if tag.name == "sections":
-                sections = tag.value[1]
-                break
-                
-        for sec in sections:
-            s_y = None
-            block_states = None
-            for t in sec.value:
-                if t.name == "Y":
-                    s_y = t.value
-                elif t.name == "block_states":
-                    block_states = t.value
-                    
-            if s_y is None or block_states is None:
-                continue
-                
-            palette = []
-            data_longs = None
-            for t in block_states:
-                if t.name == "palette":
-                    palette_tags = t.value[1]
-                    for p_tag in palette_tags:
-                        for member in p_tag.value:
-                            if member.name == "Name":
-                                palette.append(member.value)
-                elif t.name == "data":
-                    data_longs = t.value
-                    
-            if not palette:
-                continue
-                
-            if len(palette) == 1:
-                indices = [0] * 4096
-            elif data_longs is not None:
-                bits_per_block = max(4, int(math.ceil(math.log2(len(palette)))))
-                indices = unpack_block_states(data_longs, bits_per_block)
-            else:
-                indices = [0] * 4096
-                
-            y_min_sec = s_y * 16
-            for dy in range(16):
-                y_val = y_min_sec + dy
-                for dz in range(16):
-                    z_val = cz_global * 16 + dz
-                    for dx in range(16):
-                        x_val = cx_global * 16 + dx
-                        flat_idx = dy * 256 + dz * 16 + dx
-                        p_idx = indices[flat_idx]
-                        if p_idx >= len(palette):
-                            continue
-                        block_name = palette[p_idx]
-                        
-                        if block_name == "minecraft:air":
-                            continue
-                            
-                        # Snap height query (always hits lazy cell cache)
-                        cached_h = height_cache.get(x_val, z_val)
-                        if cached_h is None:
-                            h_real = interpolator.query_height(x_val, -z_val)
-                            cached_h = int(round(h_real)) - y_offset
-                            height_cache.set(x_val, z_val, cached_h)
-                            
-                        y_terrain = cached_h
-                        
-                        if block_name in TERRAIN_BLOCKS and y_val <= y_terrain:
-                            continue
-                            
-                        local_preserved[(x_val, y_val, z_val)] = block_name
-                        
-    del mca
-    return local_preserved
-
-def import_world(world_dir, glb_path, output_dir, parallel_workers=0):
-    metadata_path = os.path.join(world_dir, "tecate_metadata.json")
+def import_world(fresh_world_dir, modified_world_dir, glb_path, output_dir, cache_path=None, parallel_workers=0):
+    metadata_path = os.path.join(modified_world_dir, "tecate_metadata.json")
     if not os.path.exists(metadata_path):
-        raise FileNotFoundError(f"Metadata file not found in world directory: {metadata_path}")
+        metadata_path = os.path.join(fresh_world_dir, "tecate_metadata.json")
+    if not os.path.exists(metadata_path):
+        raise FileNotFoundError(f"Metadata file tecate_metadata.json not found in either world directory.")
         
     with open(metadata_path, 'r', encoding='utf-8') as f:
         metadata = json.load(f)
@@ -171,47 +311,86 @@ def import_world(world_dir, glb_path, output_dir, parallel_workers=0):
     s, tx, tz = align["scale"], align["translation_x"], align["translation_z"]
     
     interpolator = TerrainHeightInterpolator(glb_path, s, tx, tz)
-    height_cache = TerrainHeightCache()
     
-    region_dir = os.path.join(world_dir, "region")
-    mca_files = glob.glob(os.path.join(region_dir, "r.*.*.mca"))
-    print(f"[Importer] Found {len(mca_files)} region files.")
+    # Dynamic heights calculation
+    glb_min_y = float(interpolator.y_pts.min())
+    glb_max_y = float(interpolator.y_pts.max())
+    min_mc_y = glb_min_y - y_offset
+    max_mc_y = glb_max_y - y_offset
+    min_s_y = int(math.floor(min_mc_y / 16.0))
+    max_s_y = int(math.ceil(max_mc_y / 16.0))
     
-    preserved_blocks = {}
+    fresh_region_dir = os.path.join(fresh_world_dir, "region")
+    modified_region_dir = os.path.join(modified_world_dir, "region")
+    
+    fresh_mcas = glob.glob(os.path.join(fresh_region_dir, "r.*.*.mca"))
+    modified_mcas = glob.glob(os.path.join(modified_region_dir, "r.*.*.mca"))
+    
+    regions = set()
+    for path in fresh_mcas + modified_mcas:
+        filename = os.path.basename(path)
+        parts = filename.split('.')
+        if len(parts) == 4:
+            rx, rz = int(parts[1]), int(parts[2])
+            regions.add((rx, rz))
+            
+    print(f"[Importer] Scanning {len(regions)} regions in parallel for modifications...")
+    
     workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
     
-    try:
-        print(f"[Importer] Reading regions in parallel utilizing {workers} threads...")
-        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = {}
-            for filepath in mca_files:
-                filename = os.path.basename(filepath)
-                parts = filename.split('.')
-                rx, rz = int(parts[1]), int(parts[2])
-                
-                f_obj = executor.submit(
-                    import_single_region,
-                    filepath, rx, rz, interpolator, y_offset, height_cache
-                )
-                futures[f_obj] = filepath
-                
-            for future in concurrent.futures.as_completed(futures):
-                path = futures[future]
-                try:
-                    res = future.result()
-                    preserved_blocks.update(res)
-                except Exception as e:
-                    print(f"[Importer Error] Failed to read region {path}: {e}")
-                    
-    except KeyboardInterrupt:
-        print("\n[Importer] Ctrl+C interrupt detected! Saving checkpoint of data parsed so far...")
-        if 'executor' in locals():
-            executor.shutdown(wait=False, cancel_futures=True)
-            
-    # Always save height cache
-    height_cache.save()
+    active_chunks = set()
+    preserved_blocks = {}
     
-    print(f"[Importer] Extracted {len(preserved_blocks)} preserved blocks (terrain subtracted).")
+    with concurrent.futures.ProcessPoolExecutor(
+        max_workers=workers,
+        initializer=init_worker_process,
+        initargs=(glb_path, s, tx, tz, y_offset)
+    ) as executor:
+        futures = {}
+        for (rx, rz) in sorted(regions):
+            fresh_path = os.path.join(fresh_region_dir, f"r.{rx}.{rz}.mca")
+            modified_path = os.path.join(modified_region_dir, f"r.{rx}.{rz}.mca")
+            f = executor.submit(
+                diff_single_region_process,
+                rx, rz, fresh_path, modified_path, min_s_y, max_s_y
+            )
+            futures[f] = (rx, rz)
+            
+        for future in concurrent.futures.as_completed(futures):
+            rx, rz = futures[future]
+            try:
+                chunks, blocks = future.result()
+                active_chunks.update(chunks)
+                preserved_blocks.update(blocks)
+            except Exception as e:
+                print(f"[Importer Error] Failed to scan region r.{rx}.{rz}: {e}")
+                
+    print(f"[Importer] Identified {len(active_chunks)} chunks modified by players.")
+    
+    # 2. Merge with original roads/manzanas cache for inactive chunks
+    if not cache_path:
+        cache_path = os.path.join(os.path.dirname(modified_world_dir), "custom_blocks_cache.npz")
+        
+    custom_blocks = {}
+    if os.path.exists(cache_path):
+        custom_blocks, _, _, _ = load_custom_blocks_cache(cache_path)
+    else:
+        print(f"[Importer Warning] Original custom blocks cache not found at: {cache_path}. Running without baseline roads/manzanas.")
+        
+    if custom_blocks:
+        if hasattr(custom_blocks, 'chunk_slices') and hasattr(custom_blocks, 'new_blocks_by_chunk'):
+            original_active_chunks = set(custom_blocks.chunk_slices.keys()) | set(custom_blocks.new_blocks_by_chunk.keys())
+        else:
+            original_active_chunks = set()
+            
+        print(f"[Importer] Merging {len(original_active_chunks - active_chunks)} inactive baseline chunks from original cache...")
+        for (cx, cz) in original_active_chunks:
+            if (cx, cz) not in active_chunks:
+                # Load baseline blocks from the cache
+                chunk_blocks = custom_blocks.get_chunk_dict(cx, cz)
+                preserved_blocks.update(chunk_blocks)
+                
+    print(f"[Importer] Combined model contains {len(preserved_blocks)} non-terrain blocks.")
     
     # 3. Perform Voxel Face Culling
     print("[Importer] Optimizing voxel geometry (face culling)...")
@@ -289,10 +468,19 @@ def import_world(world_dir, glb_path, output_dir, parallel_workers=0):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Minecraft World to Blender Importer")
-    parser.add_argument("--world-dir", default="export/minecraft_world/TecateWorld", help="Path to Minecraft save world")
+    parser.add_argument("--fresh-world", required=True, help="Path to the fresh reference world directory")
+    parser.add_argument("--modified-world", required=True, help="Path to the player-modified world directory")
     parser.add_argument("--glb-path", default="models/tecate/glb/tecate.glb", help="Path to terrain GLB")
     parser.add_argument("--output-dir", default="export/minecraft_world", help="Output directory for generated Blend/GLB models")
-    parser.add_argument("--parallel", type=int, default=0, help="Number of thread workers (0 = auto)")
+    parser.add_argument("--cache-path", default=None, help="Path to custom_blocks_cache.npz (default: auto)")
+    parser.add_argument("--parallel", type=int, default=0, help="Number of process workers (0 = auto)")
     args = parser.parse_args()
     
-    import_world(args.world_dir, args.glb_path, args.output_dir, args.parallel)
+    import_world(
+        args.fresh_world,
+        args.modified_world,
+        args.glb_path,
+        args.output_dir,
+        cache_path=args.cache_path,
+        parallel_workers=args.parallel
+    )
