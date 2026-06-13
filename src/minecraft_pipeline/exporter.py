@@ -330,7 +330,13 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None,
             y_mc = get_mc_terrain_y(x_mc, z_mc)
         y_platform = y_mc + 1
 
-        if d_boundary <= 1.0:
+        is_border = (
+            (x_mc + 1, z_mc) not in inside_set or
+            (x_mc - 1, z_mc) not in inside_set or
+            (x_mc, z_mc + 1) not in inside_set or
+            (x_mc, z_mc - 1) not in inside_set
+        )
+        if is_border:
             # Sidewalk perimeter: place outward-facing stairs
             facing = "north"  # default fallback
             if (x_mc + 1, z_mc) not in inside_set:
@@ -375,7 +381,7 @@ def make_sign_block_entity(x, y, z, line1_text, line2_text=""):
         front_text
     ])
 
-def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, custom_blocks, get_mc_terrain_y):
+def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, custom_blocks, get_mc_terrain_y, edge_styles=None, blocks=None):
     """
     Procedurally places street name signs at intersections based on priority,
     street names, hierarchies, and setback geometry.
@@ -396,7 +402,29 @@ def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, cus
         custom_blocks.block_entities = {}
         
     sign_count = 0
+    placed_poles = []
     
+    # Precompute block bounding boxes in Cartesian coords for fast 2D distance checks
+    block_bboxes = []
+    if blocks:
+        for b in blocks:
+            poly = b.get("polygon", [])
+            if len(poly) >= 3:
+                xs = [pt[0] for pt in poly]
+                ys = [pt[1] for pt in poly]
+                block_bboxes.append((min(xs), max(xs), min(ys), max(ys), poly))
+
+    def is_near_large_manzana(px_mc, pz_mc):
+        if not block_bboxes:
+            return True  # If no blocks, don't filter (e.g. in tests)
+        px_cart = px_mc
+        py_cart = -pz_mc
+        for min_x, max_x, min_y, max_y, poly in block_bboxes:
+            if min_x - 5.0 <= px_cart <= max_x + 5.0 and min_y - 5.0 <= py_cart <= max_y + 5.0:
+                if distance_to_polygon_boundary(px_cart, py_cart, poly) <= 5.0:
+                    return True
+        return False
+        
     for n_id, connected_edges in adj.items():
         n_nd = node_map.get(n_id)
         if not n_nd:
@@ -412,20 +440,19 @@ def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, cus
             name = meta.get("name", "")
             hw = meta.get("highway", "residential")
             
-            road_props = resolve_road_properties(name, hw)
+            road_props = None
+            if edge_styles is not None:
+                road_props = edge_styles.get(key)
+            if road_props is None:
+                road_props = resolve_road_properties(name, hw)
             width = road_props["width"]
             
-            name_norm = (name or "").lower().strip()
-            is_expressway = ("carr" in name_norm or "carretera" in name_norm or "autop" in name_norm or "autopista" in name_norm or hw in ["motorway", "motorway_link", "trunk", "trunk_link"])
-            is_blvd = ("blvd" in name_norm or "boulevard" in name_norm or "blvrd" in name_norm)
-            is_avenida = ("av" in name_norm or "avenida" in name_norm or "paseo" in name_norm)
-            is_calle = ("calle" in name_norm or "callejón" in name_norm or "privada" in name_norm or "calzada" in name_norm)
-            
-            if is_expressway or is_blvd:
+            m_type = road_props.get("marking_type", "calle")
+            if m_type in ["highway", "boulevard"]:
                 level = 3
-            elif is_avenida:
+            elif m_type == "avenida":
                 level = 2
-            elif is_calle:
+            elif m_type == "calle":
                 level = 1
             else:
                 level = 0
@@ -514,12 +541,27 @@ def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, cus
             x_sign = int(round(x_node + r * cos_mid))
             z_sign = int(round(z_node + r * sin_mid))
             
+            # Check size filter (must be within 5m of a large manzana)
+            if not is_near_large_manzana(x_sign, z_sign):
+                continue
+                
+            # Proximity de-duplication: skip if any pole is within 10.0m
+            too_close = False
+            for px, pz in placed_poles:
+                if math.sqrt((x_sign - px)**2 + (z_sign - pz)**2) < 10.0:
+                    too_close = True
+                    break
+            if too_close:
+                continue
+                
+            placed_poles.append((x_sign, z_sign))
+            
             y_sign = get_mc_terrain_y(x_sign, z_sign)
             
             custom_blocks[(x_sign, y_sign + 1, z_sign)] = "minecraft:pale_oak_fence"
             custom_blocks[(x_sign, y_sign + 2, z_sign)] = "minecraft:pale_oak_fence"
             
-            def get_facing_direction(vx, vz):
+            def get_cardinal_priority(vx, vz):
                 px, pz = -vz, vx
                 cardinals = [
                     ("north", 0.0, -1.0),
@@ -527,18 +569,20 @@ def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, cus
                     ("east", 1.0, 0.0),
                     ("west", -1.0, 0.0)
                 ]
-                best_face = "north"
-                max_dot = -99.0
-                for face, cx, cz in cardinals:
-                    dot = px * cx + pz * cz
-                    if dot > max_dot:
-                        max_dot = dot
-                        best_face = face
-                return best_face
+                # Sort by dot product descending
+                sorted_faces = sorted(cardinals, key=lambda c: px * c[1] + pz * c[2], reverse=True)
+                return [f[0] for f in sorted_faces]
                 
-            face_v1 = get_facing_direction(v1["x"], v1["z"])
-            face_v2 = get_facing_direction(v2["x"], v2["z"])
+            faces_v1 = get_cardinal_priority(v1["x"], v1["z"])
+            faces_v2 = get_cardinal_priority(v2["x"], v2["z"])
             
+            face1 = faces_v1[0]
+            face2 = None
+            for f in faces_v2:
+                if f != face1:
+                    face2 = f
+                    break
+                    
             offsets = {
                 "north": (0, 0, -1),
                 "south": (0, 0, 1),
@@ -546,18 +590,16 @@ def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, cus
                 "west": (-1, 0, 0)
             }
             
-            off_x, off_y, off_z = offsets[face_v1]
-            bx1, by1, bz1 = x_sign + off_x, y_sign + 2, z_sign + off_z
-            custom_blocks[(bx1, by1, bz1)] = f"minecraft:pale_oak_wall_sign[facing={face_v1}]"
+            off_x1, _, off_z1 = offsets[face1]
+            bx1, by1, bz1 = x_sign + off_x1, y_sign + 2, z_sign + off_z1
+            custom_blocks[(bx1, by1, bz1)] = f"minecraft:pale_oak_wall_sign[facing={face1}]"
             custom_blocks.block_entities[(bx1, by1, bz1)] = make_sign_block_entity(bx1, by1, bz1, v1["name"])
             
-            if v2["name"] != v1["name"]:
-                off_x2, off_y2, off_z2 = offsets[face_v2]
-                bx2, by2, bz2 = x_sign + off_x2, y_sign + 2, z_sign + off_z2
-                if (bx2, by2, bz2) not in custom_blocks:
-                    custom_blocks[(bx2, by2, bz2)] = f"minecraft:pale_oak_wall_sign[facing={face_v2}]"
-                    custom_blocks.block_entities[(bx2, by2, bz2)] = make_sign_block_entity(bx2, by2, bz2, v2["name"])
-                    
+            off_x2, _, off_z2 = offsets[face2]
+            bx2, by2, bz2 = x_sign + off_x2, y_sign + 2, z_sign + off_z2
+            custom_blocks[(bx2, by2, bz2)] = f"minecraft:pale_oak_wall_sign[facing={face2}]"
+            custom_blocks.block_entities[(bx2, by2, bz2)] = make_sign_block_entity(bx2, by2, bz2, v2["name"])
+            
             sign_count += 1
             
     print(f"[Exporter] Successfully generated {sign_count} street name sign posts.")
@@ -1304,6 +1346,36 @@ def find_inside_points(min_x, max_x, min_z, max_z, polygon):
                 dists.append(distance_to_polygon_boundary(x, z, polygon))
     return np.array(xs, dtype=np.int32), np.array(zs, dtype=np.int32), np.array(dists, dtype=np.float64)
 
+def polygon_area(poly):
+    """Calculates the 2D area of a polygon using the Shoelace formula."""
+    n = len(poly)
+    if n < 3:
+        return 0.0
+    area = 0.0
+    for i in range(n):
+        j = (i + 1) % n
+        area += poly[i][0] * poly[j][1]
+        area -= poly[j][0] * poly[i][1]
+    return abs(area) / 2.0
+
+def get_normalized_street_name(name):
+    """Normalizes a street name by removing prefixes/suffixes, accents, and converting to lowercase."""
+    if not name:
+        return ""
+    import unicodedata
+    name_ascii = unicodedata.normalize('NFKD', name).encode('ASCII', 'ignore').decode('utf-8').lower().strip()
+    words = name_ascii.split()
+    filtered_words = []
+    ignored_words = {
+        "calle", "callejon", "avenida", "av", "boulevard", "blvd", "blvrd", 
+        "carretera", "carr", "camino", "privada", "calzada", "presidente", "pdte"
+    }
+    for w in words:
+        w_clean = "".join(c for c in w if c.isalnum())
+        if w_clean not in ignored_words and w_clean != "":
+            filtered_words.append(w_clean)
+    return " ".join(filtered_words).strip()
+
 def get_deterministic_choice(x, y, z, choices, weights):
     """Deterministically selects a choice based on coordinates hash."""
     # Fast non-cryptographic arithmetic hash on coordinates
@@ -1740,7 +1812,7 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, region_heights, r
     region.save(mca_path)
     print(f"[Exporter] Saved region file: {mca_path}")
 
-def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y_offset):
+def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y_offset, edge_styles):
     local_custom_blocks = {}
     for ed in chunk_edges:
         u_nd = node_map.get(ed["u"])
@@ -1762,9 +1834,11 @@ def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y
         name = meta.get("name", "")
         bridge = meta.get("bridge", "")
         layer = meta.get("layer", "")
-        is_bridge = (bridge == "yes") or (layer != "" and layer != "0" and not layer.startswith("-"))
+        is_bridge = (bridge != "" and bridge != "no")
         
-        road_props = resolve_road_properties(name, hw)
+        road_props = edge_styles.get(key)
+        if road_props is None:
+            road_props = resolve_road_properties(name, hw)
         width = road_props["width"]
         surface = road_props["surface"]
         is_rural = road_props["is_rural"]
@@ -1920,6 +1994,14 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             data = json.load(f)
             
         blocks = data.get("blocks", [])
+        filtered_blocks = []
+        for b in blocks:
+            poly = b.get("polygon", [])
+            area = polygon_area(poly)
+            if 500.0 <= area <= 60000.0:
+                filtered_blocks.append(b)
+        print(f"[Exporter] Filtered block lots by area [500, 60000] m²: kept {len(filtered_blocks)} / {len(blocks)} blocks.")
+        blocks = filtered_blocks
         road_graph = data.get("road_graph", {})
         
         # Extract and cache road metadata
@@ -1993,13 +2075,52 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         edges = road_graph.get("edges", [])
         node_map = {nd["id"]: nd for nd in nodes}
         
+        # Build style lookup and group by normalized street name
+        print("[Exporter] Resolving and propagating road styles across segments...")
+        raw_edge_styles = {}
+        name_groups = {}
+        for ed in edges:
+            key = get_edge_key(ed["u"], ed["v"])
+            meta = edge_metadata.get(key, {})
+            hw = meta.get("highway", "residential")
+            name = meta.get("name", "")
+            
+            style = resolve_road_properties(name, hw)
+            raw_edge_styles[key] = style
+            
+            norm_name = get_normalized_street_name(name)
+            if norm_name:
+                name_groups.setdefault(norm_name, []).append((key, style))
+                
+        def get_style_rank(style):
+            if style["is_rural"] or style["surface"] == "gravel":
+                return 0
+            m_type = style.get("marking_type", "calle")
+            if m_type == "calle":
+                return 1
+            if m_type == "avenida":
+                return 2
+            if m_type == "boulevard":
+                return 3
+            if m_type == "highway":
+                return 4
+            return 1
+            
+        edge_styles = dict(raw_edge_styles)
+        for norm_name, items in name_groups.items():
+            highest_item = max(items, key=lambda x: get_style_rank(x[1]))
+            highest_style = highest_item[1]
+            if get_style_rank(highest_style) > 0:
+                for key, style in items:
+                    edge_styles[key] = highest_style
+                    
         num_edges = len(edges)
         if last_edge_idx < num_edges:
             # 1. Pre-query heights for all nodes in the road graph to allow instant linear height interpolation
             node_coords = []
             node_ids = []
             for nd in nodes:
-                node_coords.append((nd["x"], -nd["y"]))
+                node_coords.append((nd["x"], nd["y"]))
                 node_ids.append(nd["id"])
                 
             print(f"[Exporter] Batch querying heights for {len(node_coords)} road nodes...")
@@ -2022,20 +2143,20 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             
             executor = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
             try:
-                futures = [
+                road_futures = [
                     executor.submit(
                         rasterize_roads_worker,
-                        chunk, node_map, edge_metadata, node_heights, y_offset
+                        chunk, node_map, edge_metadata, node_heights, y_offset, edge_styles
                     )
                     for chunk in edge_chunks
                 ]
                 
                 completed = 0
-                for f in concurrent.futures.as_completed(futures):
+                for f in concurrent.futures.as_completed(road_futures):
                     res = f.result()
                     custom_blocks.update(res)
                     completed += 1
-                    print_progress("[Exporter] Rasterizing road network chunks", completed, len(futures), t_start_road)
+                    print_progress("[Exporter] Rasterizing road network chunks", completed, len(road_futures), t_start_road)
             finally:
                 executor.shutdown(wait=False)
                 
@@ -2131,7 +2252,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 node_coords = []
                 node_ids = []
                 for nd in nodes:
-                    node_coords.append((nd["x"], -nd["y"]))
+                    node_coords.append((nd["x"], nd["y"]))
                     node_ids.append(nd["id"])
                 print(f"[Exporter] Node heights not in memory. Batch querying {len(node_coords)} road nodes for sign generation...")
                 t_node_start = time.time()
@@ -2147,7 +2268,9 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 node_heights=node_heights,
                 y_offset=y_offset,
                 custom_blocks=custom_blocks,
-                get_mc_terrain_y=get_mc_terrain_y
+                get_mc_terrain_y=get_mc_terrain_y,
+                edge_styles=edge_styles,
+                blocks=blocks
             )
         
         # Determine active chunk coordinates containing custom blocks
@@ -2221,126 +2344,148 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         water_interp = TerrainWaterInterpolator(glb_path, s, tx, tz) if os.path.exists(glb_path) else None
         
         try:
-            futures = {}
-            for (rx, rz), pts in regions_to_generate:
-                mca_path = os.path.join(region_dir, f"r.{rx}.{rz}.mca")
-                
-                # 1. Resolve heights for this region in the main thread (dynamic query)
-                missing_queries = []
-                for cx_local in range(32):
-                    for cz_local in range(32):
-                        cx_global = rx * 32 + cx_local
-                        cz_global = rz * 32 + cz_local
-                        for dx in range(16):
-                            for dz in range(16):
-                                x_val = cx_global * 16 + dx
-                                z_val = cz_global * 16 + dz
-                                if height_cache.cache.get((x_val, z_val)) is None:
-                                    missing_queries.append((x_val, -z_val))
-                                    
-                if missing_queries:
-                    batch_heights = interpolator.query_height_batch(missing_queries)
-                    for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
-                        z_val = -mz_q
-                        cached_h = int(round(h_real)) - y_offset
-                        height_cache.cache[(x_q, z_val)] = cached_h
-                    height_cache.changed = True
-                    
-                # 2. Slice heights for this region
-                region_heights = {}
-                for cx_local in range(32):
-                    for cz_local in range(32):
-                        cx_global = rx * 32 + cx_local
-                        cz_global = rz * 32 + cz_local
-                        for dx in range(16):
-                            for dz in range(16):
-                                x_val = cx_global * 16 + dx
-                                z_val = cz_global * 16 + dz
-                                h = height_cache.cache.get((x_val, z_val))
-                                if h is not None:
-                                    region_heights[(x_val, z_val)] = h
-                                    
-                # 3. Slice water triangles by chunk for this region
-                region_water_by_chunk = {}
-                if water_interp is not None:
-                    for cx_local in range(32):
-                        for cz_local in range(32):
-                            cx_global = rx * 32 + cx_local
-                            cz_global = rz * 32 + cz_local
-                            min_x_c = cx_global * 16
-                            max_x_c = min_x_c + 15
-                            min_z_c = cz_global * 16
-                            max_z_c = min_z_c + 15
-                            
-                            c_x_min = int(math.floor(min_x_c / water_interp.cell_size))
-                            c_x_max = int(math.floor(max_x_c / water_interp.cell_size))
-                            c_z_min = int(math.floor(min_z_c / water_interp.cell_size))
-                            c_z_max = int(math.floor(max_z_c / water_interp.cell_size))
-                            
-                            overlapping_tri_idx = set()
-                            for cx in range(c_x_min, c_x_max + 1):
-                                for cz in range(c_z_min, c_z_max + 1):
-                                    overlapping_tri_idx.update(water_interp.grid.get((cx, cz), []))
-                            
-                            if overlapping_tri_idx:
-                                triangles = [water_interp.triangles[idx] for idx in overlapping_tri_idx]
-                                region_water_by_chunk[(cx_local, cz_local)] = np.array(triangles, dtype=np.float64)
-                                
-                # 4. Slice classification polygons by chunk for this region
-                region_polygons_by_chunk = {}
-                if classification_index is not None:
-                    for cx_local in range(32):
-                        for cz_local in range(32):
-                            cx_global = rx * 32 + cx_local
-                            cz_global = rz * 32 + cz_local
-                            min_x_c = cx_global * 16
-                            max_x_c = min_x_c + 15
-                            min_z_c = cz_global * 16
-                            max_z_c = min_z_c + 15
-                            
-                            c_x_min = int(math.floor(min_x_c / classification_index.cell_size))
-                            c_x_max = int(math.floor(max_x_c / classification_index.cell_size))
-                            c_z_min = int(math.floor(min_z_c / classification_index.cell_size))
-                            c_z_max = int(math.floor(max_z_c / classification_index.cell_size))
-                            
-                            overlapping_poly_idx = set()
-                            for cx in range(c_x_min, c_x_max + 1):
-                                for cz in range(c_z_min, c_z_max + 1):
-                                    overlapping_poly_idx.update(classification_index.grid.get((cx, cz), []))
-                            
-                            if overlapping_poly_idx:
-                                chunk_polys = []
-                                for idx in overlapping_poly_idx:
-                                    poly = classification_index.polygons[idx]
-                                    chunk_polys.append({
-                                        "bbox": poly["bbox"],
-                                        "vertices": poly["vertices"],
-                                        "class": poly["class"]
-                                    })
-                                region_polygons_by_chunk[(cx_local, cz_local)] = chunk_polys
-                                
-                region_custom_blocks = custom_blocks.get_region_subset(rx, rz)
-                f = executor.submit(
-                    export_single_region_process_wrapper,
-                    rx, rz, pts, mca_path, min_s_y, max_s_y, region_custom_blocks,
-                    region_heights, region_water_by_chunk, region_polygons_by_chunk, y_offset
-                )
-                futures[f] = (rx, rz)
-                
+            max_pending = workers * 2
+            region_iterator = iter(regions_to_generate)
+            total_regions = len(regions_to_generate)
             completed_regions = 0
-            total_regions = len(futures)
+            
+            futures = {}
+            active_futures = []
+            
             if total_regions > 0:
                 t_start_regions = time.time()
                 print_progress("[Exporter] Generating region MCA files", 0, total_regions, t_start_regions)
-                active_futures = list(futures.keys())
-                while active_futures:
+                
+                while active_futures or True:
                     if cancel_event.is_set():
                         break
+                        
+                    # Submit new tasks if queue is not full
+                    submitted_any = False
+                    while len(active_futures) < max_pending:
+                        try:
+                            item = next(region_iterator)
+                        except StopIteration:
+                            break
+                            
+                        (rx, rz), pts = item
+                        mca_path = os.path.join(region_dir, f"r.{rx}.{rz}.mca")
+                        
+                        # 1. Resolve heights for this region in the main thread (dynamic query)
+                        missing_queries = []
+                        for cx_local in range(32):
+                            for cz_local in range(32):
+                                cx_global = rx * 32 + cx_local
+                                cz_global = rz * 32 + cz_local
+                                for dx in range(16):
+                                    for dz in range(16):
+                                        x_val = cx_global * 16 + dx
+                                        z_val = cz_global * 16 + dz
+                                        if height_cache.cache.get((x_val, z_val)) is None:
+                                            missing_queries.append((x_val, -z_val))
+                                            
+                        if missing_queries:
+                            batch_heights = interpolator.query_height_batch(missing_queries)
+                            for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
+                                z_val = -mz_q
+                                cached_h = int(round(h_real)) - y_offset
+                                height_cache.cache[(x_q, z_val)] = cached_h
+                            height_cache.changed = True
+                            
+                        # 2. Slice heights for this region
+                        region_heights = {}
+                        for cx_local in range(32):
+                            for cz_local in range(32):
+                                cx_global = rx * 32 + cx_local
+                                cz_global = rz * 32 + cz_local
+                                for dx in range(16):
+                                    for dz in range(16):
+                                        x_val = cx_global * 16 + dx
+                                        z_val = cz_global * 16 + dz
+                                        h = height_cache.cache.get((x_val, z_val))
+                                        if h is not None:
+                                            region_heights[(x_val, z_val)] = h
+                                            
+                        # 3. Slice water triangles by chunk for this region
+                        region_water_by_chunk = {}
+                        if water_interp is not None:
+                            for cx_local in range(32):
+                                for cz_local in range(32):
+                                    cx_global = rx * 32 + cx_local
+                                    cz_global = rz * 32 + cz_local
+                                    min_x_c = cx_global * 16
+                                    max_x_c = min_x_c + 15
+                                    min_z_c = cz_global * 16
+                                    max_z_c = min_z_c + 15
+                                    
+                                    c_x_min = int(math.floor(min_x_c / water_interp.cell_size))
+                                    c_x_max = int(math.floor(max_x_c / water_interp.cell_size))
+                                    c_z_min = int(math.floor(min_z_c / water_interp.cell_size))
+                                    c_z_max = int(math.floor(max_z_c / water_interp.cell_size))
+                                    
+                                    overlapping_tri_idx = set()
+                                    for cx in range(c_x_min, c_x_max + 1):
+                                        for cz in range(c_z_min, c_z_max + 1):
+                                            overlapping_tri_idx.update(water_interp.grid.get((cx, cz), []))
+                                    
+                                    if overlapping_tri_idx:
+                                        triangles = [water_interp.triangles[idx] for idx in overlapping_tri_idx]
+                                        region_water_by_chunk[(cx_local, cz_local)] = np.array(triangles, dtype=np.float64)
+                                        
+                        # 4. Slice classification polygons by chunk for this region
+                        region_polygons_by_chunk = {}
+                        if classification_index is not None:
+                            for cx_local in range(32):
+                                for cz_local in range(32):
+                                    cx_global = rx * 32 + cx_local
+                                    cz_global = rz * 32 + cz_local
+                                    min_x_c = cx_global * 16
+                                    max_x_c = min_x_c + 15
+                                    min_z_c = cz_global * 16
+                                    max_z_c = min_z_c + 15
+                                    
+                                    c_x_min = int(math.floor(min_x_c / classification_index.cell_size))
+                                    c_x_max = int(math.floor(max_x_c / classification_index.cell_size))
+                                    c_z_min = int(math.floor(min_z_c / classification_index.cell_size))
+                                    c_z_max = int(math.floor(max_z_c / classification_index.cell_size))
+                                    
+                                    overlapping_poly_idx = set()
+                                    for cx in range(c_x_min, c_x_max + 1):
+                                        for cz in range(c_z_min, c_z_max + 1):
+                                            overlapping_poly_idx.update(classification_index.grid.get((cx, cz), []))
+                                    
+                                    if overlapping_poly_idx:
+                                        chunk_polys = []
+                                        for idx in overlapping_poly_idx:
+                                            poly = classification_index.polygons[idx]
+                                            chunk_polys.append({
+                                                "bbox": poly["bbox"],
+                                                "vertices": poly["vertices"],
+                                                "class": poly["class"]
+                                            })
+                                        region_polygons_by_chunk[(cx_local, cz_local)] = chunk_polys
+                                        
+                        region_custom_blocks = custom_blocks.get_region_subset(rx, rz)
+                        f = executor.submit(
+                            export_single_region_process_wrapper,
+                            rx, rz, pts, mca_path, min_s_y, max_s_y, region_custom_blocks,
+                            region_heights, region_water_by_chunk, region_polygons_by_chunk, y_offset
+                        )
+                        futures[f] = (rx, rz)
+                        active_futures.append(f)
+                        submitted_any = True
+                        
+                    # If there are no active futures and we couldn't submit anything new, we are done
+                    if not active_futures:
+                        break
+                        
+                    # Wait for some futures to finish
                     done, not_done = concurrent.futures.wait(
                         active_futures,
                         timeout=0.2,
                         return_when=concurrent.futures.FIRST_COMPLETED
                     )
+                    
                     for future in done:
                         rx, rz = futures[future]
                         try:
@@ -2382,7 +2527,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         print("\n[Exporter] Ctrl+C interrupt detected! Saving checkpoint and cache to disk...")
         
         # Harvest completed blocks if interrupted during block platform loop
-        if 'futures' in locals() and futures:
+        if 'futures' in locals() and futures and 'completed_flags' in locals():
             try:
                 first_val = next(iter(futures.values()))
                 if isinstance(first_val, int):  # We are in the block platforms loop
