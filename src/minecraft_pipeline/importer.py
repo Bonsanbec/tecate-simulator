@@ -495,18 +495,59 @@ def import_world(fresh_world_dir, modified_world_dir, output_dir="export/minecra
         
     return json_out_path
 
+def ensure_default_env(path=".env"):
+    if not os.path.exists(path):
+        if sys.platform == "win32":
+            userprofile = os.getenv("USERPROFILE", os.path.expanduser("~"))
+            def_mod = os.path.join(userprofile, "AppData", "Roaming", ".minecraft", "saves", "TecateWorld")
+        elif sys.platform == "darwin":
+            def_mod = os.path.expanduser("~/Library/Application Support/minecraft/saves/TecateWorld")
+        else:
+            def_mod = os.path.expanduser("~/.minecraft/saves/TecateWorld")
+            
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write("# Minecraft Importer Environment Configuration\n")
+            f.write("FRESH_WORLD=export/minecraft_world/TecateWorld\n")
+            f.write(f"MODIFIED_WORLD={def_mod.replace('\\\\', '/')}\n")
+            f.write("OUTPUT_DIR=export/minecraft_world\n")
+        print(f"[Importer] Created default configuration file: {path}")
+
+def load_env(path=".env"):
+    if os.path.exists(path):
+        with open(path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if '=' in line:
+                    k, v = line.split('=', 1)
+                    k = k.strip()
+                    v = v.strip().strip('"').strip("'")
+                    if k not in os.environ:
+                        os.environ[k] = v
+
 if __name__ == "__main__":
+    ensure_default_env()
+    load_env()
+    
     import argparse
     parser = argparse.ArgumentParser(description="Minecraft World to Blender Importer")
-    parser.add_argument("--fresh-world", required=True, help="Path to the fresh reference world directory")
-    parser.add_argument("--modified-world", required=True, help="Path to the player-modified world directory")
-    parser.add_argument("--output-dir", default="export/minecraft_world", help="Output directory for generated Blend/GLB models")
+    parser.add_argument("--fresh-world", default=None, help="Path to the fresh reference world directory (falls back to FRESH_WORLD env var)")
+    parser.add_argument("--modified-world", default=None, help="Path to the player-modified world directory (falls back to MODIFIED_WORLD env var)")
+    parser.add_argument("--output-dir", default=None, help="Output directory for generated Blend/GLB models (falls back to OUTPUT_DIR env var)")
     parser.add_argument("--parallel", type=int, default=None, help="Number of process workers (default: max CPU cores)")
     args = parser.parse_args()
     
+    fresh_world = args.fresh_world or os.getenv("FRESH_WORLD")
+    modified_world = args.modified_world or os.getenv("MODIFIED_WORLD")
+    output_dir = args.output_dir or os.getenv("OUTPUT_DIR") or "export/minecraft_world"
+    
+    if not fresh_world or not modified_world:
+        parser.error("The arguments --fresh-world and --modified-world are required (or must be set in .env)")
+        
     import_world(
-        args.fresh_world,
-        args.modified_world,
-        output_dir=args.output_dir,
+        fresh_world,
+        modified_world,
+        output_dir=output_dir,
         parallel_workers=args.parallel
     )
