@@ -1103,28 +1103,15 @@ class TerrainHeightInterpolator:
             
         return results
 
-# Process-local globals for multiprocessing workers
-_worker_interpolator = None
-_worker_water_interpolator = None
-_worker_classification_index = None
-_worker_y_offset = None
-_worker_initial_height_cache = None
+# Process-local globals for multiprocessing workers (no longer needed, kept empty for compatibility)
+def init_worker_process(*args, **kwargs):
+    pass
 
-def init_worker_process(glb_path, s, tx, tz, y_offset, classification_json_path=None, initial_height_cache=None):
-    global _worker_interpolator, _worker_water_interpolator, _worker_classification_index, _worker_y_offset, _worker_initial_height_cache
-    _worker_interpolator = TerrainHeightInterpolator(glb_path, s, tx, tz)
-    _worker_water_interpolator = TerrainWaterInterpolator(glb_path, s, tx, tz)
-    _worker_classification_index = TerrainClassificationIndex(classification_json_path) if classification_json_path else None
-    _worker_y_offset = y_offset
-    _worker_initial_height_cache = initial_height_cache
-
-def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y, region_custom_blocks):
-    global _worker_interpolator, _worker_water_interpolator, _worker_classification_index, _worker_y_offset, _worker_initial_height_cache
-    
+def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y, region_custom_blocks,
+                                         region_heights, region_water_by_chunk, region_polygons_by_chunk, y_offset):
     # Process-local cache for height coordinates
     local_cache = TerrainHeightCache()
-    if _worker_initial_height_cache:
-        local_cache.cache.update(_worker_initial_height_cache)
+    local_cache.cache.update(region_heights)
     
     export_single_region(
         rx=rx,
@@ -1132,10 +1119,10 @@ def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y
         pts=pts,
         mca_path=mca_path,
         custom_blocks=region_custom_blocks,
-        interpolator=_worker_interpolator,
-        water_interpolator=_worker_water_interpolator,
-        classification_index=_worker_classification_index,
-        y_offset=_worker_y_offset,
+        region_heights=region_heights,
+        region_water_by_chunk=region_water_by_chunk,
+        region_polygons_by_chunk=region_polygons_by_chunk,
+        y_offset=y_offset,
         height_cache=local_cache,
         cancel_event=None,
         min_s_y=min_s_y,
@@ -1273,11 +1260,38 @@ def _find_inside_points_jit(min_x, max_x, min_z, max_z, polygon):
                 
     return xs[:count], zs[:count], dists[:count]
 
+@njit(nogil=True)
+def _find_inside_points_large_jit(min_x, max_x, min_z, max_z, polygon):
+    count = 0
+    for x in range(min_x, max_x + 1):
+        for z in range(min_z, max_z + 1):
+            if _point_in_polygon_jit(float(x), float(z), polygon):
+                count += 1
+                
+    xs = np.empty(count, dtype=np.int32)
+    zs = np.empty(count, dtype=np.int32)
+    dists = np.empty(count, dtype=np.float64)
+    
+    idx = 0
+    for x in range(min_x, max_x + 1):
+        for z in range(min_z, max_z + 1):
+            if _point_in_polygon_jit(float(x), float(z), polygon):
+                xs[idx] = x
+                zs[idx] = z
+                dists[idx] = _distance_to_polygon_boundary_jit(float(x), float(z), polygon)
+                idx += 1
+                
+    return xs, zs, dists
+
 def find_inside_points(min_x, max_x, min_z, max_z, polygon):
+    area = (max_x - min_x + 1) * (max_z - min_z + 1)
     if HAS_NUMBA:
         if not isinstance(polygon, np.ndarray):
             polygon = np.array(polygon, dtype=np.float64)
-        return _find_inside_points_jit(min_x, max_x, min_z, max_z, polygon)
+        if area >= 100000:
+            return _find_inside_points_large_jit(min_x, max_x, min_z, max_z, polygon)
+        else:
+            return _find_inside_points_jit(min_x, max_x, min_z, max_z, polygon)
         
     xs = []
     zs = []
@@ -1533,34 +1547,15 @@ def print_progress(label, completed, total, start_time=None):
         sys.stdout.write("\n")
         sys.stdout.flush()
 
-def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_offset, height_cache, 
-                         water_interpolator=None, classification_index=None, cancel_event=None, min_s_y=-4, max_s_y=20):
-    """Generates MCA chunks for a single region (runs in worker thread)."""
+def export_single_region(rx, rz, pts, mca_path, custom_blocks, region_heights, region_water_by_chunk, region_polygons_by_chunk, 
+                         y_offset, height_cache, cancel_event=None, min_s_y=-4, max_s_y=20):
+    """Generates MCA chunks for a single region (runs in worker thread/process)."""
     region = MCARegion(rx, rz)
     
     region_chunks = set()
     for cx_local in range(32):
         for cz_local in range(32):
             region_chunks.add((cx_local, cz_local))
-                    
-    # Pre-resolve all terrain heights for the region in batch to optimize SciPy calls
-    missing_queries = []
-    for (cx_local, cz_local) in region_chunks:
-        cx_global = rx * 32 + cx_local
-        cz_global = rz * 32 + cz_local
-        for dx in range(16):
-            for dz in range(16):
-                x_val = cx_global * 16 + dx
-                z_val = cz_global * 16 + dz
-                if height_cache.cache.get((x_val, z_val)) is None:
-                    missing_queries.append((x_val, -z_val))
-                    
-    if missing_queries:
-        batch_heights = interpolator.query_height_batch(missing_queries)
-        for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
-            z_val = -mz_q
-            cached_h = int(round(h_real)) - y_offset
-            height_cache.set(x_q, z_val, cached_h)
                     
     for (cx_local, cz_local) in region_chunks:
         if cancel_event is not None and cancel_event.is_set():
@@ -1571,51 +1566,11 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
         # Load small chunk dictionary on demand to avoid OOM
         chunk_dict = custom_blocks.get_chunk_dict(cx_global, cz_global) if hasattr(custom_blocks, 'get_chunk_dict') else custom_blocks
         
-        # Area-based optimization: check overlapping water triangles for this chunk
-        has_chunk_water = False
-        chunk_triangles = []
-        if water_interpolator is not None:
-            min_x_c = cx_global * 16
-            max_x_c = min_x_c + 15
-            min_z_c = cz_global * 16
-            max_z_c = min_z_c + 15
-            
-            c_x_min = int(math.floor(min_x_c / water_interpolator.cell_size))
-            c_x_max = int(math.floor(max_x_c / water_interpolator.cell_size))
-            c_z_min = int(math.floor(min_z_c / water_interpolator.cell_size))
-            c_z_max = int(math.floor(max_z_c / water_interpolator.cell_size))
-            
-            overlapping_tri_idx = set()
-            for cx in range(c_x_min, c_x_max + 1):
-                for cz in range(c_z_min, c_z_max + 1):
-                    overlapping_tri_idx.update(water_interpolator.grid.get((cx, cz), []))
-            
-            if overlapping_tri_idx:
-                chunk_triangles = [water_interpolator.triangles[idx] for idx in overlapping_tri_idx]
-                has_chunk_water = True
-
-        # Area-based optimization: check overlapping classification polygons for this chunk
-        has_chunk_class = False
-        chunk_polygons = []
-        if classification_index is not None:
-            min_x_c = cx_global * 16
-            max_x_c = min_x_c + 15
-            min_z_c = cz_global * 16
-            max_z_c = min_z_c + 15
-            
-            c_x_min = int(math.floor(min_x_c / classification_index.cell_size))
-            c_x_max = int(math.floor(max_x_c / classification_index.cell_size))
-            c_z_min = int(math.floor(min_z_c / classification_index.cell_size))
-            c_z_max = int(math.floor(max_z_c / classification_index.cell_size))
-            
-            overlapping_poly_idx = set()
-            for cx in range(c_x_min, c_x_max + 1):
-                for cz in range(c_z_min, c_z_max + 1):
-                    overlapping_poly_idx.update(classification_index.grid.get((cx, cz), []))
-            
-            if overlapping_poly_idx:
-                chunk_polygons = [classification_index.polygons[idx] for idx in overlapping_poly_idx]
-                has_chunk_class = True
+        tri_arr = region_water_by_chunk.get((cx_local, cz_local))
+        has_chunk_water = tri_arr is not None and len(tri_arr) > 0
+        
+        chunk_polygons = region_polygons_by_chunk.get((cx_local, cz_local), [])
+        has_chunk_class = len(chunk_polygons) > 0
         
         # Pre-lookup all 256 heights, water, and class properties for this chunk
         local_heights = np.zeros(256, dtype=np.int32)
@@ -1626,7 +1581,6 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
         local_water_found = np.zeros(256, dtype=np.bool_)
         
         if has_chunk_water:
-            tri_arr = np.array(chunk_triangles, dtype=np.float64)
             query_water_chunk_jit(cx_global * 16, cz_global * 16, tri_arr, local_water_y, local_water_found)
             
         for dz in range(16):
@@ -1639,9 +1593,7 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, interpolator, y_o
                 if cached_h is None:
                     cached_h = height_cache.get(x_val, z_val)
                     if cached_h is None:
-                        h_real = interpolator.query_height(x_val, -z_val)
-                        cached_h = int(round(h_real)) - y_offset
-                        height_cache.set(x_val, z_val, cached_h)
+                        cached_h = 0
                 
                 y_water_mc = -9999
                 if has_chunk_water and local_water_found[idx]:
@@ -2270,21 +2222,128 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         from src.minecraft_pipeline.terrain_classifier import extract_and_cache_terrain_classification
         extract_and_cache_terrain_classification(reconstruction_json_path, classification_json_path)
         
+        regions_data = []
+        if regions_to_generate:
+            print(f"[Exporter] Pre-resolving missing heights for {len(regions_to_generate)} regions in the main thread...")
+            t_pre_start = time.time()
+            missing_queries = []
+            for (rx, rz), pts in regions_to_generate:
+                for cx_local in range(32):
+                    for cz_local in range(32):
+                        cx_global = rx * 32 + cx_local
+                        cz_global = rz * 32 + cz_local
+                        for dx in range(16):
+                            for dz in range(16):
+                                x_val = cx_global * 16 + dx
+                                z_val = cz_global * 16 + dz
+                                if height_cache.cache.get((x_val, z_val)) is None:
+                                    missing_queries.append((x_val, -z_val))
+                                    
+            if missing_queries:
+                print(f"[Exporter] Querying {len(missing_queries)} missing heights in a single batch...")
+                batch_heights = interpolator.query_height_batch(missing_queries)
+                for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
+                    z_val = -mz_q
+                    cached_h = int(round(h_real)) - y_offset
+                    height_cache.cache[(x_q, z_val)] = cached_h
+                height_cache.changed = True
+            print(f"[Exporter] Pre-resolved heights in {time.time() - t_pre_start:.2f} seconds.")
+            
+            # Populate classification index
+            classification_index = TerrainClassificationIndex(classification_json_path) if os.path.exists(classification_json_path) else None
+            
+            # Slicing datasets for workers
+            for (rx, rz), pts in regions_to_generate:
+                # 1. heights dict subset
+                region_heights = {}
+                for cx_local in range(32):
+                    for cz_local in range(32):
+                        cx_global = rx * 32 + cx_local
+                        cz_global = rz * 32 + cz_local
+                        for dx in range(16):
+                            for dz in range(16):
+                                x_val = cx_global * 16 + dx
+                                z_val = cz_global * 16 + dz
+                                h = height_cache.cache.get((x_val, z_val))
+                                if h is not None:
+                                    region_heights[(x_val, z_val)] = h
+                                    
+                # 2. water triangles by chunk
+                region_water_by_chunk = {}
+                water_interp = TerrainWaterInterpolator(glb_path, s, tx, tz) if os.path.exists(glb_path) else None
+                if water_interp is not None:
+                    for cx_local in range(32):
+                        for cz_local in range(32):
+                            cx_global = rx * 32 + cx_local
+                            cz_global = rz * 32 + cz_local
+                            min_x_c = cx_global * 16
+                            max_x_c = min_x_c + 15
+                            min_z_c = cz_global * 16
+                            max_z_c = min_z_c + 15
+                            
+                            c_x_min = int(math.floor(min_x_c / water_interp.cell_size))
+                            c_x_max = int(math.floor(max_x_c / water_interp.cell_size))
+                            c_z_min = int(math.floor(min_z_c / water_interp.cell_size))
+                            c_z_max = int(math.floor(max_z_c / water_interp.cell_size))
+                            
+                            overlapping_tri_idx = set()
+                            for cx in range(c_x_min, c_x_max + 1):
+                                for cz in range(c_z_min, c_z_max + 1):
+                                    overlapping_tri_idx.update(water_interp.grid.get((cx, cz), []))
+                            
+                            if overlapping_tri_idx:
+                                triangles = [water_interp.triangles[idx] for idx in overlapping_tri_idx]
+                                region_water_by_chunk[(cx_local, cz_local)] = np.array(triangles, dtype=np.float64)
+                                
+                # 3. classification polygons by chunk
+                region_polygons_by_chunk = {}
+                if classification_index is not None:
+                    for cx_local in range(32):
+                        for cz_local in range(32):
+                            cx_global = rx * 32 + cx_local
+                            cz_global = rz * 32 + cz_local
+                            min_x_c = cx_global * 16
+                            max_x_c = min_x_c + 15
+                            min_z_c = cz_global * 16
+                            max_z_c = min_z_c + 15
+                            
+                            c_x_min = int(math.floor(min_x_c / classification_index.cell_size))
+                            c_x_max = int(math.floor(max_x_c / classification_index.cell_size))
+                            c_z_min = int(math.floor(min_z_c / classification_index.cell_size))
+                            c_z_max = int(math.floor(max_z_c / classification_index.cell_size))
+                            
+                            overlapping_poly_idx = set()
+                            for cx in range(c_x_min, c_x_max + 1):
+                                for cz in range(c_z_min, c_z_max + 1):
+                                    overlapping_poly_idx.update(classification_index.grid.get((cx, cz), []))
+                            
+                            if overlapping_poly_idx:
+                                chunk_polys = []
+                                for idx in overlapping_poly_idx:
+                                    poly = classification_index.polygons[idx]
+                                    chunk_polys.append({
+                                        "bbox": poly["bbox"],
+                                        "vertices": poly["vertices"],
+                                        "class": poly["class"]
+                                    })
+                                region_polygons_by_chunk[(cx_local, cz_local)] = chunk_polys
+                                
+                regions_data.append(((rx, rz), pts, region_heights, region_water_by_chunk, region_polygons_by_chunk))
+        
         workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
         print(f"[Exporter] Generating region MCA files in parallel using {workers} processes...")
         executor = concurrent.futures.ProcessPoolExecutor(
-            max_workers=workers,
-            initializer=init_worker_process,
-            initargs=(glb_path, s, tx, tz, y_offset, classification_json_path, height_cache.cache)
+            max_workers=workers
         )
         try:
             futures = {}
-            for (rx, rz), pts in regions_to_generate:
+            for (rx, rz), pts, region_heights, region_water_by_chunk, region_polygons_by_chunk in regions_data:
                 mca_path = os.path.join(region_dir, f"r.{rx}.{rz}.mca")
                 region_custom_blocks = custom_blocks.get_region_subset(rx, rz)
                 f = executor.submit(
                     export_single_region_process_wrapper,
-                    rx, rz, pts, mca_path, min_s_y, max_s_y, region_custom_blocks
+                    rx, rz, pts, mca_path, min_s_y, max_s_y, region_custom_blocks,
+                    region_heights, region_water_by_chunk, region_polygons_by_chunk, y_offset
                 )
                 futures[f] = (rx, rz)
                 
