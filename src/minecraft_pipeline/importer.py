@@ -296,6 +296,13 @@ def locate_blender():
         blender_path = shutil.which("blender") or "blender"
     return blender_path
 
+def get_region_dir(world_dir):
+    """Locates the Minecraft region folder, supporting custom overworld dimensions (Higher Heights)."""
+    custom_path = os.path.join(world_dir, "dimensions", "minecraft", "overworld", "region")
+    if os.path.exists(custom_path):
+        return custom_path
+    return os.path.join(world_dir, "region")
+
 def import_world(fresh_world_dir, modified_world_dir, glb_path, output_dir, cache_path=None, parallel_workers=0):
     metadata_path = os.path.join(modified_world_dir, "tecate_metadata.json")
     if not os.path.exists(metadata_path):
@@ -320,8 +327,8 @@ def import_world(fresh_world_dir, modified_world_dir, glb_path, output_dir, cach
     min_s_y = int(math.floor(min_mc_y / 16.0))
     max_s_y = int(math.ceil(max_mc_y / 16.0))
     
-    fresh_region_dir = os.path.join(fresh_world_dir, "region")
-    modified_region_dir = os.path.join(modified_world_dir, "region")
+    fresh_region_dir = get_region_dir(fresh_world_dir)
+    modified_region_dir = get_region_dir(modified_world_dir)
     
     fresh_mcas = glob.glob(os.path.join(fresh_region_dir, "r.*.*.mca"))
     modified_mcas = glob.glob(os.path.join(modified_region_dir, "r.*.*.mca"))
