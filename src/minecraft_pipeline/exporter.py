@@ -248,10 +248,9 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None,
     if interpolator is not None and height_cache is not None:
         missing_queries = []
         cache_dict = height_cache.cache
-        with height_cache.lock:
-            for x_mc, z_mc in zip(xs_in, zs_in):
-                if (x_mc, z_mc) not in cache_dict:
-                    missing_queries.append((x_mc, -z_mc))
+        for x_mc, z_mc in zip(xs_in, zs_in):
+            if (x_mc, z_mc) not in cache_dict:
+                missing_queries.append((x_mc, -z_mc))
                 
         if missing_queries:
             batch_heights = interpolator.query_height_batch(missing_queries)
@@ -268,7 +267,10 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None,
         if cancel_event.is_set():
             return local_blocks
 
-        y_mc = get_mc_terrain_y(x_mc, z_mc)
+        if height_cache is not None and (x_mc, z_mc) in height_cache.cache:
+            y_mc = height_cache.cache[(x_mc, z_mc)]
+        else:
+            y_mc = get_mc_terrain_y(x_mc, z_mc)
         y_platform = y_mc + 1
 
         if d_boundary <= 1.0:
@@ -836,20 +838,24 @@ _worker_water_interpolator = None
 _worker_classification_index = None
 _worker_custom_blocks = None
 _worker_y_offset = None
+_worker_initial_height_cache = None
 
-def init_worker_process(glb_path, s, tx, tz, custom_blocks, y_offset, classification_json_path=None):
-    global _worker_interpolator, _worker_water_interpolator, _worker_classification_index, _worker_custom_blocks, _worker_y_offset
+def init_worker_process(glb_path, s, tx, tz, custom_blocks, y_offset, classification_json_path=None, initial_height_cache=None):
+    global _worker_interpolator, _worker_water_interpolator, _worker_classification_index, _worker_custom_blocks, _worker_y_offset, _worker_initial_height_cache
     _worker_interpolator = TerrainHeightInterpolator(glb_path, s, tx, tz)
     _worker_water_interpolator = TerrainWaterInterpolator(glb_path, s, tx, tz)
     _worker_classification_index = TerrainClassificationIndex(classification_json_path) if classification_json_path else None
     _worker_custom_blocks = custom_blocks
     _worker_y_offset = y_offset
+    _worker_initial_height_cache = initial_height_cache
 
 def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y):
-    global _worker_interpolator, _worker_water_interpolator, _worker_classification_index, _worker_custom_blocks, _worker_y_offset
+    global _worker_interpolator, _worker_water_interpolator, _worker_classification_index, _worker_custom_blocks, _worker_y_offset, _worker_initial_height_cache
     
     # Process-local cache for height coordinates
     local_cache = TerrainHeightCache()
+    if _worker_initial_height_cache:
+        local_cache.cache.update(_worker_initial_height_cache)
     
     export_single_region(
         rx=rx,
@@ -866,6 +872,7 @@ def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y
         min_s_y=min_s_y,
         max_s_y=max_s_y
     )
+    return rx, rz, local_cache.cache
 
 def draw_line_3d(x1, y1, z1, x2, y2, z2):
     pts = []
@@ -1751,11 +1758,13 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         
         # Define height resolver using pre-built cell interpolators
         def get_mc_terrain_y(x_mc, z_mc):
-            h = height_cache.get(x_mc, z_mc)
+            h = height_cache.cache.get((x_mc, z_mc))
             if h is None:
-                h_real = interpolator.query_height(x_mc, -z_mc)
-                h = int(round(h_real)) - y_offset
-                height_cache.set(x_mc, z_mc, h)
+                h = height_cache.get(x_mc, z_mc)
+                if h is None:
+                    h_real = interpolator.query_height(x_mc, -z_mc)
+                    h = int(round(h_real)) - y_offset
+                    height_cache.set(x_mc, z_mc, h)
             return h
         
         resolver_ready = True
