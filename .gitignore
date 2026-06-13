@@ -1,6 +1,7 @@
 *.pyc
 venv/
-.DS_Storeexport/reconstruction_export_win.json
+.DS_Store
+export/reconstruction_export_win.json
 export/reconstruction_export.json
 export/debug/reconstruction_diagnostics.json
 export/geometry.bin
@@ -20,3 +21,4 @@ export/geometry.bin
 .env
 /godot_project/.godot
 export/minecraft_world/HigherHeightsUltimate4064_26.1.zip
+*:Zone.Identifier
