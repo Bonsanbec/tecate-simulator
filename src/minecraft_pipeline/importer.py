@@ -317,6 +317,12 @@ def get_region_dir(world_dir):
         return custom_path
     return os.path.join(world_dir, "region")
 
+def get_file_info(filepath):
+    if not os.path.exists(filepath):
+        return 0.0, 0
+    stat = os.stat(filepath)
+    return stat.st_mtime, stat.st_size
+
 def import_world(fresh_world_dir, modified_world_dir, glb_path, output_dir, cache_path=None, parallel_workers=0):
     metadata_path = os.path.join(modified_world_dir, "tecate_metadata.json")
     if not os.path.exists(metadata_path):
@@ -355,39 +361,94 @@ def import_world(fresh_world_dir, modified_world_dir, glb_path, output_dir, cach
             rx, rz = int(parts[1]), int(parts[2])
             regions.add((rx, rz))
             
-    print(f"[Importer] Scanning {len(regions)} regions in parallel for modifications...")
+    # Load scan checkpoint if available
+    checkpoint_path = os.path.join(output_dir, "importer_checkpoint.json")
+    checkpoint = {"mtimes": {}, "modified_blocks": {}}
+    if os.path.exists(checkpoint_path):
+        try:
+            with open(checkpoint_path, 'r', encoding='utf-8') as f:
+                checkpoint = json.load(f)
+            print(f"[Importer] Loaded checkpoint. Found {len(checkpoint.get('modified_blocks', {}))} previously scanned regions.")
+        except Exception as e:
+            print(f"[Importer Warning] Failed to load checkpoint: {e}")
+            
+    regions_to_scan = []
+    final_modified_blocks = {}
+    
+    for (rx, rz) in sorted(regions):
+        fresh_path = os.path.join(fresh_region_dir, f"r.{rx}.{rz}.mca")
+        mod_path = os.path.join(modified_region_dir, f"r.{rx}.{rz}.mca")
+        
+        fresh_mtime, fresh_size = get_file_info(fresh_path)
+        mod_mtime, mod_size = get_file_info(mod_path)
+        
+        region_key = f"r.{rx}.{rz}"
+        cached_info = checkpoint.get("mtimes", {}).get(region_key)
+        
+        if cached_info and cached_info == [fresh_mtime, fresh_size, mod_mtime, mod_size]:
+            # Reuse parsed blocks from checkpoint
+            region_blocks = checkpoint.get("modified_blocks", {}).get(region_key, {})
+            # Convert string coordinates "x,y,z" back to tuples
+            final_modified_blocks[region_key] = {
+                tuple(map(int, k.split(','))): v for k, v in region_blocks.items()
+            }
+        else:
+            regions_to_scan.append(((rx, rz), fresh_path, mod_path, fresh_mtime, fresh_size, mod_mtime, mod_size))
+            
+    print(f"[Importer] {len(regions_to_scan)} / {len(regions)} regions need to be scanned.")
     
     workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
-    
     active_chunks = set()
-    preserved_blocks = {}
     
-    with concurrent.futures.ProcessPoolExecutor(
-        max_workers=workers,
-        initializer=init_worker_process,
-        initargs=(glb_path, s, tx, tz, y_offset)
-    ) as executor:
-        futures = {}
-        for (rx, rz) in sorted(regions):
-            fresh_path = os.path.join(fresh_region_dir, f"r.{rx}.{rz}.mca")
-            modified_path = os.path.join(modified_region_dir, f"r.{rx}.{rz}.mca")
-            f = executor.submit(
-                diff_single_region_process,
-                rx, rz, fresh_path, modified_path, min_s_y, max_s_y
-            )
-            futures[f] = (rx, rz)
-            
-        for future in concurrent.futures.as_completed(futures):
-            rx, rz = futures[future]
-            try:
-                chunks, blocks = future.result()
-                active_chunks.update(chunks)
-                preserved_blocks.update(blocks)
-            except Exception as e:
-                print(f"[Importer Error] Failed to scan region r.{rx}.{rz}: {e}")
+    if regions_to_scan:
+        print(f"[Importer] Scanning changed regions in parallel using {workers} processes...")
+        with concurrent.futures.ProcessPoolExecutor(
+            max_workers=workers,
+            initializer=init_worker_process,
+            initargs=(glb_path, s, tx, tz, y_offset)
+        ) as executor:
+            futures = {}
+            for (rx, rz), fresh_path, mod_path, fm, fs, mm, ms in regions_to_scan:
+                f = executor.submit(
+                    diff_single_region_process,
+                    rx, rz, fresh_path, mod_path, min_s_y, max_s_y
+                )
+                futures[f] = (rx, rz, fm, fs, mm, ms)
                 
-    print(f"[Importer] Identified {len(active_chunks)} chunks modified by players.")
-    
+            for future in concurrent.futures.as_completed(futures):
+                rx, rz, fm, fs, mm, ms = futures[future]
+                region_key = f"r.{rx}.{rz}"
+                try:
+                    chunks, blocks = future.result()
+                    active_chunks.update(chunks)
+                    final_modified_blocks[region_key] = blocks
+                    
+                    # Update checkpoint NBT data in-memory
+                    checkpoint.setdefault("mtimes", {})[region_key] = [fm, fs, mm, ms]
+                    checkpoint.setdefault("modified_blocks", {})[region_key] = {
+                        f"{k[0]},{k[1]},{k[2]}": v for k, v in blocks.items()
+                    }
+                except Exception as e:
+                    print(f"[Importer Error] Failed to scan region r.{rx}.{rz}: {e}")
+                    
+        # Save updated checkpoint back to disk
+        try:
+            with open(checkpoint_path, 'w', encoding='utf-8') as f:
+                json.dump(checkpoint, f, indent=4)
+            print(f"[Importer] Saved checkpoint to: {checkpoint_path}")
+        except Exception as e:
+            print(f"[Importer Warning] Failed to save checkpoint: {e}")
+            
+    # Combine all player modifications
+    preserved_blocks = {}
+    for r_blocks in final_modified_blocks.values():
+        preserved_blocks.update(r_blocks)
+        
+    # Re-build active_chunks set from all modified coordinates
+    active_chunks = set()
+    for (x, y, z) in preserved_blocks.keys():
+        active_chunks.add((x // 16, z // 16))
+        
     # 2. Merge with original roads/manzanas cache for inactive chunks
     if not cache_path:
         cache_path = os.path.join(os.path.dirname(modified_world_dir), "custom_blocks_cache.npz")
@@ -407,47 +468,60 @@ def import_world(fresh_world_dir, modified_world_dir, glb_path, output_dir, cach
         print(f"[Importer] Merging {len(original_active_chunks - active_chunks)} inactive baseline chunks from original cache...")
         for (cx, cz) in original_active_chunks:
             if (cx, cz) not in active_chunks:
-                # Load baseline blocks from the cache
                 chunk_blocks = custom_blocks.get_chunk_dict(cx, cz)
                 preserved_blocks.update(chunk_blocks)
                 
     print(f"[Importer] Combined model contains {len(preserved_blocks)} non-terrain blocks.")
     
-    # 3. Perform Voxel Face Culling
-    print("[Importer] Optimizing voxel geometry (face culling)...")
-    culled_blocks = {}
-    for (x, y, z), name in preserved_blocks.items():
-        neighbors = [
-            (x + 1, y, z), (x - 1, y, z),
-            (x, y + 1, z), (x, y - 1, z),
-            (x, y, z + 1), (x, y, z - 1)
-        ]
-        all_present = all(n in preserved_blocks for n in neighbors)
-        if not all_present:
-            culled_blocks[(x, y, z)] = name
-            
-    print(f"[Importer] Optimized voxel mesh contains {len(culled_blocks)} blocks (culled {len(preserved_blocks) - len(culled_blocks)} internal blocks).")
+    # 3. Perform Exposed Face Culling & Generate box list grouped by region
+    print("[Importer] Optimizing voxel geometry (exposed face culling)...")
+    region_data = {}
+    total_culled = 0
+    total_exposed = 0
     
-    # 4. Generate box list
-    boxes = []
-    for (x, y, z), name in culled_blocks.items():
+    for (x, y, z), name in preserved_blocks.items():
+        mask = 0
+        if (x + 1, y, z) not in preserved_blocks:
+            mask |= 1
+        if (x - 1, y, z) not in preserved_blocks:
+            mask |= 2
+        if (x, y + 1, z) not in preserved_blocks:
+            mask |= 4
+        if (x, y - 1, z) not in preserved_blocks:
+            mask |= 8
+        if (x, y, z + 1) not in preserved_blocks:
+            mask |= 16
+        if (x, y, z - 1) not in preserved_blocks:
+            mask |= 32
+            
+        if mask == 0:
+            total_culled += 1
+            continue
+            
+        total_exposed += 1
+        rx = int(math.floor(x / 512.0))
+        rz = int(math.floor(z / 512.0))
+        region_key = f"r.{rx}.{rz}"
+        
         loc_x = float(x)
         loc_y = float(-z)
         loc_z = float(y + y_offset)
         
         color = BLOCK_COLORS.get(name, [0.8, 0.8, 0.8])
-        boxes.append({
-            "min": [loc_x, loc_y, loc_z],
-            "max": [loc_x + 1.0, loc_y + 1.0, loc_z + 1.0],
+        region_data.setdefault(region_key, []).append({
+            "pos": [loc_x, loc_y, loc_z],
+            "mask": mask,
             "block_type": name,
             "color": color
         })
         
+    print(f"[Importer] Optimization finished: culled {total_culled} internal blocks, kept {total_exposed} exposed blocks.")
+    
     os.makedirs(output_dir, exist_ok=True)
     json_out_path = os.path.join(output_dir, "boxes.json")
     with open(json_out_path, 'w', encoding='utf-8') as f:
-        json.dump(boxes, f, indent=4)
-    print(f"[Importer] Saved boxes to JSON: {json_out_path}")
+        json.dump({"region_data": region_data}, f, indent=4)
+    print(f"[Importer] Saved optimized exposed faces to JSON: {json_out_path}")
     
     # 5. Invoke Blender background compilation
     blender_bin = locate_blender()

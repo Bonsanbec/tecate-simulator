@@ -20,14 +20,11 @@ def clear_scene():
             block.remove(item)
 
 def get_or_create_relative_image(block_name):
-    # Strip prefix
     clean_name = block_name
     if ":" in clean_name:
         clean_name = clean_name.split(":")[-1]
     
-    # Path relative to the .blend file: //resource_pack/assets/minecraft/textures/block/<clean_name>.png
     rel_path = f"//resource_pack/assets/minecraft/textures/block/{clean_name}.png"
-    
     image_name = f"img_{clean_name}"
     img = bpy.data.images.get(image_name)
     if not img:
@@ -72,83 +69,99 @@ def setup_block_material(block_name, color):
 
 def build_voxels_mesh(boxes_data, output_dir):
     """
-    Groups boxes by block type, constructs meshes, merges vertices,
-    and sets up relative texture shader materials.
+    Groups boxes by region and block type, constructs meshes with exposed faces,
+    merges vertices, and sets up relative texture shader materials.
     """
-    # Group boxes by block type
-    grouped_boxes = {}
-    for box in boxes_data:
-        b_type = box["block_type"]
-        grouped_boxes.setdefault(b_type, []).append(box)
-        
-    print(f"[Blender] Compiling {len(grouped_boxes)} unique block types...")
+    region_data = boxes_data.get("region_data", {})
     
-    for b_type, boxes in grouped_boxes.items():
-        # Clean names for Blender object identifiers
-        clean_type = b_type.replace(':', '_')
-        mesh_name = f"mesh_{clean_type}"
-        obj_name = f"obj_{clean_type}"
-        
-        verts = []
-        faces = []
-        
-        for idx, box in enumerate(boxes):
-            b_min = box["min"]
-            b_max = box["max"]
+    print(f"[Blender] Parsing exposed geometry for {len(region_data)} regions...")
+    
+    for region_key, boxes in region_data.items():
+        # Group boxes in this region by block type
+        grouped_boxes = {}
+        for box in boxes:
+            b_type = box["block_type"]
+            grouped_boxes.setdefault(b_type, []).append(box)
             
-            x0, y0, z0 = b_min
-            x1, y1, z1 = b_max
+        for b_type, region_boxes in grouped_boxes.items():
+            # Clean names for Blender identifiers
+            clean_reg = region_key.replace('.', '_')
+            clean_type = b_type.replace(':', '_')
+            mesh_name = f"mesh_{clean_reg}_{clean_type}"
+            obj_name = f"obj_{clean_reg}_{clean_type}"
             
-            v_idx = len(verts)
-            verts.extend([
-                (x0, y0, z0), # 0
-                (x1, y0, z0), # 1
-                (x1, y1, z0), # 2
-                (x0, y1, z0), # 3
-                (x0, y0, z1), # 4
-                (x1, y0, z1), # 5
-                (x1, y1, z1), # 6
-                (x0, y1, z1)  # 7
-            ])
+            verts = []
+            faces = []
             
-            faces.extend([
-                [v_idx + 0, v_idx + 1, v_idx + 2, v_idx + 3], # Bottom
-                [v_idx + 4, v_idx + 5, v_idx + 6, v_idx + 7], # Top
-                [v_idx + 0, v_idx + 1, v_idx + 5, v_idx + 4], # Front
-                [v_idx + 1, v_idx + 2, v_idx + 6, v_idx + 5], # Right
-                [v_idx + 2, v_idx + 3, v_idx + 7, v_idx + 6], # Back
-                [v_idx + 3, v_idx + 0, v_idx + 4, v_idx + 7]  # Left
-            ])
-            
-        mesh = bpy.data.meshes.new(name=mesh_name)
-        mesh.from_pydata(verts, [], faces)
-        mesh.update()
-        
-        obj = bpy.data.objects.new(obj_name, mesh)
-        bpy.context.scene.collection.objects.link(obj)
-        
-        # Apply NBT Material with relative textures
-        color = boxes[0]["color"]
-        mat = setup_block_material(b_type, color)
-        obj.data.materials.append(mat)
-        
-        # Optimize mesh by removing duplicate vertices and hidden faces
-        bpy.context.view_layer.objects.active = obj
-        obj.select_set(True)
-        
-        try:
-            bpy.ops.object.mode_set(mode='EDIT')
-            # Merges overlapping vertices
-            bpy.ops.mesh.remove_doubles(threshold=0.0001)
-            # Recalculate normals to face outward
-            bpy.ops.mesh.normals_make_consistent(inside=False)
-            bpy.ops.object.mode_set(mode='OBJECT')
-        except Exception as err:
-            print(f"[Warning] Failed to optimize mesh {obj_name}: {err}")
-            if obj.mode != 'OBJECT':
-                bpy.ops.object.mode_set(mode='OBJECT')
+            for idx, box in enumerate(region_boxes):
+                b_pos = box["pos"]
+                mask = box["mask"]
                 
-        obj.select_set(False)
+                cx, cy, cz = b_pos
+                x0, y0, z0 = cx, cy, cz
+                x1, y1, z1 = cx + 1.0, cy + 1.0, cz + 1.0
+                
+                v_idx = len(verts)
+                verts.extend([
+                    (x0, y0, z0), # 0
+                    (x1, y0, z0), # 1
+                    (x1, y1, z0), # 2
+                    (x0, y1, z0), # 3
+                    (x0, y0, z1), # 4
+                    (x1, y0, z1), # 5
+                    (x1, y1, z1), # 6
+                    (x0, y1, z1)  # 7
+                ])
+                
+                # Add exposed faces based on bitmask
+                # Right (+X)
+                if mask & 1:
+                    faces.append([v_idx + 1, v_idx + 2, v_idx + 6, v_idx + 5])
+                # Left (-X)
+                if mask & 2:
+                    faces.append([v_idx + 3, v_idx + 0, v_idx + 4, v_idx + 7])
+                # Top (+Z)
+                if mask & 4:
+                    faces.append([v_idx + 4, v_idx + 5, v_idx + 6, v_idx + 7])
+                # Bottom (-Z)
+                if mask & 8:
+                    faces.append([v_idx + 0, v_idx + 3, v_idx + 2, v_idx + 1])
+                # Front (-Y)
+                if mask & 16:
+                    faces.append([v_idx + 0, v_idx + 1, v_idx + 5, v_idx + 4])
+                # Back (+Y)
+                if mask & 32:
+                    faces.append([v_idx + 2, v_idx + 3, v_idx + 7, v_idx + 6])
+                    
+            mesh = bpy.data.meshes.new(name=mesh_name)
+            mesh.from_pydata(verts, [], faces)
+            mesh.update()
+            
+            obj = bpy.data.objects.new(obj_name, mesh)
+            bpy.context.scene.collection.objects.link(obj)
+            
+            # Apply Material
+            color = region_boxes[0]["color"]
+            mat = setup_block_material(b_type, color)
+            obj.data.materials.append(mat)
+            
+            # Optimize mesh by removing duplicate vertices and hidden faces
+            bpy.context.view_layer.objects.active = obj
+            obj.select_set(True)
+            
+            try:
+                bpy.ops.object.mode_set(mode='EDIT')
+                # Merges overlapping vertices
+                bpy.ops.mesh.remove_doubles(threshold=0.0001)
+                # Recalculate normals to face outward
+                bpy.ops.mesh.normals_make_consistent(inside=False)
+                bpy.ops.object.mode_set(mode='OBJECT')
+            except Exception as err:
+                print(f"[Warning] Failed to optimize mesh {obj_name}: {err}")
+                if obj.mode != 'OBJECT':
+                    bpy.ops.object.mode_set(mode='OBJECT')
+                    
+            obj.select_set(False)
 
 def setup_scene_rendering():
     """Sets up default lighting in the scene."""

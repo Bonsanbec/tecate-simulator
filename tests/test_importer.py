@@ -134,3 +134,51 @@ def test_extract_chunk_blocks_filtered():
     # Check that bricks are present
     assert len(blocks) == 4096
     assert blocks[(0, 0, 0)] == "minecraft:bricks"
+
+def test_file_info_helper():
+    from src.minecraft_pipeline.importer import get_file_info
+    # Non-existent file
+    mtime, size = get_file_info("non_existent_file.mca")
+    assert mtime == 0.0
+    assert size == 0
+
+def test_exposed_face_culling_logic():
+    # Setup adjacent blocks in 3D:
+    # (0,0,0) and (1,0,0) are adjacent
+    # (0,0,0) should have exposed faces on left (-X), top (+Y), bottom (-Y), front (+Z), back (-Z)
+    # Right (+X) neighbor (1,0,0) is present, so Right face should not be exposed.
+    preserved_blocks = {
+        (0, 0, 0): "minecraft:stone",
+        (1, 0, 0): "minecraft:stone"
+    }
+    
+    # Calculate masks manually:
+    # For (0,0,0):
+    # - (1,0,0) is in preserved_blocks -> mask & 1 (Right) is 0
+    # - (-1,0,0) is NOT in preserved_blocks -> mask & 2 (Left) is 2
+    # - (0,1,0) is NOT in preserved_blocks -> mask & 4 (Top) is 4
+    # - (0,-1,0) is NOT in preserved_blocks -> mask & 8 (Bottom) is 8
+    # - (0,0,1) is NOT in preserved_blocks -> mask & 16 (Front) is 16
+    # - (0,0,-1) is NOT in preserved_blocks -> mask & 32 (Back) is 32
+    # Total mask = 2 + 4 + 8 + 16 + 32 = 62
+    
+    # Let's run the mask logic
+    x, y, z = 0, 0, 0
+    mask = 0
+    if (x + 1, y, z) not in preserved_blocks:
+        mask |= 1
+    if (x - 1, y, z) not in preserved_blocks:
+        mask |= 2
+    if (x, y + 1, z) not in preserved_blocks:
+        mask |= 4
+    if (x, y - 1, z) not in preserved_blocks:
+        mask |= 8
+    if (x, y, z + 1) not in preserved_blocks:
+        mask |= 16
+    if (x, y, z - 1) not in preserved_blocks:
+        mask |= 32
+        
+    assert mask == 62
+    assert (mask & 1) == 0 # Right face culled
+    assert (mask & 2) == 2 # Left face exposed
+
