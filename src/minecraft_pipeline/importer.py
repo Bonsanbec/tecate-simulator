@@ -231,11 +231,20 @@ def extract_chunk_blocks_filtered(chunk_nbt, cx_global, cz_global, min_s_y, max_
 def diff_single_region_process(rx, rz, fresh_mca_path, modified_mca_path, min_s_y, max_s_y):
     global _worker_interpolator, _worker_y_offset
     
-    fresh_mca = MCARegion.load(fresh_mca_path, rx, rz) if os.path.exists(fresh_mca_path) else None
-    modified_mca = MCARegion.load(modified_mca_path, rx, rz) if os.path.exists(modified_mca_path) else None
-    
     active_chunks = set()
     block_data = {}
+    
+    # Tier 1: Fast file-level content comparison
+    if os.path.exists(fresh_mca_path) and os.path.exists(modified_mca_path):
+        try:
+            import filecmp
+            if filecmp.cmp(fresh_mca_path, modified_mca_path, shallow=False):
+                return active_chunks, block_data
+        except Exception:
+            pass
+            
+    fresh_mca = MCARegion.load(fresh_mca_path, rx, rz) if os.path.exists(fresh_mca_path) else None
+    modified_mca = MCARegion.load(modified_mca_path, rx, rz) if os.path.exists(modified_mca_path) else None
     
     if not modified_mca:
         return active_chunks, block_data
@@ -250,15 +259,20 @@ def diff_single_region_process(rx, rz, fresh_mca_path, modified_mca_path, min_s_
         if comp_fresh is None:
             is_changed = True
         else:
-            fresh_nbt = fresh_mca.get_chunk_nbt(cx_local, cz_local)
-            modified_nbt = modified_mca.get_chunk_nbt(cx_local, cz_local)
-            if not modified_nbt:
-                is_changed = (fresh_nbt is not None)
-            elif not fresh_nbt:
-                is_changed = True
+            # Tier 2: Fast chunk-level compressed byte comparison
+            if comp_fresh == comp_modified:
+                is_changed = False
             else:
-                is_changed = chunk_block_states_differ(fresh_nbt, modified_nbt)
-                
+                # Fallback to deep NBT structure comparison
+                fresh_nbt = fresh_mca.get_chunk_nbt(cx_local, cz_local)
+                modified_nbt = modified_mca.get_chunk_nbt(cx_local, cz_local)
+                if not modified_nbt:
+                    is_changed = (fresh_nbt is not None)
+                elif not fresh_nbt:
+                    is_changed = True
+                else:
+                    is_changed = chunk_block_states_differ(fresh_nbt, modified_nbt)
+                    
         if is_changed:
             active_chunks.add((cx_global, cz_global))
             modified_nbt = modified_mca.get_chunk_nbt(cx_local, cz_local)
