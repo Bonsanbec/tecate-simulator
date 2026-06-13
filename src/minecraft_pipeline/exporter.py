@@ -258,18 +258,29 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None,
                 height_cache.set(x_q, z_val, cached_h)
                 
     # 3. Generate block platforms
+    inside_set = set(zip(xs_in, zs_in))
     for x_mc, z_mc, d_boundary in zip(xs_in, zs_in, dists_in):
         if cancel_event.is_set():
             return local_blocks
 
-        if d_boundary > 1.0:
-            continue
-
         y_mc = get_mc_terrain_y(x_mc, z_mc)
-
         y_platform = y_mc + 1
 
-        local_blocks[(x_mc, y_platform, z_mc)] = "minecraft:smooth_stone"
+        if d_boundary <= 1.0:
+            # Sidewalk perimeter: place outward-facing stairs
+            facing = "north"  # default fallback
+            if (x_mc + 1, z_mc) not in inside_set:
+                facing = "east"
+            elif (x_mc - 1, z_mc) not in inside_set:
+                facing = "west"
+            elif (x_mc, z_mc + 1) not in inside_set:
+                facing = "south"
+            elif (x_mc, z_mc - 1) not in inside_set:
+                facing = "north"
+            local_blocks[(x_mc, y_platform, z_mc)] = f"minecraft:stone_brick_stairs[facing={facing},half=bottom,shape=straight]"
+        else:
+            # Interior: place smooth stone
+            local_blocks[(x_mc, y_platform, z_mc)] = "minecraft:smooth_stone"
         
     return local_blocks
 
@@ -928,6 +939,9 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                     lanes = meta.get("lanes", 2)
                     width = meta.get("width", 6.0)
                     surface = meta.get("surface", "asphalt")
+                    bridge = meta.get("bridge", "")
+                    layer = meta.get("layer", "")
+                    is_bridge = (bridge == "yes") or (layer != "" and layer != "0" and not layer.startswith("-"))
                     
                     is_rural = (surface in ["gravel", "dirt", "earth", "ground", "sand", "grass"]) or (hw in ["track", "path", "bridleway"])
                     
@@ -976,7 +990,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                                 block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
                                 
                                 # Roadside vegetation just outside the boundary
-                                if abs(d) == d_max:
+                                if not is_bridge and abs(d) == d_max:
                                     veg_x = int(round(cx + (d + (1 if d > 0 else -1)) * perp_x))
                                     veg_z = int(round(cz + (d + (1 if d > 0 else -1)) * perp_z))
                                     veg_y = get_mc_terrain_y(veg_x, veg_z)
@@ -1014,7 +1028,14 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                                     weights = [0.6, 0.25, 0.05, 0.05, 0.05]
                                     block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
                                     
-                            custom_blocks[(x_mc, y_mc, z_mc)] = block_name
+                            if is_bridge:
+                                y_road = y_mc + 6
+                                custom_blocks[(x_mc, y_road, z_mc)] = block_name
+                                if (d == d_min or d == d_max) and (step % 8 == 0):
+                                    for y_pil in range(y_mc, y_road):
+                                        custom_blocks[(x_mc, y_pil, z_mc)] = "minecraft:cobblestone"
+                            else:
+                                custom_blocks[(x_mc, y_mc, z_mc)] = block_name
                 last_edge_idx = idx + 1
         else:
             print("[Exporter] Road network rasterization already fully completed.")
