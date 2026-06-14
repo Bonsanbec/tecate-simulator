@@ -27,6 +27,8 @@ METADATA_FILES=(
     "export/road_metadata.json"
     "export/terrain_classification.json"
     "export/minecraft_world/terrain_height_cache.json"
+    "export/minecraft_world/custom_blocks_cache_entities.pkl"
+    "export/minecraft_world/custom_blocks_cache.npz"
     "export/minecraft_world/TecateWorld/tecate_metadata.json"
 )
 
