@@ -663,7 +663,7 @@ class TerrainHeightCache:
     A thread-safe caching system for terrain height lookups to avoid
     re-running heavy Delaunay/griddata calculations on duplicate columns.
     """
-    def __init__(self, cache_path="data/terrain_height_cache.json"):
+    def __init__(self, cache_path="export/minecraft_world/terrain_height_cache.json"):
         self.cache_path = cache_path
         self.lock = threading.Lock()
         self.cache = {}
