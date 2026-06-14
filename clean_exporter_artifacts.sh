@@ -17,7 +17,7 @@ echo "Cleaning exporter artifacts..."
 # 1. Remove generated Minecraft world saves and caches
 if [ -d "$OUTPUT_DIR" ]; then
     echo "Removing output directory: $OUTPUT_DIR"
-    rm -rf "$OUTPUT_DIR"/!\(.gitkeep\)
+    rm -rf "$OUTPUT_DIR/TecateWorld"
 else
     echo "No output directory found at $OUTPUT_DIR"
 fi
@@ -27,6 +27,7 @@ METADATA_FILES=(
     "export/road_metadata.json"
     "export/terrain_classification.json"
     "export/minecraft_world/terrain_height_cache.json"
+    "export/minecraft_world/TecateWorld/tecate_metadata.json"
 )
 
 for file in "${METADATA_FILES[@]}"; do
