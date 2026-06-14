@@ -26,6 +26,7 @@ fi
 METADATA_FILES=(
     "export/road_metadata.json"
     "export/terrain_classification.json"
+    "export/water_osm_cache.json"
     "export/minecraft_world/terrain_height_cache.json"
     "export/minecraft_world/custom_blocks_cache_entities.pkl"
     "export/minecraft_world/custom_blocks_cache.npz"
