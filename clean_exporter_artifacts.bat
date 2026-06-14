@@ -28,7 +28,7 @@ if exist "%TERRAIN_CLASS%" (
     del /f /q "%TERRAIN_CLASS%"
 )
 
-set "HEIGHT_CACHE=data\terrain_height_cache.json"
+set "HEIGHT_CACHE=export\minecraft_world\terrain_height_cache.json"
 if exist "%HEIGHT_CACHE%" (
     echo Removing file: %HEIGHT_CACHE%
     del /f /q "%HEIGHT_CACHE%"

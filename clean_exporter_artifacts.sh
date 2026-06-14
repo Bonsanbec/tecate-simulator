@@ -26,7 +26,7 @@ fi
 METADATA_FILES=(
     "export/road_metadata.json"
     "export/terrain_classification.json"
-    "data/terrain_height_cache.json"
+    "export/minecraft_world/terrain_height_cache.json"
 )
 
 for file in "${METADATA_FILES[@]}"; do
