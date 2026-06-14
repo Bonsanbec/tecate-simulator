@@ -2064,7 +2064,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
     
     cancel_event = threading.Event()
     #height_cache_path = os.path.join(output_dir, "terrain_height_cache.json") # This freezes the system.
-    height_cache = TerrainHeightCache()
+    height_cache = TerrainHeightCache(cache_path=None)
     
     # Pre-define helper as None to prevent UnboundLocalError during early Ctrl+C
     resolver_ready = False
