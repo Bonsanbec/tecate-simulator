@@ -32,6 +32,13 @@ def save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_bloc
         os.makedirs(os.path.dirname(cache_path), exist_ok=True)
         if isinstance(custom_blocks, VoxelMap):
             palette = list(custom_blocks.palette)
+            # Harvest any new block names from new chunks that aren't already in the palette
+            new_names = set()
+            for chunk_dict in custom_blocks.new_blocks_by_chunk.values():
+                new_names.update(chunk_dict.values())
+            for name in sorted(new_names):
+                if name not in palette:
+                    palette.append(name)
         else:
             palette = list(set(custom_blocks.values()))
         palette_map = {name: idx for idx, name in enumerate(palette)}
@@ -2236,12 +2243,13 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             print("[Exporter] Block platforms rasterization already fully completed.")
             
         # Unified Cache Saving: Save if any new road edges or blocks were rasterized
-        if last_edge_idx > initial_edge_idx or last_block_idx > initial_block_idx:
-            completed_block_indices = {i for i, val in enumerate(completed_flags) if val}
-            save_custom_blocks_cache(
-                cache_path, custom_blocks, last_edge_idx, last_block_idx,
-                completed_block_indices=completed_block_indices
-            )
+        if not cancel_event.is_set():
+            if last_edge_idx > initial_edge_idx or last_block_idx > initial_block_idx:
+                completed_block_indices = {i for i, val in enumerate(completed_flags) if val}
+                save_custom_blocks_cache(
+                    cache_path, custom_blocks, last_edge_idx, last_block_idx,
+                    completed_block_indices=completed_block_indices
+                )
                         
         print(f"[Exporter] Rasterized {len(custom_blocks)} custom geometry blocks.")
         
