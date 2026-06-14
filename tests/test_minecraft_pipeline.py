@@ -361,9 +361,9 @@ def test_rasterize_single_block():
     
     blocks = rasterize_single_block(b, mock_get_terrain_y, cancel_event)
     
-    # Check that platforms are placed at Y=13, with stairs on border and smooth stone in interior
+    # Check that platforms are placed at Y=13, with smooth stone everywhere
     assert (1, 13, -9) in blocks
-    assert blocks[(1, 13, -9)].startswith("minecraft:stone_brick_stairs")
+    assert blocks[(1, 13, -9)] == "minecraft:smooth_stone"
     assert (5, 13, -5) in blocks
     assert blocks[(5, 13, -5)] == "minecraft:smooth_stone"
 
@@ -407,7 +407,7 @@ def test_rasterize_single_block_batch_heights():
     )
     
     assert (1, -217, -9) in blocks
-    assert blocks[(1, -217, -9)].startswith("minecraft:stone_brick_stairs")
+    assert blocks[(1, -217, -9)] == "minecraft:smooth_stone"
     assert (5, -217, -5) in blocks
     assert blocks[(5, -217, -5)] == "minecraft:smooth_stone"
     assert interpolator.batch_queried_count > 0
