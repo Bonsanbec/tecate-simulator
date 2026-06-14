@@ -388,7 +388,8 @@ def make_sign_block_entity(x, y, z, line1_text, line2_text=""):
         front_text
     ])
 
-def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, custom_blocks, get_mc_terrain_y, edge_styles=None, blocks=None):
+def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, custom_blocks, get_mc_terrain_y,
+                          edge_styles=None, blocks=None, interpolator=None, height_cache=None, parallel_workers=0):
     """
     Procedurally places street name signs at intersections based on priority,
     street names, hierarchies, and setback geometry.
@@ -408,8 +409,8 @@ def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, cus
     if not hasattr(custom_blocks, 'block_entities'):
         custom_blocks.block_entities = {}
         
-    sign_count = 0
     placed_poles = []
+    candidates = []
     
     # Precompute block bounding boxes in Cartesian coords for fast 2D distance checks
     block_bboxes = []
@@ -563,11 +564,6 @@ def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, cus
                 
             placed_poles.append((x_sign, z_sign))
             
-            y_sign = get_mc_terrain_y(x_sign, z_sign)
-            
-            custom_blocks[(x_sign, y_sign + 1, z_sign)] = "minecraft:pale_oak_fence"
-            custom_blocks[(x_sign, y_sign + 2, z_sign)] = "minecraft:pale_oak_fence"
-            
             def get_cardinal_priority(vx, vz):
                 px, pz = -vz, vx
                 cardinals = [
@@ -576,7 +572,6 @@ def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, cus
                     ("east", 1.0, 0.0),
                     ("west", -1.0, 0.0)
                 ]
-                # Sort by dot product descending
                 sorted_faces = sorted(cardinals, key=lambda c: px * c[1] + pz * c[2], reverse=True)
                 return [f[0] for f in sorted_faces]
                 
@@ -590,26 +585,78 @@ def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, cus
                     face2 = f
                     break
                     
-            offsets = {
-                "north": (0, 0, -1),
-                "south": (0, 0, 1),
-                "east": (1, 0, 0),
-                "west": (-1, 0, 0)
-            }
+            candidates.append((x_sign, z_sign, v1, v2, face1, face2))
             
-            off_x1, _, off_z1 = offsets[face1]
-            bx1, by1, bz1 = x_sign + off_x1, y_sign + 2, z_sign + off_z1
-            custom_blocks[(bx1, by1, bz1)] = f"minecraft:pale_oak_wall_sign[facing={face1}]"
-            custom_blocks.block_entities[(bx1, by1, bz1)] = make_sign_block_entity(bx1, by1, bz1, v1["name"])
+    # Pass 2: Batch query heights for candidates if interpolator and height_cache are provided
+    if interpolator is not None and height_cache is not None:
+        missing_queries = []
+        for x_sign, z_sign, _, _, _, _ in candidates:
+            if height_cache.cache.get((x_sign, z_sign)) is None:
+                missing_queries.append((x_sign, -z_sign))
+        if missing_queries:
+            print(f"[Exporter] Pre-resolving missing heights for {len(missing_queries)} street sign poles...")
+            batch_heights = interpolator.query_height_batch(missing_queries)
+            with height_cache.lock:
+                for (x_q, mz_q), h_real in zip(missing_queries, batch_heights):
+                    z_val = -mz_q
+                    cached_h = int(round(h_real)) - y_offset
+                    height_cache.cache[(x_q, z_val)] = cached_h
+                height_cache.changed = True
+                
+    num_candidates = len(candidates)
+    if num_candidates == 0:
+        print("[Exporter] Successfully generated 0 street name sign posts.")
+        return
+        
+    # Pass 3: Parallelized Block & Entity Placement
+    print(f"[Exporter] Placing {num_candidates} sign posts in parallel...")
+    workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
+    chunk_size = max(1, num_candidates // workers)
+    chunks = [candidates[i:i + chunk_size] for i in range(0, num_candidates, chunk_size)]
+    
+    def generate_signs_worker(chunk_candidates, y_off, get_y):
+        local_blocks = {}
+        local_entities = {}
+        offsets = {
+            "north": (0, 0, -1),
+            "south": (0, 0, 1),
+            "east": (1, 0, 0),
+            "west": (-1, 0, 0)
+        }
+        for x_s, z_s, v_1, v_2, f1, f2 in chunk_candidates:
+            y_s = get_y(x_s, z_s)
             
-            off_x2, _, off_z2 = offsets[face2]
-            bx2, by2, bz2 = x_sign + off_x2, y_sign + 2, z_sign + off_z2
-            custom_blocks[(bx2, by2, bz2)] = f"minecraft:pale_oak_wall_sign[facing={face2}]"
-            custom_blocks.block_entities[(bx2, by2, bz2)] = make_sign_block_entity(bx2, by2, bz2, v2["name"])
+            # Place fences
+            local_blocks[(x_s, y_s + 1, z_s)] = "minecraft:pale_oak_fence"
+            local_blocks[(x_s, y_s + 2, z_s)] = "minecraft:pale_oak_fence"
             
-            sign_count += 1
+            # Place signs
+            off_x1, _, off_z1 = offsets[f1]
+            bx1, by1, bz1 = x_s + off_x1, y_s + 2, z_s + off_z1
+            local_blocks[(bx1, by1, bz1)] = f"minecraft:pale_oak_wall_sign[facing={f1}]"
+            local_entities[(bx1, by1, bz1)] = make_sign_block_entity(bx1, by1, bz1, v_1["name"])
             
-    print(f"[Exporter] Successfully generated {sign_count} street name sign posts.")
+            off_x2, _, off_z2 = offsets[f2]
+            bx2, by2, bz2 = x_s + off_x2, y_s + 2, z_s + off_z2
+            local_blocks[(bx2, by2, bz2)] = f"minecraft:pale_oak_wall_sign[facing={f2}]"
+            local_entities[(bx2, by2, bz2)] = make_sign_block_entity(bx2, by2, bz2, v_2["name"])
+            
+        return local_blocks, local_entities
+
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
+    try:
+        futures = [
+            executor.submit(generate_signs_worker, chunk, y_offset, get_mc_terrain_y)
+            for chunk in chunks
+        ]
+        for f in concurrent.futures.as_completed(futures):
+            loc_blocks, loc_entities = f.result()
+            custom_blocks.update(loc_blocks)
+            custom_blocks.block_entities.update(loc_entities)
+    finally:
+        executor.shutdown(wait=False)
+        
+    print(f"[Exporter] Successfully generated {num_candidates} street name sign posts.")
 
 class TerrainHeightCache:
     """
@@ -2277,7 +2324,10 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 custom_blocks=custom_blocks,
                 get_mc_terrain_y=get_mc_terrain_y,
                 edge_styles=edge_styles,
-                blocks=blocks
+                blocks=blocks,
+                interpolator=interpolator,
+                height_cache=height_cache,
+                parallel_workers=parallel_workers
             )
         
         # Determine active chunk coordinates containing custom blocks
