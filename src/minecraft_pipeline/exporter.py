@@ -2757,6 +2757,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             json.dump(metadata, f, indent=4)
             
         print(f"[Exporter] Save finished: {world_dir}")
+        sys.exit(0)
     else:
         print("[Exporter Warning] Interrupted before setup completed. No level.dat or metadata generated.")
         
