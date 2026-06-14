@@ -810,6 +810,120 @@ out body geom;
             return True, highest_y
         return False, 0.0
 
+    def lot_overlaps_water(self, polygon_local):
+        """
+        Vectorized check: returns True if any interior block of the lot sits over
+        a water polygon.
+
+        Parameters
+        ----------
+        polygon_local : list of [lx, ly]
+            Polygon vertices in raw local Cartesian space as stored in the JSON
+            (i.e. the same coordinate system as gps_to_local output, NOT scaled).
+            z is computed as -ly to match the water triangle convention.
+
+        Strategy
+        --------
+        1. Convert polygon to (x, z) = (lx, -ly) — the same space as the triangles.
+        2. Collect all candidate water triangle indices that overlap the lot bbox
+           via the spatial grid (one set union over all intersecting cells).
+        3. Stack candidate triangles into numpy arrays (Ax, Az) per vertex.
+        4. Build the full grid of interior integer (x, z) points using the existing
+           find_inside_points scanner.
+        5. For each candidate triangle, run a fully vectorized barycentric test
+           across ALL interior points simultaneously with numpy broadcasting.
+           Short-circuit and return True on the first hit.
+        """
+        if not self.triangles:
+            return False
+
+        # Step 1: convert polygon to xz in water-triangle space
+        poly_xz = [(lx, -ly) for lx, ly in polygon_local]
+        if len(poly_xz) < 3:
+            return False
+
+        xs_poly = [p[0] for p in poly_xz]
+        zs_poly = [p[1] for p in poly_xz]
+        min_x_p = int(math.floor(min(xs_poly)))
+        max_x_p = int(math.ceil(max(xs_poly)))
+        min_z_p = int(math.floor(min(zs_poly)))
+        max_z_p = int(math.ceil(max(zs_poly)))
+
+        # Step 2: gather candidate triangle indices from spatial grid
+        c_x_min = int(math.floor(min_x_p / self.cell_size))
+        c_x_max = int(math.floor(max_x_p / self.cell_size))
+        c_z_min = int(math.floor(min_z_p / self.cell_size))
+        c_z_max = int(math.floor(max_z_p / self.cell_size))
+
+        candidate_idx: set = set()
+        for cx in range(c_x_min, c_x_max + 1):
+            for cz in range(c_z_min, c_z_max + 1):
+                candidate_idx.update(self.grid.get((cx, cz), []))
+
+        if not candidate_idx:
+            return False  # no water triangles anywhere near this lot
+
+        # Step 3: build numpy arrays for candidate triangles (xz only, y not needed)
+        tris = self.triangles
+        # Shape: (T, 3, 2) — [tri_idx, vertex 0/1/2, x/z]
+        tri_arr = np.array(
+            [[[tris[i][v][0], tris[i][v][2]] for v in range(3)] for i in candidate_idx],
+            dtype=np.float64,
+        )  # (T, 3, 2)
+
+        # Step 4: get all interior integer points of the lot polygon
+        xs_in, zs_in, _ = find_inside_points(min_x_p, max_x_p, min_z_p, max_z_p, poly_xz)
+        if len(xs_in) == 0:
+            return False
+
+        # pts: (N, 2)
+        pts = np.column_stack([xs_in.astype(np.float64), zs_in.astype(np.float64)])
+
+        # Step 5: vectorized barycentric test — process triangles in batches
+        # For triangle (A, B, C) and N query points P:
+        #   v0 = C - A,  v1 = B - A,  v2 = P - A   (all shape (N,2) after broadcast)
+        #   u = (d11*d02 - d01*d12) / denom
+        #   v = (d00*d12 - d01*d02) / denom
+        #   inside iff u>=0 and v>=0 and u+v<=1
+        eps = 1e-5
+        T = tri_arr.shape[0]
+        BATCH = 64  # triangles per batch — keeps peak memory bounded
+
+        for batch_start in range(0, T, BATCH):
+            batch = tri_arr[batch_start: batch_start + BATCH]  # (B, 3, 2)
+            A = batch[:, 0, :]   # (B, 2)
+            B = batch[:, 1, :]   # (B, 2)
+            C = batch[:, 2, :]   # (B, 2)
+
+            v0 = C - A           # (B, 2)
+            v1 = B - A           # (B, 2)
+            # P - A for every (point, triangle): (N, B, 2)
+            v2 = pts[:, np.newaxis, :] - A[np.newaxis, :, :]
+
+            d00 = (v0 * v0).sum(axis=1)          # (B,)
+            d01 = (v0 * v1).sum(axis=1)          # (B,)
+            d11 = (v1 * v1).sum(axis=1)          # (B,)
+            d02 = (v2 * v0[np.newaxis]).sum(axis=2)  # (N, B)
+            d12 = (v2 * v1[np.newaxis]).sum(axis=2)  # (N, B)
+
+            denom = d00 * d11 - d01 * d01        # (B,)
+            valid = np.abs(denom) > 1e-8          # (B,) — skip degenerate tris
+            if not valid.any():
+                continue
+
+            inv = np.where(valid, 1.0 / np.where(valid, denom, 1.0), 0.0)  # (B,)
+            u = (d11 * d02 - d01 * d12) * inv    # (N, B)
+            v = (d00 * d12 - d01 * d02) * inv    # (N, B)
+
+            inside = (u >= -eps) & (v >= -eps) & (u + v <= 1.0 + eps)  # (N, B)
+            # Mask out degenerate triangles
+            inside &= valid[np.newaxis, :]
+
+            if inside.any():
+                return True
+
+        return False
+
 class TerrainClassificationIndex:
     """
     Parses and indexes classification polygons (paved, dirt, grass) from OSM.
@@ -2271,37 +2385,13 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                     if cancel_event.is_set():
                         break
                     b = blocks[idx]
-                    # Skip lots whose perimeter crosses water.
-                    # Walk every edge of the polygon at 1-block step density in MC space.
+                    # Skip lots whose area overlaps water (vectorized interior check)
                     poly = b.get("polygon", [])
-                    if poly and water_interp.triangles:
-                        _over_water = False
-                        n_pts = len(poly)
-                        for _ei in range(n_pts):
-                            _ax, _ay = poly[_ei]
-                            _bx, _by = poly[(_ei + 1) % n_pts]
-                            # Project both endpoints to MC space
-                            _x1 = s * _ax + tx;  _z1 = s * (-_ay) + tz
-                            _x2 = s * _bx + tx;  _z2 = s * (-_by) + tz
-                            _dx = _x2 - _x1;     _dz = _z2 - _z1
-                            _edge_len = math.sqrt(_dx * _dx + _dz * _dz)
-                            if _edge_len < 1e-5:
-                                continue
-                            _steps = max(1, int(math.ceil(_edge_len)))
-                            for _si in range(_steps + 1):
-                                _t = _si / _steps
-                                _px = _x1 + _t * _dx
-                                _pz = _z1 + _t * _dz
-                                if water_interp.query_water(_px, _pz)[0]:
-                                    _over_water = True
-                                    break
-                            if _over_water:
-                                break
-                        if _over_water:
-                            completed_flags[idx] = True
-                            with progress_lock:
-                                completed_count += 1
-                            continue
+                    if poly and water_interp.lot_overlaps_water(poly):
+                        completed_flags[idx] = True
+                        with progress_lock:
+                            completed_count += 1
+                        continue
                     f = executor.submit(
                         rasterize_single_block,
                         b, get_mc_terrain_y, cancel_event,
