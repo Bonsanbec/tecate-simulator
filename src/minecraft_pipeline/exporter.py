@@ -2530,8 +2530,11 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         else:
             print(f"[Exporter Warning] Validation finished: {corrupted_regions} region files are corrupted.")
             
-    except KeyboardInterrupt:
-        print("\n[Exporter] Ctrl+C interrupt detected! Saving checkpoint and cache to disk...")
+    except (KeyboardInterrupt, MemoryError) as e:
+        if isinstance(e, MemoryError):
+            print("\n[Exporter Warning] MemoryError detected! Saving checkpoint and cache to disk to preserve progress...")
+        else:
+            print("\n[Exporter] Ctrl+C interrupt detected! Saving checkpoint and cache to disk...")
         
         # Harvest completed blocks if interrupted during block platform loop
         if 'futures' in locals() and futures and 'completed_flags' in locals():
