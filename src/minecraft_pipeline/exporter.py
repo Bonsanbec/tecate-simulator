@@ -69,6 +69,17 @@ def save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_bloc
             
         np.savez_compressed(cache_path, **kwargs)
         print(f"[Exporter] Cache saved successfully: {cache_path} (edge progress: {last_edge_idx}, block progress: {last_block_idx})")
+        
+        # Save block entities companion cache
+        entities_path = cache_path.replace(".npz", "_entities.pkl")
+        if hasattr(custom_blocks, 'block_entities') and custom_blocks.block_entities:
+            try:
+                import pickle
+                with open(entities_path, 'wb') as f:
+                    pickle.dump(custom_blocks.block_entities, f)
+                print(f"[Exporter] Saved {len(custom_blocks.block_entities)} block entities to cache: {entities_path}")
+            except Exception as e:
+                print(f"[Exporter Warning] Failed to save block entities cache: {e}")
     except Exception as e:
         print(f"[Exporter Warning] Failed to save custom blocks cache: {e}")
 
@@ -281,6 +292,18 @@ def load_custom_blocks_cache(cache_path):
             palette_list.append(val)
         
         custom_blocks = VoxelMap(x_arr, y_arr, z_arr, block_ids, palette_list)
+        
+        # Load block entities companion cache
+        entities_path = cache_path.replace(".npz", "_entities.pkl")
+        if os.path.exists(entities_path):
+            try:
+                import pickle
+                with open(entities_path, 'rb') as f:
+                    custom_blocks.block_entities = pickle.load(f)
+                print(f"[Exporter] Loaded {len(custom_blocks.block_entities)} block entities from cache: {entities_path}")
+            except Exception as e:
+                print(f"[Exporter Warning] Failed to load block entities cache: {e}")
+                
         print(f"[Exporter] Loaded {len(custom_blocks)} custom blocks from cache in {time.time() - start_time:.2f} seconds (progress: edge {last_edge_idx}, block {last_block_idx}).")
         return custom_blocks, last_edge_idx, last_block_idx, completed_block_indices
     except Exception as e:
@@ -326,8 +349,7 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None,
                 height_cache.changed = True
                 
     # 3. Generate block platforms
-    inside_set = set(zip(xs_in, zs_in))
-    for x_mc, z_mc, d_boundary in zip(xs_in, zs_in, dists_in):
+    for x_mc, z_mc in zip(xs_in, zs_in):
         if cancel_event.is_set():
             return local_blocks
 
@@ -337,27 +359,7 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None,
             y_mc = get_mc_terrain_y(x_mc, z_mc)
         y_platform = y_mc + 1
 
-        is_border = (
-            (x_mc + 1, z_mc) not in inside_set or
-            (x_mc - 1, z_mc) not in inside_set or
-            (x_mc, z_mc + 1) not in inside_set or
-            (x_mc, z_mc - 1) not in inside_set
-        )
-        if is_border:
-            # Sidewalk perimeter: place outward-facing stairs
-            facing = "north"  # default fallback
-            if (x_mc + 1, z_mc) not in inside_set:
-                facing = "east"
-            elif (x_mc - 1, z_mc) not in inside_set:
-                facing = "west"
-            elif (x_mc, z_mc + 1) not in inside_set:
-                facing = "south"
-            elif (x_mc, z_mc - 1) not in inside_set:
-                facing = "north"
-            local_blocks[(x_mc, y_platform, z_mc)] = f"minecraft:stone_brick_stairs[facing={facing},half=bottom,shape=straight]"
-        else:
-            # Interior: place smooth stone
-            local_blocks[(x_mc, y_platform, z_mc)] = "minecraft:smooth_stone"
+        local_blocks[(x_mc, y_platform, z_mc)] = "minecraft:smooth_stone"
         
     return local_blocks
 
@@ -366,8 +368,8 @@ def make_sign_block_entity(x, y, z, line1_text, line2_text=""):
     Creates an NBT TAG_COMPOUND representing a sign block entity
     with the specified street name text on its front face.
     """
-    l1 = json.dumps({"text": line1_text})
-    l2 = json.dumps({"text": line2_text})
+    l1 = json.dumps({"text": line1_text, "color": "black", "bold": True})
+    l2 = json.dumps({"text": line2_text, "color": "black", "bold": True})
     
     front_text = NBT(TAG_COMPOUND, "front_text", [
         NBT(TAG_LIST, "messages", (TAG_STRING, [
@@ -377,7 +379,18 @@ def make_sign_block_entity(x, y, z, line1_text, line2_text=""):
             '{"text": ""}'
         ])),
         NBT(TAG_STRING, "color", "black"),
-        NBT(TAG_BYTE, "glow", 0)
+        NBT(TAG_BYTE, "has_glowing_text", 0)
+    ])
+    
+    back_text = NBT(TAG_COMPOUND, "back_text", [
+        NBT(TAG_LIST, "messages", (TAG_STRING, [
+            '{"text": ""}',
+            '{"text": ""}',
+            '{"text": ""}',
+            '{"text": ""}'
+        ])),
+        NBT(TAG_STRING, "color", "black"),
+        NBT(TAG_BYTE, "has_glowing_text", 0)
     ])
     
     return NBT(TAG_COMPOUND, "", [
@@ -385,7 +398,8 @@ def make_sign_block_entity(x, y, z, line1_text, line2_text=""):
         NBT(TAG_INT, "x", int(x)),
         NBT(TAG_INT, "y", int(y)),
         NBT(TAG_INT, "z", int(z)),
-        front_text
+        front_text,
+        back_text
     ])
 
 def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, custom_blocks, get_mc_terrain_y,
@@ -417,10 +431,11 @@ def generate_street_signs(road_graph, edge_metadata, node_heights, y_offset, cus
     if blocks:
         for b in blocks:
             poly = b.get("polygon", [])
-            if len(poly) >= 3:
-                xs = [pt[0] for pt in poly]
-                ys = [pt[1] for pt in poly]
-                block_bboxes.append((min(xs), max(xs), min(ys), max(ys), poly))
+            if polygon_area(poly) >= 500.0:
+                if len(poly) >= 3:
+                    xs = [pt[0] for pt in poly]
+                    ys = [pt[1] for pt in poly]
+                    block_bboxes.append((min(xs), max(xs), min(ys), max(ys), poly))
 
     def is_near_large_manzana(px_mc, pz_mc):
         if not block_bboxes:
@@ -857,93 +872,193 @@ def resolve_road_properties(name, highway_type):
 
 class TerrainWaterInterpolator:
     """
-    Parses and indexes water meshes (nodes starting with 'water_') from the GLB.
-    Builds a cell-based spatial index of 2D projected water triangles for fast O(1) query.
+    Queries and parses water features (polygons and waterways) from OpenStreetMap (OSM)
+    via Overpass API or a local cache file, projects them to local Cartesian space,
+    triangulates them, and builds a cell-based spatial grid index.
     """
-    def __init__(self, glb_path, s, tx, tz, cell_size=200.0):
+    def __init__(self, glb_path, s, tx, tz, cell_size=200.0, bbox=None, terrain_interpolator=None):
         self.cell_size = cell_size
         self.grid = {}
         self.triangles = []
         
-        if not os.path.exists(glb_path):
-            print(f"[WaterInterpolator Warning] GLB not found: {glb_path}")
+        # Bounding box calculation (lat/lon)
+        if bbox is None:
+            # Fallback to Tecate default bounding box
+            min_lat, max_lat = 32.55, 32.60
+            min_lon, max_lon = -116.69, -116.60
+        else:
+            min_lat, min_lon, max_lat, max_lon = bbox
+            
+        # 1. Try to load cached water OSM JSON from disk
+        import os
+        import json
+        import requests
+        from src.core_io.coords import gps_to_local
+        from scipy.spatial import Delaunay
+        
+        cache_dir = "export"
+        os.makedirs(cache_dir, exist_ok=True)
+        cache_path = os.path.join(cache_dir, "water_osm_cache.json")
+        
+        osm_data = None
+        if os.path.exists(cache_path):
+            try:
+                print(f"[WaterInterpolator] Loading water features from cache: {cache_path}")
+                with open(cache_path, 'r', encoding='utf-8') as f:
+                    osm_data = json.load(f)
+            except Exception as e:
+                print(f"[WaterInterpolator Warning] Failed to load water cache: {e}")
+                
+        # 2. If not cached, query the Overpass API
+        if not osm_data:
+            overpass_url = "https://overpass-api.de/api/interpreter"
+            query = f"""[out:json][timeout:60];
+(
+  way["natural"="water"]({min_lat},{min_lon},{max_lat},{max_lon});
+  relation["natural"="water"]({min_lat},{min_lon},{max_lat},{max_lon});
+  way["waterway"]({min_lat},{min_lon},{max_lat},{max_lon});
+  relation["waterway"]({min_lat},{min_lon},{max_lat},{max_lon});
+);
+out body geom;
+"""
+            headers = {
+                "User-Agent": "TecateSimulatorMinecraftPipeline/1.0 (contact: hakkindavid@github)"
+            }
+            try:
+                print(f"[WaterInterpolator] Querying Overpass API for water features in bbox: ({min_lat}, {min_lon}) to ({max_lat}, {max_lon})...")
+                resp = requests.post(overpass_url, data={"data": query}, headers=headers, timeout=60)
+                if resp.status_code == 200:
+                    osm_data = resp.json()
+                    # Save to cache
+                    with open(cache_path, 'w', encoding='utf-8') as f:
+                        json.dump(osm_data, f, indent=4)
+                    print(f"[WaterInterpolator] Saved water features cache to {cache_path}")
+                else:
+                    print(f"[WaterInterpolator Warning] Overpass API failed with status code: {resp.status_code}")
+            except Exception as e:
+                print(f"[WaterInterpolator Warning] Overpass request failed: {e}")
+                
+        if not osm_data:
+            print("[WaterInterpolator Warning] No water data available.")
             return
             
-        print("[WaterInterpolator] Parsing water meshes from GLB...")
-        with open(glb_path, "rb") as f:
-            header = f.read(12)
-            magic, version, length = struct.unpack('<III', header)
-            if magic != 0x46546c67:
-                raise ValueError("Invalid GLB magic number")
-                
-            chunk_header = f.read(8)
-            chunk_length, chunk_type = struct.unpack('<II', chunk_header)
-            json_bytes = f.read(chunk_length)
-            gltf = json.loads(json_bytes.decode('utf-8'))
+        elements = osm_data.get("elements", [])
+        print(f"[WaterInterpolator] Parsing {len(elements)} water elements from OSM...")
+        
+        # 3. Process ways and relations
+        for el in elements:
+            tags = el.get("tags", {})
+            el_type = el.get("type")
             
-            f.seek(12 + 8 + chunk_length)
-            chunk1_header = f.read(8)
-            chunk1_len, chunk1_type = struct.unpack('<II', chunk1_header)
-            binary_data = f.read(chunk1_len)
+            waterway = tags.get("waterway")
+            natural = tags.get("natural")
             
-        # Find all water nodes
-        water_nodes = []
-        for idx, node in enumerate(gltf.get('nodes', [])):
-            name = node.get('name', '')
-            if name.startswith('water_'):
-                water_nodes.append((name, node.get('mesh')))
-                
-        for name, mesh_idx in water_nodes:
-            if mesh_idx is None:
-                continue
-            mesh = gltf['meshes'][mesh_idx]
-            prim = mesh['primitives'][0]
+            # Identify if it is a polygon (water area) or line (waterway)
+            is_area = (natural == "water" or waterway in ["riverbank", "dock", "basin", "reservoir", "pond"])
             
-            # Position accessor
-            pos_idx = prim['attributes']['POSITION']
-            pos_acc = gltf['accessors'][pos_idx]
-            pos_bv = gltf['bufferViews'][pos_acc['bufferView']]
-            pos_offset = pos_bv.get('byteOffset', 0) + pos_acc.get('byteOffset', 0)
-            pos_count = pos_acc['count']
-            positions = np.frombuffer(binary_data[pos_offset:pos_offset + pos_count * 12], dtype=np.float32).reshape(pos_count, 3)
-            
-            # Project vertices to MC space
-            pts_mc = []
-            for idx in range(pos_count):
-                x_mc = s * positions[idx, 0] + tx
-                z_mc = s * (-positions[idx, 2]) + tz
-                y_mc = s * positions[idx, 1]
-                pts_mc.append((x_mc, y_mc, z_mc))
-                
-            # Indices accessor
-            indices_idx = prim.get('indices')
-            if indices_idx is not None:
-                ind_acc = gltf['accessors'][indices_idx]
-                ind_bv = gltf['bufferViews'][ind_acc['bufferView']]
-                ind_offset = ind_bv.get('byteOffset', 0) + ind_acc.get('byteOffset', 0)
-                ind_count = ind_acc['count']
-                component_type = ind_acc['componentType']
-                
-                dtype = np.uint16 if component_type == 5123 else np.uint32
-                item_size = 2 if component_type == 5123 else 4
-                indices = np.frombuffer(binary_data[ind_offset:ind_offset + ind_count * item_size], dtype=dtype)
-                
-                for idx in range(0, len(indices), 3):
-                    if idx + 2 < len(indices):
-                        a = pts_mc[indices[idx]]
-                        b = pts_mc[indices[idx+1]]
-                        c = pts_mc[indices[idx+2]]
-                        self.triangles.append((a, b, c))
+            if is_area:
+                # Retrieve coordinates
+                poly_pts = []
+                if el_type == "way":
+                    geom = el.get("geometry", [])
+                    for pt in geom:
+                        lx, ly = gps_to_local(pt["lat"], pt["lon"])
+                        # project to local MC Cartesian coordinates (x, -y)
+                        poly_pts.append((lx, -ly))
+                elif el_type == "relation":
+                    members = el.get("members", [])
+                    for m in members:
+                        if m.get("role") == "outer" and m.get("type") == "way":
+                            geom = m.get("geometry", [])
+                            for pt in geom:
+                                lx, ly = gps_to_local(pt["lat"], pt["lon"])
+                                poly_pts.append((lx, -ly))
+                                
+                if len(poly_pts) >= 3:
+                    # Resolve terrain heights for vertices
+                    pts_3d = []
+                    for (x_mc, z_mc) in poly_pts:
+                        if terrain_interpolator is not None:
+                            y_real = terrain_interpolator.query_height(x_mc, -z_mc)
+                        else:
+                            y_real = 400.0  # default fallback
+                        pts_3d.append((x_mc, y_real, z_mc))
+                        
+                    # Triangulate polygon in 2D using Delaunay
+                    points_2d = np.array(poly_pts)
+                    try:
+                        # Deduplicate points to prevent Delaunay crash
+                        _, unique_indices = np.unique(points_2d, axis=0, return_index=True)
+                        unique_indices = sorted(unique_indices)
+                        unique_pts_2d = points_2d[unique_indices]
+                        unique_pts_3d = [pts_3d[i] for i in unique_indices]
+                        
+                        if len(unique_pts_2d) >= 3:
+                            tri = Delaunay(unique_pts_2d)
+                            for simplex in tri.simplices:
+                                a = unique_pts_3d[simplex[0]]
+                                b = unique_pts_3d[simplex[1]]
+                                c = unique_pts_3d[simplex[2]]
+                                
+                                # Verify that the triangle center is inside the polygon
+                                cx = (a[0] + b[0] + c[0]) / 3.0
+                                cz = (a[2] + b[2] + c[2]) / 3.0
+                                if point_in_polygon(cx, cz, poly_pts):
+                                    self.triangles.append((a, b, c))
+                    except Exception:
+                        # If Delaunay fails, fallback to simple fan triangulation
+                        for i in range(1, len(unique_pts_3d) - 1):
+                            self.triangles.append((unique_pts_3d[0], unique_pts_3d[i], unique_pts_3d[i+1]))
             else:
-                for idx in range(0, len(pts_mc), 3):
-                    if idx + 2 < len(pts_mc):
-                        a = pts_mc[idx]
-                        b = pts_mc[idx+1]
-                        c = pts_mc[idx+2]
+                # It is a waterway line segment: buffer it into rectangles and triangulate
+                geom = el.get("geometry", [])
+                if len(geom) >= 2:
+                    if waterway == "river":
+                        half_w = 6.0
+                    elif waterway == "stream":
+                        half_w = 1.5
+                    else:
+                        half_w = 3.0
+                        
+                    for i in range(len(geom) - 1):
+                        pt1 = geom[i]
+                        pt2 = geom[i+1]
+                        
+                        lx1, ly1 = gps_to_local(pt1["lat"], pt1["lon"])
+                        lx2, ly2 = gps_to_local(pt2["lat"], pt2["lon"])
+                        x1, z1 = lx1, -ly1
+                        x2, z2 = lx2, -ly2
+                        
+                        dx = x2 - x1
+                        dz = z2 - z1
+                        dist = math.sqrt(dx*dx + dz*dz)
+                        if dist < 1e-5:
+                            continue
+                            
+                        # Perpendicular offsets
+                        perp_x = -dz / dist * half_w
+                        perp_z = dx / dist * half_w
+                        
+                        # Heights at segment ends
+                        if terrain_interpolator is not None:
+                            y1 = terrain_interpolator.query_height(x1, -z1)
+                            y2 = terrain_interpolator.query_height(x2, -z2)
+                        else:
+                            y1 = 400.0
+                            y2 = 400.0
+                            
+                        # Create four corner points in 3D
+                        a = (x1 - perp_x, y1, z1 - perp_z)
+                        b = (x1 + perp_x, y1, z1 + perp_z)
+                        c = (x2 + perp_x, y2, z2 + perp_z)
+                        d = (x2 - perp_x, y2, z2 - perp_z)
+                        
+                        # Add two triangles for this segment rectangle
                         self.triangles.append((a, b, c))
+                        self.triangles.append((a, c, d))
                         
         # Index triangles in spatial grid
-        print(f"[WaterInterpolator] Loaded {len(self.triangles)} water triangles. Building spatial grid...")
+        print(f"[WaterInterpolator] Loaded {len(self.triangles)} water triangles from OSM. Building spatial grid...")
         for tri_idx, (a, b, c) in enumerate(self.triangles):
             min_x = min(a[0], b[0], c[0])
             max_x = max(a[0], b[0], c[0])
@@ -958,6 +1073,7 @@ class TerrainWaterInterpolator:
             for cx in range(c_x_min, c_x_max + 1):
                 for cz in range(c_z_min, c_z_max + 1):
                     self.grid.setdefault((cx, cz), []).append(tri_idx)
+                    
         print(f"[WaterInterpolator] Spatial grid indexed in {len(self.grid)} cells.")
 
     def query_water(self, px, pz):
@@ -1853,14 +1969,31 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, region_heights, r
             ])
             sections_nbt_list.append(section_comp)
             
-        chunk_nbt = NBT(TAG_COMPOUND, "", [
+        # Collect block entities for this chunk
+        chunk_block_entities = []
+        if hasattr(custom_blocks, "block_entities") and custom_blocks.block_entities:
+            min_bx = cx_global * 16
+            max_bx = min_bx + 15
+            min_bz = cz_global * 16
+            max_bz = min_bz + 15
+            for (bx, by, bz), entity_nbt in custom_blocks.block_entities.items():
+                if min_bx <= bx <= max_bx and min_bz <= bz <= max_bz:
+                    chunk_block_entities.append(entity_nbt)
+                    
+        chunk_nbt_list = [
             NBT(TAG_INT, "DataVersion", 3463),
             NBT(TAG_INT, "xPos", cx_global),
             NBT(TAG_INT, "zPos", cz_global),
             NBT(TAG_INT, "yPos", min_s_y),
             NBT(TAG_STRING, "Status", "full"),
             NBT(TAG_LIST, "sections", (TAG_COMPOUND, sections_nbt_list))
-        ])
+        ]
+        if chunk_block_entities:
+            chunk_nbt_list.append(NBT(TAG_LIST, "block_entities", (TAG_COMPOUND, chunk_block_entities)))
+        else:
+            chunk_nbt_list.append(NBT(TAG_LIST, "block_entities", (TAG_COMPOUND, [])))
+            
+        chunk_nbt = NBT(TAG_COMPOUND, "", chunk_nbt_list)
         region.set_chunk_nbt(cx_local, cz_local, chunk_nbt)
         
     region.save(mca_path)
@@ -1895,7 +2028,7 @@ def rasterize_blocks_worker(chunk_blocks, height_cache_dict):
         local_custom_blocks.update(blocks_dict)
     return local_custom_blocks
 
-def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y_offset, edge_styles):
+def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y_offset, edge_styles, centerline_heights=None):
     local_custom_blocks = {}
     for ed in chunk_edges:
         u_nd = node_map.get(ed["u"])
@@ -1946,10 +2079,33 @@ def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y
             cx = x1 + t * dx
             cz = z1 + t * dz
             
-            # Linear height interpolation along the road segment
-            y_mc = int(round(u_h + t * (v_h - u_h)))
+            # Linear height interpolation along the road segment (ground base height)
+            y_base = u_h + t * (v_h - u_h)
             
             dist_along = t * dist
+            ramp_len = min(10.0, dist / 2.0)
+            
+            if is_bridge:
+                if ramp_len > 0:
+                    if dist_along < ramp_len:
+                        f = dist_along / ramp_len
+                        y_road_float = (1.0 - f) * u_h + f * (y_base + 6.0)
+                    elif dist_along > dist - ramp_len:
+                        f = (dist - dist_along) / ramp_len
+                        y_road_float = (1.0 - f) * v_h + f * (y_base + 6.0)
+                    else:
+                        y_road_float = y_base + 6.0
+                else:
+                    y_road_float = y_base + 6.0
+                y_road = int(round(y_road_float))
+            else:
+                cx_mc = int(round(cx))
+                cz_mc = int(round(cz))
+                if centerline_heights is not None and (cx_mc, cz_mc) in centerline_heights:
+                    y_road = centerline_heights[(cx_mc, cz_mc)]
+                else:
+                    y_road = int(round(y_base))
+            
             is_near_intersection = (dist_along < 4.0) or ((dist - dist_along) < 4.0)
             
             d_min = int(math.floor(-half_w))
@@ -1971,7 +2127,7 @@ def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y
                         "minecraft:mossy_cobblestone"
                     ]
                     weights = [0.5, 0.25, 0.15, 0.05, 0.05]
-                    block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
+                    block_name = get_deterministic_choice(x_mc, y_road, z_mc, choices, weights)
                 else:
                     # Modern asphalt road materials
                     is_marking = False
@@ -2027,16 +2183,22 @@ def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y
                                 "minecraft:coal_block"
                             ]
                             weights = [0.6, 0.25, 0.05, 0.05, 0.05]
-                        block_name = get_deterministic_choice(x_mc, y_mc, z_mc, choices, weights)
+                        block_name = get_deterministic_choice(x_mc, y_road, z_mc, choices, weights)
                         
                 if is_bridge:
-                    y_road = y_mc + 6
                     local_custom_blocks[(x_mc, y_road, z_mc)] = block_name
+                    # Clear 4 air blocks above road block to prevent burying
+                    for y_above in range(y_road + 1, y_road + 5):
+                        local_custom_blocks[(x_mc, y_above, z_mc)] = "minecraft:air"
                     if (d == d_min or d == d_max) and (step % 8 == 0):
-                        for y_pil in range(y_mc, y_road):
+                        y_base_int = int(round(y_base))
+                        for y_pil in range(y_base_int, y_road):
                             local_custom_blocks[(x_mc, y_pil, z_mc)] = "minecraft:cobblestone"
                 else:
-                    local_custom_blocks[(x_mc, y_mc, z_mc)] = block_name
+                    local_custom_blocks[(x_mc, y_road, z_mc)] = block_name
+                    # Clear 4 air blocks above road block to prevent burying
+                    for y_above in range(y_road + 1, y_road + 5):
+                        local_custom_blocks[(x_mc, y_above, z_mc)] = "minecraft:air"
     return local_custom_blocks
 
 def export_world(reconstruction_json_path, glb_path, output_dir, parallel_workers=0):
@@ -2081,9 +2243,9 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         for b in blocks:
             poly = b.get("polygon", [])
             area = polygon_area(poly)
-            if 500.0 <= area <= 60000.0:
+            if area <= 60000.0:
                 filtered_blocks.append(b)
-        print(f"[Exporter] Filtered block lots by area [500, 60000] m²: kept {len(filtered_blocks)} / {len(blocks)} blocks.")
+        print(f"[Exporter] Filtered block lots by area <= 60000 m²: kept {len(filtered_blocks)} / {len(blocks)} blocks.")
         blocks = filtered_blocks
         road_graph = data.get("road_graph", {})
         
@@ -2131,8 +2293,8 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         if y_offset_override is not None:
             y_offset = y_offset_override
         else:
-            y_offset = int(math.floor(min_height)) + 60
-            print(f"[Exporter] Minimum terrain height: {min_height:.2f}m. Set vertical offset Y_offset = {y_offset}m (baseline Y = -60).")
+            y_offset = int(math.floor(min_height)) + 230
+            print(f"[Exporter] Minimum terrain height: {min_height:.2f}m. Set vertical offset Y_offset = {y_offset}m.")
         
         # Define height resolver using pre-built cell interpolators
         def get_mc_terrain_y(x_mc, z_mc):
@@ -2214,13 +2376,74 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 node_heights[nd_id] = int(round(h_raw)) - y_offset
             print(f"[Exporter] Node height queries completed in {time.time() - t_node_start:.2f}s.")
             
+            # 2. Pre-query heights for all centerline coordinates of non-bridge edges
+            remaining_edges = edges[last_edge_idx:]
+            centerline_coords = []
+            for ed in remaining_edges:
+                key = get_edge_key(ed["u"], ed["v"])
+                meta = edge_metadata.get(key, {})
+                bridge = meta.get("bridge", "")
+                is_bridge = (bridge != "" and bridge != "no")
+                if is_bridge:
+                    continue
+                    
+                u_nd = node_map.get(ed["u"])
+                v_nd = node_map.get(ed["v"])
+                if not u_nd or not v_nd:
+                    continue
+                x1, z1 = u_nd["x"], -u_nd["y"]
+                x2, z2 = v_nd["x"], -v_nd["y"]
+                
+                dx = x2 - x1
+                dz = z2 - z1
+                dist = math.sqrt(dx*dx + dz*dz)
+                if dist < 1e-5:
+                    continue
+                    
+                steps = int(math.ceil(dist * 2))
+                for step in range(steps + 1):
+                    t = step / steps
+                    cx = x1 + t * dx
+                    cz = z1 + t * dz
+                    cx_mc = int(round(cx))
+                    cz_mc = int(round(cz))
+                    centerline_coords.append((cx_mc, -cz_mc))
+            
+            # Deduplicate coordinates to save queries
+            unique_centerline_coords = list(set(centerline_coords))
+            print(f"[Exporter] Batch querying heights for {len(unique_centerline_coords)} road centerline points...")
+            t_center_start = time.time()
+            centerline_heights_raw = interpolator.query_height_batch(unique_centerline_coords)
+            
+            centerline_heights = {}
+            for (cx_mc, query_z), h_raw in zip(unique_centerline_coords, centerline_heights_raw):
+                cz_mc = -query_z
+                centerline_heights[(cx_mc, cz_mc)] = int(round(h_raw)) - y_offset
+            print(f"[Exporter] Centerline height queries completed in {time.time() - t_center_start:.2f}s.")
+            
+            # Sort edges so that lower rank edges come first and higher rank / bridges come last.
+            # This ensures that when we process and merge them sequentially, the higher rank / bridges
+            # overwrite any overlapping pixels of lower rank edges.
+            def get_edge_sort_key(ed):
+                key = get_edge_key(ed["u"], ed["v"])
+                meta = edge_metadata.get(key, {})
+                bridge = meta.get("bridge", "")
+                is_bridge = (bridge != "" and bridge != "no")
+                
+                style = edge_styles.get(key)
+                if style is None:
+                    style = resolve_road_properties(meta.get("name", ""), meta.get("highway", "residential"))
+                rank = get_style_rank(style)
+                return (is_bridge, rank)
+                
+            remaining_edges = sorted(remaining_edges, key=get_edge_sort_key)
+            
             # Parallelize road rasterization using ProcessPoolExecutor
             workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
             print(f"[Exporter] Rasterizing road network in parallel using {workers} processes...")
             t_start_road = time.time()
             
-            # Divide remaining edges into chunks for processes
-            remaining_edges = edges[last_edge_idx:]
+            # Divide sorted remaining edges into chunks for processes
             chunk_size = max(1, len(remaining_edges) // (workers * 4))
             edge_chunks = [remaining_edges[i:i + chunk_size] for i in range(0, len(remaining_edges), chunk_size)]
             
@@ -2229,7 +2452,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 road_futures = [
                     executor.submit(
                         rasterize_roads_worker,
-                        chunk, node_map, edge_metadata, node_heights, y_offset, edge_styles
+                        chunk, node_map, edge_metadata, node_heights, y_offset, edge_styles, centerline_heights
                     )
                     for chunk in edge_chunks
                 ]
@@ -2408,6 +2631,35 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             for (x, y, z) in custom_blocks.keys():
                 active_chunks.add((int(math.floor(x / 16.0)), int(math.floor(z / 16.0))))
                 
+        # Add Cuchumá mountain region chunks to active_chunks
+        try:
+            from src.core_io.coords import gps_to_local
+            cuchuma_lat = 32.5796047
+            cuchuma_lon = -116.688985
+            cuchuma_r = 1630.0 # 1.63 km
+            
+            lx, ly = gps_to_local(cuchuma_lat, cuchuma_lon)
+            peak_x, peak_z = lx, -ly
+            
+            min_cx = int(math.floor((peak_x - cuchuma_r) / 16.0))
+            max_cx = int(math.floor((peak_x + cuchuma_r) / 16.0))
+            min_cz = int(math.floor((peak_z - cuchuma_r) / 16.0))
+            max_cz = int(math.floor((peak_z + cuchuma_r) / 16.0))
+            
+            added_cuchuma = 0
+            for cx in range(min_cx, max_cx + 1):
+                for cz in range(min_cz, max_cz + 1):
+                    # Check distance from chunk center to peak
+                    ccx = cx * 16 + 8
+                    ccz = cz * 16 + 8
+                    dist = math.sqrt((ccx - peak_x)**2 + (ccz - peak_z)**2)
+                    if dist <= cuchuma_r:
+                        active_chunks.add((cx, cz))
+                        added_cuchuma += 1
+            print(f"[Exporter] Added {added_cuchuma} chunks from the Cuchumá mountain region (1.63 km radius around peak).")
+        except Exception as e:
+            print(f"[Exporter Warning] Failed to add Cuchumá mountain chunks: {e}")
+                
         regions = {}
         for (cx, cz) in active_chunks:
             rx = int(math.floor(cx / 32.0))
@@ -2466,9 +2718,17 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             max_workers=workers
         )
         
+        # Convert min/max Cartesian bounds to GPS bbox
+        from src.core_io.coords import local_to_gps
+        lat1, lon1 = local_to_gps(min_x, min_y)
+        lat2, lon2 = local_to_gps(max_x, max_y)
+        min_lat, max_lat = min(lat1, lat2) - 0.01, max(lat1, lat2) + 0.01
+        min_lon, max_lon = min(lon1, lon2) - 0.01, max(lon1, lon2) + 0.01
+        bbox = (min_lat, min_lon, max_lat, max_lon)
+
         # Populate classification index and water interpolator in the main thread once
         classification_index = TerrainClassificationIndex(classification_json_path) if os.path.exists(classification_json_path) else None
-        water_interp = TerrainWaterInterpolator(glb_path, s, tx, tz) if os.path.exists(glb_path) else None
+        water_interp = TerrainWaterInterpolator(glb_path, s, tx, tz, bbox=bbox, terrain_interpolator=interpolator)
         
         try:
             max_pending = workers * 2
