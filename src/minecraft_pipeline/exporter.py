@@ -349,7 +349,8 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None,
                 height_cache.changed = True
                 
     # 3. Generate block platforms
-    for x_mc, z_mc in zip(xs_in, zs_in):
+    inside_set = set(zip(xs_in, zs_in))
+    for x_mc, z_mc, d_boundary in zip(xs_in, zs_in, dists_in):
         if cancel_event.is_set():
             return local_blocks
 
@@ -359,7 +360,27 @@ def rasterize_single_block(b, get_mc_terrain_y, cancel_event, interpolator=None,
             y_mc = get_mc_terrain_y(x_mc, z_mc)
         y_platform = y_mc + 1
 
-        local_blocks[(x_mc, y_platform, z_mc)] = "minecraft:smooth_stone"
+        is_border = (
+            (x_mc + 1, z_mc) not in inside_set or
+            (x_mc - 1, z_mc) not in inside_set or
+            (x_mc, z_mc + 1) not in inside_set or
+            (x_mc, z_mc - 1) not in inside_set
+        )
+        if is_border:
+            # Sidewalk perimeter: place outward-facing stairs
+            facing = "north"  # default fallback
+            if (x_mc + 1, z_mc) not in inside_set:
+                facing = "east"
+            elif (x_mc - 1, z_mc) not in inside_set:
+                facing = "west"
+            elif (x_mc, z_mc + 1) not in inside_set:
+                facing = "south"
+            elif (x_mc, z_mc - 1) not in inside_set:
+                facing = "north"
+            local_blocks[(x_mc, y_platform, z_mc)] = f"minecraft:stone_brick_stairs[facing={facing},half=bottom,shape=straight]"
+        else:
+            # Interior: place smooth stone
+            local_blocks[(x_mc, y_platform, z_mc)] = "minecraft:smooth_stone"
         
     return local_blocks
 
