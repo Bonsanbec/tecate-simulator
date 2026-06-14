@@ -2236,13 +2236,12 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             print("[Exporter] Block platforms rasterization already fully completed.")
             
         # Unified Cache Saving: Save if any new road edges or blocks were rasterized
-        if not cancel_event.is_set():
-            if last_edge_idx > initial_edge_idx or last_block_idx > initial_block_idx:
-                completed_block_indices = {i for i, val in enumerate(completed_flags) if val}
-                save_custom_blocks_cache(
-                    cache_path, custom_blocks, last_edge_idx, last_block_idx,
-                    completed_block_indices=completed_block_indices
-                )
+        if last_edge_idx > initial_edge_idx or last_block_idx > initial_block_idx:
+            completed_block_indices = {i for i, val in enumerate(completed_flags) if val}
+            save_custom_blocks_cache(
+                cache_path, custom_blocks, last_edge_idx, last_block_idx,
+                completed_block_indices=completed_block_indices
+            )
                         
         print(f"[Exporter] Rasterized {len(custom_blocks)} custom geometry blocks.")
         
