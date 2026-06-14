@@ -1969,6 +1969,14 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             return h
         
         resolver_ready = True
+
+        # Build water index early so block rasterization can skip water-covered lots
+        from src.core_io.coords import local_to_gps as _local_to_gps
+        _lat1, _lon1 = _local_to_gps(min_x, min_y)
+        _lat2, _lon2 = _local_to_gps(max_x, max_y)
+        _bbox = (min(_lat1, _lat2) - 0.01, min(_lon1, _lon2) - 0.01,
+                 max(_lat1, _lat2) + 0.01, max(_lon1, _lon2) + 0.01)
+        water_interp = TerrainWaterInterpolator(glb_path, s, tx, tz, bbox=_bbox, terrain_interpolator=interpolator)
     
         print("[Exporter] Rasterizing road networks and custom block lot platforms...")
         cache_path = os.path.join(output_dir, "custom_blocks_cache.npz")
@@ -2169,6 +2177,37 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                     if cancel_event.is_set():
                         break
                     b = blocks[idx]
+                    # Skip lots whose perimeter crosses water.
+                    # Walk every edge of the polygon at 1-block step density in MC space.
+                    poly = b.get("polygon", [])
+                    if poly and water_interp.triangles:
+                        _over_water = False
+                        n_pts = len(poly)
+                        for _ei in range(n_pts):
+                            _ax, _ay = poly[_ei]
+                            _bx, _by = poly[(_ei + 1) % n_pts]
+                            # Project both endpoints to MC space
+                            _x1 = s * _ax + tx;  _z1 = s * (-_ay) + tz
+                            _x2 = s * _bx + tx;  _z2 = s * (-_by) + tz
+                            _dx = _x2 - _x1;     _dz = _z2 - _z1
+                            _edge_len = math.sqrt(_dx * _dx + _dz * _dz)
+                            if _edge_len < 1e-5:
+                                continue
+                            _steps = max(1, int(math.ceil(_edge_len)))
+                            for _si in range(_steps + 1):
+                                _t = _si / _steps
+                                _px = _x1 + _t * _dx
+                                _pz = _z1 + _t * _dz
+                                if water_interp.query_water(_px, _pz)[0]:
+                                    _over_water = True
+                                    break
+                            if _over_water:
+                                break
+                        if _over_water:
+                            completed_flags[idx] = True
+                            with progress_lock:
+                                completed_count += 1
+                            continue
                     f = executor.submit(
                         rasterize_single_block,
                         b, get_mc_terrain_y, cancel_event,
@@ -2307,18 +2346,9 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         executor = concurrent.futures.ProcessPoolExecutor(
             max_workers=workers
         )
-        
-        # Convert min/max Cartesian bounds to GPS bbox
-        from src.core_io.coords import local_to_gps
-        lat1, lon1 = local_to_gps(min_x, min_y)
-        lat2, lon2 = local_to_gps(max_x, max_y)
-        min_lat, max_lat = min(lat1, lat2) - 0.01, max(lat1, lat2) + 0.01
-        min_lon, max_lon = min(lon1, lon2) - 0.01, max(lon1, lon2) + 0.01
-        bbox = (min_lat, min_lon, max_lat, max_lon)
 
         # Populate classification index and water interpolator in the main thread once
         classification_index = TerrainClassificationIndex(classification_json_path) if os.path.exists(classification_json_path) else None
-        water_interp = TerrainWaterInterpolator(glb_path, s, tx, tz, bbox=bbox, terrain_interpolator=interpolator)
         
         try:
             max_pending = workers * 2
