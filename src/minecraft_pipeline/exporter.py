@@ -32,6 +32,13 @@ def save_custom_blocks_cache(cache_path, custom_blocks, last_edge_idx, last_bloc
         os.makedirs(os.path.dirname(cache_path), exist_ok=True)
         if isinstance(custom_blocks, VoxelMap):
             palette = list(custom_blocks.palette)
+            # Harvest any new block names from new chunks that aren't already in the palette
+            new_names = set()
+            for chunk_dict in custom_blocks.new_blocks_by_chunk.values():
+                new_names.update(chunk_dict.values())
+            for name in sorted(new_names):
+                if name not in palette:
+                    palette.append(name)
         else:
             palette = list(set(custom_blocks.values()))
         palette_map = {name: idx for idx, name in enumerate(palette)}
