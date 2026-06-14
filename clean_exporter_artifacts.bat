@@ -11,7 +11,7 @@ set "OUTPUT_DIR=export\minecraft_world"
 
 if exist "%OUTPUT_DIR%" (
     echo Removing output directory: %OUTPUT_DIR%
-    powershell -NoProfile -Command "Get-ChildItem -Path '%OUTPUT_DIR%' -Recurse | Where-Object { $_.Name -ne '.gitkeep' } | Remove-Item -Recurse -Force"
+    rmdir /s /q "%OUTPUT_DIR%"
 ) else (
     echo No output directory found at %OUTPUT_DIR%
 )
