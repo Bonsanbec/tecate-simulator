@@ -17,7 +17,7 @@ echo "Cleaning exporter artifacts..."
 # 1. Remove generated Minecraft world saves and caches
 if [ -d "$OUTPUT_DIR" ]; then
     echo "Removing output directory: $OUTPUT_DIR"
-    rm -rf "$OUTPUT_DIR"
+    rm -rf "$OUTPUT_DIR"/!\(.gitkeep\)
 else
     echo "No output directory found at $OUTPUT_DIR"
 fi
