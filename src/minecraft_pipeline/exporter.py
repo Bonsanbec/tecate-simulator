@@ -1862,6 +1862,97 @@ def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y
                         local_custom_blocks[(x_mc, y_above, z_mc)] = "minecraft:air"
     return local_custom_blocks
 
+
+def _merge_bridge_gaps(edges, edge_metadata, node_map,
+                       max_gap_ratio=1.0, angle_threshold_deg=30.0):
+    """
+    Promotes non-bridge gap segments to bridges when they connect two bridge
+    segments that share the same (normalised) road name, are roughly collinear,
+    and whose gap length is at most max_gap_ratio × the shorter flanking bridge.
+
+    Operates entirely on edge_metadata in-place; the graph topology is untouched.
+    """
+    # Build adjacency: node_id → [(other_node_id, edge_key), ...]
+    adj = {}
+    for ed in edges:
+        u, v = ed["u"], ed["v"]
+        k = get_edge_key(u, v)
+        adj.setdefault(u, []).append((v, k))
+        adj.setdefault(v, []).append((u, k))
+
+    def _node_dist(a_id, b_id):
+        a, b = node_map.get(a_id), node_map.get(b_id)
+        if not a or not b:
+            return 0.0
+        dx, dy = b["x"] - a["x"], b["y"] - a["y"]
+        return math.sqrt(dx * dx + dy * dy)
+
+    def _edge_angle(a_id, b_id):
+        a, b = node_map.get(a_id), node_map.get(b_id)
+        if not a or not b:
+            return 0.0
+        return math.atan2(b["y"] - a["y"], b["x"] - a["x"])
+
+    def _angles_collinear(alpha, beta, thr):
+        """True if the two angles are within thr of parallel OR anti-parallel."""
+        diff = abs((alpha - beta + math.pi) % (2 * math.pi) - math.pi)
+        return diff <= thr or abs(diff - math.pi) <= thr
+
+    thr_rad = math.radians(angle_threshold_deg)
+    newly_bridged = []
+
+    for ed in edges:
+        u, v = ed["u"], ed["v"]
+        key = get_edge_key(u, v)
+        meta = edge_metadata.get(key, {})
+        # Only consider non-bridge segments that have a road name
+        bridge_tag = meta.get("bridge", "")
+        if bridge_tag and bridge_tag != "no":
+            continue
+        name = meta.get("name", "")
+        norm_name = get_normalized_street_name(name)
+        if not norm_name:
+            continue
+
+        gap_len = _node_dist(u, v)
+        seg_angle = _edge_angle(u, v)
+
+        def _find_flanking_bridge(node_id):
+            """
+            Return the length of the nearest same-name bridge edge touching
+            node_id whose direction is collinear with the gap segment, or None.
+            """
+            for (other_id, ek) in adj.get(node_id, []):
+                if ek == key:
+                    continue
+                emeta = edge_metadata.get(ek, {})
+                if not (emeta.get("bridge", "") not in ("", "no")):
+                    continue
+                enorm = get_normalized_street_name(emeta.get("name", ""))
+                if enorm != norm_name:
+                    continue
+                b_angle = _edge_angle(node_id, other_id)
+                if not _angles_collinear(seg_angle, b_angle, thr_rad):
+                    continue
+                return _node_dist(node_id, other_id)
+            return None
+
+        bridge_len_u = _find_flanking_bridge(u)
+        bridge_len_v = _find_flanking_bridge(v)
+
+        if bridge_len_u is None or bridge_len_v is None:
+            continue
+        if gap_len <= min(bridge_len_u, bridge_len_v) * max_gap_ratio:
+            newly_bridged.append(key)
+
+    for key in newly_bridged:
+        meta = edge_metadata.setdefault(key, {})
+        meta["bridge"] = "yes"
+        meta.setdefault("_auto_merged_bridge", True)
+
+    if newly_bridged:
+        print(f"[Exporter] Bridge merge: promoted {len(newly_bridged)} gap segment(s) to bridge.")
+
 def export_world(reconstruction_json_path, glb_path, output_dir, parallel_workers=0):
     world_dir = os.path.join(output_dir, "TecateWorld")
     region_dir = os.path.join(world_dir, "region")
@@ -1988,6 +2079,9 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
         nodes = road_graph.get("nodes", [])
         edges = road_graph.get("edges", [])
         node_map = {nd["id"]: nd for nd in nodes}
+        
+        # Merge OSM-split bridge segments: promotes short same-name collinear gaps to bridges
+        _merge_bridge_gaps(edges, edge_metadata, node_map)
         
         # Build style lookup and group by normalized street name
         print("[Exporter] Resolving and propagating road styles across segments...")
