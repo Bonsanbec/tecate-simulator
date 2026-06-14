@@ -1783,7 +1783,7 @@ def print_progress(label, completed, total, start_time=None):
             speed = completed / elapsed
             speed_str = f" @ {speed:.1f} items/s"
             
-    sys.stdout.write(f"\r\033[K{label}: [{bar}] {pct}% ({completed}/{total}){speed_str}")
+    sys.stdout.write(f"\r{label}: [{bar}] {pct}% ({completed}/{total}){speed_str}")
     sys.stdout.flush()
     if completed >= total:
         sys.stdout.write("\n")
@@ -1997,36 +1997,7 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, region_heights, r
         region.set_chunk_nbt(cx_local, cz_local, chunk_nbt)
         
     region.save(mca_path)
-
-def rasterize_blocks_worker(chunk_blocks, height_cache_dict):
-    """
-    Worker function to rasterize a chunk of block platforms.
-    All required heights must be present in height_cache_dict.
-    """
-    class MockCancelEvent:
-        def is_set(self):
-            return False
-            
-    class MockHeightCache:
-        def __init__(self, d):
-            self.cache = d
-            self.lock = threading.Lock()
-            self.changed = False
-            
-    cancel_event = MockCancelEvent()
-    mock_height_cache = MockHeightCache(height_cache_dict)
-    
-    def mock_get_mc_terrain_y(x_mc, z_mc):
-        return height_cache_dict.get((x_mc, z_mc), 0)
-        
-    local_custom_blocks = {}
-    for b in chunk_blocks:
-        blocks_dict = rasterize_single_block(
-            b, mock_get_mc_terrain_y, cancel_event,
-            interpolator=None, y_offset=0, height_cache=mock_height_cache
-        )
-        local_custom_blocks.update(blocks_dict)
-    return local_custom_blocks
+    print(f"[Exporter] Saved region file: {mca_path}")
 
 def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y_offset, edge_styles, centerline_heights=None):
     local_custom_blocks = {}
@@ -2440,14 +2411,14 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
             
             # Parallelize road rasterization using ProcessPoolExecutor
             workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
-            print(f"[Exporter] Rasterizing road network in parallel using {workers} processes...")
+            print(f"[Exporter] Rasterizing road network in parallel using {workers} threads...")
             t_start_road = time.time()
             
-            # Divide sorted remaining edges into chunks for processes
+            # Divide sorted remaining edges into chunks for threads
             chunk_size = max(1, len(remaining_edges) // (workers * 4))
             edge_chunks = [remaining_edges[i:i + chunk_size] for i in range(0, len(remaining_edges), chunk_size)]
             
-            executor = concurrent.futures.ProcessPoolExecutor(max_workers=workers)
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
             try:
                 road_futures = [
                     executor.submit(
@@ -2479,45 +2450,8 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                 completed_flags[i] = True
                 
         if last_block_idx < num_blocks:
-            # Pre-resolve all terrain heights for remaining block lots in the main thread (batch query)
-            print("[Exporter] Pre-calculating coordinates and batch querying heights for block lots...")
-            t_pre_start = time.time()
-            all_coords_to_query = []
-            for idx in range(num_blocks):
-                if completed_flags[idx]:
-                    continue
-                b = blocks[idx]
-                poly = b.get("polygon", [])
-                poly_mc = [[pt[0], -pt[1]] for pt in poly]
-                
-                xs_poly = [pt[0] for pt in poly_mc]
-                zs_poly = [pt[1] for pt in poly_mc]
-                if not xs_poly or not zs_poly:
-                    continue
-                    
-                min_x_p = int(math.floor(min(xs_poly)))
-                max_x_p = int(math.ceil(max(xs_poly)))
-                min_z_p = int(math.floor(min(zs_poly)))
-                max_z_p = int(math.ceil(max(zs_poly)))
-                
-                xs_in, zs_in, _ = find_inside_points(min_x_p, max_x_p, min_z_p, max_z_p, poly_mc)
-                for x_mc, z_mc in zip(xs_in, zs_in):
-                    if height_cache.cache.get((x_mc, z_mc)) is None:
-                        all_coords_to_query.append((x_mc, -z_mc))
-                        
-            if all_coords_to_query:
-                all_coords_to_query = list(set(all_coords_to_query))
-                print(f"[Exporter] Batch querying {len(all_coords_to_query)} missing terrain heights for block platforms...")
-                batch_heights = interpolator.query_height_batch(all_coords_to_query)
-                for (x_q, mz_q), h_real in zip(all_coords_to_query, batch_heights):
-                    z_val = -mz_q
-                    cached_h = int(round(h_real)) - y_offset
-                    height_cache.cache[(x_q, z_val)] = cached_h
-                height_cache.changed = True
-            print(f"[Exporter] Block lot pre-calculations completed in {time.time() - t_pre_start:.2f}s.")
-
             workers = parallel_workers if parallel_workers > 0 else (os.cpu_count() or 4)
-            print(f"[Exporter] Rasterizing block platforms in parallel using {workers} processes...")
+            print(f"[Exporter] Rasterizing block platforms in parallel using {workers} threads...")
             t_start_blocks = time.time()
             
             progress_lock = threading.Lock()
@@ -2536,24 +2470,21 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                     if completed_count % 50 == 0 or completed_count == num_blocks:
                         print_progress("[Exporter] Rasterizing block platforms", completed_count, num_blocks, t_start_blocks)
                         
-            # Divide remaining blocks into chunks for processes
-            remaining_blocks_indices = [idx for idx in range(num_blocks) if not completed_flags[idx]]
-            chunk_size = max(1, len(remaining_blocks_indices) // (workers * 4))
-            block_chunks_indices = [remaining_blocks_indices[i:i + chunk_size] for i in range(0, len(remaining_blocks_indices), chunk_size)]
-            
-            executor = concurrent.futures.ProcessPoolExecutor(max_workers=workers)
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
             try:
                 futures = {}
-                height_cache_dict = dict(height_cache.cache)
-                for chunk_indices in block_chunks_indices:
+                for idx in range(num_blocks):
+                    if completed_flags[idx]:
+                        continue
                     if cancel_event.is_set():
                         break
-                    chunk_blocks = [blocks[idx] for idx in chunk_indices]
+                    b = blocks[idx]
                     f = executor.submit(
-                        rasterize_blocks_worker,
-                        chunk_blocks, height_cache_dict
+                        rasterize_single_block,
+                        b, get_mc_terrain_y, cancel_event,
+                        interpolator, y_offset, height_cache
                     )
-                    futures[f] = chunk_indices
+                    futures[f] = idx
                     
                 active_futures = list(futures.keys())
                 while active_futures:
@@ -2565,14 +2496,13 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                         return_when=concurrent.futures.FIRST_COMPLETED
                     )
                     for f in done:
-                        chunk_indices = futures[f]
+                        block_idx = futures[f]
                         try:
                             res = f.result()
                             custom_blocks.update(res)
                         except Exception as e:
-                            print(f"\n[Exporter Error] Failed to rasterize block chunk starting at {chunk_indices[0] if chunk_indices else 'unknown'}: {e}")
-                        for block_idx in chunk_indices:
-                            progress_callback(block_idx)
+                            print(f"\n[Exporter Error] Failed to rasterize block {block_idx}: {e}")
+                        progress_callback(block_idx)
                         active_futures.remove(f)
             finally:
                 executor.shutdown(wait=False, cancel_futures=True)
@@ -2882,7 +2812,7 @@ def export_world(reconstruction_json_path, glb_path, output_dir, parallel_worker
                         except Exception as e:
                             print(f"\n[Exporter Error] Failed to generate region r.{rx}.{rz}: {e}")
                         completed_regions += 1
-                        print_progress(f"[Exporter] Generating region MCA files (last: r.{rx}.{rz})", completed_regions, total_regions, t_start_regions)
+                        print_progress("[Exporter] Generating region MCA files", completed_regions, total_regions, t_start_regions)
                         active_futures.remove(future)
             else:
                 print("[Exporter] All regions are already generated and valid. Nothing to do.")
