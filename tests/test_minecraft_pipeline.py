@@ -315,6 +315,39 @@ def test_custom_blocks_cache_roundtrip(tmp_path):
     assert lb_idx == last_block_idx
     assert loaded_completed == completed_block_indices
 
+def test_custom_blocks_cache_voxelmap_roundtrip(tmp_path):
+    """Verifies that save_custom_blocks_cache correctly harvests new block names when custom_blocks is a VoxelMap."""
+    from src.minecraft_pipeline.exporter import save_custom_blocks_cache, load_custom_blocks_cache, VoxelMap
+    import numpy as np
+    
+    cache_path = os.path.join(tmp_path, "test_cache_voxelmap.npz")
+    
+    # Create an initial empty VoxelMap
+    voxel_map = VoxelMap(
+        x_arr=np.array([], dtype=np.int32),
+        y_arr=np.array([], dtype=np.int32),
+        z_arr=np.array([], dtype=np.int32),
+        block_ids=np.array([], dtype=np.int32),
+        palette=[]
+    )
+    
+    # Add some block states via __setitem__ (which go to new_blocks_by_chunk)
+    voxel_map[10, 20, 30] = "minecraft:gravel"
+    voxel_map[-5, 12, 100] = "minecraft:andesite"
+    
+    # Save cache
+    save_custom_blocks_cache(cache_path, voxel_map, last_edge_idx=10, last_block_idx=20)
+    assert os.path.exists(cache_path)
+    
+    # Load cache back
+    loaded_map, le_idx, lb_idx, _ = load_custom_blocks_cache(cache_path)
+    
+    # Assert correctness
+    assert loaded_map.get((10, 20, 30)) == "minecraft:gravel"
+    assert loaded_map.get((-5, 12, 100)) == "minecraft:andesite"
+    assert "minecraft:gravel" in loaded_map.palette
+    assert "minecraft:andesite" in loaded_map.palette
+
 def test_rasterize_single_block():
     """Verifies that rasterize_single_block correctly assigns platform, sidewalk, and curb heights."""
     from src.minecraft_pipeline.exporter import rasterize_single_block
