@@ -1494,7 +1494,7 @@ def print_progress(label, completed, total, start_time=None):
             speed = completed / elapsed
             speed_str = f" @ {speed:.1f} items/s"
             
-    sys.stdout.write(f"\r{label}: [{bar}] {pct}% ({completed}/{total}){speed_str}")
+    sys.stdout.write(f"\r\033[K{label}: [{bar}] {pct}% ({completed}/{total}){speed_str}")
     sys.stdout.flush()
     if completed >= total:
         sys.stdout.write("\n")
