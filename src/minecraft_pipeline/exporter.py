@@ -669,7 +669,7 @@ class TerrainHeightCache:
         self.cache = {}
         self.changed = False
         
-        if os.path.exists(cache_path):
+        if cache_path and os.path.exists(cache_path):
             try:
                 with open(cache_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
@@ -691,7 +691,7 @@ class TerrainHeightCache:
             self.changed = True
 
     def save(self):
-        if not self.changed:
+        if not self.changed or not self.cache_path:
             return
         with self.lock:
             try:
@@ -1206,7 +1206,7 @@ def init_worker_process(*args, **kwargs):
 def export_single_region_process_wrapper(rx, rz, pts, mca_path, min_s_y, max_s_y, region_custom_blocks,
                                          region_heights, region_water_by_chunk, region_polygons_by_chunk, y_offset):
     # Process-local cache for height coordinates
-    local_cache = TerrainHeightCache()
+    local_cache = TerrainHeightCache(cache_path=None)
     local_cache.cache.update(region_heights)
     
     export_single_region(
