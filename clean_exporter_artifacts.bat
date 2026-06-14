@@ -7,7 +7,7 @@ cd /d "%~dp0"
 echo ============================================================
 echo Cleaning exporter artifacts...
 
-set "OUTPUT_DIR=export\minecraft_world"
+set "OUTPUT_DIR=export\minecraft_world\TecateWorld"
 
 if exist "%OUTPUT_DIR%" (
     echo Removing output directory: %OUTPUT_DIR%
@@ -32,6 +32,30 @@ set "HEIGHT_CACHE=export\minecraft_world\terrain_height_cache.json"
 if exist "%HEIGHT_CACHE%" (
     echo Removing file: %HEIGHT_CACHE%
     del /f /q "%HEIGHT_CACHE%"
+)
+
+set "WATER_CACHE=export/water_osm_cache.json"
+if exist "%WATER_CACHE%" (
+    echo Removing file: %WATER_CACHE%
+    del /f /q "%WATER_CACHE%"
+)
+
+set "ENT_CACHE=export/minecraft_world/custom_blocks_cache_entities.pkl"
+if exist "%ENT_CACHE%" (
+    echo Removing file: %ENT_CACHE%
+    del /f /q "%ENT_CACHE%"
+)
+
+set "CUSTOM_CACHE=export/minecraft_world/custom_blocks_cache.npz"
+if exist "%CUSTOM_CACHE%" (
+    echo Removing file: %CUSTOM_CACHE%
+    del /f /q "%CUSTOM_CACHE%"
+)
+
+set "TECATE_META_CACHE=export/minecraft_world/TecateWorld/tecate_metadata.json"
+if exist "%TECATE_META_CACHE%" (
+    echo Removing file: %TECATE_META_CACHE%
+    del /f /q "%TECATE_META_CACHE%"
 )
 
 echo Clean complete!
