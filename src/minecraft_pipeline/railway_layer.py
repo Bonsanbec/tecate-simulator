@@ -1002,6 +1002,13 @@ def apply_railway_to_mca(
 # Punto de entrada principal
 # ─────────────────────────────────────────────────────────────────────────────
 
+def get_region_dir(world_dir):
+    """Locates the Minecraft region folder, supporting custom overworld dimensions (Higher Heights)."""
+    custom_path = os.path.join(world_dir, "dimensions", "minecraft", "overworld", "region")
+    if os.path.exists(custom_path):
+        return custom_path
+    return os.path.join(world_dir, "region")
+
 def export_railway_layer(
     world_dir: str,
     glb_path: str,
@@ -1044,7 +1051,7 @@ def export_railway_layer(
 
     print(f"[Railway] World metadata: y_offset={y_offset}, scale={s:.6f}")
 
-    region_dir = os.path.join(world_dir, "region")
+    region_dir = get_region_dir(world_dir)
     if not os.path.exists(region_dir):
         raise FileNotFoundError(f"[Railway] Region dir not found: {region_dir}")
 
