@@ -1803,7 +1803,121 @@ def export_single_region(rx, rz, pts, mca_path, custom_blocks, region_heights, r
     region.save(mca_path)
     print(f"[Exporter] Saved region file: {mca_path}")
 
+def rasterize_linear_segment(
+    x1, z1, x2, z2,
+    y1_mc, y2_mc,
+    half_w,
+    block_fn,
+    is_bridge=False,
+    centerline_heights=None,
+):
+    """
+    Rasterizes a single linear segment using a perpendicular sweep.
+
+    This is the **shared geometry kernel** reused by both the road pipeline
+    (rasterize_roads_worker) and the railway layer (rasterize_railway_worker).
+    It handles height interpolation, bridge ramps, and the perpendicular
+    width sweep, delegating block-material selection to a caller-supplied
+    ``block_fn``.
+
+    Parameters
+    ----------
+    x1, z1, x2, z2 : float
+        Endpoints in local Minecraft Cartesian space.
+    y1_mc, y2_mc : int
+        Terrain heights at the endpoints (already offset by y_offset).
+    half_w : float
+        Half-width of the corridor to rasterize.  Use 0 for a 1-block-wide
+        centerline (d == 0 only).
+    block_fn : callable
+        ``block_fn(x_mc, z_mc, d, dist_along, dist, is_bridge, y_road) -> str | None``
+        Returns a block name string, or None to skip the position.
+    is_bridge : bool
+        When True, the segment is elevated with ramp logic and pillar support.
+    centerline_heights : dict | None
+        Pre-resolved heights keyed by (x_mc, z_mc).  Used for non-bridge
+        segments to match terrain precisely.
+
+    Returns
+    -------
+    dict  {(x, y, z): block_name}
+    """
+    local_blocks = {}
+    dx = x2 - x1
+    dz = z2 - z1
+    dist = math.sqrt(dx * dx + dz * dz)
+    if dist < 1e-5:
+        return local_blocks
+
+    perp_x = -dz / dist
+    perp_z =  dx / dist
+
+    d_min = int(math.floor(-half_w))
+    d_max = int(math.ceil(half_w))
+    steps = int(math.ceil(dist * 2))
+
+    for step in range(steps + 1):
+        t = step / steps
+        cx = x1 + t * dx
+        cz = z1 + t * dz
+        y_base = y1_mc + t * (y2_mc - y1_mc)
+        dist_along = t * dist
+        ramp_len = min(10.0, dist / 2.0)
+
+        if is_bridge:
+            if ramp_len > 0:
+                if dist_along < ramp_len:
+                    f = dist_along / ramp_len
+                    y_road_float = (1.0 - f) * y1_mc + f * (y_base + 6.0)
+                elif dist_along > dist - ramp_len:
+                    f = (dist - dist_along) / ramp_len
+                    y_road_float = (1.0 - f) * y2_mc + f * (y_base + 6.0)
+                else:
+                    y_road_float = y_base + 6.0
+            else:
+                y_road_float = y_base + 6.0
+            y_road = int(round(y_road_float))
+        else:
+            cx_mc = int(round(cx))
+            cz_mc = int(round(cz))
+            if centerline_heights is not None and (cx_mc, cz_mc) in centerline_heights:
+                y_road = centerline_heights[(cx_mc, cz_mc)]
+            else:
+                y_road = int(round(y_base))
+
+        for d in range(d_min, d_max + 1):
+            px = cx + d * perp_x
+            pz = cz + d * perp_z
+            x_mc = int(round(px))
+            z_mc = int(round(pz))
+
+            block_name = block_fn(x_mc, z_mc, d, dist_along, dist, is_bridge, y_road)
+            if not block_name:
+                continue
+
+            if is_bridge:
+                local_blocks[(x_mc, y_road, z_mc)] = block_name
+                for y_above in range(y_road + 1, y_road + 5):
+                    local_blocks[(x_mc, y_above, z_mc)] = "minecraft:air"
+                if (d == d_min or d == d_max) and (step % 8 == 0):
+                    y_base_int = int(round(y_base))
+                    for y_pil in range(y_base_int, y_road):
+                        local_blocks[(x_mc, y_pil, z_mc)] = "minecraft:cobblestone"
+            else:
+                local_blocks[(x_mc, y_road, z_mc)] = block_name
+                for y_above in range(y_road + 1, y_road + 5):
+                    local_blocks[(x_mc, y_above, z_mc)] = "minecraft:air"
+
+    return local_blocks
+
+
 def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y_offset, edge_styles, centerline_heights=None):
+    """
+    Rasterizes a batch of road edges into a custom-blocks dict.
+
+    Delegates the per-segment geometry sweep to rasterize_linear_segment(),
+    which is the shared kernel also used by the railway layer.
+    """
     local_custom_blocks = {}
     for ed in chunk_edges:
         u_nd = node_map.get(ed["u"])
@@ -1812,21 +1926,20 @@ def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y
             continue
         x1, z1 = u_nd["x"], -u_nd["y"]
         x2, z2 = v_nd["x"], -v_nd["y"]
-        
+
         u_h = node_heights.get(ed["u"])
         v_h = node_heights.get(ed["v"])
         if u_h is None or v_h is None:
             u_h = 400 - y_offset
             v_h = 400 - y_offset
-            
+
         key = get_edge_key(ed["u"], ed["v"])
         meta = edge_metadata.get(key, {})
         hw = meta.get("highway", "residential")
         name = meta.get("name", "")
         bridge = meta.get("bridge", "")
-        layer = meta.get("layer", "")
         is_bridge = (bridge != "" and bridge != "no")
-        
+
         road_props = edge_styles.get(key)
         if road_props is None:
             road_props = resolve_road_properties(name, hw)
@@ -1834,146 +1947,96 @@ def rasterize_roads_worker(chunk_edges, node_map, edge_metadata, node_heights, y
         surface = road_props["surface"]
         is_rural = road_props["is_rural"]
         marking_type = road_props["marking_type"]
-        
-        dx = x2 - x1
-        dz = z2 - z1
-        dist = math.sqrt(dx*dx + dz*dz)
-        if dist < 1e-5:
-            continue
-            
-        perp_x = -dz / dist
-        perp_z = dx / dist
-        
+
         # Add padding to ensure road overlaps block boundaries and gets clipped perfectly
-        w_adjusted = width + 3
-        half_w = w_adjusted / 2.0
-        
-        steps = int(math.ceil(dist * 2))
-        for step in range(steps + 1):
-            t = step / steps
-            cx = x1 + t * dx
-            cz = z1 + t * dz
-            
-            # Linear height interpolation along the road segment (ground base height)
-            y_base = u_h + t * (v_h - u_h)
-            
-            dist_along = t * dist
-            ramp_len = min(10.0, dist / 2.0)
-            
-            if is_bridge:
-                if ramp_len > 0:
-                    if dist_along < ramp_len:
-                        f = dist_along / ramp_len
-                        y_road_float = (1.0 - f) * u_h + f * (y_base + 6.0)
-                    elif dist_along > dist - ramp_len:
-                        f = (dist - dist_along) / ramp_len
-                        y_road_float = (1.0 - f) * v_h + f * (y_base + 6.0)
-                    else:
-                        y_road_float = y_base + 6.0
-                else:
-                    y_road_float = y_base + 6.0
-                y_road = int(round(y_road_float))
-            else:
-                cx_mc = int(round(cx))
-                cz_mc = int(round(cz))
-                if centerline_heights is not None and (cx_mc, cz_mc) in centerline_heights:
-                    y_road = centerline_heights[(cx_mc, cz_mc)]
-                else:
-                    y_road = int(round(y_base))
-            
+        half_w = (width + 3) / 2.0
+
+        # ── Build a material-selection closure for this specific road edge ──
+        _width = width
+        _surface = surface
+        _is_rural = is_rural
+        _marking_type = marking_type
+
+        def _road_block_fn(x_mc, z_mc, d, dist_along, dist, is_bridge_inner, y_road,
+                           __width=_width, __surface=_surface,
+                           __is_rural=_is_rural, __marking_type=_marking_type):
             is_near_intersection = (dist_along < 4.0) or ((dist - dist_along) < 4.0)
-            
-            d_min = int(math.floor(-half_w))
-            d_max = int(math.ceil(half_w))
-            for d in range(d_min, d_max + 1):
-                px = cx + d * perp_x
-                pz = cz + d * perp_z
-                
-                x_mc = int(round(px))
-                z_mc = int(round(pz))
-                
-                if is_rural:
-                    # Rural/historical road materials
-                    choices = [
-                        "minecraft:gravel",
-                        "minecraft:cobblestone",
-                        "minecraft:coarse_dirt",
-                        "minecraft:andesite",
-                        "minecraft:mossy_cobblestone"
-                    ]
-                    weights = [0.5, 0.25, 0.15, 0.05, 0.05]
-                    block_name = get_deterministic_choice(x_mc, y_road, z_mc, choices, weights)
-                else:
-                    # Modern asphalt road materials
-                    is_marking = False
-                    block_name = None
-                    
-                    # Center markings
-                    if marking_type in ["highway", "boulevard", "avenida"]:
-                        if abs(d) < 0.5 and not is_near_intersection:
-                            if marking_type == "highway":
-                                # Solid double yellow line
-                                block_name = "minecraft:yellow_concrete"
-                                is_marking = True
-                            else:
-                                # Dashed yellow line
-                                if int(math.floor(dist_along)) % 4 < 2:
-                                    block_name = "minecraft:yellow_concrete"
-                                    is_marking = True
-                                    
-                    elif marking_type == "calle":
-                        if abs(d) < 0.5 and not is_near_intersection:
-                            # Dashed white line
-                            if int(math.floor(dist_along)) % 4 < 2:
-                                block_name = "minecraft:white_concrete"
-                                is_marking = True
-                                
-                    # Boulevard lane divider markings (dashed white)
-                    if not is_marking and marking_type == "boulevard" and not is_near_intersection:
-                        if abs(abs(d) - 3.5) < 0.5:
-                            if int(math.floor(dist_along)) % 4 < 2:
-                                block_name = "minecraft:white_concrete"
-                                is_marking = True
-                                
-                    # Side markings
-                    if not is_marking and marking_type in ["highway", "boulevard", "avenida"] and not is_near_intersection:
-                        edge_d = max(1.0, math.floor(width / 2.0) - 1.0)
-                        if abs(abs(d) - edge_d) < 0.5:
-                            block_name = "minecraft:white_concrete"
+
+            if __is_rural:
+                choices = [
+                    "minecraft:gravel",
+                    "minecraft:cobblestone",
+                    "minecraft:coarse_dirt",
+                    "minecraft:andesite",
+                    "minecraft:mossy_cobblestone"
+                ]
+                weights = [0.5, 0.25, 0.15, 0.05, 0.05]
+                return get_deterministic_choice(x_mc, y_road, z_mc, choices, weights)
+
+            # Modern asphalt road materials
+            is_marking = False
+            block_name = None
+
+            # Center markings
+            if __marking_type in ["highway", "boulevard", "avenida"]:
+                if abs(d) < 0.5 and not is_near_intersection:
+                    if __marking_type == "highway":
+                        block_name = "minecraft:yellow_concrete"
+                        is_marking = True
+                    else:
+                        if int(math.floor(dist_along)) % 4 < 2:
+                            block_name = "minecraft:yellow_concrete"
                             is_marking = True
-                            
-                    if not is_marking:
-                        if surface == "asphalt_clean":
-                            choices = ["minecraft:gray_concrete", "minecraft:black_concrete"]
-                            weights = [0.8, 0.2]
-                        elif surface == "asphalt_light":
-                            choices = ["minecraft:gray_concrete_powder", "minecraft:andesite", "minecraft:gravel"]
-                            weights = [0.7, 0.2, 0.1]
-                        else:
-                            choices = [
-                                "minecraft:gray_concrete_powder",
-                                "minecraft:black_concrete_powder",
-                                "minecraft:smooth_basalt",
-                                "minecraft:cobbled_deepslate",
-                                "minecraft:coal_block"
-                            ]
-                            weights = [0.6, 0.25, 0.05, 0.05, 0.05]
-                        block_name = get_deterministic_choice(x_mc, y_road, z_mc, choices, weights)
-                        
-                if is_bridge:
-                    local_custom_blocks[(x_mc, y_road, z_mc)] = block_name
-                    # Clear 4 air blocks above road block to prevent burying
-                    for y_above in range(y_road + 1, y_road + 5):
-                        local_custom_blocks[(x_mc, y_above, z_mc)] = "minecraft:air"
-                    if (d == d_min or d == d_max) and (step % 8 == 0):
-                        y_base_int = int(round(y_base))
-                        for y_pil in range(y_base_int, y_road):
-                            local_custom_blocks[(x_mc, y_pil, z_mc)] = "minecraft:cobblestone"
+            elif __marking_type == "calle":
+                if abs(d) < 0.5 and not is_near_intersection:
+                    if int(math.floor(dist_along)) % 4 < 2:
+                        block_name = "minecraft:white_concrete"
+                        is_marking = True
+
+            # Boulevard lane divider markings (dashed white)
+            if not is_marking and __marking_type == "boulevard" and not is_near_intersection:
+                if abs(abs(d) - 3.5) < 0.5:
+                    if int(math.floor(dist_along)) % 4 < 2:
+                        block_name = "minecraft:white_concrete"
+                        is_marking = True
+
+            # Side markings
+            if not is_marking and __marking_type in ["highway", "boulevard", "avenida"] and not is_near_intersection:
+                edge_d = max(1.0, math.floor(__width / 2.0) - 1.0)
+                if abs(abs(d) - edge_d) < 0.5:
+                    block_name = "minecraft:white_concrete"
+                    is_marking = True
+
+            if not is_marking:
+                if __surface == "asphalt_clean":
+                    choices = ["minecraft:gray_concrete", "minecraft:black_concrete"]
+                    weights = [0.8, 0.2]
+                elif __surface == "asphalt_light":
+                    choices = ["minecraft:gray_concrete_powder", "minecraft:andesite", "minecraft:gravel"]
+                    weights = [0.7, 0.2, 0.1]
                 else:
-                    local_custom_blocks[(x_mc, y_road, z_mc)] = block_name
-                    # Clear 4 air blocks above road block to prevent burying
-                    for y_above in range(y_road + 1, y_road + 5):
-                        local_custom_blocks[(x_mc, y_above, z_mc)] = "minecraft:air"
+                    choices = [
+                        "minecraft:gray_concrete_powder",
+                        "minecraft:black_concrete_powder",
+                        "minecraft:smooth_basalt",
+                        "minecraft:cobbled_deepslate",
+                        "minecraft:coal_block"
+                    ]
+                    weights = [0.6, 0.25, 0.05, 0.05, 0.05]
+                block_name = get_deterministic_choice(x_mc, y_road, z_mc, choices, weights)
+
+            return block_name
+
+        seg_blocks = rasterize_linear_segment(
+            x1, z1, x2, z2,
+            u_h, v_h,
+            half_w,
+            _road_block_fn,
+            is_bridge=is_bridge,
+            centerline_heights=centerline_heights,
+        )
+        local_custom_blocks.update(seg_blocks)
+
     return local_custom_blocks
 
 
