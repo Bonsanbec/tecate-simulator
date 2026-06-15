@@ -1,0 +1,14 @@
+{
+    "vertical_offset": 391,
+    "bbox": {
+        "min_local_x": -10804.780847335613,
+        "max_local_x": 67235.03023355894,
+        "min_local_y": -37369.64785447852,
+        "max_local_y": 3088.118719956014
+    },
+    "terrain_alignment": {
+        "scale": 0.8427785648661434,
+        "translation_x": 28052.404303473268,
+        "translation_z": -16620.3853885848
+    }
+}
