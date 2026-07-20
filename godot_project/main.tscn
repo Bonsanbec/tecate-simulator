@@ -1,7 +1,6 @@
-[gd_scene load_steps=7 format=3 uid="uid://db7572d55c7a"]
+[gd_scene load_steps=6 format=3 uid="uid://db7572d55c7a"]
 
 [ext_resource type="Script" path="res://apply_shader.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://assets/blocks/geometry.gltf" id="2_geometry"]
 [ext_resource type="PackedScene" path="res://assets/tecate.glb" id="3_terrain"]
 [ext_resource type="Script" path="res://player.gd" id="4_player_script"]
 
@@ -21,7 +20,7 @@ script = ExtResource("1_script")
 [node name="Terrain" parent="." instance=ExtResource("3_terrain")]
 transform = Transform3D(0.84277856, 0, 0, 0, 0.84277856, 0, 0, 0, 0.84277856, 28057.9043, 0, 16614.8854)
 
-[node name="Geometry" parent="." instance=ExtResource("2_geometry")]
+[node name="Geometry" type="Node3D" parent="."]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 20, 0)
