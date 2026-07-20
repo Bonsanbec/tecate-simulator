@@ -27,11 +27,14 @@ func _ready():
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	
-	# 3. Load manzana GLTFs if available and not already in tree
+	# 3. Load manzana GLTFs into Geometry node
 	if geometry_node:
 		_load_manzana_gltfs(geometry_node)
+		
+	# 4. Load Infrastructure GLTFs (Roads, Bridges, Railways)
+	_load_infrastructure()
 	
-	# 4. Snap player or camera to terrain height
+	# 5. Snap player or camera to terrain height
 	if player_node:
 		print("[ApplyShader] Snapping Player to terrain...")
 		_snap_player(player_node)
@@ -39,23 +42,28 @@ func _ready():
 		print("[ApplyShader] Snapping Camera3D to terrain...")
 		_snap_camera(camera_node)
 		
-	# 5. Snap building meshes to terrain height
+	# 6. Snap all building & infrastructure meshes to terrain height
 	if geometry_node:
 		print("[ApplyShader] Snapping building meshes to terrain height...")
 		_snap_building_meshes_recursive(geometry_node)
 		
-	# 6. Create colliders for building meshes after snapping
+	var infra_container = get_node_or_null("Infrastructure")
+	if infra_container:
+		print("[ApplyShader] Snapping infrastructure meshes to terrain height...")
+		_snap_building_meshes_recursive(infra_container)
+		
+	# 7. Create colliders for building meshes after height snapping
 	if geometry_node:
 		print("[ApplyShader] Creating collision shapes for building meshes...")
 		_create_colliders_recursive(geometry_node)
 		
-	# 7. Apply facade shaders / fallback materials to building meshes
+	# 8. Apply facade shaders / fallback materials (NO MESH HIDING)
 	var shader = load("res://shaders/facade_pom.gdshader")
 	if geometry_node:
 		print("[ApplyShader] Applying materials & shaders to building meshes...")
 		_apply_materials_recursive(geometry_node, shader)
 		
-	# 8. Instantiate 3D building name tags from manifest
+	# 9. Instantiate high-visibility 3D building name tags from manifest
 	_instantiate_building_tags()
 
 func _load_manzana_gltfs(parent_node: Node):
@@ -77,7 +85,7 @@ func _load_manzana_gltfs(parent_node: Node):
 			var minfo = manifest[manzana_id]
 			var gltf_path = minfo.get("gltf_path", "")
 			if ResourceLoader.exists(gltf_path):
-				# Sanitize node name (replace dots with underscores to avoid NodePath issues)
+				# Sanitize node name (replace dots with underscores)
 				var clean_name = manzana_id.replace(".", "_")
 				if not parent_node.has_node(clean_name):
 					var scene = load(gltf_path)
@@ -88,8 +96,36 @@ func _load_manzana_gltfs(parent_node: Node):
 						loaded_count += 1
 		print("[ApplyShader] Loaded ", loaded_count, " manzana GLTF scenes into Geometry node.")
 
+func _load_infrastructure():
+	var infra_container = get_node_or_null("Infrastructure")
+	if not infra_container:
+		infra_container = Node3D.new()
+		infra_container.name = "Infrastructure"
+		add_child(infra_container)
+		
+	var infra_files = [
+		"res://assets/infrastructure/roads.gltf",
+		"res://assets/infrastructure/railways.gltf",
+		"res://assets/infrastructure/bridges.gltf",
+		"res://assets/infrastructure/osm_road_network.gltf"
+	]
+	
+	var loaded_infra = 0
+	for path in infra_files:
+		if ResourceLoader.exists(path):
+			var scene = load(path)
+			if scene:
+				var inst = scene.instantiate()
+				infra_container.add_child(inst)
+				loaded_infra += 1
+				
+	print("[ApplyShader] Loaded ", loaded_infra, " infrastructure GLTF models.")
+
 func _snap_building_meshes_recursive(node: Node):
 	if node is MeshInstance3D:
+		# Always ensure mesh is visible (NO mesh hiding)
+		node.visible = true
+		
 		var mesh = node.mesh
 		if mesh:
 			var aabb = mesh.get_aabb()
@@ -98,7 +134,6 @@ func _snap_building_meshes_recursive(node: Node):
 			
 			var ground_h = _get_terrain_height(global_center.x, global_center.z)
 			if ground_h != null:
-				# Align bottom of mesh (min Y) to terrain ground height
 				var min_y_offset = (aabb.position.y) * node.global_transform.basis.get_scale().y
 				node.global_position.y = ground_h - min_y_offset
 				
@@ -125,7 +160,7 @@ func _instantiate_building_tags():
 		tags_container.name = "BuildingTags"
 		add_child(tags_container)
 		
-	print("[ApplyShader] Instantiating 3D building name tags...")
+	print("[ApplyShader] Instantiating high-visibility per-building 3D tags...")
 	var tag_count = 0
 	for manzana_id in manifest.keys():
 		var minfo = manifest[manzana_id]
@@ -134,23 +169,23 @@ func _instantiate_building_tags():
 			var label_text = b.get("label", "")
 			var tag_pos_arr = b.get("tag_position", [0, 0, 0])
 			if label_text != "":
-				# Raycast terrain height at tag X, Z location
 				var ground_h = _get_terrain_height(tag_pos_arr[0], tag_pos_arr[2])
-				var tag_y = (ground_h if ground_h != null else 405.0) + b.get("height_m", 5.0) + 2.0
+				var tag_y = (ground_h if ground_h != null else 405.0) + b.get("height_m", 5.0) + 3.0
 				
 				var lbl = Label3D.new()
 				lbl.text = label_text
 				lbl.position = Vector3(tag_pos_arr[0], tag_y, tag_pos_arr[2])
 				lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-				lbl.font_size = 48
-				lbl.outline_size = 12
+				lbl.font_size = 72
+				lbl.outline_size = 16
 				lbl.outline_render_priority = 1
 				lbl.no_depth_test = true
 				lbl.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				lbl.outline_modulate = Color(0.0, 0.0, 0.0, 1.0)
 				tags_container.add_child(lbl)
 				tag_count += 1
 				
-	print("[ApplyShader] Instantiated ", tag_count, " 3D building tags.")
+	print("[ApplyShader] Instantiated ", tag_count, " high-visibility per-building 3D tags.")
 
 func _create_colliders_recursive(node: Node):
 	if node is MeshInstance3D:
@@ -185,6 +220,7 @@ func _get_terrain_height(x: float, z: float):
 
 func _apply_materials_recursive(node: Node, shader: Shader):
 	if node is MeshInstance3D:
+		# ENSURE NO MESH HIDING LOGIC (Requirement 3)
 		node.visible = true
 		
 		var name = node.name
@@ -223,7 +259,7 @@ func _apply_materials_recursive(node: Node, shader: Shader):
 				node.material_override = mat
 				applied_shader = true
 				
-		# Fallback PBR material for textureless or untextured buildings/roofs so they render cleanly
+		# Fallback PBR material for textureless or untextured buildings/roofs/platforms so they render cleanly
 		if not applied_shader and node.material_override == null:
 			var fallback_mat = StandardMaterial3D.new()
 			fallback_mat.albedo_color = Color(0.85, 0.85, 0.88)

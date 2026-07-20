@@ -17,10 +17,11 @@ def run_export():
         sys.exit(1)
 
     print("=" * 60)
-    print("  STEP 2: MANZANA GLTF EXPORT PIPELINE (CORRECTED COORD TRANSFORMS)")
+    print("  STEP 2: MANZANA GLTF & OVER-TERRAIN PLATFORM EXPORT PIPELINE")
     print("=" * 60)
 
     mapping_file = "data/building_manzana_mapping.json"
+    blocks_file = "data/blocks_cache.json"
     blend_file = "models/tecate/osm2world.blend"
     output_dir = "godot_project/assets/blocks/manzanas"
     translation = mathutils.Vector((34975.75, -31878.95, 0.0))
@@ -34,18 +35,23 @@ def run_export():
         print(f"Error: Blend file not found at {blend_file}")
         sys.exit(1)
 
-    print(f"[1/4] Loading {mapping_file}...")
+    print(f"[1/5] Loading {mapping_file}...")
     with open(mapping_file, "r") as f:
         mapping_data = json.load(f)
 
     manzanas = mapping_data.get("manzanas", {})
     print(f"  Found {len(manzanas)} unique manzanas to export.")
 
-    print(f"[2/4] Loading {blend_file}...")
+    blocks_data = {}
+    if os.path.exists(blocks_file):
+        with open(blocks_file, "r") as f:
+            blocks_data = json.load(f)
+
+    print(f"[2/5] Loading {blend_file}...")
     bpy.ops.wm.open_mainfile(filepath=blend_file)
 
-    # Apply translation directly to mesh vertex data so glTF nodes have identity transform in game space
-    print(f"[3/4] Baking spatial offset {translation} directly into mesh vertex buffers...")
+    # 3. Bake spatial offset directly into mesh vertex data
+    print(f"[3/5] Baking spatial offset {translation} directly into mesh vertex buffers...")
     all_building_names = set(mapping_data.get("buildings", {}).keys())
     for obj in bpy.data.objects:
         if obj.name in all_building_names and obj.type == 'MESH':
@@ -57,7 +63,6 @@ def run_export():
 
     os.makedirs(output_dir, exist_ok=True)
 
-    # Helper to create optimized .import file for Godot
     import_template = """[remap]
 
 importer="scene"
@@ -91,7 +96,36 @@ gltf/naming_version=2
 gltf/embedded_image_handling=1
 """
 
-    print(f"[4/4] Exporting {len(manzanas)} manzanas to GLTF format...")
+    def create_platform_mesh(manzana_id, poly_pts):
+        if len(poly_pts) < 3:
+            return None
+        mesh = bpy.data.meshes.new(f"PlatformMesh_{manzana_id}")
+        obj = bpy.data.objects.new(f"Pavement_{manzana_id}", mesh)
+        bpy.context.scene.collection.objects.link(obj)
+
+        verts = []
+        # Top and bottom faces for 0.4m thick elevated over-terrain pavement
+        for x, y in poly_pts:
+            verts.append((x, y, 0.2))
+        for x, y in poly_pts:
+            verts.append((x, y, -0.2))
+
+        n_pts = len(poly_pts)
+        faces = []
+        # Top face
+        faces.append([i for i in range(n_pts)])
+        # Bottom face
+        faces.append([i + n_pts for i in range(n_pts - 1, -1, -1)])
+        # Side quad faces
+        for i in range(n_pts):
+            next_i = (i + 1) % n_pts
+            faces.append([i, next_i, next_i + n_pts, i + n_pts])
+
+        mesh.from_pydata(verts, [], faces)
+        mesh.update()
+        return obj
+
+    print(f"[4/5] Exporting {len(manzanas)} manzanas to GLTF format...")
     exported_count = 0
     error_count = 0
 
@@ -109,7 +143,15 @@ gltf/embedded_image_handling=1
                 obj.select_set(True)
                 valid_objs.append(obj)
 
-        if not valid_objs:
+        # Create platform over-terrain mesh if polygon available
+        platform_obj = None
+        if manzana_id in blocks_data and "polygon" in blocks_data[manzana_id]:
+            poly = blocks_data[manzana_id]["polygon"]
+            platform_obj = create_platform_mesh(manzana_id, poly)
+            if platform_obj:
+                platform_obj.select_set(True)
+
+        if not valid_objs and not platform_obj:
             continue
 
         out_gltf = os.path.join(output_dir, f"{manzana_id}.gltf")
@@ -119,7 +161,7 @@ gltf/embedded_image_handling=1
             bpy.ops.export_scene.gltf(
                 filepath=out_gltf,
                 export_format='GLTF_SEPARATE',
-                export_copyright="Tecate Simulator OSM Manzana",
+                export_copyright="Tecate Simulator Manzana Platform",
                 export_texcoords=True,
                 export_normals=True,
                 export_materials='EXPORT',
@@ -137,6 +179,10 @@ gltf/embedded_image_handling=1
         except Exception as e:
             print(f"  [Error] Failed to export {manzana_id}: {e}")
             error_count += 1
+
+        # Clean up temporary platform object
+        if platform_obj:
+            bpy.data.objects.remove(platform_obj, do_unlink=True)
 
     print("=" * 60)
     print(f"  Export Complete!")
