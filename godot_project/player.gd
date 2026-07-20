@@ -1,11 +1,16 @@
 extends CharacterBody3D
 
-@export var speed: float = 8.0
-@export var jump_velocity: float = 6.0
+# Minecraft 1:1 Exact Movement Speeds (m/s)
+@export var walk_speed: float = 4.317
+@export var sprint_speed: float = 5.612
+@export var sneak_speed: float = 1.295
+@export var jump_velocity: float = 5.5
 @export var sensitivity: float = 0.15
-@export var fly_speed: float = 20.0
 
-# Get the gravity from the project settings to be synced with RigidBody nodes.
+# Minecraft Creative/Spectator Flying Speeds (m/s)
+@export var fly_speed: float = 10.92
+@export var fly_sprint_speed: float = 21.84
+
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity", 9.8)
 
 @onready var camera = $Camera3D
@@ -41,24 +46,24 @@ func _input(event):
 				
 		if event.keycode == KEY_SPACE:
 			var current_time = Time.get_ticks_msec() / 1000.0
-			# If double-pressed Space in the air within 0.3s, toggle flying
+			# Double-press Space within 0.3s toggles Minecraft flight mode
 			if not is_on_floor() and (current_time - space_press_timer) < 0.3:
 				is_flying = !is_flying
 				if is_flying:
 					velocity = Vector3.ZERO
-					print("[Player] Flying enabled")
+					print("[Player] Minecraft Flying Mode ENABLED")
 				else:
-					print("[Player] Flying disabled")
+					print("[Player] Minecraft Flying Mode DISABLED")
 			space_press_timer = current_time
 
 func _physics_process(delta):
-	# Handle running modifier (Ctrl)
-	var active_speed = speed
-	if Input.is_key_pressed(KEY_CTRL):
-		active_speed *= 2.0  # Run speed multiplier
+	var is_sprinting = Input.is_key_pressed(KEY_CTRL)
+	var is_sneaking = Input.is_key_pressed(KEY_SHIFT)
 
 	if is_flying:
-		# Flying movement
+		# Minecraft Flying Movement Physics
+		var active_fly_speed = fly_sprint_speed if is_sprinting else fly_speed
+		
 		var input_dir = Vector2.ZERO
 		if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
 			input_dir.y -= 1
@@ -69,38 +74,38 @@ func _physics_process(delta):
 		if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
 			input_dir.x += 1
 			
-		# Compute direction relative to camera basis (including looking up/down)
 		var cam_basis = camera.global_transform.basis
 		var direction = (cam_basis.z * input_dir.y + cam_basis.x * input_dir.x).normalized()
 		
-		# Vertical fly controls
-		var fly_up_down = 0.0
+		var vertical_fly = 0.0
 		if Input.is_key_pressed(KEY_SPACE):
-			fly_up_down += 1.0
+			vertical_fly += 1.0
 		if Input.is_key_pressed(KEY_SHIFT):
-			fly_up_down -= 1.0
+			vertical_fly -= 1.0
 			
-		var fly_velocity = direction * active_speed
-		fly_velocity.y += fly_up_down * active_speed
+		var target_vel = direction * active_fly_speed
+		target_vel.y += vertical_fly * active_fly_speed
 		
-		velocity = fly_velocity
+		velocity = target_vel
 		move_and_slide()
 		
-		# If we touch the floor, disable flying
 		if is_on_floor():
 			is_flying = false
 			print("[Player] Landed, flying disabled")
 	else:
-		# Walking physics
-		# Add the gravity.
+		# Minecraft Walking / Ground Physics
+		var active_speed = walk_speed
+		if is_sprinting:
+			active_speed = sprint_speed
+		elif is_sneaking:
+			active_speed = sneak_speed
+
 		if not is_on_floor():
 			velocity.y -= gravity * delta
 
-		# Handle Jump.
 		if Input.is_key_pressed(KEY_SPACE) and is_on_floor():
 			velocity.y = jump_velocity
 
-		# Get the input direction and handle the movement/deceleration.
 		var input_dir = Vector2.ZERO
 		if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
 			input_dir.y -= 1

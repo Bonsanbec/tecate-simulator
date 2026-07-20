@@ -24,6 +24,7 @@ def run_mapping():
 
     blend_file = "models/tecate/osm2world.blend"
     blocks_file = "data/blocks_cache.json"
+    osm_cache_file = "data/tecate_osm_cache.json"
     output_file = "data/building_manzana_mapping.json"
     translation = mathutils.Vector((34975.75, -31878.95, 0.0))
 
@@ -35,7 +36,56 @@ def run_mapping():
         print(f"Error: Blocks cache not found at {blocks_file}")
         sys.exit(1)
 
-    print(f"[1/4] Loading {blend_file}...")
+    # 1. Load Road/POI Spatial Index for Street Name Resolution
+    street_segments = []
+    if os.path.exists(osm_cache_file):
+        print(f"[1/5] Extracting street name spatial index from {osm_cache_file}...")
+        try:
+            with open(osm_cache_file, "r") as f:
+                osm_data = json.load(f)
+            nodes = osm_data.get("nodes", {})
+            edges = osm_data.get("edges", [])
+            
+            # Calibration constants for lat/lon -> local coords
+            LAT_REF = 32.573229
+            LON_REF = -116.626536
+            METERS_PER_DEG_LAT = 110900.0
+            METERS_PER_DEG_LON = 93800.0
+
+            for e in edges:
+                if isinstance(e, dict) and e.get("name"):
+                    u_id = str(e.get("u"))
+                    v_id = str(e.get("v"))
+                    if u_id in nodes and v_id in nodes:
+                        u_node = nodes[u_id]
+                        v_node = nodes[v_id]
+                        ux = (u_node["lon"] - LON_REF) * METERS_PER_DEG_LON
+                        uy = (u_node["lat"] - LAT_REF) * METERS_PER_DEG_LAT
+                        vx = (v_node["lon"] - LON_REF) * METERS_PER_DEG_LON
+                        vy = (v_node["lat"] - LAT_REF) * METERS_PER_DEG_LAT
+                        street_segments.append({
+                            "name": e["name"],
+                            "mid": ((ux + vx) / 2.0, (uy + vy) / 2.0)
+                        })
+            print(f"  Loaded {len(street_segments)} named street segments.")
+        except Exception as e:
+            print(f"  [Warning] Could not parse street names from OSM cache: {e}")
+
+    def resolve_street_name(x, y):
+        if not street_segments:
+            return "Tecate Sector"
+        best_dist = float('inf')
+        best_name = "Avenida Tecate"
+        for s in street_segments:
+            mx, my = s["mid"]
+            d = math.hypot(x - mx, y - my)
+            if d < best_dist:
+                best_dist = d
+                best_name = s["name"]
+        return best_name
+
+    # 2. Open Blender file and filter building objects
+    print(f"[2/5] Loading {blend_file}...")
     bpy.ops.wm.open_mainfile(filepath=blend_file)
 
     excluded_materials = {
@@ -47,7 +97,7 @@ def run_mapping():
         'SCREE', 'TENNIS_NET', 'TERRAIN_DEFAULT', 'WATER'
     }
 
-    print("[2/4] Filtering building objects...")
+    print("[3/5] Filtering building objects...")
     original_collection = bpy.data.collections.get("Collection")
     building_objs = []
     for obj in original_collection.objects:
@@ -63,9 +113,10 @@ def run_mapping():
             if not is_excluded:
                 building_objs.append(obj)
 
-    print(f"  Found {len(building_objs)} building objects.")
+    print(f"  Found {len(building_objs)} building mesh primitives.")
 
-    print(f"[3/4] Loading manzana blocks from {blocks_file}...")
+    # 3. Load manzana blocks
+    print(f"[4/5] Loading manzana blocks from {blocks_file}...")
     with open(blocks_file, "r") as f:
         blocks = json.load(f)
 
@@ -101,7 +152,8 @@ def run_mapping():
             p1x, p1y = p2x, p2y
         return inside
 
-    print("[4/4] Mapping buildings to manzanas...")
+    # 4. Map primitives and group by building entity per manzana
+    print("[5/5] Mapping building primitives to manzanas & assigning spatial labels...")
     mapping_results = {}
     manzana_to_buildings = {}
 
@@ -117,7 +169,7 @@ def run_mapping():
         bcz_max = max(v.z for v in bbox_world)
         height = bcz_max - bcz_min
 
-        # Match block
+        # Match manzana block
         matched_id = None
         for block_id, binfo in block_data_processed.items():
             if binfo["minx"] - 2.0 <= bcx <= binfo["maxx"] + 2.0 and binfo["miny"] - 2.0 <= bcy <= binfo["maxy"] + 2.0:
@@ -137,9 +189,11 @@ def run_mapping():
                 nearest_count += 1
 
         materials = [s.material.name for s in obj.material_slots if s.material]
+        street_name = resolve_street_name(bcx, bcy)
 
         building_info = {
             "building_name": obj.name,
+            "street_name": street_name,
             "manzana_id": matched_id,
             "centroid": [round(bcx, 3), round(bcy, 3), round(bcz_min, 3)],
             "height": round(height, 2),
@@ -169,7 +223,7 @@ def run_mapping():
 
     print(f"Mapping complete!")
     print(f"  Exact matches: {exact_count}")
-    print(f"  Nearest centroid matches: {nearest_count}")
+    print(f"  Nearest matches: {nearest_count}")
     print(f"  Total unique manzanas: {len(manzana_to_buildings)}")
     print(f"  Saved output to: {output_file}")
     print("=" * 60)
