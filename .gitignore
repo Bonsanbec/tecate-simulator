@@ -24,3 +24,7 @@ export/geometry.bin
 /export/minecraft_world/resource_pack
 *.nbi
 *.nbc
+data
+export
+models
+reference
