@@ -2,7 +2,6 @@
 
 # run_remote.sh
 # Usage: ./run_remote.sh [REMOTE_SSH_HOST]
-# Default host: HakkinDavid@hakkin.tail4b53f5.ts.net
 
 set -euo pipefail
 
@@ -17,7 +16,7 @@ if [ -f .env ]; then
 fi
 
 # 1. Determine remote host and arguments
-REMOTE_HOST="${REMOTE_HOST:-HakkinDavid@hakkin.tail4b53f5.ts.net}"
+REMOTE_HOST="${REMOTE_HOST}"
 if [[ "${1:-}" == *@* || "${1:-}" == *.ts.net* ]]; then
     REMOTE_HOST="$1"
     shift

@@ -512,7 +512,7 @@ def ensure_default_env(path=".env"):
             f.write("FRESH_WORLD=export/minecraft_world/TecateWorld\n")
             f.write(f"MODIFIED_WORLD={def_mod.replace('\\\\', '/')}\n")
             f.write("OUTPUT_DIR=export/minecraft_world\n")
-            f.write("REMOTE_HOST=HakkinDavid@hakkin.tail4b53f5.ts.net\n")
+            f.write("REMOTE_HOST=\n")
             f.write("REMOTE_PATH=~/tecate-simulator\n")
         print(f"[Importer] Created default configuration file: {path}")
 

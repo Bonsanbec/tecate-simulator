@@ -2,7 +2,6 @@
 
 # pull_remote_json.sh
 # Usage: ./pull_remote_json.sh [REMOTE_SSH_HOST]
-# Default host: HakkinDavid@hakkin.tail4b53f5.ts.net
 
 set -euo pipefail
 
@@ -17,7 +16,7 @@ if [ -f .env ]; then
 fi
 
 # 1. Determine remote host
-REMOTE_HOST="${1:-${REMOTE_HOST:-HakkinDavid@hakkin.tail4b53f5.ts.net}}"
+REMOTE_HOST="${REMOTE_HOST}"
 REMOTE_PATH="${REMOTE_PATH:-~/tecate-simulator}"
 
 echo "============================================================"
