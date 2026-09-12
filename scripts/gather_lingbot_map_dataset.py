@@ -8,8 +8,7 @@ adjacent manzanas (blocks) into a dataset structured for 3D rebuilding with ling
 
 The script extracts block geometry and facade metadata from cache files, orders
 the panoramas sequentially along each block's facade perimeter to form a right-cyclic
-scan, synchronizes any missing panorama images from the remote WSL server over SSH,
-and exports the dataset.
+scan, and exports the dataset.
 """
 
 import os
@@ -88,40 +87,16 @@ def get_block_cyclic_panos(block_id, facades_data):
 
     return deduped
 
-def fetch_missing_images_remote(missing_files, remote_host, remote_path):
-    """
-    Synchronizes missing panorama images from the remote WSL server over SSH using tar,
-    piping the file list over stdin to avoid command line length limits.
-    """
-    print(f"\n[Remote Sync] Fetching {len(missing_files)} missing panorama files from remote WSL ({remote_host})...")
-    
-    file_list_str = "\n".join(missing_files) + "\n"
-    cmd = f'ssh -o ConnectTimeout=15 {remote_host} wsl bash -c "\\"cd {remote_path} && tar -czf - -T -\\"" | tar -xzf -'
-    
-    res = subprocess.run(cmd, input=file_list_str, shell=True, capture_output=True, text=True)
-    if res.returncode != 0:
-        print(f"[Error] SSH tar transfer failed with return code {res.returncode}")
-        print(f"Stderr: {res.stderr}")
-        sys.exit(1)
-
-    print("[Remote Sync] All missing panorama images successfully fetched and verified!")
-
 def main():
     load_env()
 
     parser = argparse.ArgumentParser(
         description="Gather Parque Hidalgo and adjacent block panoramas for lingbot-map 3D reconstruction."
     )
-    parser.add_argument("--remote-host", default=os.environ.get("REMOTE_HOST"),
-                        help="Remote SSH host for WSL instance.")
-    parser.add_argument("--remote-path", default=os.environ.get("REMOTE_PATH", "~/tecate-simulator"),
-                        help="Path to tecate-simulator repo on remote host.")
     parser.add_argument("--output-dir", default="lingbot-map",
                         help="Output directory for lingbot-map dataset.")
     parser.add_argument("--dist-threshold", type=float, default=35.0,
                         help="Max vertex distance (meters) to identify immediately adjacent blocks.")
-    parser.add_argument("--skip-sync", action="store_true",
-                        help="Skip remote SSH synchronization of panorama screenshots.")
     parser.add_argument("--dry-run", action="store_true",
                         help="Run spatial analysis and print sequence counts without writing files.")
 
@@ -134,7 +109,6 @@ def main():
     for fpath in [blocks_cache_file, facades_cache_file, panoramas_cache_file]:
         if not os.path.exists(fpath):
             print(f"[Error] Required cache file not found: {fpath}")
-            print("Please run ./pull_remote_json.sh first to pull local cache JSONs.")
             sys.exit(1)
 
     print("============================================================")
@@ -227,10 +201,8 @@ def main():
         if needs_fetch:
             missing_files.append(fpath)
 
-    if missing_files and not args.skip_sync:
-        fetch_missing_images_remote(missing_files, args.remote_host, args.remote_path)
-    elif missing_files and args.skip_sync:
-        print(f"[Warning] {len(missing_files)} panorama images are missing locally, but --skip-sync was passed.")
+    if missing_files:
+        print(f"[Warning] {len(missing_files)} panorama images are missing or are Git LFS pointers locally in data/screenshots/pano/.")
 
     # 5. Export dataset to lingbot-map/{block_id}/0001.png, 0002.png, ..., N.png
     print(f"\n[4/4] Exporting dataset to '{args.output_dir}'...")

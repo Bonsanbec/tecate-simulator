@@ -33,7 +33,7 @@ The development environment does not populate local screenshot caches by default
 ```bash
 python scripts/collect_case_study_images.py
 ```
-This script reads the target facade list from `data/case_study/target_facade.json`, references the caches, detects missing or Git LFS pointer files, and fetches the required screenshots from the remote host configured in `.env` via SSH/WSL. It then creates symlinks in `data/case_study/target_images/` pointing to the retrieved images. And also pull the export/geometry.gltf similarly.
+This script reads the target facade list from `data/case_study/target_facade.json`, references the caches, detects missing or Git LFS pointer files, and verifies local screenshots. It then creates symlinks in `data/case_study/target_images/` pointing to the retrieved images.
 
 ### 3. Terrain-Reconstruction Coordinate Alignment
 The terrain GLB has its center at the shape's center and contains an altered NW-most vertex. The reconstruction pipeline places Parque Hidalgo (32.573229, -116.626536) at Cartesian (0,0). 
@@ -45,11 +45,10 @@ We align them via the following 2D Procrustes-style mathematical transform:
 5. **Apply Transform**: Apply the resulting transformation matrix to the terrain GLB import node in Godot to bring it into alignment with the local Cartesian building block coordinates.
 
 ### 4. Planar Block Height Alignment (Terrain Projection)
-The low-poly building geometry exported at remote's `export/geometry.gltf` (centered at Parque Hidalgo 0,0) lacks elevation adjustments; all building blocks have their base at height Z = 0. To resolve this and sit buildings correctly on the terrain:
+The low-poly building geometry exported at `export/geometry.gltf` (centered at Parque Hidalgo 0,0) lacks elevation adjustments; all building blocks have their base at height Z = 0. To resolve this and sit buildings correctly on the terrain:
 1. **Centroid Elevation Retrieval**: For each building block, compute the 2D Cartesian centroid $(C_x, C_y)$ of its footprint.
 2. **Raycast Snapping**: Perform a vertical raycast from $(C_x, C_y, +\infty)$ downwards onto the aligned terrain GLB mesh to find the terrain intersection height $Z_{terrain}$.
 3. **Height Offset & Skirt Extrusion**: Set the block's base elevation to $Z_{terrain}$. To prevent visual gaps or floating corners due to local terrain slope, extend the block geometry downwards (skirt/foundation extrusion) by a safety margin (e.g., 1.5m) into the terrain mesh. This keeps roofs level and avoids complex polygon shearing or UV stretching.
-Note: For retrieving the GLTF from remote, follow a similar approach to that of collect_case_study_images.py.
 
 ### 5. Parameterized Per-Facade PBR & Height Generation
 * **Default Heuristics**: Maps semantic mask IDs from SegFormer to material properties:
@@ -115,7 +114,7 @@ We evaluate the candidate approaches for a municipal-scale Godot game:
 * Set up a Godot runtime profiler to log GPU frame times.
 
 ### Phase 3: Study Case Evaluation (Weeks 5 - 6)
-* Run `collect_case_study_images.py` to acquire baseline photos over SSH.
+* Run `collect_case_study_images.py` to organize baseline photos locally.
 * Process "Caseta Telefónica LA PANZA" (Facades `[68-77]`).
 * Generate albedo, masks, packed PBR textures, and prop transform points.
 * Compile and export the glTF. Verify POM depth and prop alignment in Godot.

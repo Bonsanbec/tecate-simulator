@@ -82,7 +82,6 @@ Located at `export/`
 | File | Size | Description |
 |------|------|-------------|
 | `reconstruction_export.json` | 37.0 MB | Full scene document (road graph + 159 blocks) — primary Blender input |
-| `reconstruction_export_win.json` | 38.0 MB | Windows path-translated version (for WSL→Windows Blender) |
 | `metadata.json` | 9.0 MB | Coverage statistics + 15,507 provenance entries |
 
 ### 3D Geometry

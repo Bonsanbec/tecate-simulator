@@ -171,7 +171,7 @@
 
 **Evidence**: From `reconstruction_export.json` sample.
 
-**Impact**: This file is non-portable. Moving the project directory or sharing the file with another machine will cause Blender to fail to load textures. A `reconstruction_export_win.json` variant with Windows paths is generated for the WSL case, but this further fragments the portability issue.
+**Impact**: This file is non-portable across directory paths if absolute paths are moved without relative path resolution.
 
 **Root cause**: `os.path.abspath()` is used throughout `prism_generator.py` when building texture paths.
 

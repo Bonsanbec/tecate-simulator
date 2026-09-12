@@ -53,7 +53,6 @@ tecate-simulator/
 │   ├── geometry.gltf                 # Final textured 3D scene (glTF, separate)
 │   ├── geometry.bin                  # Binary geometry buffer (2.4 MB)
 │   ├── reconstruction_export.json    # Scene document: road graph + block list (37 MB)
-│   ├── reconstruction_export_win.json # Windows-path translated version (38 MB)
 │   ├── metadata.json                 # Coverage statistics + provenance (9 MB)
 │   ├── textures/                     # Per-block facade PNG textures (virtual renders)
 │   └── debug/
@@ -83,7 +82,7 @@ tecate-simulator/
 
 | Module | File | Role |
 |--------|------|------|
-| **CLI Orchestrator** | `src/main.py` | Argument parsing, pipeline execution, Blender invocation, WSL path translation |
+| **CLI Orchestrator** | `src/main.py` | Argument parsing, pipeline execution, Blender invocation |
 | **Coordinate System** | `src/core_io/coords.py` | GPS ↔ local ETP Cartesian projection centered at Parque Hidalgo |
 | **IO Utilities** | `src/core_io/io_manager.py` | `ensure_dir`, `save_json`, `load_json` |
 | **Cache Migrator** | `src/core_io/migration.py` | Migrates legacy raw-scraped archive to structural_graph layout |
@@ -209,9 +208,8 @@ This implies the repository functions as a **living archive** that incrementally
 The codebase explicitly handles:
 - **macOS**: Blender at `/Applications/Blender.app/Contents/MacOS/Blender`
 - **Windows**: Blender at `C:/Program Files/Blender Foundation/Blender 5.1/blender.exe`
-- **WSL**: Path translation via `wslpath -w`, Windows Blender called from Linux shell
 - **Linux**: `shutil.which("blender")` fallback
-- **Headless**: Auto-detected for WSL/Linux without `DISPLAY`
+- **Headless**: Auto-detected for Linux without `DISPLAY`
 
 ---
 

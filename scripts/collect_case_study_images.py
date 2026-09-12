@@ -100,35 +100,8 @@ def main():
             to_fetch.append(f"data/screenshots/pano/{img}")
             
     if to_fetch:
-        load_env()
-        
-        store_remote = os.environ.get("store_remote")
-        store_remote_path = os.environ.get("store_remote_path", "~/tecate-simulator")
-        store_remote_wsl = os.environ.get("store_remote_wsl", "1")
-        
-        if not store_remote:
-            print("[collect_case_study_images] Error: Missing screenshots and no remote host configured in .env (store_remote).")
-            print("[collect_case_study_images] Treating as local. Please ensure Git LFS screenshots are pulled locally.")
-            sys.exit(1)
-            
-        print(f"[collect_case_study_images] Need to fetch {len(to_fetch)} screenshot files from remote {store_remote}...")
-        
-        files_arg = " ".join(to_fetch)
-        tar_cmd = f"tar -C {store_remote_path} -czf - {files_arg}"
-        
-        if store_remote_wsl in ("1", "true", "True"):
-            tar_cmd = f"wsl {tar_cmd}"
-            
-        cmd = f'ssh {store_remote} "{tar_cmd}" | tar -xzf -'
-        
-        print(f"Running command: {cmd}")
-        res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        if res.returncode == 0:
-            print("[collect_case_study_images] Successfully fetched screenshots over SSH!")
-        else:
-            print(f"[Error] Failed to fetch screenshots. Return code: {res.returncode}")
-            print(f"Stderr: {res.stderr}")
-            sys.exit(1)
+        print(f"[collect_case_study_images] Warning: {len(to_fetch)} screenshot files are missing or are Git LFS pointers in data/screenshots/pano/.")
+        print("[collect_case_study_images] Please ensure local screenshots or Git LFS files are present.")
     else:
         print("[collect_case_study_images] All screenshots are already present locally and are real files.")
         
