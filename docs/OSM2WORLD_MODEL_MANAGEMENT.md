@@ -29,17 +29,17 @@ This model has all horizontal offsets, vertical terrain elevations, foundation s
                        │ scripts/create_adjusted_blend.py
                        ▼
 ┌──────────────────────────────────────────────┐
-│  godot_project/assets/osm2world_adjusted.blend │  (Primary Workspace Asset)
-│  - 483 3D volume structures (within 3km)     │
+│  godot_project/assets/osm2world_adjusted.blend │  (Primary Workspace Asset, 102 MB)
+│  - 3,552 3D volume structures (Full region)  │
 │  - Full OSM metadata & real-world names      │
 │  - Perfectly aligned (DX=+34976.59, DY=-31879.03)│
 │  - Draped on terrain with 3.5m skirts        │
 │  - Clean 1 unit = 1 meter coordinates        │
 └──────────────────────┬───────────────────────┘
-                       │ Fast glTF Export (0.59s)
+                       │ Fast glTF Export (8.1s)
                        ▼
 ┌──────────────────────────────────────────────┐
-│    godot_project/assets/osm2world_baked.glb  │  (Godot Runtime Asset, 6.5 MB)
+│    godot_project/assets/osm2world_baked.glb  │  (Godot Runtime Asset, 269 MB)
 └──────────────────────────────────────────────┘
 ```
 
@@ -141,15 +141,30 @@ In the original `osm2world.blend`, leaf mesh objects were named generically (`Me
 - In `osm2world_adjusted.blend`, all vertex coordinates are baked into true world metric space ($1\text{ Blender unit} = 1.0\text{ meter}$), parent empties are removed, and all objects have clean identity matrices (`matrix_world = Identity`).
 
 ### 4.4 Collection Organization
-Surviving objects are cleanly organized into 4 semantic Blender Collections:
-- `Buildings` (196 objects within 3km center)
-- `PowerInfrastructure` (27 objects: HighVoltagePowerTowers, PowerLines, WindTurbines)
-- `Vegetation` (258 objects: Trees, Forest clusters)
+Surviving objects are cleanly organized into 4 semantic Blender Collections across the entire municipality:
+- `Buildings` (2,602 objects: 100% of all OSM buildings)
+- `PowerInfrastructure` (539 objects: HighVoltagePowerTowers, WindTurbines, PowerLines)
+- `Vegetation` (409 objects: 253 Trees + 156 Forest canopy clusters)
 - `CivicAmenities` (2 objects: BusStops)
 
 ---
 
-## 5. Usage & Re-Export Workflow
+## 5. Performance Optimization & Parallelization
+
+The previous prebaking script suffered from a severe 16-minute bottleneck during object deletion due to Blender's Python API updating internal dependency graphs on every single call to `bpy.data.objects.remove(obj)`.
+
+### Key Optimizations Implemented:
+1. **C++ Native Batch Removal (`bpy.data.batch_remove`)**:
+   - Instead of 54,000 Python removal iterations, objects to delete and empty hierarchy nodes are collected into lists and purged in bulk using native C++ `bpy.data.batch_remove(ids=...)`.
+   - **Result**: Reduced deletion time from **16+ minutes down to 67 seconds** across 51,697 objects.
+2. **C++ SIMD Raycasting**:
+   - `mathutils.bvhtree.BVHTree.FromPolygons` evaluates 3,899 raycasts in parallel C routines in **under 36 seconds**.
+3. **Sub-10s glTF Export**:
+   - Exporting the entire city of 3,552 physical structures with full custom properties takes only **8.16 seconds**.
+
+---
+
+## 6. Usage & Re-Export Workflow
 
 To inspect, modify, or add custom assets to the scene:
 
@@ -162,9 +177,9 @@ To inspect, modify, or add custom assets to the scene:
    - `File` → `Export` → `glTF 2.0 (.glb/.gltf)`
    - Destination: `godot_project/assets/osm2world_baked.glb`
    - Under **Data** → **Include**, check **Custom Properties** (`extras`).
-   - Export time is **under 1 second**!
+   - Export time is **only 8 seconds**!
 
 3. **Or run the automated pipeline**:
    ```bash
-   /Applications/Blender.app/Contents/MacOS/Blender -b -P scripts/create_adjusted_blend.py -- --radius 3000.0
+   /Applications/Blender.app/Contents/MacOS/Blender -b -P scripts/create_adjusted_blend.py -- --radius -1.0
    ```

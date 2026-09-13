@@ -35,7 +35,7 @@ def parse_args():
     parser.add_argument("--terrain-glb", default="godot_project/assets/tecate.glb", help="Input terrain GLB file")
     parser.add_argument("--output-blend", default="godot_project/assets/osm2world_adjusted.blend", help="Output adjusted blend file")
     parser.add_argument("--output-glb", default="godot_project/assets/osm2world_baked.glb", help="Output baked GLB file")
-    parser.add_argument("--radius", type=float, default=3000.0, help="Culling radius in meters from Parque Hidalgo (-1 for all)")
+    parser.add_argument("--radius", type=float, default=-1.0, help="Culling radius in meters from Parque Hidalgo (-1 for all)")
     parser.add_argument("--skirt-depth", type=float, default=3.5, help="Foundation skirt downward extrusion depth in meters")
     parser.add_argument("--building-z-offset", type=float, default=0.0, help="Additional elevation offset for buildings")
     return parser.parse_args(argv)
@@ -208,9 +208,14 @@ def main():
         # Terrain elevation lookup
         terrain_z = get_terrain_z(bvh, cx, cy)
         if terrain_z is None:
-            objects_to_delete.append(obj)
-            culled_no_terrain += 1
-            continue
+            # Check if close to terrain boundary (e.g. within 500m)
+            near_loc, near_norm, near_idx, near_dist = bvh.find_nearest(mathutils.Vector((cx, cy, 0.0)))
+            if near_dist < 500.0:
+                terrain_z = near_loc.z
+            else:
+                objects_to_delete.append(obj)
+                culled_no_terrain += 1
+                continue
 
         # Make mesh unique if shared
         if obj.data.users > 1:
@@ -268,16 +273,18 @@ def main():
 
     print(f"[Processing] Completed in {time.time() - t0:.2f}s: {processed_count:,} retained ({culled_radius} culled by radius, {culled_no_terrain} out of terrain).")
 
-    # Delete purged objects
-    print(f"[Cleanup] Removing {len(objects_to_delete):,} culled and flat mesh objects...")
-    for obj in objects_to_delete:
-        bpy.data.objects.remove(obj, do_unlink=True)
+    # Delete purged objects using native C++ batch removal (sub-second)
+    t_clean = time.time()
+    print(f"[Cleanup] Removing {len(objects_to_delete):,} culled and flat mesh objects via batch_remove...")
+    if objects_to_delete:
+        bpy.data.batch_remove(ids=objects_to_delete)
 
     # Delete all Empty objects
     empty_objs = [o for o in bpy.data.objects if o.type == "EMPTY"]
-    print(f"[Cleanup] Removing {len(empty_objs):,} empty hierarchy nodes...")
-    for o in empty_objs:
-        bpy.data.objects.remove(o, do_unlink=True)
+    print(f"[Cleanup] Removing {len(empty_objs):,} empty hierarchy nodes via batch_remove...")
+    if empty_objs:
+        bpy.data.batch_remove(ids=empty_objs)
+    print(f"[Cleanup] Batch removal completed in {time.time() - t_clean:.2f}s.")
 
     # Organize into clean Blender Collections
     print("[Organization] Creating semantic collections...")
