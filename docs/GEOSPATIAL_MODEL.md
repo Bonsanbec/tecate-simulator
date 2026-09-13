@@ -366,3 +366,25 @@ $$Z_{\text{godot}} = -(Y_{\text{osm}} - 31879.03)$$
 - Exports to [`godot_project/assets/osm2world_baked.glb`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/godot_project/assets/osm2world_baked.glb) in under 1 second (6.5 MB, replacing legacy `geometry.gltf` in Godot).
 - See [OSM2WORLD_MODEL_MANAGEMENT.md](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/docs/OSM2WORLD_MODEL_MANAGEMENT.md) for full architectural details.
 
+---
+
+## 16. Minecraft Pipeline Spatial Relationship & Reconciliation
+
+### Coordinate Alignment
+The voxelized Minecraft world in `export/minecraft_world/TecateWorld` shares the exact same horizontal origin:
+- $(X_{\text{mc}}=0, Z_{\text{mc}}=0) \longleftrightarrow (0, 0)$ local Cartesian meters at Parque Miguel Hidalgo.
+- Axis mapping: $X_{\text{mc}} = X_{\text{local}}$, $Z_{\text{mc}} = -Y_{\text{local}}$ (Minecraft South is $-Y_{\text{local}}$).
+
+### Historical Terrain Shift Discrepancy
+While the Godot engine transform aligns `tecate.glb` with $tx = 28057.9043$ and $tz = 16614.8854$, the Minecraft generator `src/minecraft_pipeline/exporter.py` (L2153-2154) hardcoded:
+$$tx_{\text{mc}} = 28052.4043, \quad tz_{\text{mc}} = -16620.3854$$
+This introduced a systematic **$5.50\text{ m}$ shift (West and North)** between the voxelized elevation profile and the road/building layout in Minecraft.
+
+### Pipeline Reconciliation & Player Ledger Preservation
+For full documentation on:
+1. Reconciling the 159 procedural downtown blocks with the 2,602 full-municipality 3D buildings in `osm2world_adjusted.blend`,
+2. Discarding 100% of the terrain to isolate player modifications via `src/minecraft_pipeline/importer.py`,
+3. The zero-risk preservation and audit behavior of the Ledger SQLite plugin (`ledger.db`),
+see [RECONCILIATION_AND_LEDGER_PLAN.md](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/docs/minecraft_pipeline/RECONCILIATION_AND_LEDGER_PLAN.md).
+
+

@@ -27,6 +27,17 @@
 
 ---
 
+### A-3 🟢 RESOLVED: Minecraft Pipeline Discrepancies and Ledger Integration Strategy
+
+**Resolution**: Fully audited and documented in September 2026.
+- **Terrain Offset**: Identified a $5.50\text{ m}$ shift in `src/minecraft_pipeline/exporter.py` ($tx=28052.40, tz=-16620.38$) vs Godot ground truth ($tx=28057.90, tz=16614.89$).
+- **Content Gap**: Audited the gap between Minecraft's 159 procedural downtown blocks vs `osm2world_adjusted.blend`'s 2,602 full-municipality 3D buildings, 449 power towers, and 79 wind turbines.
+- **Terrain Discard**: Documented how `importer.py`'s 3-tier differential scanner discards 100% of unmodified terrain/roads and extracts pure player delta $\Delta_{\text{player}}$.
+- **Ledger Preservation**: Confirmed that Ledger's SQLite database (`ledger.db`) is completely decoupled from `.mca` region files, suffers zero integrity risk from offline world updates, and maintains 1:1 $(X, Z)$ coordinate alignment.
+- See [RECONCILIATION_AND_LEDGER_PLAN.md](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/docs/minecraft_pipeline/RECONCILIATION_AND_LEDGER_PLAN.md) for full architectural plan.
+
+---
+
 ## Category B: Pipeline Gaps
 
 ### B-1 🔴 `TemporalVisualClassifier` Is Not Wired Into Pipeline

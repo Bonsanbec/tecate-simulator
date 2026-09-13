@@ -16,6 +16,7 @@
 | [BLOCK_SEMANTICS.md](./BLOCK_SEMANTICS.md) | Significado geográfico de cada bloque Minecraft colocado |
 | [FORMATS.md](./FORMATS.md) | Formatos de entrada/salida, estructuras de datos |
 | [EXTENSIONS.md](./EXTENSIONS.md) | Guía para extender, importar, exportar y usar el mundo como SIG |
+| [RECONCILIATION_AND_LEDGER_PLAN.md](./RECONCILIATION_AND_LEDGER_PLAN.md) | Reconciliación con modelo calibrado, descarte de terreno y preservación de Ledger SQLite |
 
 ---
 
@@ -30,6 +31,7 @@ Para comprender el sistema completo, leer en este orden:
 5. **PIPELINE_IMPORT.md** — cómo extraer información del mundo editado
 6. **FORMATS.md** — referencia de estructuras de datos
 7. **EXTENSIONS.md** — cómo extender el sistema
+8. **RECONCILIATION_AND_LEDGER_PLAN.md** — auditoría comparativa, descarte de terreno y hoja de ruta de modernización
 
 ---
 
