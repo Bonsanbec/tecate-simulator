@@ -15,6 +15,8 @@ var rot_y: float = 0.0
 
 var space_press_timer: float = 0.0
 var is_flying: bool = false
+var position_log_timer: float = 0.0
+
 
 func _ready():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -120,3 +122,8 @@ func _physics_process(delta):
 			velocity.z = move_toward(velocity.z, 0, active_speed)
 
 		move_and_slide()
+	position_log_timer += delta
+
+	if position_log_timer >= 1.0:
+		print("Player position: ", global_position)
+		position_log_timer = 0.0
