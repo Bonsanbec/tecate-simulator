@@ -357,10 +357,12 @@ $$Z_{\text{godot}} = -(Y_{\text{osm}} - 31879.03)$$
 
 (This resolves a previous 24m SW offset that arose when anchoring solely to asymmetric park perimeter nodes).
 
-### Prebaking Pipeline (`scripts/bake_osm2world_terrain.py`)
-- Reads `tecate.glb` TIN mesh into a `mathutils.bvhtree.BVHTree`.
-- Raycasts downwards onto the terrain to evaluate ground elevations.
-- Elevates building footprints rigidly and adds a 3.5m foundation skirt downwards to prevent gaps on sloped terrain.
-- Drapes linear networks (roads, paths) per-vertex onto the terrain.
-- Prebakes the result to `godot_project/assets/osm2world_baked.glb`, replacing `geometry.gltf` in Godot without requiring runtime raycasting.
+### Working Copy Blend & Prebaking Pipeline
+- Authoritative working copy: [`godot_project/assets/osm2world_adjusted.blend`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/godot_project/assets/osm2world_adjusted.blend) (with convenience symlink `osm2world_adjusted.blend` in workspace root).
+- Generated via [`scripts/create_adjusted_blend.py`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/scripts/create_adjusted_blend.py).
+- 22 flat surface categories (roads, junctions, rails, water surfaces) purged to eliminate 85% draw-call overhead and ground texture Z-fighting.
+- Elevates 3D building and prop footprints with 3.5m foundation skirts.
+- Preserves full semantic metadata (OSM names, IDs, tags) on all mesh data blocks.
+- Exports to [`godot_project/assets/osm2world_baked.glb`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/godot_project/assets/osm2world_baked.glb) in under 1 second (6.5 MB, replacing legacy `geometry.gltf` in Godot).
+- See [OSM2WORLD_MODEL_MANAGEMENT.md](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/docs/OSM2WORLD_MODEL_MANAGEMENT.md) for full architectural details.
 
