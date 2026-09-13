@@ -27,12 +27,7 @@ func _ready():
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	
-	# 3. Perform raycast snapping for building meshes
-	if geometry_node:
-		print("[ApplyShader] Snapping building meshes to terrain...")
-		_snap_meshes_recursive(geometry_node)
-		
-	# 4. Snap player or camera to terrain
+	# 3. Snap player or camera to terrain
 	if player_node:
 		print("[ApplyShader] Snapping Player to terrain...")
 		_snap_player(player_node)
@@ -40,16 +35,10 @@ func _ready():
 		print("[ApplyShader] Snapping Camera3D to terrain...")
 		_snap_camera(camera_node)
 		
-	# 5. Create colliders for building meshes (after snapping, to avoid self-intersection during raycasting)
+	# 4. Create colliders for baked building/city meshes
 	if geometry_node:
-		print("[ApplyShader] Creating collision shapes for building meshes...")
+		print("[ApplyShader] Creating collision shapes for city meshes...")
 		_create_colliders_recursive(geometry_node)
-		
-	# 6. Apply shaders
-	var shader = load("res://shaders/facade_pom.gdshader")
-	if shader and geometry_node:
-		print("[ApplyShader] Applying POM shader to facade meshes...")
-		_apply_shader_recursive(geometry_node, shader)
 
 func _is_transparent_or_textureless(node: Node) -> bool:
 	if not (node is MeshInstance3D):
