@@ -108,8 +108,11 @@ def bake_scene(args):
     import bpy
     import mathutils
 
-    DX = 34865.68
-    DY = -31820.16
+    # Exact geometric alignment centered at Parque Miguel Hidalgo (32.573229°N, -116.626536°W)
+    # Calibrated to the four corner nodes of the park in OSM2World:
+    # (n10105944274, n10105944272, n4691398444, n4691398449)
+    DX = 34952.30
+    DY = -31902.87
     MAX_R_SQ = args.radius * args.radius if args.radius > 0 else float("inf")
 
     # 1. Build terrain BVHTree
