@@ -7,30 +7,23 @@
 
 ## Category A: Coordinate System Gaps
 
-### A-1 🔴 Terrain-Reconstruction Coordinate Alignment Is Undefined
+### A-1 🟢 RESOLVED: Terrain-Reconstruction Coordinate Alignment Is Defined
 
-**What**: The terrain GLBs in `models/tecate/glb/` were generated from INEGI data and exported via an external toolchain. The reconstruction pipeline uses a local Cartesian system centered at Parque Hidalgo. There is **no documented or implemented coordinate transform** that aligns the terrain mesh with the procedural building geometry.
-
-**Evidence**: 
-- `tecate.md` states "Coordinate system preserved from original GeoJSON source" but does not specify what that implies in 3D
-- `blender_script.py` uses local coordinates directly as Blender world coordinates — terrain import procedure is not in this script
-- No alignment matrix, offset, or scale factor is stored anywhere in the codebase
-
-**Impact**: Without alignment, a Babylon.js or Three.js viewer cannot place the reconstructed buildings on the terrain surface. Buildings would float at Z=0 in an incorrect world position.
-
-**Unknown**: What 3D space does the terrain GLB use? Meters? What origin? Is Z up or Y up?
+**Resolution**: Reverse-engineered and verified in September 2026.
+- The terrain GLB mesh (`tecate.glb`) uses a Web Mercator projection centered around an extended facsimile bounding box (extending ~2.84 km NW to Donohue Mountain/Cerro Cuchumá).
+- The exact coordinate transform into Godot local space has scale $s = \cos(32.573229^\circ) \approx 0.84277856$ and translations $tx = 28057.9043$, $tz = 16614.8854$, precisely placing Parque Miguel Hidalgo at $(0, 0, 0)$.
+- The exact facsimile polygon was extracted as `godot_project/assets/tecate_facsimile_polygon.geojson`.
+- See [FACSIMILE_POLYGON_AND_ALIGNMENT.md](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/docs/FACSIMILE_POLYGON_AND_ALIGNMENT.md) for detailed mathematical transforms and analysis.
 
 ---
 
-### A-2 🟡 Z=0 Ground Plane vs Actual Terrain Elevation
+### A-2 🟢 RESOLVED: Terrain Elevation and Snapping Prebaking
 
-**What**: All building geometry is placed at `Z = 0` (ground plane). Real Tecate has terrain relief — the city center is at ~540m ASL, and the surrounding hills (Cerro Cuchumá) reach ~1,600m.
-
-**Evidence**: `blender_script.py` line 146: `z_base = 0.0` for all blocks.
-
-**Impact**: On flat terrain, this is fine. But if the terrain mesh reflects actual elevation, buildings would need to be snapped to the terrain surface at the correct elevation.
-
-**Unknown**: Is the terrain GLB normalized to Z=0 at city center, or does it use absolute elevation?
+**Resolution**: Implemented via offline prebaking script `scripts/bake_osm2world_terrain.py`.
+- Terrain elevation is resolved by raycasting down from $+2000\text{ m}$ onto the `tecate.glb` TIN mesh using Blender's `mathutils.bvhtree.BVHTree`.
+- Buildings and props are elevated rigidly by footprint centroid elevation with a downward foundation skirt of 3.5m to avoid gaps.
+- Road and path vertices are draped onto the terrain.
+- Prebaked asset exported to `godot_project/assets/osm2world_baked.glb` and integrated into Godot's `main.tscn`, removing the need for slow runtime raycasts.
 
 ---
 

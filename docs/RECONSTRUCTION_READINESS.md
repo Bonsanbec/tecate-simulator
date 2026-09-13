@@ -18,7 +18,7 @@
 | Blender 3D model | ✅ Available | `tecate_reconstruction.blend1` (autosave) |
 | glTF export | ✅ Available | `geometry.gltf` + `geometry.bin` |
 | Terrain base model | ✅ Available | 3 GLB variants in `models/tecate/glb/` |
-| Terrain-reconstruction alignment | ❌ Missing | No documented coordinate frame bridge |
+| Terrain-reconstruction alignment | ✅ Complete | Resolved via `bake_osm2world_terrain.py` & `tecate_facsimile_polygon.geojson` |
 | Temporal accuracy | ⚠️ Partial | ~80% 2009 panos, but some 2015–2025 leakage |
 | Building height accuracy | ⚠️ Estimated | Vision-estimated from roofline, not ground truth |
 | Complete city coverage | ⚠️ Partial | 159/4,239 blocks reconstructed (3.75%) |

@@ -291,13 +291,23 @@ TR = (poly[i+1][0], poly[i+1][1], z_base + height)  # (x, y, h)
 
 ---
 
-## 12. Terrain Model Coordinate System
+## 12. Terrain Model Coordinate System (Resolved)
 
-The terrain GLB models in `models/tecate/` were generated from INEGI data. From `tecate.md`:
+The terrain GLB models in `models/tecate/` and `godot_project/assets/tecate.glb` were generated from an extended geographic boundary. From `tecate.md`:
 
-> "INEGI municipal polygon dataset — Coordinate system preserved from original GeoJSON source"
+> "One polygon vertex was intentionally modified before mesh extraction. The original upper-left vertex of the INEGI polygon was displaced toward Donohue Mountain in order to include the complete silhouette of Cerro Cuchumá inside the rendered environment."
 
-The terrain models use the **INEGI GeoJSON coordinate system** (WGS84 lon/lat in GeoJSON convention). There is **no documented explicit coordinate alignment** between the terrain model and the pipeline's local Cartesian system — this constitutes a known gap (see UNKNOWNS_AND_GAPS.md).
+### Projection & Scale
+- The raw mesh coordinates $(px, py, pz)$ in `tecate.glb` are based on **Web Mercator (EPSG:3857)** centered at:
+  $$X_{\text{center}} = -12,949,516.38\text{ m}, \quad Y_{\text{center}} = 3,819,082.83\text{ m}$$
+- Because Web Mercator stretches coordinates by $1 / \cos(\text{lat})$, the Godot terrain node scales the model by:
+  $$s = 0.8427785648661434 \approx \cos(32.573229^\circ)$$
+- The Godot `Terrain` node transform bridges terrain raw mesh coordinates to local Cartesian ground meters:
+  $$X_{\text{godot}} = s \cdot px + 28057.9043$$
+  $$Z_{\text{godot}} = s \cdot pz + 16614.8854$$
+- This aligns the terrain surface to **Parque Miguel Hidalgo $(0, 0, 0)$** with sub-millimeter precision.
+
+For the full mathematical derivation and the extracted facsimile GeoJSON boundary (`godot_project/assets/tecate_facsimile_polygon.geojson`), see [FACSIMILE_POLYGON_AND_ALIGNMENT.md](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/docs/FACSIMILE_POLYGON_AND_ALIGNMENT.md).
 
 ---
 
@@ -332,3 +342,23 @@ R = [
 ```
 
 This rotates from world space into camera space around the Z-axis (vertical). It is a standard **rotation matrix for heading/bearing**, not a full 6DOF camera pose. Pitch and roll are assumed zero (camera level).
+
+---
+
+## 15. OSM2World Model Alignment & Offline Prebaking
+
+The external city model in `models/tecate/osm2world.blend` uses true ground metric coordinates centered at its regional bounding box.
+
+### Alignment to Local Simulator Origin
+Anchor points at the 4 corners of Parque Miguel Hidalgo in `osm2world.blend` average to centroid $(-34952.30, 31902.87)$. To map into the local Cartesian / Godot origin $(0,0,0)$:
+
+$$X_{\text{godot}} = X_{\text{osm}} + 34952.30$$
+$$Z_{\text{godot}} = -(Y_{\text{osm}} - 31902.87)$$
+
+### Prebaking Pipeline (`scripts/bake_osm2world_terrain.py`)
+- Reads `tecate.glb` TIN mesh into a `mathutils.bvhtree.BVHTree`.
+- Raycasts downwards onto the terrain to evaluate ground elevations.
+- Elevates building footprints rigidly and adds a 3.5m foundation skirt downwards to prevent gaps on sloped terrain.
+- Drapes linear networks (roads, paths) per-vertex onto the terrain.
+- Prebakes the result to `godot_project/assets/osm2world_baked.glb`, replacing `geometry.gltf` in Godot without requiring runtime raycasting.
+

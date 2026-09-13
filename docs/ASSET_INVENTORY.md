@@ -196,7 +196,7 @@ The `.blend` file contains:
 | Panorama cache | ✅ Substantial | 3,906 panoramas, ~80% from 2009 era |
 | Facade textures | ✅ Near-complete | 99.84% textured |
 | 3D Scene | ✅ Exported | 159 blocks in geometry.gltf |
-| Terrain-scene alignment | ❌ Not implemented | Coordinate frame bridging is missing |
+| Terrain-scene alignment | ✅ Complete | Resolved via `bake_osm2world_terrain.py` & `tecate_facsimile_polygon.geojson` |
 | Stereo/depth maps | ❌ Not present | No depth data or stereo output |
 | Orthophoto/DSM | ❌ Not present | No aerial or satellite imagery |
 | Temporal layering | ⚠️ Partial | Temporal filter exists but is not integrated into final output |
