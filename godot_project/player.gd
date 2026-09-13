@@ -124,6 +124,6 @@ func _physics_process(delta):
 		move_and_slide()
 	position_log_timer += delta
 
-	if position_log_timer >= 1.0:
+	if position_log_timer >= 10.0:
 		print("Player position: ", global_position)
 		position_log_timer = 0.0
