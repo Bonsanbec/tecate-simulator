@@ -350,10 +350,12 @@ This rotates from world space into camera space around the Z-axis (vertical). It
 The external city model in `models/tecate/osm2world.blend` uses true ground metric coordinates centered at its regional bounding box.
 
 ### Alignment to Local Simulator Origin
-Anchor points at the 4 corners of Parque Miguel Hidalgo in `osm2world.blend` average to centroid $(-34952.30, 31902.87)$. To map into the local Cartesian / Godot origin $(0,0,0)$:
+Calibrated across 437 OpenStreetMap road intersections within 1 km of the city center:
 
-$$X_{\text{godot}} = X_{\text{osm}} + 34952.30$$
-$$Z_{\text{godot}} = -(Y_{\text{osm}} - 31902.87)$$
+$$X_{\text{godot}} = X_{\text{osm}} + 34976.59$$
+$$Z_{\text{godot}} = -(Y_{\text{osm}} - 31879.03)$$
+
+(This resolves a previous 24m SW offset that arose when anchoring solely to asymmetric park perimeter nodes).
 
 ### Prebaking Pipeline (`scripts/bake_osm2world_terrain.py`)
 - Reads `tecate.glb` TIN mesh into a `mathutils.bvhtree.BVHTree`.

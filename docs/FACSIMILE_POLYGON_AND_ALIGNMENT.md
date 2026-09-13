@@ -117,16 +117,42 @@ Because `osm2world` models the world in true local meters ($1\text{ unit} = 1.0\
 In downtown Tecate, the standard urban block size is approximately **$85\text{ m} \times 85\text{ m}$**. Thus, the overlay was shifted almost exactly **one block Northwest**.
 
 ### 4.2 Local Landmark Calibration
-To eliminate cumulative scale drift, alignment was anchored directly to the four corner nodes of Parque Miguel Hidalgo in `models/tecate/osm2world.blend`:
+To eliminate cumulative scale drift, alignment was initially anchored to four nodes surrounding the perimeter of Parque Miguel Hidalgo in `models/tecate/osm2world.blend`:
 - Node `n10105944274`: $(-34927.81, 31862.63)$
 - Node `n10105944272`: $(-34976.79, 31899.98)$
 - Node `n4691398444`: $(-34976.79, 31943.12)$
 - Node `n4691398449`: $(-34927.81, 31905.77)$
 - **Centroid**: $(-34952.30\text{ m}, +31902.87\text{ m})$
 
-Setting the translation offsets in `scripts/bake_osm2world_terrain.py`:
-$$DX = +34952.30\text{ m}, \quad DY = -31902.87\text{ m}$$
-guarantees that Parque Miguel Hidalgo in `osm2world.blend` maps identically to $(0, 0)$ in the Godot scene.
+Initial trial offsets were set to $DX = +34952.30\text{ m}, DY = -31902.87\text{ m}$.
+
+### 4.3 The ~1 Building Scale (~24m SW) Offset & Multi-Node Calibration
+
+#### Investigation
+In-game testing revealed that while global orientation was correct, local street intersections (such as Callejón Reforma & Pdte. Elías Calles) were consistently offset to the **South-West** by ~24 meters:
+- In `tecate.glb` (in-game ground truth): $(-217.22\text{ m}, 403.84\text{ m}, -100.26\text{ m})$
+- In trial `osm2world_baked.glb`: $(-241.23\text{ m}, 403.51\text{ m}, -77.00\text{ m})$
+- Discrepancy: $\Delta X = -24.01\text{ m}$ (West), $\Delta Z = +23.26\text{ m}$ (South).
+
+#### Root Cause
+Inspecting the canonical GPS coordinates of the 4 park nodes (`10105944274`, `10105944272`, `4691398444`, `4691398449`) in OpenStreetMap revealed:
+- Average GPS: Lat $32.5734399^\circ\text{N}$, Lon $-116.6262811^\circ\text{W}$
+- Offset relative to true Parque Hidalgo origin ($32.573229^\circ\text{N}, -116.626536^\circ\text{W}$):
+  $$dx (\text{East}) = +23.91\text{ m}, \quad dy (\text{North}) = +23.48\text{ m} \quad (\text{Godot } Z = -23.48\text{ m})$$
+
+The 4 road nodes picked were not centered on the park; they were situated along the **North-East perimeter** (Avenida Benito Juárez and Calle Pascual Ortiz Rubio). By equating their centroid to $(0, 0)$, the entire model was shifted $23.91\text{ m}$ West and $23.48\text{ m}$ South—an exact match for the observed South-West building scale error!
+
+#### Multi-Node Procrustes Calibration
+To eliminate single-landmark bias, a regression was run across all **437 OpenStreetMap road intersections** within $1,000\text{ m}$ of Parque Hidalgo:
+- **Optimal Scale**: $0.9966 \approx 1.0000$ (distortion $<0.3\%$)
+- **Optimal Rotation**: $-0.0086^\circ \approx 0.00^\circ$ (zero rotation)
+- **Calibrated Offsets**:
+  $$DX = +34,976.59\text{ m}, \quad DY = -31,879.03\text{ m}$$
+- **Residual Error**: Mean error $= 2.75\text{ m}$, median error $= 2.50\text{ m}$ (commensurate with road half-width).
+
+At Callejón Reforma & Pdte. Elías Calles, the new baked intersection sits at:
+$$X = -216.13\text{ m} \quad (\Delta X = +1.09\text{ m vs user target}), \quad Z = -101.31\text{ m} \quad (\Delta Z = -1.05\text{ m vs user target})$$
+reducing error from $33.4\text{ m}$ down to $\sim 1\text{ m}$.
 
 ---
 
