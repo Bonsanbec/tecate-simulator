@@ -358,12 +358,12 @@ $$Z_{\text{godot}} = -(Y_{\text{osm}} - 31879.03)$$
 (This resolves a previous 24m SW offset that arose when anchoring solely to asymmetric park perimeter nodes).
 
 ### Working Copy Blend & Prebaking Pipeline
-- Authoritative working copy: [`godot_project/assets/osm2world_adjusted.blend`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/godot_project/assets/osm2world_adjusted.blend) (with convenience symlink `osm2world_adjusted.blend` in workspace root).
+- Authoritative working copy: [`blender_assets/osm2world_adjusted.blend`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/blender_assets/osm2world_adjusted.blend) (with convenience symlink `osm2world_adjusted.blend` in workspace root).
 - Generated via [`scripts/create_adjusted_blend.py`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/scripts/create_adjusted_blend.py).
 - 22 flat surface categories (roads, junctions, rails, water surfaces) purged to eliminate 85% draw-call overhead and ground texture Z-fighting.
 - Elevates 3D building and prop footprints with 3.5m foundation skirts.
 - Preserves full semantic metadata (OSM names, IDs, tags) on all mesh data blocks.
-- Exports to [`godot_project/assets/osm2world_baked.glb`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/godot_project/assets/osm2world_baked.glb) in under 1 second (6.5 MB, replacing legacy `geometry.gltf` in Godot).
+- Exports to [`godot_project/assets/osm2world_baked.glb`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/godot_project/assets/osm2world_baked.glb) in under 1 second (replacing legacy `geometry.gltf` in Godot).
 - See [OSM2WORLD_MODEL_MANAGEMENT.md](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/docs/OSM2WORLD_MODEL_MANAGEMENT.md) for full architectural details.
 
 ---
@@ -386,5 +386,17 @@ For full documentation on:
 2. Discarding 100% of the terrain to isolate player modifications via `src/minecraft_pipeline/importer.py`,
 3. The zero-risk preservation and audit behavior of the Ledger SQLite plugin (`ledger.db`),
 see [RECONCILIATION_AND_LEDGER_PLAN.md](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/docs/minecraft_pipeline/RECONCILIATION_AND_LEDGER_PLAN.md).
+
+---
+
+## 17. Continuous Vector GIS Layers & Hash-Cached Bake Pipeline
+
+To eliminate Godot 4.x headless import errors caused by placing `.blend` files inside `res://assets/`, the authoring and runtime environments are decoupled:
+- **Authoring Layer (`blender_assets/*.blend`)**: Contains individual working copies for `osm2world`, `roadways`, `railways`, `waterways`, `bridges`, and `manzanas`.
+- **Runtime Layer (`godot_project/assets/*_baked.glb`)**: Pure glTF 2.0 binaries consumed by Godot without any runtime Blender dependency.
+- **Hash-Cached Auto-Baking ([`scripts/bake_pipeline.py`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/scripts/bake_pipeline.py))**: Tracks SHA-256 signatures in `blender_assets/.bake_manifest.json`, completing zero-change checks across all 6 layers in **0.06 seconds**.
+- **Preservation of Natural Mountain Textures**: Manzana lot platforms and road ribbons are generated strictly for developed urban parcels. Mountains and rural expanses (Cerro Cuchumá, Donohoe Mountain) remain 100% uncovered, preserving the high-resolution aerial photograph [`tecate_groundTexture.png`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/godot_project/assets/tecate_groundTexture.png) on `tinMesh`.
+- See [MODULAR_GIS_LAYERS_AND_BAKE_PIPELINE.md](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/docs/MODULAR_GIS_LAYERS_AND_BAKE_PIPELINE.md) for full documentation.
+
 
 

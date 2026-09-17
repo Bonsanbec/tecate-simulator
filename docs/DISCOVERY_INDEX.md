@@ -18,6 +18,8 @@
 | F | [CODEBASE_ANALYSIS.md](./CODEBASE_ANALYSIS.md) | Module APIs, design patterns, known bugs, algorithmic choices |
 | G | [RECONSTRUCTION_READINESS.md](./RECONSTRUCTION_READINESS.md) | What is operational, data quality assessment, limitations |
 | H | [UNKNOWNS_AND_GAPS.md](./UNKNOWNS_AND_GAPS.md) | All unknowns, gaps, and open questions (21 items, severity-graded) |
+| I | [OSM2WORLD_MODEL_MANAGEMENT.md](./OSM2WORLD_MODEL_MANAGEMENT.md) | Authoritative 3D structures, 22 flat categories purged, 3.5m foundation skirts |
+| J | [MODULAR_GIS_LAYERS_AND_BAKE_PIPELINE.md](./MODULAR_GIS_LAYERS_AND_BAKE_PIPELINE.md) | Modular GIS layers (Waterways, Railways, Bridges, Roadways, Manzanas) & SHA-256 hash bake pipeline |
 
 ---
 
