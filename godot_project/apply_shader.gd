@@ -64,10 +64,14 @@ func _is_transparent_or_textureless(node: Node) -> bool:
 		return false
 		
 	var name = node.name
+	# Billboard trees and forests without alpha channel (rhomboids in the sky)
+	if name.begins_with("Tree_") or name.begins_with("Forest_"):
+		return true
+
 	# Roofs are textureless and should not be rendered
 	if name.begins_with("roof_") or name.begins_with("roofs_"):
 		return true
-		
+
 	# Explicitly untextured meshes
 	if name.contains("untextured"):
 		return true

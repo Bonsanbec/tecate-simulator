@@ -33,7 +33,7 @@ def parse_args():
         argv = argv[1:]
 
     parser = argparse.ArgumentParser(description="Prebake OSM2World alignment and elevation onto Tecate terrain.")
-    parser.add_argument("--blend-path", default="models/tecate/osm2world.blend", help="Input OSM2World blend file")
+    parser.add_argument("--blend-path", default="blender_assets/osm2world_adjusted.blend", help="Input OSM2World blend file")
     parser.add_argument("--terrain-glb", default="godot_project/assets/tecate.glb", help="Input terrain GLB file")
     parser.add_argument("--output-glb", default="godot_project/assets/osm2world_baked.glb", help="Output baked GLB file")
     parser.add_argument("--radius", type=float, default=3000.0, help="Culling radius in meters from Parque Hidalgo (-1 for all)")
@@ -147,10 +147,9 @@ def bake_scene(args):
     rigid_count = 0
     continuous_count = 0
     culled_count = 0
-
     for obj in mesh_objects:
-        # Purge default Blender startup items if any
-        if obj.name in ("Cube", "Camera", "Light"):
+        # Purge default Blender startup items or unshaded billboard trees/forests
+        if obj.name in ("Cube", "Camera", "Light") or obj.name.startswith("Tree_") or obj.name.startswith("Forest_"):
             objects_to_delete.append(obj)
             continue
 

@@ -970,6 +970,7 @@ out geom;
             else:
                 target = bridge_ways if curr_is_bridge else road_ways
                 target.append({
+                    "way_id": el["id"],
                     "nodes": curr_nodes,
                     "pts": curr_pts,
                     "style": curr_style,
@@ -984,6 +985,7 @@ out geom;
 
         target = bridge_ways if curr_is_bridge else road_ways
         target.append({
+            "way_id": el["id"],
             "nodes": curr_nodes,
             "pts": curr_pts,
             "style": curr_style,
@@ -1092,6 +1094,15 @@ def generate_bridges(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network=
         pts = b_way["pts"]
         if len(pts) < 2:
             continue
+
+        way_id = b_way.get("way_id")
+        # Standalone bridge ways 1229759737 and 1229759758 are directly integrated as exterior sidewalks
+        # of the Blvd Universidad dual bridges (51794560 & 51794561), so skip rendering them independently:
+        if way_id in (1229759737, 1229759758):
+            continue
+
+        is_blvd_univ = way_id in (51794560, 51794561)
+
         poly_2d = [(p["x"], p["y"]) for p in pts]
         style = b_way["style"] or resolve_road_properties("", "residential")
         width = style.get("width", 8.0)
@@ -1112,8 +1123,8 @@ def generate_bridges(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network=
         if total_len < 1.0:
             continue
 
-        z_start_ground = get_terrain_z(bvh, poly_2d[0][0], poly_2d[0][1]) + (0.25 if is_ped else 0.15)
-        z_end_ground = get_terrain_z(bvh, poly_2d[-1][0], poly_2d[-1][1]) + (0.25 if is_ped else 0.15)
+        z_start_ground = get_terrain_z(bvh, poly_2d[0][0], poly_2d[0][1]) + (0.28 if is_ped else 0.18)
+        z_end_ground = get_terrain_z(bvh, poly_2d[-1][0], poly_2d[-1][1]) + (0.28 if is_ped else 0.18)
 
         elev_target = 3.5 if total_len > 30.0 else 1.8
         ramp_len = min(14.0, total_len / 3.0)
@@ -1128,12 +1139,12 @@ def generate_bridges(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network=
                 u = s / ramp_len
                 ease = u * u * (3.0 - 2.0 * u)
                 z = (1.0 - ease) * z_start_ground + ease * z_target
-                return max(z, z_g + (0.25 if is_ped else 0.15))
+                return max(z, z_g + (0.28 if is_ped else 0.18))
             elif not end_internal and s > (total_len - ramp_len):
                 u = (total_len - s) / ramp_len
                 ease = u * u * (3.0 - 2.0 * u)
                 z = (1.0 - ease) * z_end_ground + ease * z_target
-                return max(z, z_g + (0.25 if is_ped else 0.15))
+                return max(z, z_g + (0.28 if is_ped else 0.18))
             else:
                 return max(z_target, z_g + 1.2)
 
@@ -1142,37 +1153,45 @@ def generate_bridges(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network=
             dx = poly_2d[1][0] - poly_2d[0][0]
             dy = poly_2d[1][1] - poly_2d[0][1]
             dist = math.hypot(dx, dy) or 1.0
-            nx = -dy / dist * (half_w + 0.3)
-            ny =  dx / dist * (half_w + 0.3)
+            unx = -dy / dist
+            uny =  dx / dist
+
+            if is_blvd_univ:
+                w_left = 5.6   # exterior sidewalk edge (-un)
+                w_right = 3.8  # median edge (+un)
+            else:
+                w_left = half_w + 0.3
+                w_right = half_w + 0.3
+
             p0 = poly_2d[0]
             z0 = z_start_ground
             v_ab = len(verts)
-            verts.append((p0[0] - nx, p0[1] - ny, z0))
-            verts.append((p0[0] + nx, p0[1] + ny, z0))
-            verts.append((p0[0] + nx, p0[1] + ny, z0 - 3.0))
-            verts.append((p0[0] - nx, p0[1] - ny, z0 - 3.0))
+            verts.append((p0[0] - unx * w_left,  p0[1] - uny * w_left,  z0))
+            verts.append((p0[0] + unx * w_right, p0[1] + uny * w_right, z0))
+            verts.append((p0[0] + unx * w_right, p0[1] + uny * w_right, z0 - 3.0))
+            verts.append((p0[0] - unx * w_left,  p0[1] - uny * w_left,  z0 - 3.0))
             faces.append((v_ab, v_ab + 1, v_ab + 2))
             faces.append((v_ab, v_ab + 2, v_ab + 3))
             mat_indices.extend([1, 1])
 
             # Flared concrete wingwalls (+1.2m outward)
-            fw_x = -dy / dist * (half_w + 1.2)
-            fw_y =  dx / dist * (half_w + 1.2)
+            fw_left = w_left + 1.2
+            fw_right = w_right + 1.2
             # Left wingwall
             v_ww1 = len(verts)
-            verts.append((p0[0] - nx, p0[1] - ny, z0))
-            verts.append((p0[0] - fw_x, p0[1] - fw_y, z0 - 0.5))
-            verts.append((p0[0] - fw_x, p0[1] - fw_y, z0 - 3.0))
-            verts.append((p0[0] - nx, p0[1] - ny, z0 - 3.0))
+            verts.append((p0[0] - unx * w_left,  p0[1] - uny * w_left,  z0))
+            verts.append((p0[0] - unx * fw_left, p0[1] - uny * fw_left, z0 - 0.5))
+            verts.append((p0[0] - unx * fw_left, p0[1] - uny * fw_left, z0 - 3.0))
+            verts.append((p0[0] - unx * w_left,  p0[1] - uny * w_left,  z0 - 3.0))
             faces.append((v_ww1, v_ww1 + 1, v_ww1 + 2))
             faces.append((v_ww1, v_ww1 + 2, v_ww1 + 3))
             mat_indices.extend([1, 1])
             # Right wingwall
             v_ww2 = len(verts)
-            verts.append((p0[0] + nx, p0[1] + ny, z0))
-            verts.append((p0[0] + fw_x, p0[1] + fw_y, z0 - 0.5))
-            verts.append((p0[0] + fw_x, p0[1] + fw_y, z0 - 3.0))
-            verts.append((p0[0] + nx, p0[1] + ny, z0 - 3.0))
+            verts.append((p0[0] + unx * w_right,  p0[1] + uny * w_right,  z0))
+            verts.append((p0[0] + unx * fw_right, p0[1] + uny * fw_right, z0 - 0.5))
+            verts.append((p0[0] + unx * fw_right, p0[1] + uny * fw_right, z0 - 3.0))
+            verts.append((p0[0] + unx * w_right,  p0[1] + uny * w_right,  z0 - 3.0))
             faces.append((v_ww2, v_ww2 + 1, v_ww2 + 2))
             faces.append((v_ww2, v_ww2 + 2, v_ww2 + 3))
             mat_indices.extend([1, 1])
@@ -1182,37 +1201,45 @@ def generate_bridges(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network=
             dx = poly_2d[-1][0] - poly_2d[-2][0]
             dy = poly_2d[-1][1] - poly_2d[-2][1]
             dist = math.hypot(dx, dy) or 1.0
-            nx = -dy / dist * (half_w + 0.3)
-            ny =  dx / dist * (half_w + 0.3)
+            unx = -dy / dist
+            uny =  dx / dist
+
+            if is_blvd_univ:
+                w_left = 5.6
+                w_right = 3.8
+            else:
+                w_left = half_w + 0.3
+                w_right = half_w + 0.3
+
             pn = poly_2d[-1]
             zn = z_end_ground
             v_ab = len(verts)
-            verts.append((pn[0] - nx, pn[1] - ny, zn))
-            verts.append((pn[0] + nx, pn[1] + ny, zn))
-            verts.append((pn[0] + nx, pn[1] + ny, zn - 3.0))
-            verts.append((pn[0] - nx, pn[1] - ny, zn - 3.0))
+            verts.append((pn[0] - unx * w_left,  pn[1] - uny * w_left,  zn))
+            verts.append((pn[0] + unx * w_right, pn[1] + uny * w_right, zn))
+            verts.append((pn[0] + unx * w_right, pn[1] + uny * w_right, zn - 3.0))
+            verts.append((pn[0] - unx * w_left,  pn[1] - uny * w_left,  zn - 3.0))
             faces.append((v_ab, v_ab + 1, v_ab + 2))
             faces.append((v_ab, v_ab + 2, v_ab + 3))
             mat_indices.extend([1, 1])
 
             # Flared concrete wingwalls (+1.2m outward)
-            fw_x = -dy / dist * (half_w + 1.2)
-            fw_y =  dx / dist * (half_w + 1.2)
+            fw_left = w_left + 1.2
+            fw_right = w_right + 1.2
             # Left wingwall
             v_ww1 = len(verts)
-            verts.append((pn[0] - nx, pn[1] - ny, zn))
-            verts.append((pn[0] - fw_x, pn[1] - fw_y, zn - 0.5))
-            verts.append((pn[0] - fw_x, pn[1] - fw_y, zn - 3.0))
-            verts.append((pn[0] - nx, pn[1] - ny, zn - 3.0))
+            verts.append((pn[0] - unx * w_left,  pn[1] - uny * w_left,  zn))
+            verts.append((pn[0] - unx * fw_left, pn[1] - uny * fw_left, zn - 0.5))
+            verts.append((pn[0] - unx * fw_left, pn[1] - uny * fw_left, zn - 3.0))
+            verts.append((pn[0] - unx * w_left,  pn[1] - uny * w_left,  zn - 3.0))
             faces.append((v_ww1, v_ww1 + 1, v_ww1 + 2))
             faces.append((v_ww1, v_ww1 + 2, v_ww1 + 3))
             mat_indices.extend([1, 1])
             # Right wingwall
             v_ww2 = len(verts)
-            verts.append((pn[0] + nx, pn[1] + ny, zn))
-            verts.append((pn[0] + fw_x, pn[1] + fw_y, zn - 0.5))
-            verts.append((pn[0] + fw_x, pn[1] + fw_y, zn - 3.0))
-            verts.append((pn[0] + nx, pn[1] + ny, zn - 3.0))
+            verts.append((pn[0] + unx * w_right,  pn[1] + uny * w_right,  zn))
+            verts.append((pn[0] + unx * fw_right, pn[1] + uny * fw_right, zn - 0.5))
+            verts.append((pn[0] + unx * fw_right, pn[1] + uny * fw_right, zn - 3.0))
+            verts.append((pn[0] + unx * w_right,  pn[1] + uny * w_right,  zn - 3.0))
             faces.append((v_ww2, v_ww2 + 1, v_ww2 + 2))
             faces.append((v_ww2, v_ww2 + 2, v_ww2 + 3))
             mat_indices.extend([1, 1])
@@ -1227,9 +1254,6 @@ def generate_bridges(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network=
             seg_len = seg_lens[i]
             if seg_len < 0.1:
                 continue
-
-            nx = -dy / seg_len * half_w
-            ny =  dx / seg_len * half_w
 
             steps = max(1, int(math.ceil(seg_len / 3.0)))
             for s_idx in range(steps):
@@ -1247,90 +1271,204 @@ def generate_bridges(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network=
                 z1 = calc_deck_z(dist_a, sp1_x, sp1_y)
                 z2 = calc_deck_z(dist_b, sp2_x, sp2_y)
 
-                # 1. Deck surface (Pedestrian deck uses M_BridgeConcrete slot 1, vehicular uses M_BridgeDeck slot 0)
-                deck_slot = 1 if is_ped else 0
-                soffit_depth = 0.35 if is_ped else 0.80
+                unx = -dy / seg_len
+                uny =  dx / seg_len
 
-                v_d = len(verts)
-                verts.append((sp1_x - nx, sp1_y - ny, z1))
-                verts.append((sp1_x + nx, sp1_y + ny, z1))
-                verts.append((sp2_x + nx, sp2_y + ny, z2))
-                verts.append((sp2_x - nx, sp2_y - ny, z2))
+                if is_blvd_univ:
+                    # Specialized Boulevard Universidad bridge cross section:
+                    # - 2-lane road deck (-3.8m to +3.8m)
+                    # - Exterior sidewalk deck (-3.8m to -5.6m, +0.15m curb step)
+                    # - Exterior railing at -5.6m (+1.1m)
+                    # - Median parapet at +3.8m (+1.1m) facing center river gap
+                    soffit_depth = 0.80
 
-                # Soffit (bottom of box girder)
-                verts.append((sp1_x - nx, sp1_y - ny, z1 - soffit_depth))
-                verts.append((sp1_x + nx, sp1_y + ny, z1 - soffit_depth))
-                verts.append((sp2_x + nx, sp2_y + ny, z2 - soffit_depth))
-                verts.append((sp2_x - nx, sp2_y - ny, z2 - soffit_depth))
+                    r1_ext_x, r1_ext_y = sp1_x - unx * 3.8, sp1_y - uny * 3.8
+                    r1_med_x, r1_med_y = sp1_x + unx * 3.8, sp1_y + uny * 3.8
+                    r2_ext_x, r2_ext_y = sp2_x - unx * 3.8, sp2_y - uny * 3.8
+                    r2_med_x, r2_med_y = sp2_x + unx * 3.8, sp2_y + uny * 3.8
 
-                # Deck face
-                faces.append((v_d, v_d + 1, v_d + 2))
-                faces.append((v_d, v_d + 2, v_d + 3))
-                mat_indices.extend([deck_slot, deck_slot])
+                    sw1_out_x, sw1_out_y = sp1_x - unx * 5.6, sp1_y - uny * 5.6
+                    sw2_out_x, sw2_out_y = sp2_x - unx * 5.6, sp2_y - uny * 5.6
 
-                # Soffit face
-                faces.append((v_d + 4, v_d + 6, v_d + 5))
-                faces.append((v_d + 4, v_d + 7, v_d + 6))
-                mat_indices.extend([1, 1])
+                    # Road deck surface
+                    v_d = len(verts)
+                    verts.append((r1_ext_x, r1_ext_y, z1))
+                    verts.append((r1_med_x, r1_med_y, z1))
+                    verts.append((r2_med_x, r2_med_y, z2))
+                    verts.append((r2_ext_x, r2_ext_y, z2))
+                    faces.append((v_d, v_d + 1, v_d + 2))
+                    faces.append((v_d, v_d + 2, v_d + 3))
+                    mat_indices.extend([0, 0]) # M_BridgeDeck (asphalt)
 
-                # Girder sides
-                faces.append((v_d, v_d + 3, v_d + 7))
-                faces.append((v_d, v_d + 7, v_d + 4))
-                faces.append((v_d + 1, v_d + 5, v_d + 6))
-                faces.append((v_d + 1, v_d + 6, v_d + 2))
-                mat_indices.extend([1, 1, 1, 1])
-
-                # 2. Side parapets / railings (+1.1m)
-                v_p = len(verts)
-                verts.append((sp1_x - nx, sp1_y - ny, z1 + 1.1))
-                verts.append((sp2_x - nx, sp2_y - ny, z2 + 1.1))
-                verts.append((sp1_x + nx, sp1_y + ny, z1 + 1.1))
-                verts.append((sp2_x + nx, sp2_y + ny, z2 + 1.1))
-
-                faces.append((v_d, v_p, v_p + 1))
-                faces.append((v_d, v_p + 1, v_d + 3))
-                faces.append((v_d + 1, v_d + 2, v_p + 3))
-                faces.append((v_d + 1, v_p + 3, v_p + 2))
-                mat_indices.extend([1, 1, 1, 1])
-
-                # 3. Center road marking on deck (ONLY on vehicular bridges)
-                if not is_ped:
-                    is_marking_on = (int(math.floor(dist_a)) % 4 < 2) if marking_type != "highway" else True
-                    if is_marking_on:
-                        cw = 0.12 if marking_type == "calle" else 0.18
+                    # Center road marking (white dashed)
+                    if (int(math.floor(dist_a)) % 4 < 2):
+                        cw = 0.12
                         v_m = len(verts)
-                        verts.append((sp1_x - nx / half_w * cw, sp1_y - ny / half_w * cw, z1 + 0.005))
-                        verts.append((sp1_x + nx / half_w * cw, sp1_y + ny / half_w * cw, z1 + 0.005))
-                        verts.append((sp2_x + nx / half_w * cw, sp2_y + ny / half_w * cw, z2 + 0.005))
-                        verts.append((sp2_x - nx / half_w * cw, sp2_y - ny / half_w * cw, z2 + 0.005))
+                        verts.append((sp1_x - unx * cw, sp1_y - uny * cw, z1 + 0.005))
+                        verts.append((sp1_x + unx * cw, sp1_y + uny * cw, z1 + 0.005))
+                        verts.append((sp2_x + unx * cw, sp2_y + uny * cw, z2 + 0.005))
+                        verts.append((sp2_x - unx * cw, sp2_y - uny * cw, z2 + 0.005))
                         faces.append((v_m, v_m + 1, v_m + 2))
                         faces.append((v_m, v_m + 2, v_m + 3))
-                        m_slot = 3 if marking_type == "calle" else 2
-                        mat_indices.extend([m_slot, m_slot])
+                        mat_indices.extend([3, 3]) # M_RoadMarkingWhite
 
-                # 4. Pillars placed every 12m where clearance > 1.4m
-                mid_d = (dist_a + dist_b) / 2.0
-                if ramp_len < mid_d < (total_len - ramp_len) and (int(mid_d) % 12 < 3) and (s_idx == 0):
-                    mid_x = (sp1_x + sp2_x) / 2.0
-                    mid_y = (sp1_y + sp2_y) / 2.0
-                    deck_z = (z1 + z2) / 2.0
-                    g_z = get_terrain_z(bvh, mid_x, mid_y)
-                    if (deck_z - soffit_depth - g_z) > 1.4:
-                        pw = 0.4 if is_ped else 0.6
-                        v_pil = len(verts)
-                        verts.append((mid_x - pw, mid_y - pw, g_z - 0.5))
-                        verts.append((mid_x + pw, mid_y - pw, g_z - 0.5))
-                        verts.append((mid_x + pw, mid_y + pw, g_z - 0.5))
-                        verts.append((mid_x - pw, mid_y + pw, g_z - 0.5))
-                        verts.append((mid_x - pw, mid_y - pw, deck_z - soffit_depth))
-                        verts.append((mid_x + pw, mid_y - pw, deck_z - soffit_depth))
-                        verts.append((mid_x + pw, mid_y + pw, deck_z - soffit_depth))
-                        verts.append((mid_x - pw, mid_y + pw, deck_z - soffit_depth))
-                        for f_idx in range(4):
-                            next_f = (f_idx + 1) % 4
-                            faces.append((v_pil + f_idx, v_pil + next_f, v_pil + 4 + next_f))
-                            faces.append((v_pil + f_idx, v_pil + 4 + next_f, v_pil + 4 + f_idx))
-                            mat_indices.extend([1, 1])
+                    # Curb face & Sidewalk top surface
+                    v_sw = len(verts)
+                    verts.append((r1_ext_x, r1_ext_y, z1))             # 0
+                    verts.append((r1_ext_x, r1_ext_y, z1 + 0.15))      # 1
+                    verts.append((r2_ext_x, r2_ext_y, z2 + 0.15))      # 2
+                    verts.append((r2_ext_x, r2_ext_y, z2))             # 3
+                    faces.append((v_sw, v_sw + 1, v_sw + 2))
+                    faces.append((v_sw, v_sw + 2, v_sw + 3))
+                    mat_indices.extend([1, 1])
+
+                    verts.append((sw1_out_x, sw1_out_y, z1 + 0.15))    # 4
+                    verts.append((sw2_out_x, sw2_out_y, z2 + 0.15))    # 5
+                    faces.append((v_sw + 1, v_sw + 4, v_sw + 5))
+                    faces.append((v_sw + 1, v_sw + 5, v_sw + 2))
+                    mat_indices.extend([1, 1])
+
+                    # Exterior pedestrian railing
+                    v_pr = len(verts)
+                    verts.append((sw1_out_x, sw1_out_y, z1 + 0.15 + 1.1)) # 0
+                    verts.append((sw2_out_x, sw2_out_y, z2 + 0.15 + 1.1)) # 1
+                    faces.append((v_sw + 4, v_pr, v_pr + 1))
+                    faces.append((v_sw + 4, v_pr + 1, v_sw + 5))
+                    mat_indices.extend([1, 1])
+
+                    # Median barrier / parapet facing center gap
+                    v_mb = len(verts)
+                    verts.append((r1_med_x, r1_med_y, z1 + 1.1))       # 0
+                    verts.append((r2_med_x, r2_med_y, z2 + 1.1))       # 1
+                    faces.append((v_d + 1, v_d + 2, v_mb + 1))
+                    faces.append((v_d + 1, v_mb + 1, v_mb))
+                    mat_indices.extend([1, 1])
+
+                    # Soffit underside (spanning full width -5.6m to +3.8m)
+                    v_sof = len(verts)
+                    verts.append((sw1_out_x, sw1_out_y, z1 - soffit_depth)) # 0
+                    verts.append((r1_med_x,  r1_med_y,  z1 - soffit_depth)) # 1
+                    verts.append((r2_med_x,  r2_med_y,  z2 - soffit_depth)) # 2
+                    verts.append((sw2_out_x, sw2_out_y, z2 - soffit_depth)) # 3
+                    faces.append((v_sof, v_sof + 2, v_sof + 1))
+                    faces.append((v_sof, v_sof + 3, v_sof + 2))
+                    mat_indices.extend([1, 1])
+
+                    # Girder sides
+                    faces.append((v_sw + 4, v_sof, v_sof + 3))
+                    faces.append((v_sw + 4, v_sof + 3, v_sw + 5))
+                    faces.append((v_d + 1, v_sof + 1, v_sof + 2))
+                    faces.append((v_d + 1, v_sof + 2, v_d + 2))
+                    mat_indices.extend([1, 1, 1, 1])
+
+                    # Pillars
+                    mid_d = (dist_a + dist_b) / 2.0
+                    if ramp_len < mid_d < (total_len - ramp_len) and (int(mid_d) % 12 < 3) and (s_idx == 0):
+                        mid_x = (sp1_x + sp2_x) / 2.0
+                        mid_y = (sp1_y + sp2_y) / 2.0
+                        deck_z = (z1 + z2) / 2.0
+                        g_z = get_terrain_z(bvh, mid_x, mid_y)
+                        if (deck_z - soffit_depth - g_z) > 1.4:
+                            pw = 0.6
+                            v_pil = len(verts)
+                            verts.append((mid_x - pw, mid_y - pw, g_z - 0.5))
+                            verts.append((mid_x + pw, mid_y - pw, g_z - 0.5))
+                            verts.append((mid_x + pw, mid_y + pw, g_z - 0.5))
+                            verts.append((mid_x - pw, mid_y + pw, g_z - 0.5))
+                            verts.append((mid_x - pw, mid_y - pw, deck_z - soffit_depth))
+                            verts.append((mid_x + pw, mid_y - pw, deck_z - soffit_depth))
+                            verts.append((mid_x + pw, mid_y + pw, deck_z - soffit_depth))
+                            verts.append((mid_x - pw, mid_y + pw, deck_z - soffit_depth))
+                            for f_idx in range(4):
+                                next_f = (f_idx + 1) % 4
+                                faces.append((v_pil + f_idx, v_pil + next_f, v_pil + 4 + next_f))
+                                faces.append((v_pil + f_idx, v_pil + 4 + next_f, v_pil + 4 + f_idx))
+                                mat_indices.extend([1, 1])
+
+                else:
+                    # Standard symmetric box-girder bridge
+                    nx = unx * half_w
+                    ny = uny * half_w
+
+                    deck_slot = 1 if is_ped else 0
+                    soffit_depth = 0.35 if is_ped else 0.80
+
+                    v_d = len(verts)
+                    verts.append((sp1_x - nx, sp1_y - ny, z1))
+                    verts.append((sp1_x + nx, sp1_y + ny, z1))
+                    verts.append((sp2_x + nx, sp2_y + ny, z2))
+                    verts.append((sp2_x - nx, sp2_y - ny, z2))
+
+                    verts.append((sp1_x - nx, sp1_y - ny, z1 - soffit_depth))
+                    verts.append((sp1_x + nx, sp1_y + ny, z1 - soffit_depth))
+                    verts.append((sp2_x + nx, sp2_y + ny, z2 - soffit_depth))
+                    verts.append((sp2_x - nx, sp2_y - ny, z2 - soffit_depth))
+
+                    faces.append((v_d, v_d + 1, v_d + 2))
+                    faces.append((v_d, v_d + 2, v_d + 3))
+                    mat_indices.extend([deck_slot, deck_slot])
+
+                    faces.append((v_d + 4, v_d + 6, v_d + 5))
+                    faces.append((v_d + 4, v_d + 7, v_d + 6))
+                    mat_indices.extend([1, 1])
+
+                    faces.append((v_d, v_d + 3, v_d + 7))
+                    faces.append((v_d, v_d + 7, v_d + 4))
+                    faces.append((v_d + 1, v_d + 5, v_d + 6))
+                    faces.append((v_d + 1, v_d + 6, v_d + 2))
+                    mat_indices.extend([1, 1, 1, 1])
+
+                    # Side parapets
+                    v_p = len(verts)
+                    verts.append((sp1_x - nx, sp1_y - ny, z1 + 1.1))
+                    verts.append((sp2_x - nx, sp2_y - ny, z2 + 1.1))
+                    verts.append((sp1_x + nx, sp1_y + ny, z1 + 1.1))
+                    verts.append((sp2_x + nx, sp2_y + ny, z2 + 1.1))
+
+                    faces.append((v_d, v_p, v_p + 1))
+                    faces.append((v_d, v_p + 1, v_d + 3))
+                    faces.append((v_d + 1, v_d + 2, v_p + 3))
+                    faces.append((v_d + 1, v_p + 3, v_p + 2))
+                    mat_indices.extend([1, 1, 1, 1])
+
+                    # Center road marking (vehicular only)
+                    if not is_ped:
+                        is_marking_on = (int(math.floor(dist_a)) % 4 < 2) if marking_type != "highway" else True
+                        if is_marking_on:
+                            cw = 0.12 if marking_type == "calle" else 0.18
+                            v_m = len(verts)
+                            verts.append((sp1_x - nx / half_w * cw, sp1_y - ny / half_w * cw, z1 + 0.005))
+                            verts.append((sp1_x + nx / half_w * cw, sp1_y + ny / half_w * cw, z1 + 0.005))
+                            verts.append((sp2_x + nx / half_w * cw, sp2_y + ny / half_w * cw, z2 + 0.005))
+                            verts.append((sp2_x - nx / half_w * cw, sp2_y - ny / half_w * cw, z2 + 0.005))
+                            faces.append((v_m, v_m + 1, v_m + 2))
+                            faces.append((v_m, v_m + 2, v_m + 3))
+                            m_slot = 3 if marking_type == "calle" else 2
+                            mat_indices.extend([m_slot, m_slot])
+
+                    # Pillars
+                    mid_d = (dist_a + dist_b) / 2.0
+                    if ramp_len < mid_d < (total_len - ramp_len) and (int(mid_d) % 12 < 3) and (s_idx == 0):
+                        mid_x = (sp1_x + sp2_x) / 2.0
+                        mid_y = (sp1_y + sp2_y) / 2.0
+                        deck_z = (z1 + z2) / 2.0
+                        g_z = get_terrain_z(bvh, mid_x, mid_y)
+                        if (deck_z - soffit_depth - g_z) > 1.4:
+                            pw = 0.4 if is_ped else 0.6
+                            v_pil = len(verts)
+                            verts.append((mid_x - pw, mid_y - pw, g_z - 0.5))
+                            verts.append((mid_x + pw, mid_y - pw, g_z - 0.5))
+                            verts.append((mid_x + pw, mid_y + pw, g_z - 0.5))
+                            verts.append((mid_x - pw, mid_y + pw, g_z - 0.5))
+                            verts.append((mid_x - pw, mid_y - pw, deck_z - soffit_depth))
+                            verts.append((mid_x + pw, mid_y - pw, deck_z - soffit_depth))
+                            verts.append((mid_x + pw, mid_y + pw, deck_z - soffit_depth))
+                            verts.append((mid_x - pw, mid_y + pw, deck_z - soffit_depth))
+                            for f_idx in range(4):
+                                next_f = (f_idx + 1) % 4
+                                faces.append((v_pil + f_idx, v_pil + next_f, v_pil + 4 + next_f))
+                                faces.append((v_pil + f_idx, v_pil + 4 + next_f, v_pil + 4 + f_idx))
+                                mat_indices.extend([1, 1])
 
             cum_len += seg_len
 
@@ -1450,16 +1588,16 @@ def generate_roadways(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network
 
         if is_ped:
             base_slot = 3  # M_CurbConcrete / sidewalk concrete
-            elev_top = 0.25
+            elev_top = 0.28
         elif is_rural:
             base_slot = 2  # M_RuralGravel
             elev_top = 0.12
         elif marking_type == "boulevard":
             base_slot = 1  # M_AsphaltClean
-            elev_top = 0.15
+            elev_top = 0.18
         else:
             base_slot = 0  # M_Asphalt
-            elev_top = 0.15
+            elev_top = 0.18
 
         seg_lens = []
         total_len = 0.0
@@ -1562,10 +1700,10 @@ def generate_roadways(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network
                 faces.append((v_sk_r, v_sk_r + 2, v_sk_r + 3))
                 mat_indices.extend([base_slot, base_slot])
 
-                # ── 2. CONCRETE CURBS (+0.25m platform curb edge, 10cm lip above asphalt) ──
+                # ── 2. CONCRETE CURBS (+0.28m platform curb edge, 10cm lip above asphalt) ──
                 if not is_rural and not is_ped and width >= 6.0:
                     curb_w = 0.25
-                    curb_elev = 0.25
+                    curb_elev = 0.28
                     # Left curb top
                     v_lc = len(verts)
                     in_l1_x, in_l1_y = sp1_x - nx * (half_w - curb_w), sp1_y - ny * (half_w - curb_w)
@@ -1592,7 +1730,7 @@ def generate_roadways(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network
 
                 # ── 3. MINECRAFT TAXONOMY ROAD MARKINGS ──
                 if not is_rural and not is_ped and not is_near_inter:
-                    def add_ribbon(d_start, d_end, slot, z_bias=0.155):
+                    def add_ribbon(d_start, d_end, slot, z_bias=0.185):
                         vx_1a, vy_1a = sp1_x + nx * d_start, sp1_y + ny * d_start
                         vx_1b, vy_1b = sp1_x + nx * d_end,   sp1_y + ny * d_end
                         vx_2b, vy_2b = sp2_x + nx * d_end,   sp2_y + ny * d_end
@@ -1677,11 +1815,54 @@ def generate_roadways(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network
 # 7. Layer Generator 5: Manzanas & Urban Lots (Delaunay Conformal Platforms)
 # ─────────────────────────────────────────────────────────────────────────────
 
+def shrink_polygon_2d(poly, d=3.8):
+    """
+    Shrinks a 2D planar polygon inwards by distance d (meters) using vertex normal bisectors.
+    Prevents city blocks from encroaching on roadways, curbs, or sidewalks.
+    """
+    pts = list(poly)
+    if pts[0] == pts[-1]:
+        pts = pts[:-1]
+    N = len(pts)
+    if N < 3:
+        return []
+    area = 0.5 * sum(pts[i][0]*pts[(i+1)%N][1] - pts[(i+1)%N][0]*pts[i][1] for i in range(N))
+    if area < 0:
+        pts.reverse()
+        area = -area
+    new_pts = []
+    for i in range(N):
+        curr_v = pts[i]
+        prev_v = pts[(i - 1) % N]
+        next_v = pts[(i + 1) % N]
+        e1_x, e1_y = curr_v[0] - prev_v[0], curr_v[1] - prev_v[1]
+        e2_x, e2_y = next_v[0] - curr_v[0], next_v[1] - curr_v[1]
+        len1, len2 = math.hypot(e1_x, e1_y), math.hypot(e2_x, e2_y)
+        if len1 < 1e-4 or len2 < 1e-4:
+            new_pts.append(curr_v)
+            continue
+        n1_x, n1_y = -e1_y / len1, e1_x / len1
+        n2_x, n2_y = -e2_y / len2, e2_x / len2
+        bx, by = n1_x + n2_x, n1_y + n2_y
+        b_len = math.hypot(bx, by)
+        if b_len < 1e-4:
+            bx, by = n1_x, n1_y
+        else:
+            bx /= b_len
+            by /= b_len
+        cos_t = max(0.2, bx * n1_x + by * n1_y)
+        offset_dist = min(d / cos_t, d * 2.5)
+        new_pts.append((curr_v[0] + offset_dist * bx, curr_v[1] + offset_dist * by))
+    new_area = 0.5 * abs(sum(new_pts[i][0]*new_pts[(i+1)%N][1] - new_pts[(i+1)%N][0]*new_pts[i][1] for i in range(N)))
+    if new_area < 25.0 or new_area >= area:
+        return []
+    return new_pts
+
 def generate_manzanas(bvh, cache_dir, out_blend, out_glb, bbox):
     import bpy
     import mathutils
 
-    print("\n" + "="*70 + "\nGENERATING URBAN MANZANAS LAYER (6M DELAUNAY DRAPING & MOUNTAIN PRESERVATION)\n" + "="*70)
+    print("\n" + "="*70 + "\nGENERATING URBAN MANZANAS LAYER (INSET FILLERS, LANDUSE SOVEREIGNTY & MOUNTAIN PRESERVATION)\n" + "="*70)
     bpy.ops.wm.read_homefile(use_empty=True)
 
     min_lat, min_lon, max_lat, max_lon = bbox
@@ -1735,11 +1916,26 @@ out geom;
         tags = el.get("tags", {})
         is_green = tags.get("leisure") in ["park", "pitch", "garden"] or tags.get("landuse") in ["cemetery", "forest", "grass"]
         mat_slot = 1 if is_green else 0
-        polygon_candidates.append({"poly": poly_2d, "slot": mat_slot, "area": area})
+        polygon_candidates.append({"poly": poly_2d, "slot": mat_slot, "area": area, "is_landuse": True})
 
     print(f"[Manzanas] Loaded {len(polygon_candidates)} OSM landuse/leisure polygons.")
 
-    # ── 2. Road Network Planar Cycles (True City Blocks / Manzanas as in Minecraft pipeline) ──
+    # Spatial bounding boxes of landuse polygons for rapid O(1) collision testing
+    landuse_boxes = []
+    for cand in polygon_candidates:
+        lp = cand["poly"]
+        xs = [p[0] for p in lp]
+        ys = [p[1] for p in lp]
+        landuse_boxes.append((min(xs), max(xs), min(ys), max(ys), lp))
+
+    def is_point_in_landuse(px, py):
+        for b_min_x, b_max_x, b_min_y, b_max_y, lp in landuse_boxes:
+            if b_min_x <= px <= b_max_x and b_min_y <= py <= b_max_y:
+                if point_in_poly(px, py, lp):
+                    return True
+        return False
+
+    # ── 2. Road Network Planar Cycles (True City Blocks / Manzanas as Inset Fillers) ──
     road_cache_path = os.path.join(cache_dir, "road_osm.json")
     if os.path.exists(road_cache_path):
         with open(road_cache_path, "r", encoding="utf-8") as f:
@@ -1761,7 +1957,6 @@ out geom;
                 adj.setdefault(u, set()).add(v)
                 adj.setdefault(v, set()).add(u)
 
-        # Sort neighbors angularly
         sorted_neighbors = {}
         for u, nbrs in adj.items():
             ux, uy = node_coords[u]
@@ -1793,10 +1988,8 @@ out geom;
                 if len(loop) >= 4 and loop[0] == loop[-1]:
                     poly = [node_coords[n] for n in loop[:-1]]
                     signed_area = 0.5 * sum(poly[i][0]*poly[(i+1)%len(poly)][1] - poly[(i+1)%len(poly)][0]*poly[i][1] for i in range(len(poly)))
-                    # Interior planar faces in this traversal have signed_area < 0
                     if signed_area < 0:
                         abs_area = abs(signed_area)
-                        # Filter out huge polygons > 60,000 m2 (e.g. Cerro Cuchumá perimeter) and tiny artifacts < 50 m2
                         if 50.0 < abs_area < 60000.0:
                             xs = [p[0] for p in poly]
                             ys = [p[1] for p in poly]
@@ -1805,30 +1998,33 @@ out geom;
 
         print(f"[Manzanas] Extracted {len(cycle_blocks)} planar city block cycles from road network graph.")
 
-        # Avoid duplicates: add cycle blocks whose centroids are not inside an already classified OSM park/landuse
+        # Shrink city block cycles inwards by 3.8m to keep roadways and curbs completely free
         added_cycles = 0
         for cb in cycle_blocks:
             c_poly = cb["poly"]
-            cx = sum(p[0] for p in c_poly) / len(c_poly)
-            cy = sum(p[1] for p in c_poly) / len(c_poly)
-            is_inside_existing = any(point_in_poly(cx, cy, cand["poly"]) for cand in polygon_candidates)
-            if not is_inside_existing:
-                polygon_candidates.append(cb)
+            shrunk_poly = shrink_polygon_2d(c_poly, d=3.8)
+            if len(shrunk_poly) >= 3:
+                polygon_candidates.append({
+                    "poly": shrunk_poly,
+                    "slot": 0,
+                    "area": cb["area"],
+                    "is_landuse": False
+                })
                 added_cycles += 1
 
-        print(f"[Manzanas] Combined total: {len(polygon_candidates)} urban blocks and landuse platforms ({added_cycles} from road cycles).")
+        print(f"[Manzanas] Combined total: {len(polygon_candidates)} urban platforms ({added_cycles} shrunk filler blocks from road cycles).")
 
     # ── 3. Triangulation and Mesh Generation ──
     for cand in polygon_candidates:
         poly_2d = cand["poly"]
         mat_slot = cand["slot"]
+        is_landuse = cand.get("is_landuse", False)
 
         xs = [p[0] for p in poly_2d]
         ys = [p[1] for p in poly_2d]
         min_x, max_x = min(xs), max(xs)
         min_y, max_y = min(ys), max(ys)
 
-        # Delaunay grid points (6m) to hug terrain curves with 0 clipping
         pts = [mathutils.Vector((p[0], p[1])) for p in poly_2d]
         edges = [(i, (i + 1) % len(poly_2d)) for i in range(len(poly_2d))]
 
@@ -1841,6 +2037,9 @@ out geom;
             for j in range(y_steps):
                 gy = min_y + j * grid_step
                 if point_in_poly(gx, gy, poly_2d):
+                    # Filler behavior: city blocks do NOT overwrite existing OSM landuse (parks/schools)
+                    if not is_landuse and is_point_in_landuse(gx, gy):
+                        continue
                     grid_pts.append(mathutils.Vector((gx, gy)))
 
         all_pts = pts + grid_pts
@@ -1849,15 +2048,17 @@ out geom;
             out_pts, out_edges, out_faces, _, _, _ = res
 
             v_offset = len(verts)
-            # Elevation: +0.25m curb platform height (matching sidewalk level above asphalt)
+            # Elevation: +0.12m platform height (safely below +0.18m asphalt and +0.28m curb)
             for opt in out_pts:
-                pz = get_terrain_z(bvh, opt.x, opt.y) + 0.25
+                pz = get_terrain_z(bvh, opt.x, opt.y) + 0.12
                 verts.append((opt.x, opt.y, pz))
 
             for f in out_faces:
                 cx = (out_pts[f[0]].x + out_pts[f[1]].x + out_pts[f[2]].x) / 3.0
                 cy = (out_pts[f[0]].y + out_pts[f[1]].y + out_pts[f[2]].y) / 3.0
                 if point_in_poly(cx, cy, poly_2d):
+                    if not is_landuse and is_point_in_landuse(cx, cy):
+                        continue
                     faces.append((v_offset + f[0], v_offset + f[1], v_offset + f[2]))
                     mat_indices.append(mat_slot)
         except Exception:
@@ -1866,17 +2067,17 @@ out geom;
             tri_indices = mathutils.geometry.tessellate_polygon([poly_vectors])
             v_offset = len(verts)
             for px, py in poly_2d:
-                pz = get_terrain_z(bvh, px, py) + 0.25
+                pz = get_terrain_z(bvh, px, py) + 0.12
                 verts.append((px, py, pz))
             for tri in tri_indices:
                 faces.append((v_offset + tri[0], v_offset + tri[1], v_offset + tri[2]))
                 mat_indices.append(mat_slot)
 
-        # Perimeter vertical curb skirt down to -0.25m below terrain (50cm total thickness) to seal edges completely
+        # Perimeter vertical skirt down to -0.25m below terrain (37cm total thickness) to seal edges completely
         skirt_off = len(verts)
         for i, (px, py) in enumerate(poly_2d):
             pz = get_terrain_z(bvh, px, py)
-            verts.append((px, py, pz + 0.25))
+            verts.append((px, py, pz + 0.12))
             verts.append((px, py, pz - 0.25))
             if i > 0:
                 i0 = skirt_off + (i - 1) * 2
@@ -1904,7 +2105,7 @@ out geom;
     obj = bpy.data.objects.new("UrbanManzanas", m_mesh)
     bpy.context.collection.objects.link(obj)
 
-    print(f"[Manzanas] Created {len(faces):,} dense draped manzana triangles (+0.25m platform, -0.25m physical skirts, 0% clipping).")
+    print(f"[Manzanas] Created {len(faces):,} dense draped manzana triangles (+0.12m platform, -0.25m physical skirts, 0% clipping).")
     print("[Manzanas] Mountains and rural zones left 100% uncovered to preserve aerial photo.")
     bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(out_blend))
     print(f"[Manzanas] Saved working copy to: {out_blend}")
