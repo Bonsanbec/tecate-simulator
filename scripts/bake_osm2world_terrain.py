@@ -184,7 +184,17 @@ def bake_scene(args):
         if obj.data.users > 1:
             obj.data = obj.data.copy()
 
-        if is_rigid:
+        # Check if vertices are already draped on terrain (Z > 200m in Tecate)
+        is_already_draped = any(w.z > 200.0 for w in world_verts)
+
+        if is_already_draped:
+            for idx, v in enumerate(obj.data.vertices):
+                v.co = world_verts[idx]
+            if is_rigid:
+                rigid_count += 1
+            else:
+                continuous_count += 1
+        elif is_rigid:
             terrain_z = get_terrain_z(bvh, cx, cy)
             if terrain_z is None:
                 objects_to_delete.append(obj)

@@ -1957,8 +1957,20 @@ out geom;
                 adj.setdefault(u, set()).add(v)
                 adj.setdefault(v, set()).add(u)
 
+        # Prune dead-end street spurs (antennas / degree-1 nodes) so interior dead ends / cul-de-sacs
+        # do not break the enclosing planar face traversal of the city block
+        adj_cycles = {u: set(nbrs) for u, nbrs in adj.items()}
+        while True:
+            dead_ends = [u for u, nbrs in adj_cycles.items() if len(nbrs) <= 1]
+            if not dead_ends:
+                break
+            for u in dead_ends:
+                for v in list(adj_cycles[u]):
+                    adj_cycles[v].discard(u)
+                del adj_cycles[u]
+
         sorted_neighbors = {}
-        for u, nbrs in adj.items():
+        for u, nbrs in adj_cycles.items():
             ux, uy = node_coords[u]
             sorted_neighbors[u] = sorted(list(nbrs), key=lambda v: math.atan2(node_coords[v][1] - uy, node_coords[v][0] - ux))
 

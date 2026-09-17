@@ -133,12 +133,22 @@ def bake_single_glb(layer_name, blend_path, glb_path, blender_bin):
     t0 = time.time()
     os.makedirs(os.path.dirname(glb_path), exist_ok=True)
     
-    # Clean export command
+    # Clean export command (purging unshaded billboard trees/forests if osm2world)
+    if layer_name == "osm2world":
+        py_expr = (
+            "import bpy, os; "
+            "tree_objs = [o for o in bpy.data.objects if o.name.startswith('Tree') or o.name.startswith('Forest')]; "
+            "[bpy.data.objects.remove(o, do_unlink=True) for o in tree_objs]; "
+            f"bpy.ops.export_scene.gltf(filepath=r'{os.path.abspath(glb_path)}', export_format='GLB', export_apply=True, export_materials='EXPORT')"
+        )
+    else:
+        py_expr = f"import bpy; bpy.ops.export_scene.gltf(filepath=r'{os.path.abspath(glb_path)}', export_format='GLB', export_apply=True, export_materials='EXPORT')"
+
     cmd = [
         blender_bin,
         "-b", blend_path,
         "--python-expr",
-        f"import bpy; bpy.ops.export_scene.gltf(filepath=r'{os.path.abspath(glb_path)}', export_format='GLB', export_apply=True, export_materials='EXPORT')"
+        py_expr
     ]
     
     res = subprocess.run(cmd, capture_output=True, text=True)
