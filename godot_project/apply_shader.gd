@@ -18,16 +18,26 @@ func _ready():
 		print("[ApplyShader] Terrain node not found!")
 		return
 		
-	# 1. Create trimesh colliders for the terrain meshes
+	# 1. Hide legacy embedded low-poly road/water meshes inside terrain node
+	_hide_legacy_terrain_overlays(terrain_node)
+
+	# 2. Create trimesh colliders for the terrain meshes
 	print("[ApplyShader] Creating collision shapes for terrain meshes...")
 	_create_colliders_recursive(terrain_node)
+
+	# 3. Create colliders for bridges and roadways so player can walk on them
+	for layer_name in ["Bridges", "Roadways", "Manzanas"]:
+		var layer_node = get_node_or_null(layer_name)
+		if layer_node:
+			print("[ApplyShader] Creating collision shapes for layer: ", layer_name)
+			_create_colliders_recursive(layer_node)
 	
-	# 2. Await physics frames so colliders register in the physics world
+	# 4. Await physics frames so colliders register in the physics world
 	print("[ApplyShader] Waiting for physics server to synchronize...")
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	
-	# 3. Snap player or camera to terrain
+	# 5. Snap player or camera to terrain
 	if player_node:
 		print("[ApplyShader] Snapping Player to terrain...")
 		_snap_player(player_node)
@@ -35,10 +45,19 @@ func _ready():
 		print("[ApplyShader] Snapping Camera3D to terrain...")
 		_snap_camera(camera_node)
 		
-	# 4. Create colliders for baked building/city meshes
+	# 6. Create colliders for baked building/city meshes
 	if geometry_node:
 		print("[ApplyShader] Creating collision shapes for city meshes...")
 		_create_colliders_recursive(geometry_node)
+
+func _hide_legacy_terrain_overlays(node: Node):
+	if node is MeshInstance3D:
+		var n = node.name
+		if n.begins_with("__mergedRoads_") or n.begins_with("water_"):
+			node.visible = false
+	for child in node.get_children():
+		_hide_legacy_terrain_overlays(child)
+
 
 func _is_transparent_or_textureless(node: Node) -> bool:
 	if not (node is MeshInstance3D):
