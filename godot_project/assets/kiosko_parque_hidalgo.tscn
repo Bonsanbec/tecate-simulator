@@ -1,0 +1,99 @@
+[gd_scene load_steps=18 format=3 uid="uid://kiosko_parque_hidalgo_01"]
+
+[ext_resource type="PackedScene" path="res://assets/kiosko_parque_hidalgo.glb" id="1_mesh"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_base"]
+height = 1.2
+radius = 3.35
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_step_0"]
+size = Vector3(1.6, 0.17142857142857143, 0.32)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_step_1"]
+size = Vector3(1.6, 0.34285714285714286, 0.32)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_step_2"]
+size = Vector3(1.6, 0.5142857142857142, 0.32)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_step_3"]
+size = Vector3(1.6, 0.6857142857142857, 0.32)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_step_4"]
+size = Vector3(1.6, 0.8571428571428572, 0.32)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_step_5"]
+size = Vector3(1.6, 1.0285714285714285, 0.32)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_step_6"]
+size = Vector3(1.6, 1.2, 0.32)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_columna"]
+size = Vector3(0.50, 2.70, 0.50)
+
+[node name="Kiosko_Parque_Hidalgo" type="StaticBody3D"]
+
+[node name="Kiosko_Model" parent="." instance=ExtResource("1_mesh")]
+
+[node name="Collision_Base" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+shape = SubResource("CylinderShape3D_base")
+
+[node name="Collision_Step_0" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0857, 5.4300)
+shape = SubResource("BoxShape3D_step_0")
+
+[node name="Collision_Step_1" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1714, 5.1100)
+shape = SubResource("BoxShape3D_step_1")
+
+[node name="Collision_Step_2" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2571, 4.7900)
+shape = SubResource("BoxShape3D_step_2")
+
+[node name="Collision_Step_3" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3429, 4.4700)
+shape = SubResource("BoxShape3D_step_3")
+
+[node name="Collision_Step_4" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4286, 4.1500)
+shape = SubResource("BoxShape3D_step_4")
+
+[node name="Collision_Step_5" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5143, 3.8300)
+shape = SubResource("BoxShape3D_step_5")
+
+[node name="Collision_Step_6" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6000, 3.5100)
+shape = SubResource("BoxShape3D_step_6")
+
+[node name="Collision_Columna_0" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1672, 2.5500, 2.8178)
+shape = SubResource("BoxShape3D_columna")
+
+[node name="Collision_Columna_1" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1672, 2.5500, 2.8178)
+shape = SubResource("BoxShape3D_columna")
+
+[node name="Collision_Columna_2" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8178, 2.5500, 1.1672)
+shape = SubResource("BoxShape3D_columna")
+
+[node name="Collision_Columna_3" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8178, 2.5500, -1.1672)
+shape = SubResource("BoxShape3D_columna")
+
+[node name="Collision_Columna_4" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1672, 2.5500, -2.8178)
+shape = SubResource("BoxShape3D_columna")
+
+[node name="Collision_Columna_5" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1672, 2.5500, -2.8178)
+shape = SubResource("BoxShape3D_columna")
+
+[node name="Collision_Columna_6" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8178, 2.5500, -1.1672)
+shape = SubResource("BoxShape3D_columna")
+
+[node name="Collision_Columna_7" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8178, 2.5500, 1.1672)
+shape = SubResource("BoxShape3D_columna")
