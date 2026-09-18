@@ -34,7 +34,7 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description="Prebake OSM2World alignment and elevation onto Tecate terrain.")
     parser.add_argument("--blend-path", default="blender_assets/osm2world_adjusted.blend", help="Input OSM2World blend file")
-    parser.add_argument("--terrain-glb", default="godot_project/assets/tecate.glb", help="Input terrain GLB file")
+    parser.add_argument("--terrain-glb", default="godot_project/assets/tecate2.glb", help="Input terrain GLB file")
     parser.add_argument("--output-glb", default="godot_project/assets/osm2world_baked.glb", help="Output baked GLB file")
     parser.add_argument("--radius", type=float, default=3000.0, help="Culling radius in meters from Parque Hidalgo (-1 for all)")
     parser.add_argument("--road-z-offset", type=float, default=0.08, help="Z offset in meters for draped road surfaces")
@@ -59,7 +59,12 @@ def build_terrain_bvh(glb_path):
         f.read(8)
         binary_data = f.read()
 
-    mesh = gltf["meshes"][1]  # mesh 1 is tinMesh
+    tin_mesh_idx = 0
+    for node in gltf.get("nodes", []):
+        if node.get("name") == "tinMesh":
+            tin_mesh_idx = node.get("mesh", 0)
+            break
+    mesh = gltf["meshes"][tin_mesh_idx]  # tinMesh
     prim = mesh["primitives"][0]
     pos_idx = prim["attributes"]["POSITION"]
     ind_idx = prim["indices"]

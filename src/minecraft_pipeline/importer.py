@@ -508,7 +508,7 @@ def ensure_default_env(path=".env"):
         with open(path, 'w', encoding='utf-8') as f:
             f.write("# Minecraft Importer/Exporter Environment Configuration\n")
             f.write("IMPORT_JSON=export/reconstruction_export.json\n")
-            f.write("GLB_PATH=models/tecate/glb/tecate.glb\n")
+            f.write("GLB_PATH=models/tecate/glb/tecate2.glb\n")
             f.write("FRESH_WORLD=export/minecraft_world/TecateWorld\n")
             f.write(f"MODIFIED_WORLD={def_mod.replace('\\\\', '/')}\n")
             f.write("OUTPUT_DIR=export/minecraft_world\n")

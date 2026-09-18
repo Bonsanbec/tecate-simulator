@@ -10,7 +10,7 @@ class TerrainAligner:
     Computes the Procrustes Least Squares transformation (scale, rotation, translation)
     to align the terrain GLB mesh with the local Cartesian coordinates (Equirectangular relative to Parque Hidalgo).
     """
-    def __init__(self, geojson_path="reference/tecate-polygon.json", glb_path="models/tecate/glb/tecate.glb"):
+    def __init__(self, geojson_path="reference/tecate-polygon.json", glb_path="godot_project/assets/tecate2.glb"):
         self.geojson_path = geojson_path
         self.glb_path = glb_path
 
@@ -50,13 +50,19 @@ class TerrainAligner:
             json_bytes = f.read(chunk_length)
             gltf = json.loads(json_bytes.decode('utf-8'))
             
-            # Find clippedBottom mesh (index 3 or name matches clippedBottom)
+            # Find clippedBottom mesh
             clipped_bottom_mesh_idx = None
-            for idx, mesh in enumerate(gltf.get('meshes', [])):
-                node_name = gltf.get('nodes', [{}])[idx].get('name', '')
-                if node_name == 'clippedBottom' or idx == 3:
-                    clipped_bottom_mesh_idx = idx
+            for node in gltf.get('nodes', []):
+                if node.get('name') == 'clippedBottom':
+                    clipped_bottom_mesh_idx = node.get('mesh')
                     break
+            if clipped_bottom_mesh_idx is None:
+                for idx, mesh in enumerate(gltf.get('meshes', [])):
+                    if mesh.get('name') == 'clippedBottom':
+                        clipped_bottom_mesh_idx = idx
+                        break
+            if clipped_bottom_mesh_idx is None and len(gltf.get('meshes', [])) > 2:
+                clipped_bottom_mesh_idx = 2
                     
             if clipped_bottom_mesh_idx is None:
                 raise ValueError("Could not find 'clippedBottom' mesh in GLB")

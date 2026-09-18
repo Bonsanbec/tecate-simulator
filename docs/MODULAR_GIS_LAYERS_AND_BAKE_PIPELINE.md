@@ -14,7 +14,7 @@ Se consolidó:
 1. **Desacoplamiento Estructural Total:** Separación absoluta entre los archivos de trabajo de Blender (`blender_assets/`) y los binarios de ejecución en Godot (`godot_project/assets/`), eliminando la sobrecarga y los errores del importador headless de Godot 4.x.
 2. **Pipeline de Horneado Unificado con Hash-Caching ([`scripts/bake_pipeline.py`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/scripts/bake_pipeline.py)):** Verificación instantánea basada en hashes SHA-256 que solo invoca a Blender cuando un archivo `.blend` ha sido modificado o falta su binario `.glb`.
 3. **Jerarquía Vertical Estricta (Anti-Clipping y Cero Z-Fighting):**
-   - **Terreno Natural (`tecate.glb`):** $Z = 0.00\text{ m}$ (relieve base).
+   - **Terreno Natural (`tecate2.glb`):** $Z = 0.00\text{ m}$ (relieve base).
    - **Plataformas de Manzana / Lotes Urbanos:** $Z = Z_{\text{terreno}} + 0.12\text{ m}$ (faldones perimetrales sólidos hasta $-0.25\text{ m}$).
    - **Superficie de Rodamiento Asfáltica:** $Z = Z_{\text{terreno}} + 0.18\text{ m}$ (6 cm sobre la plataforma de manzana interior).
    - **Señalamiento Horizontal Vial:** $Z = Z_{\text{terreno}} + 0.185\text{ m}$ (5 mm de offset sobre el asfalto).
@@ -63,7 +63,7 @@ Se estableció una frontera física y lógica estricta:
 │  - waterways_baked.glb  (3.4 MB, Río Tecate)            │
 │  - bridges_baked.glb    (0.7 MB, 12K tris)              │
 │  - manzanas_baked.glb   (36.5 MB, 1,864 plataformas)    │
-│  - tecate.glb           (82 MB, relieve base)           │
+│  - tecate2.glb          (99 MB, relieve base)           │
 └─────────────────────────────────────────────────────────┘
 ```
 

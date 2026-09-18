@@ -68,7 +68,12 @@ def build_terrain_bvh(glb_path):
         f.read(8)
         binary_data = f.read()
 
-    tin_prim = gltf["meshes"][1]["primitives"][0]
+    tin_mesh_idx = 0
+    for node in gltf.get("nodes", []):
+        if node.get("name") == "tinMesh":
+            tin_mesh_idx = node.get("mesh", 0)
+            break
+    tin_prim = gltf["meshes"][tin_mesh_idx]["primitives"][0]
     pos_acc = gltf["accessors"][tin_prim["attributes"]["POSITION"]]
     pos_bv = gltf["bufferViews"][pos_acc["bufferView"]]
     pos_offset = pos_bv.get("byteOffset", 0) + pos_acc.get("byteOffset", 0)
@@ -2141,7 +2146,7 @@ def main():
     print("TECATE DIGITAL TWIN: GENERATING ALL MODULAR GIS 3D LAYERS")
     print("="*70)
 
-    terrain_glb = "godot_project/assets/tecate.glb"
+    terrain_glb = "godot_project/assets/tecate2.glb"
     cache_dir = "godot_project/assets/osm_cache"
     bbox = (32.5217, -116.6950, 32.5850, -116.5105)
 

@@ -32,7 +32,7 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description="Create pre-adjusted OSM2World blend file.")
     parser.add_argument("--blend-path", default="models/tecate/osm2world.blend", help="Input read-only blend file")
-    parser.add_argument("--terrain-glb", default="godot_project/assets/tecate.glb", help="Input terrain GLB file")
+    parser.add_argument("--terrain-glb", default="godot_project/assets/tecate2.glb", help="Input terrain GLB file")
     parser.add_argument("--output-blend", default="godot_project/assets/osm2world_adjusted.blend", help="Output adjusted blend file")
     parser.add_argument("--output-glb", default="godot_project/assets/osm2world_baked.glb", help="Output baked GLB file")
     parser.add_argument("--radius", type=float, default=-1.0, help="Culling radius in meters from Parque Hidalgo (-1 for all)")
@@ -58,8 +58,12 @@ def build_terrain_bvh(glb_path):
         f.read(8)
         binary_data = f.read()
 
-    # Find tinMesh primitive (index 1)
-    tin_mesh_idx = 1
+    # Find tinMesh primitive dynamically
+    tin_mesh_idx = 0
+    for node in gltf.get("nodes", []):
+        if node.get("name") == "tinMesh":
+            tin_mesh_idx = node.get("mesh", 0)
+            break
     tin_prim = gltf["meshes"][tin_mesh_idx]["primitives"][0]
     pos_acc = gltf["accessors"][tin_prim["attributes"]["POSITION"]]
     pos_bv = gltf["bufferViews"][pos_acc["bufferView"]]

@@ -1267,7 +1267,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     world_dir  = args.world_dir  or os.getenv("FRESH_WORLD")  or "export/minecraft_world/TecateWorld"
-    glb_path   = args.glb_path   or os.getenv("GLB_PATH")     or "models/tecate/glb/tecate.glb"
+    glb_path   = args.glb_path   or os.getenv("GLB_PATH")     or "models/tecate/glb/tecate2.glb"
     output_dir = args.output_dir or os.getenv("OUTPUT_DIR")   or "export/minecraft_world"
 
     if not os.path.exists(world_dir):

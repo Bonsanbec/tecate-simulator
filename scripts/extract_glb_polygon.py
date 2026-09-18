@@ -30,12 +30,11 @@ def extract_boundary_loop(glb_path: str) -> np.ndarray:
         f.read(8)
         binary_data = f.read()
 
-    # Find clippedBottom mesh (mesh index 3 or named clippedBottom)
-    clipped_idx = 3
-    for idx, mesh in enumerate(gltf.get("meshes", [])):
-        node_name = gltf.get("nodes", [{}])[idx].get("name", "")
-        if node_name == "clippedBottom":
-            clipped_idx = idx
+    # Find node named clippedBottom and get its mesh index
+    clipped_idx = 2
+    for node in gltf.get("nodes", []):
+        if node.get("name") == "clippedBottom":
+            clipped_idx = node.get("mesh", 2)
             break
 
     mesh = gltf["meshes"][clipped_idx]
@@ -154,7 +153,7 @@ def export_geojson(glb_path: str, output_path: str):
 
 def main():
     parser = argparse.ArgumentParser(description="Extract facsimile boundary GeoJSON from tecate.glb.")
-    parser.add_argument("--glb-path", default="godot_project/assets/tecate.glb", help="Path to terrain GLB")
+    parser.add_argument("--glb-path", default="godot_project/assets/tecate2.glb", help="Path to terrain GLB")
     parser.add_argument("--output-path", default="godot_project/assets/tecate_facsimile_polygon.geojson", help="Output GeoJSON path")
     args = parser.parse_args()
 

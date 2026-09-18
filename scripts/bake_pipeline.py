@@ -43,7 +43,7 @@ BLENDER_ASSETS_DIR = os.path.join(WORKSPACE_ROOT, "blender_assets")
 RUNTIME_ASSETS_DIR = os.path.join(WORKSPACE_ROOT, "godot_project", "assets")
 MANIFEST_PATH = os.path.join(BLENDER_ASSETS_DIR, ".bake_manifest.json")
 OSM_CACHE_DIR = os.path.join(RUNTIME_ASSETS_DIR, "osm_cache")
-TERRAIN_GLB = os.path.join(RUNTIME_ASSETS_DIR, "tecate.glb")
+TERRAIN_GLB = os.path.join(RUNTIME_ASSETS_DIR, "tecate2.glb")
 
 LAYERS = {
     "osm2world": {

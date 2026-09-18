@@ -430,8 +430,13 @@ def load_terrain_vertices(glb_path, s, tx, tz):
         chunk1_len, chunk1_type = struct.unpack('<II', chunk1_header)
         binary_data = f.read(chunk1_len)
         
-        # Mesh 1 is tinMesh (surface TIN)
-        mesh = gltf['meshes'][1]
+        # Find tinMesh dynamically
+        tin_mesh_idx = 0
+        for node in gltf.get("nodes", []):
+            if node.get("name") == "tinMesh":
+                tin_mesh_idx = node.get("mesh", 0)
+                break
+        mesh = gltf['meshes'][tin_mesh_idx]
         prim = mesh['primitives'][0]
         pos_idx = prim['attributes']['POSITION']
         
@@ -2930,7 +2935,7 @@ def ensure_default_env(path=".env"):
         with open(path, 'w', encoding='utf-8') as f:
             f.write("# Minecraft Importer/Exporter Environment Configuration\n")
             f.write("IMPORT_JSON=export/reconstruction_export.json\n")
-            f.write("GLB_PATH=models/tecate/glb/tecate.glb\n")
+            f.write("GLB_PATH=models/tecate/glb/tecate2.glb\n")
             f.write("FRESH_WORLD=export/minecraft_world/TecateWorld\n")
             f.write(f"MODIFIED_WORLD={def_mod.replace('\\\\', '/')}\n")
             f.write("OUTPUT_DIR=export/minecraft_world\n")
@@ -2965,7 +2970,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     import_json = args.import_json or os.getenv("IMPORT_JSON") or "export/reconstruction_export.json"
-    glb_path = args.glb_path or os.getenv("GLB_PATH") or "models/tecate/glb/tecate.glb"
+    glb_path = args.glb_path or os.getenv("GLB_PATH") or "models/tecate/glb/tecate2.glb"
     output_dir = args.output_dir or os.getenv("OUTPUT_DIR") or "export/minecraft_world"
     
     export_world(import_json, glb_path, output_dir, args.parallel)
