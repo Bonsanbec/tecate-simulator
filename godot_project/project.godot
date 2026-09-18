@@ -26,3 +26,7 @@ project/assembly_name="Tecate Simulator Facade MVP"
 
 textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.894118, 0.894118, 0.894118, 1)
+
+[debug]
+
+file_logging/enable_file_logging=false

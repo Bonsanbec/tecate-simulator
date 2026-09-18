@@ -21,16 +21,19 @@ func _ready():
 	# 1. Hide legacy embedded low-poly road/water meshes inside terrain node
 	_hide_legacy_terrain_overlays(terrain_node)
 
-	# 2. Create trimesh colliders for the terrain meshes
-	print("[ApplyShader] Creating collision shapes for terrain meshes...")
-	_create_colliders_recursive(terrain_node)
+	# 2. Create trimesh colliders ONLY for the actual walkable terrain surface (tinMesh)
+	print("[ApplyShader] Creating collision shapes for terrain surface...")
+	var tin_mesh = terrain_node.get_node_or_null("tinMesh")
+	if tin_mesh and tin_mesh is MeshInstance3D:
+		tin_mesh.create_trimesh_collision()
 
-	# 3. Create colliders for bridges and roadways so player can walk on them
-	for layer_name in ["Bridges", "Roadways", "Manzanas"]:
-		var layer_node = get_node_or_null(layer_name)
-		if layer_node:
-			print("[ApplyShader] Creating collision shapes for layer: ", layer_name)
-			_create_colliders_recursive(layer_node)
+	# 3. Create colliders for elevated structures (Bridges)
+	# Note: Roadways and Manzanas are visual decal overlays draped directly over tinMesh.
+	# Generating trimesh colliders for them creates overlapping inverted faces that trap the player.
+	var bridges_node = get_node_or_null("Bridges")
+	if bridges_node:
+		print("[ApplyShader] Creating collision shapes for Bridges...")
+		_create_visible_colliders_recursive(bridges_node)
 	
 	# 4. Await physics frames so colliders register in the physics world
 	print("[ApplyShader] Waiting for physics server to synchronize...")
@@ -45,10 +48,10 @@ func _ready():
 		print("[ApplyShader] Snapping Camera3D to terrain...")
 		_snap_camera(camera_node)
 		
-	# 6. Create colliders for baked building/city meshes
+	# 6. Create colliders for baked building meshes only (skipping sky powerlines, etc.)
 	if geometry_node:
-		print("[ApplyShader] Creating collision shapes for city meshes...")
-		_create_colliders_recursive(geometry_node)
+		print("[ApplyShader] Creating collision shapes for building meshes...")
+		_create_building_colliders_recursive(geometry_node)
 
 func _hide_legacy_terrain_overlays(node: Node):
 	if node is MeshInstance3D:
@@ -103,12 +106,19 @@ func _is_transparent_or_textureless(node: Node) -> bool:
 			
 	return false
 
-func _create_colliders_recursive(node: Node):
-	if node is MeshInstance3D:
+func _create_visible_colliders_recursive(node: Node):
+	if node is MeshInstance3D and node.visible:
 		if not _is_transparent_or_textureless(node):
 			node.create_trimesh_collision()
 	for child in node.get_children():
-		_create_colliders_recursive(child)
+		_create_visible_colliders_recursive(child)
+
+func _create_building_colliders_recursive(node: Node):
+	if node is MeshInstance3D and node.visible:
+		if node.name.begins_with("Building_") and not _is_transparent_or_textureless(node):
+			node.create_trimesh_collision()
+	for child in node.get_children():
+		_create_building_colliders_recursive(child)
 
 func _snap_meshes_recursive(node: Node):
 	if node is MeshInstance3D:
@@ -144,18 +154,20 @@ func _snap_camera(camera: Camera3D):
 
 func _snap_player(player: CharacterBody3D):
 	var pos = player.global_position
-	var height = _get_terrain_height(pos.x, pos.z)
+	var height = _get_terrain_height(pos.x, pos.z, [player.get_rid()])
 	if height != null:
-		player.global_position.y = height + 2.0
+		player.global_position.y = height + 0.1
 		print("[ApplyShader] Snapped Player to height: ", player.global_position.y)
 
-func _get_terrain_height(x: float, z: float):
+func _get_terrain_height(x: float, z: float, exclude_rids: Array = []):
 	var space_state = get_world_3d().direct_space_state
 	# Raycast from Y = 2000 down to Y = -2000
 	var query = PhysicsRayQueryParameters3D.create(
 		Vector3(x, 2000.0, z),
 		Vector3(x, -2000.0, z)
 	)
+	if not exclude_rids.is_empty():
+		query.exclude = exclude_rids
 	var result = space_state.intersect_ray(query)
 	if not result.is_empty():
 		return result.position.y
