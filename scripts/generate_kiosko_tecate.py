@@ -127,7 +127,7 @@ def create_materials():
         node_lad_alb.image = img_lad_alb
         links_l.new(node_lad_alb.outputs["Color"], bsdf_l.inputs["Base Color"])
     else:
-        bsdf_l.inputs["Base Color"].default_value = (0.46, 0.17, 0.09, 1.0)
+        bsdf_l.inputs["Base Color"].default_value = (0.35, 0.20, 0.13, 1.0)
 
     if os.path.exists(lad_rgh):
         img_lad_rgh = bpy.data.images.load(lad_rgh)
@@ -155,7 +155,7 @@ def create_materials():
     m_mortero = bpy.data.materials.new(name="M_Mortero_Gris")
     bsdf_m = m_mortero.node_tree.nodes.get("Principled BSDF")
     if bsdf_m:
-        bsdf_m.inputs["Base Color"].default_value = (0.75, 0.72, 0.67, 1.0)
+        bsdf_m.inputs["Base Color"].default_value = (0.22, 0.18, 0.15, 1.0)
         bsdf_m.inputs["Metallic"].default_value = 0.0
         bsdf_m.inputs["Roughness"].default_value = 0.95
     mats["M_Mortero_Gris"] = m_mortero
@@ -348,7 +348,7 @@ def build_octagonal_base(mats, col):
     # 5. Puerta de registro de servicio en cara lateral (-45°)
     door_w = 0.65
     door_h = 0.85
-    face_rot = Matrix.Rotation(math.radians(-45), 4, 'Z')
+    face_rot = Matrix.Rotation(math.radians(45), 4, 'Z')
     door_center = face_rot @ Vector((0.0, -OCT_APOTHEM, 0.15 + door_h / 2.0))
 
     d_res = bmesh.ops.create_cube(bm, size=1.0)
@@ -670,19 +670,18 @@ def build_columns(mats, col):
             for f in v.link_faces:
                 f.material_index = 1
 
-        # 2. Fuste de ladrillo artesanal siglo XIX (Z = 1.40 a 3.74 m, H = 2.34 m)
-        # 18 hiladas gruesas decimonónicas con mortero de cal
+        # 2. Fuste de ladrillo artesanal decimonónico (Z = 1.40 a 3.74 m, H = 2.34 m)
+        # 18 hiladas gruesas compactas sin bandas blancas ni separaciones pronunciadas (fiel a media_1789717720582.png)
         fuste_z_start = 1.40
         fuste_z_end = 3.74
         fuste_h = fuste_z_end - fuste_z_start
         num_courses = 18
         total_course_h = fuste_h / num_courses # ~0.13 m
-        brick_h = total_course_h * 0.80        # ~0.104 m
-        mortar_h = total_course_h * 0.20       # ~0.026 m
+        brick_h = total_course_h - 0.003       # Junta casi a tope con leve hendidura rústica (3 mm)
 
         for c in range(num_courses):
-            cz_brick = fuste_z_start + c * total_course_h + brick_h / 2.0
-            c_size = COLUMN_SIZE - (0.006 if c % 2 == 0 else 0.002)
+            cz_brick = fuste_z_start + c * total_course_h + total_course_h / 2.0
+            c_size = COLUMN_SIZE - (0.004 if c % 2 == 0 else 0.001)
             b_res = bmesh.ops.create_cube(bm, size=1.0)
             bmesh.ops.scale(bm, vec=Vector((c_size, c_size, brick_h)), verts=b_res['verts'])
             bmesh.ops.transform(bm, matrix=rot_mat, verts=b_res['verts'])
@@ -691,18 +690,10 @@ def build_columns(mats, col):
                 for f in v.link_faces:
                     f.material_index = 0
                     for loop in f.loops:
-                        loop[uv_layer].uv = Vector((loop.vert.co.x * 1.5, loop.vert.co.z * 1.5))
-
-            if c < num_courses - 1:
-                cz_mortar = fuste_z_start + (c + 1) * total_course_h - mortar_h / 2.0
-                m_size = COLUMN_SIZE - 0.015
-                m_res = bmesh.ops.create_cube(bm, size=1.0)
-                bmesh.ops.scale(bm, vec=Vector((m_size, m_size, mortar_h)), verts=m_res['verts'])
-                bmesh.ops.transform(bm, matrix=rot_mat, verts=m_res['verts'])
-                bmesh.ops.translate(bm, vec=col_pos + Vector((0, 0, cz_mortar)), verts=m_res['verts'])
-                for v in m_res['verts']:
-                    for f in v.link_faces:
-                        f.material_index = 4
+                        # Mapeo UV que rota y desplaza por hilada para romper uniformidad
+                        u_coord = (loop.vert.co.x + loop.vert.co.y) * 1.8 + (c * 0.15)
+                        v_coord = loop.vert.co.z * 1.2
+                        loop[uv_layer].uv = Vector((u_coord, v_coord))
 
         # 3. Capitel blanco ensanchado (Z = 3.74 a 3.92 m, ancho 0.58 m)
         c1_res = bmesh.ops.create_cube(bm, size=1.0)
