@@ -1,17 +1,18 @@
 """
 =============================================================================
 Generador 3D Paramétrico: Kiosco Octagonal Tradicional de Tecate, B.C.
-(Parque Miguel Hidalgo) - Versión de Alta Fidelidad
+(Parque Miguel Hidalgo) - Versión v2.0 (Fidelidad Milimétrica Completa)
 =============================================================================
 """
 
 import bpy
 import bmesh
 import math
+import os
 from mathutils import Vector, Matrix
 
 # =============================================================================
-# CONSTANTES Y COTAS ARQUITECTÓNICAS
+# CONSTANTES Y COTAS ARQUITECTÓNICAS (v2.0)
 # =============================================================================
 OCT_APOTHEM = 3.35         # Radio inscrito / apotema base (m)
 OCT_CIRCUM = OCT_APOTHEM / math.cos(math.pi / 8.0) # ~3.62624 m
@@ -28,17 +29,20 @@ COL_RADIUS = 3.05         # Radio radial de centros de columnas (m)
 PLINTH_SIZE = 0.55        # Lado de base cuadrada plinto (m)
 PLINTH_HEIGHT = 0.20      # Altura plinto (Z = 1.20 a 1.40 m)
 COLUMN_SIZE = 0.45        # Lado sección fuste ladrillo (m)
-COLUMN_HEIGHT = 2.50      # Altura fuste (Z = 1.40 a 3.90 m)
-CAPITAL_SIZE = 0.52       # Lado capitel blanco (m)
-CAPITAL_HEIGHT = 0.15     # Altura capitel (Z = 3.75 a 3.90 m)
+COLUMN_HEIGHT = 2.46      # Altura fuste (Z = 1.40 a 3.86 m)
+CAPITAL_SIZE = 0.58       # Lado capitel ensanchado v2.0 (m)
+CAPITAL_HEIGHT = 0.18     # Altura capitel (Z = 3.74 a 3.92 m)
 
-RING_R_OUT = 3.70         # Radio exterior anillo corona (Ø 7.40 m)
-RING_R_IN = 3.15          # Radio interior anillo corona (Ø 6.30 m)
-RING_Z_BOTTOM = 3.90      # Arranque anillo entablamento (m)
-RING_HEIGHT = 0.45        # Altura anillo (Z = 3.90 a 4.35 m)
+# Anillo de corona cilíndrico continuo (v2.0: más grueso y prominente)
+RING_R_OUT = 3.75         # Radio exterior tambor cilíndrico (Ø 7.50 m)
+RING_R_CORNICE = 3.85     # Radio volado cornisa superior anillo (Ø 7.70 m)
+RING_R_IN = 3.10          # Radio interior anillo (Ø 6.20 m)
+RING_Z_BOTTOM = 3.85      # Arranque anillo entablamento (m)
+RING_Z_TOP = 4.40         # Cota superior del anillo (m, H = 0.55 m)
 
-ROOF_R_BASE = 3.80        # Radio base cono cubierta (Ø 7.60 m)
-ROOF_Z_EAVE = 4.35        # Cota del alero volado (m)
+# Cubierta cónica circular aplanada con tejas 3D (v2.0)
+ROOF_R_BASE = 3.90        # Radio base cono cubierta (Ø 7.80 m)
+ROOF_Z_EAVE = 4.38        # Cota del alero volado (m)
 ROOF_Z_PEAK = 5.55        # Cota de la cúspide máxima (m)
 
 
@@ -55,89 +59,177 @@ def clean_scene():
 
 
 def create_materials():
+    """
+    Configura los materiales PBR integrando las texturas PBR generadas en godot_project/assets/textures/:
+    1. M_Piedra_Base: Mampostería de laja irregular tecatense con Albedo, Normal y Roughness.
+    2. M_Ladrillo_Pilar: Ladrillo cocido rojo terracota cálido con relieve.
+    3. M_Mortero_Gris: Cemento/cal clara para llagas y juntas.
+    4. M_Estuco_Blanco: Estuco blanco marfil cálido envejecido para anillo, capiteles y cornisa.
+    5. M_Herreria_Negra: Hierro forjado martillado anticorrosivo (Metallic 0.85, Roughness 0.45).
+    6. M_Teja_Terracota: Arcilla roja colonial cocida con Albedo, Normal de tejas y Roughness.
+    7. M_Piso_Cantera: Cantera beige claro con despiece regular y Normal map.
+    8. M_Vidrio_Farol: Vidrio ámbar cálido translúcido con sutil emisión.
+    """
     mats = {}
+    tex_dir = os.path.abspath("godot_project/assets/textures")
 
-    # 1. M_Piedra_Base: Cantería / laja irregular ocre con mortero gris
+    # 1. M_Piedra_Base con mapas PBR
     m_piedra = bpy.data.materials.new(name="M_Piedra_Base")
-    nodes = m_piedra.node_tree.nodes
-    bsdf = nodes.get("Principled BSDF")
-    if bsdf:
-        bsdf.inputs["Base Color"].default_value = (0.64, 0.52, 0.36, 1.0) # Tono laja ocre dorado tecatense
-        bsdf.inputs["Metallic"].default_value = 0.0
-        bsdf.inputs["Roughness"].default_value = 0.88
+    nodes_p = m_piedra.node_tree.nodes
+    links_p = m_piedra.node_tree.links
+    bsdf_p = nodes_p.get("Principled BSDF")
+
+    p_alb = os.path.join(tex_dir, "kiosko_laja_albedo.png")
+    p_nrm = os.path.join(tex_dir, "kiosko_laja_normal.png")
+    p_rgh = os.path.join(tex_dir, "kiosko_laja_roughness.png")
+
+    if os.path.exists(p_alb):
+        img_alb = bpy.data.images.load(p_alb)
+        node_alb = nodes_p.new("ShaderNodeTexImage")
+        node_alb.image = img_alb
+        links_p.new(node_alb.outputs["Color"], bsdf_p.inputs["Base Color"])
+    else:
+        bsdf_p.inputs["Base Color"].default_value = (0.64, 0.52, 0.36, 1.0)
+
+    if os.path.exists(p_rgh):
+        img_rgh = bpy.data.images.load(p_rgh)
+        img_rgh.colorspace_settings.name = "Non-Color"
+        node_rgh = nodes_p.new("ShaderNodeTexImage")
+        node_rgh.image = img_rgh
+        links_p.new(node_rgh.outputs["Color"], bsdf_p.inputs["Roughness"])
+    else:
+        bsdf_p.inputs["Roughness"].default_value = 0.88
+
+    if os.path.exists(p_nrm):
+        img_nrm = bpy.data.images.load(p_nrm)
+        img_nrm.colorspace_settings.name = "Non-Color"
+        node_nrm_tex = nodes_p.new("ShaderNodeTexImage")
+        node_nrm_tex.image = img_nrm
+        node_norm_map = nodes_p.new("ShaderNodeNormalMap")
+        node_norm_map.inputs["Strength"].default_value = 1.4
+        links_p.new(node_nrm_tex.outputs["Color"], node_norm_map.inputs["Color"])
+        links_p.new(node_norm_map.outputs["Normal"], bsdf_p.inputs["Normal"])
+
+    bsdf_p.inputs["Metallic"].default_value = 0.0
     mats["M_Piedra_Base"] = m_piedra
 
-    # 2. M_Ladrillo_Pilar: Ladrillo cocido terracota / óxido
+    # 2. M_Ladrillo_Pilar: Terracota cocido rojizo cálido tecatense
     m_ladrillo = bpy.data.materials.new(name="M_Ladrillo_Pilar")
-    nodes = m_ladrillo.node_tree.nodes
-    bsdf = nodes.get("Principled BSDF")
-    if bsdf:
-        bsdf.inputs["Base Color"].default_value = (0.62, 0.25, 0.15, 1.0) # Terracota rojizo cálido
-        bsdf.inputs["Metallic"].default_value = 0.0
-        bsdf.inputs["Roughness"].default_value = 0.80
+    bsdf_l = m_ladrillo.node_tree.nodes.get("Principled BSDF")
+    if bsdf_l:
+        bsdf_l.inputs["Base Color"].default_value = (0.48, 0.16, 0.08, 1.0) # Rojo ladrillo profundo
+        bsdf_l.inputs["Metallic"].default_value = 0.0
+        bsdf_l.inputs["Roughness"].default_value = 0.80
     mats["M_Ladrillo_Pilar"] = m_ladrillo
 
-    # 3. M_Mortero_Gris: Mortero gris claro para juntas de ladrillo y piedra
+    # 3. M_Mortero_Gris: Cemento/cal claro
     m_mortero = bpy.data.materials.new(name="M_Mortero_Gris")
-    nodes = m_mortero.node_tree.nodes
-    bsdf = nodes.get("Principled BSDF")
-    if bsdf:
-        bsdf.inputs["Base Color"].default_value = (0.76, 0.74, 0.70, 1.0) # Cemento / cal claro
-        bsdf.inputs["Metallic"].default_value = 0.0
-        bsdf.inputs["Roughness"].default_value = 0.92
+    bsdf_m = m_mortero.node_tree.nodes.get("Principled BSDF")
+    if bsdf_m:
+        bsdf_m.inputs["Base Color"].default_value = (0.82, 0.80, 0.76, 1.0)
+        bsdf_m.inputs["Metallic"].default_value = 0.0
+        bsdf_m.inputs["Roughness"].default_value = 0.92
     mats["M_Mortero_Gris"] = m_mortero
 
-    # 4. M_Estuco_Blanco: Estuco blanco marfil cálido / yeso
+    # 4. M_Estuco_Blanco: Estuco blanco marfil cálido / yeso colonial
     m_estuco = bpy.data.materials.new(name="M_Estuco_Blanco")
-    nodes = m_estuco.node_tree.nodes
-    bsdf = nodes.get("Principled BSDF")
-    if bsdf:
-        bsdf.inputs["Base Color"].default_value = (0.90, 0.89, 0.86, 1.0)
-        bsdf.inputs["Metallic"].default_value = 0.0
-        bsdf.inputs["Roughness"].default_value = 0.65
+    bsdf_e = m_estuco.node_tree.nodes.get("Principled BSDF")
+    if bsdf_e:
+        bsdf_e.inputs["Base Color"].default_value = (0.91, 0.90, 0.87, 1.0)
+        bsdf_e.inputs["Metallic"].default_value = 0.0
+        bsdf_e.inputs["Roughness"].default_value = 0.65
     mats["M_Estuco_Blanco"] = m_estuco
 
-    # 5. M_Herreria_Negra: Negro forja grafito anticorrosivo
+    # 5. M_Herreria_Negra: Hierro forjado martillado anticorrosivo
     m_hierro = bpy.data.materials.new(name="M_Herreria_Negra")
-    nodes = m_hierro.node_tree.nodes
-    bsdf = nodes.get("Principled BSDF")
-    if bsdf:
-        bsdf.inputs["Base Color"].default_value = (0.04, 0.04, 0.04, 1.0)
-        bsdf.inputs["Metallic"].default_value = 0.85
-        bsdf.inputs["Roughness"].default_value = 0.45
+    bsdf_h = m_hierro.node_tree.nodes.get("Principled BSDF")
+    if bsdf_h:
+        bsdf_h.inputs["Base Color"].default_value = (0.05, 0.05, 0.05, 1.0)
+        bsdf_h.inputs["Metallic"].default_value = 0.85
+        bsdf_h.inputs["Roughness"].default_value = 0.45
     mats["M_Herreria_Negra"] = m_hierro
 
-    # 6. M_Teja_Terracota: Arcilla cocida roja tradicional colonial
+    # 6. M_Teja_Terracota con mapas PBR
     m_teja = bpy.data.materials.new(name="M_Teja_Terracota")
-    nodes = m_teja.node_tree.nodes
-    bsdf = nodes.get("Principled BSDF")
-    if bsdf:
-        bsdf.inputs["Base Color"].default_value = (0.58, 0.23, 0.15, 1.0)
-        bsdf.inputs["Metallic"].default_value = 0.0
-        bsdf.inputs["Roughness"].default_value = 0.75
+    nodes_t = m_teja.node_tree.nodes
+    links_t = m_teja.node_tree.links
+    bsdf_t = nodes_t.get("Principled BSDF")
+
+    p_tj_alb = os.path.join(tex_dir, "kiosko_teja_albedo.png")
+    p_tj_nrm = os.path.join(tex_dir, "kiosko_teja_normal.png")
+    p_tj_rgh = os.path.join(tex_dir, "kiosko_teja_roughness.png")
+
+    if os.path.exists(p_tj_alb):
+        img_tj_alb = bpy.data.images.load(p_tj_alb)
+        node_talb = nodes_t.new("ShaderNodeTexImage")
+        node_talb.image = img_tj_alb
+        links_t.new(node_talb.outputs["Color"], bsdf_t.inputs["Base Color"])
+    else:
+        bsdf_t.inputs["Base Color"].default_value = (0.55, 0.20, 0.12, 1.0)
+
+    if os.path.exists(p_tj_rgh):
+        img_tj_rgh = bpy.data.images.load(p_tj_rgh)
+        img_tj_rgh.colorspace_settings.name = "Non-Color"
+        node_trgh = nodes_t.new("ShaderNodeTexImage")
+        node_trgh.image = img_tj_rgh
+        links_t.new(node_trgh.outputs["Color"], bsdf_t.inputs["Roughness"])
+    else:
+        bsdf_t.inputs["Roughness"].default_value = 0.78
+
+    if os.path.exists(p_tj_nrm):
+        img_tj_nrm = bpy.data.images.load(p_tj_nrm)
+        img_tj_nrm.colorspace_settings.name = "Non-Color"
+        node_tnrm_tex = nodes_t.new("ShaderNodeTexImage")
+        node_tnrm_tex.image = img_tj_nrm
+        node_tnorm_map = nodes_t.new("ShaderNodeNormalMap")
+        node_tnorm_map.inputs["Strength"].default_value = 1.5
+        links_t.new(node_tnrm_tex.outputs["Color"], node_tnorm_map.inputs["Color"])
+        links_t.new(node_tnorm_map.outputs["Normal"], bsdf_t.inputs["Normal"])
+
+    bsdf_t.inputs["Metallic"].default_value = 0.0
     mats["M_Teja_Terracota"] = m_teja
 
-    # 7. M_Piso_Cantera: Cantera beige claro / losas de piso
+    # 7. M_Piso_Cantera con texturas
     m_piso = bpy.data.materials.new(name="M_Piso_Cantera")
-    nodes = m_piso.node_tree.nodes
-    bsdf = nodes.get("Principled BSDF")
-    if bsdf:
-        bsdf.inputs["Base Color"].default_value = (0.78, 0.76, 0.71, 1.0)
-        bsdf.inputs["Metallic"].default_value = 0.0
-        bsdf.inputs["Roughness"].default_value = 0.60
+    nodes_pi = m_piso.node_tree.nodes
+    links_pi = m_piso.node_tree.links
+    bsdf_pi = nodes_pi.get("Principled BSDF")
+
+    p_can_alb = os.path.join(tex_dir, "kiosko_cantera_albedo.png")
+    p_can_nrm = os.path.join(tex_dir, "kiosko_cantera_normal.png")
+
+    if os.path.exists(p_can_alb):
+        img_can_alb = bpy.data.images.load(p_can_alb)
+        node_calb = nodes_pi.new("ShaderNodeTexImage")
+        node_calb.image = img_can_alb
+        links_pi.new(node_calb.outputs["Color"], bsdf_pi.inputs["Base Color"])
+    else:
+        bsdf_pi.inputs["Base Color"].default_value = (0.76, 0.74, 0.69, 1.0)
+
+    if os.path.exists(p_can_nrm):
+        img_can_nrm = bpy.data.images.load(p_can_nrm)
+        img_can_nrm.colorspace_settings.name = "Non-Color"
+        node_cnrm_tex = nodes_pi.new("ShaderNodeTexImage")
+        node_cnrm_tex.image = img_can_nrm
+        node_cnorm_map = nodes_pi.new("ShaderNodeNormalMap")
+        node_cnorm_map.inputs["Strength"].default_value = 0.8
+        links_pi.new(node_cnrm_tex.outputs["Color"], node_cnorm_map.inputs["Color"])
+        links_pi.new(node_cnorm_map.outputs["Normal"], bsdf_pi.inputs["Normal"])
+
+    bsdf_pi.inputs["Metallic"].default_value = 0.0
+    bsdf_pi.inputs["Roughness"].default_value = 0.60
     mats["M_Piso_Cantera"] = m_piso
 
-    # 8. M_Vidrio_Farol: Vidrio ámbar/cálido de los faroles
+    # 8. M_Vidrio_Farol
     m_vidrio = bpy.data.materials.new(name="M_Vidrio_Farol")
-    nodes = m_vidrio.node_tree.nodes
-    bsdf = nodes.get("Principled BSDF")
-    if bsdf:
-        bsdf.inputs["Base Color"].default_value = (0.95, 0.90, 0.78, 1.0)
-        bsdf.inputs["Metallic"].default_value = 0.1
-        bsdf.inputs["Roughness"].default_value = 0.25
-        if "Emission Color" in bsdf.inputs:
-            bsdf.inputs["Emission Color"].default_value = (0.95, 0.85, 0.60, 1.0)
-            bsdf.inputs["Emission Strength"].default_value = 0.8
+    bsdf_v = m_vidrio.node_tree.nodes.get("Principled BSDF")
+    if bsdf_v:
+        bsdf_v.inputs["Base Color"].default_value = (0.96, 0.92, 0.82, 1.0)
+        bsdf_v.inputs["Metallic"].default_value = 0.05
+        bsdf_v.inputs["Roughness"].default_value = 0.25
+        if "Emission Color" in bsdf_v.inputs:
+            bsdf_v.inputs["Emission Color"].default_value = (0.96, 0.86, 0.62, 1.0)
+            bsdf_v.inputs["Emission Strength"].default_value = 1.0
     mats["M_Vidrio_Farol"] = m_vidrio
 
     return mats
@@ -155,7 +247,7 @@ def get_octagon_vertices(radius, z):
 
 
 def create_annular_ring(bm, r_in, r_out, thick, segments=12, matrix=Matrix()):
-    """Crea un anillo toroidal/anular extruido sólido y cerrado en el plano XZ."""
+    """Crea un anillo anular cerrado en el plano XZ."""
     v_front_in = []
     v_front_out = []
     v_back_in = []
@@ -182,13 +274,14 @@ def create_annular_ring(bm, r_in, r_out, thick, segments=12, matrix=Matrix()):
 def build_octagonal_base(mats, col):
     """
     Construye la Base Octagonal de Mampostería (Z = 0.0 a 1.20 m):
-    - Plinto inferior de desplante (Z = 0 a 0.08 m).
-    - Muro con hiladas de mampostería de piedra laja y juntas de mortero.
-    - Piso superior de cantera (M_Piso_Cantera).
+    - Zócalo de cimentación inferior (Z = 0.0 a 0.08 m).
+    - Muros con textura y UVs de laja irregular tecatense.
+    - Piso superior de cantera con UVs.
     - Moldura perimetral en voladizo (M_Estuco_Blanco).
-    - Registro / Puerta de servicio empotrada en cara lateral derecha (-45°).
+    - Puerta de servicio empotrada en cara lateral derecha (-45°).
     """
     bm = bmesh.new()
+    uv_layer = bm.loops.layers.uv.verify()
 
     # 1. Zócalo / Desplante inferior de cimentación (Z = 0.0 a 0.08 m)
     r_foot = OCT_CIRCUM + 0.04
@@ -201,36 +294,37 @@ def build_octagonal_base(mats, col):
         f = bm.faces.new([v_foot_bot[k], v_foot_bot[kn], v_foot_top[kn], v_foot_top[k]])
         f.material_index = 0
 
-    # 2. Muro octagonal con hiladas de laja de piedra (Z = 0.08 m a 1.20 m)
-    # Creamos 5 hiladas horizontales para articular la mampostería de piedra
-    stone_courses = 5
-    z_start = 0.08
-    z_end = BASE_HEIGHT
-    course_h = (z_end - z_start) / stone_courses
+    # 2. Muro octagonal principal (Z = 0.08 a 1.20 m)
+    v_wall_bot = [bm.verts.new(v) for v in get_octagon_vertices(OCT_CIRCUM, 0.08)]
+    v_wall_top = [bm.verts.new(v) for v in get_octagon_vertices(OCT_CIRCUM, BASE_HEIGHT)]
 
-    v_prev_ring = [bm.verts.new(v) for v in get_octagon_vertices(OCT_CIRCUM, z_start)]
     # Chaflán de conexión con el zócalo
     for k in range(8):
         kn = (k + 1) % 8
-        f = bm.faces.new([v_foot_top[k], v_foot_top[kn], v_prev_ring[kn], v_prev_ring[k]])
-        f.material_index = 0
+        f_ch = bm.faces.new([v_foot_top[k], v_foot_top[kn], v_wall_bot[kn], v_wall_bot[k]])
+        f_ch.material_index = 0
 
-    for c in range(stone_courses):
-        z_c_top = z_start + (c + 1) * course_h
-        # Sutil variación de relieve en cada hilada (±6 mm) para realismo de cantería
-        r_c = OCT_CIRCUM + (0.008 if c % 2 == 1 else -0.004)
-        v_next_ring = [bm.verts.new(v) for v in get_octagon_vertices(r_c if c < stone_courses - 1 else OCT_CIRCUM, z_c_top)]
+    # Caras laterales del muro de mampostería con mapeo UV
+    for k in range(8):
+        kn = (k + 1) % 8
+        f = bm.faces.new([v_wall_bot[k], v_wall_bot[kn], v_wall_top[kn], v_wall_top[k]])
+        f.material_index = 0 # M_Piedra_Base
 
-        for k in range(8):
-            kn = (k + 1) % 8
-            f = bm.faces.new([v_prev_ring[k], v_prev_ring[kn], v_next_ring[kn], v_next_ring[k]])
-            f.material_index = 0 # Piedra base
+        u_start = (k * 2.0)
+        u_end = ((k + 1) * 2.0)
+        loops = list(f.loops)
+        loops[0][uv_layer].uv = Vector((u_start, 0.0))
+        loops[1][uv_layer].uv = Vector((u_end, 0.0))
+        loops[2][uv_layer].uv = Vector((u_end, 1.0))
+        loops[3][uv_layer].uv = Vector((u_start, 1.0))
 
-        v_prev_ring = v_next_ring
-
-    # Piso superior (Z = 1.20 m)
-    f_top = bm.faces.new(v_prev_ring)
-    f_top.material_index = 1 # Piso Cantera
+    # Piso superior (Z = 1.20 m) con mapeo UV cantera
+    f_top = bm.faces.new(v_wall_top)
+    f_top.material_index = 1 # M_Piso_Cantera
+    for loop in f_top.loops:
+        vx = loop.vert.co.x
+        vy = loop.vert.co.y
+        loop[uv_layer].uv = Vector((vx * 0.6 + 0.5, vy * 0.6 + 0.5))
 
     # 3. Moldura / Cornisa Perimetral Volada (Z = 1.10 m a 1.22 m, saliente +0.12 m)
     r_c_bot = OCT_CIRCUM + 0.02
@@ -263,30 +357,27 @@ def build_octagonal_base(mats, col):
     f1_center = f1_normal * OCT_APOTHEM
     f1_rot = Matrix.Rotation(ang_f1 - math.pi / 2.0, 4, 'Z')
 
-    # Marco de ángulo de hierro
     frame_w = 0.04
     frame_res = bmesh.ops.create_cube(bm, size=1.0)
-    bmesh.ops.scale(bm, vec=Vector((door_w + frame_w*2, 0.03, door_h + frame_w*2)), verts=frame_res['verts'])
+    bmesh.ops.scale(bm, vec=Vector((door_w + frame_w*2, 0.035, door_h + frame_w*2)), verts=frame_res['verts'])
     bmesh.ops.transform(bm, matrix=f1_rot, verts=frame_res['verts'])
-    bmesh.ops.translate(bm, vec=f1_center + Vector((0, 0, door_z_min + door_h/2.0)) + f1_normal * 0.015, verts=frame_res['verts'])
+    bmesh.ops.translate(bm, vec=f1_center + Vector((0, 0, door_z_min + door_h/2.0)) + f1_normal * 0.018, verts=frame_res['verts'])
     for v in frame_res['verts']:
         for f in v.link_faces:
             f.material_index = 3 # Herrería negra
 
-    # Chapa central empotrada
     door_res = bmesh.ops.create_cube(bm, size=1.0)
     bmesh.ops.scale(bm, vec=Vector((door_w, 0.02, door_h)), verts=door_res['verts'])
     bmesh.ops.transform(bm, matrix=f1_rot, verts=door_res['verts'])
-    bmesh.ops.translate(bm, vec=f1_center + Vector((0, 0, door_z_min + door_h/2.0)) + f1_normal * 0.02, verts=door_res['verts'])
+    bmesh.ops.translate(bm, vec=f1_center + Vector((0, 0, door_z_min + door_h/2.0)) + f1_normal * 0.024, verts=door_res['verts'])
     for v in door_res['verts']:
         for f in v.link_faces:
             f.material_index = 3
 
-    # Tirador y cerrojo
     h_res = bmesh.ops.create_cube(bm, size=1.0)
     bmesh.ops.scale(bm, vec=Vector((0.025, 0.025, 0.10)), verts=h_res['verts'])
     bmesh.ops.transform(bm, matrix=f1_rot, verts=h_res['verts'])
-    bmesh.ops.translate(bm, vec=f1_center + f1_tangent * (door_w * 0.3) + Vector((0, 0, door_z_min + door_h * 0.5)) + f1_normal * 0.045, verts=h_res['verts'])
+    bmesh.ops.translate(bm, vec=f1_center + f1_tangent * (door_w * 0.3) + Vector((0, 0, door_z_min + door_h * 0.5)) + f1_normal * 0.048, verts=h_res['verts'])
     for v in h_res['verts']:
         for f in v.link_faces:
             f.material_index = 3
@@ -312,10 +403,11 @@ def build_staircase(mats, col):
     """
     Construye la Escalinata de Acceso Frontal:
     - 7 peldaños de cantera con bocel (0.32 x 0.1714 m).
-    - Alfardas/muros laterales de piedra laja en declive continuo que enmarcan la escalera.
-    - Barandales de herrería negra con balaustres verticales.
+    - Alfardas laterales de confinamiento en declive de piedra laja rústica.
+    - Barandales de herrería negra con pasamanos reforzado y balaustres verticales.
     """
     bm = bmesh.new()
+    uv_layer = bm.loops.layers.uv.verify()
 
     half_w = STAIR_WIDTH / 2.0
     y_wall = -OCT_APOTHEM
@@ -334,6 +426,8 @@ def build_staircase(mats, col):
         v4 = bm.verts.new(Vector((-half_w, y_wall, z_step_top)))
         f_tread = bm.faces.new([v1, v2, v3, v4])
         f_tread.material_index = 0
+        for loop in f_tread.loops:
+            loop[uv_layer].uv = Vector((loop.vert.co.x * 0.6, loop.vert.co.y * 0.6))
 
         # Contrahuella
         v5 = bm.verts.new(Vector((-half_w, y_step_front, z_step_bot)))
@@ -350,12 +444,11 @@ def build_staircase(mats, col):
         fn.material_index = 0
 
     # Alfardas / Flancos laterales sólidos de piedra en pendiente
-    alfarda_thick = 0.12
+    alfarda_thick = 0.14
     for side_sign in [-1.0, 1.0]:
         x_in = side_sign * half_w
         x_out = side_sign * (half_w + alfarda_thick)
 
-        # 4 vértices del trapecio lateral inclinado
         p_bot_front = Vector((x_out, y_start, 0.0))
         p_bot_back  = Vector((x_out, y_wall, 0.0))
         p_top_back  = Vector((x_out, y_wall, BASE_HEIGHT + 0.04))
@@ -371,7 +464,6 @@ def build_staircase(mats, col):
         v_tb_in = bm.verts.new(Vector((x_in, y_wall, BASE_HEIGHT + 0.04)))
         v_tf_in = bm.verts.new(Vector((x_in, y_start, STAIR_RISER + 0.04)))
 
-        # Cara exterior de la alfarda (Piedra base)
         if side_sign < 0:
             f_ext = bm.faces.new([v_bf, v_bb, v_tb, v_tf])
             f_top_a = bm.faces.new([v_tf, v_tb, v_tb_in, v_tf_in])
@@ -379,8 +471,10 @@ def build_staircase(mats, col):
             f_ext = bm.faces.new([v_bf, v_tf, v_tb, v_bb])
             f_top_a = bm.faces.new([v_tf_in, v_tb_in, v_tb, v_tf])
 
-        f_ext.material_index = 1 # Piedra base
+        f_ext.material_index = 1 # M_Piedra_Base
         f_top_a.material_index = 1
+        for loop in f_ext.loops:
+            loop[uv_layer].uv = Vector((loop.vert.co.y * 0.4, loop.vert.co.z * 0.8))
 
     # Barandales laterales inclinados a 0.90 m
     rail_h = 0.90
@@ -396,12 +490,12 @@ def build_staircase(mats, col):
         rot_quat = Vector((0, 0, 1)).rotation_difference(dir_vec)
 
         res = bmesh.ops.create_cube(bm, size=1.0)
-        bmesh.ops.scale(bm, vec=Vector((0.04, 0.05, length)), verts=res['verts'])
+        bmesh.ops.scale(bm, vec=Vector((0.05, 0.04, length)), verts=res['verts'])
         bmesh.ops.rotate(bm, cent=Vector((0, 0, 0)), matrix=rot_quat.to_matrix(), verts=res['verts'])
         bmesh.ops.translate(bm, vec=mid_point, verts=res['verts'])
         for f in res['verts']:
             for face in f.link_faces:
-                face.material_index = 2 # Herrería negra
+                face.material_index = 2
 
         for step_idx in range(STAIR_STEPS):
             bx = side_x
@@ -410,7 +504,7 @@ def build_staircase(mats, col):
             tz = bz + rail_h
             post_h = tz - bz
             res_p = bmesh.ops.create_cube(bm, size=1.0)
-            bmesh.ops.scale(bm, vec=Vector((0.022, 0.022, post_h)), verts=res_p['verts'])
+            bmesh.ops.scale(bm, vec=Vector((0.024, 0.024, post_h)), verts=res_p['verts'])
             bmesh.ops.translate(bm, vec=Vector((bx, by, bz + post_h / 2.0)), verts=res_p['verts'])
             for f in res_p['verts']:
                 for face in f.link_faces:
@@ -433,24 +527,16 @@ def build_staircase(mats, col):
 
 
 def build_colonial_lantern(bm, center_pos, rotation_z):
-    """
-    Construye un farol colonial tradicional de Tecate:
-    - Placa mural y brazo de forja en 'S' saliente.
-    - Caja trapezoidal clásica de 4 caras de vidrio ámbar enmarcada en hierro.
-    - Cubierta piramidal con cúspide y remate inferior.
-    """
     rot_mat = Matrix.Rotation(rotation_z, 4, 'Z')
 
-    # 1. Placa de anclaje a la pared de ladrillo
     plate_res = bmesh.ops.create_cube(bm, size=1.0)
     bmesh.ops.scale(bm, vec=Vector((0.08, 0.02, 0.20)), verts=plate_res['verts'])
     bmesh.ops.transform(bm, matrix=rot_mat, verts=plate_res['verts'])
     bmesh.ops.translate(bm, vec=center_pos, verts=plate_res['verts'])
     for v in plate_res['verts']:
         for f in v.link_faces:
-            f.material_index = 2 # Herrería negra
+            f.material_index = 2
 
-    # 2. Brazo de soporte curvo en 'S'
     arm_res = bmesh.ops.create_cube(bm, size=1.0)
     bmesh.ops.scale(bm, vec=Vector((0.03, 0.22, 0.03)), verts=arm_res['verts'])
     bmesh.ops.translate(bm, vec=Vector((0.0, 0.11, 0.04)), verts=arm_res['verts'])
@@ -460,7 +546,6 @@ def build_colonial_lantern(bm, center_pos, rotation_z):
         for f in v.link_faces:
             f.material_index = 2
 
-    # Puntal diagonal inferior
     strut_res = bmesh.ops.create_cube(bm, size=1.0)
     bmesh.ops.scale(bm, vec=Vector((0.02, 0.16, 0.02)), verts=strut_res['verts'])
     bmesh.ops.rotate(bm, cent=Vector((0,0,0)), matrix=Matrix.Rotation(math.radians(-35), 4, 'X'), verts=strut_res['verts'])
@@ -471,13 +556,11 @@ def build_colonial_lantern(bm, center_pos, rotation_z):
         for f in v.link_faces:
             f.material_index = 2
 
-    # 3. Caja trapezoidal del farol (más ancha arriba que abajo)
     lantern_center = center_pos + rot_mat @ Vector((0.0, 0.24, -0.02))
     h_cage = 0.24
     w_top = 0.18
     w_bot = 0.12
 
-    # Vidrio interior trapezoidal
     v_vt = [
         Vector((-w_top/2, -w_top/2, h_cage/2)),
         Vector(( w_top/2, -w_top/2, h_cage/2)),
@@ -497,9 +580,8 @@ def build_colonial_lantern(bm, center_pos, rotation_z):
     for i in range(4):
         nxt = (i + 1) % 4
         f_glass = bm.faces.new([vb_bm[i], vb_bm[nxt], vt_bm[nxt], vt_bm[i]])
-        f_glass.material_index = 3 # Vidrio farol
+        f_glass.material_index = 3
 
-    # Costillas y marcos de hierro en las 4 aristas
     for i in range(4):
         rib_res = bmesh.ops.create_cube(bm, size=1.0)
         bmesh.ops.scale(bm, vec=Vector((0.016, 0.016, h_cage + 0.02)), verts=rib_res['verts'])
@@ -508,9 +590,8 @@ def build_colonial_lantern(bm, center_pos, rotation_z):
         bmesh.ops.translate(bm, vec=rib_p, verts=rib_res['verts'])
         for v in rib_res['verts']:
             for f in v.link_faces:
-                f.material_index = 2 # Herrería
+                f.material_index = 2
 
-    # 4. Tejadillo piramidal de 4 aguas con alero
     roof_h = 0.12
     r_alero = w_top + 0.04
     v_rt = [
@@ -527,9 +608,8 @@ def build_colonial_lantern(bm, center_pos, rotation_z):
     for i in range(4):
         nxt = (i + 1) % 4
         f_roof = bm.faces.new([v_rt_bm[i], v_rt_bm[nxt], v_peak_bm])
-        f_roof.material_index = 2 # Herrería
+        f_roof.material_index = 2
 
-    # Remate superior esférico/puntal
     spire_res = bmesh.ops.create_cone(bm, cap_ends=True, segments=8, radius1=0.025, radius2=0.005, depth=0.06)
     bmesh.ops.transform(bm, matrix=rot_mat, verts=spire_res['verts'])
     bmesh.ops.translate(bm, vec=lantern_center + rot_mat @ (p_peak + Vector((0,0,0.03))), verts=spire_res['verts'])
@@ -537,7 +617,6 @@ def build_colonial_lantern(bm, center_pos, rotation_z):
         for f in v.link_faces:
             f.material_index = 2
 
-    # Remate inferior en gota
     drop_res = bmesh.ops.create_cone(bm, cap_ends=True, segments=8, radius1=0.015, radius2=0.005, depth=0.05)
     bmesh.ops.rotate(bm, cent=Vector((0,0,0)), matrix=Matrix.Rotation(math.pi, 4, 'X'), verts=drop_res['verts'])
     bmesh.ops.transform(bm, matrix=rot_mat, verts=drop_res['verts'])
@@ -549,10 +628,10 @@ def build_colonial_lantern(bm, center_pos, rotation_z):
 
 def build_columns(mats, col):
     """
-    Construye las 8 Columnas Radiales (R = 3.05 m):
-    - Plinto base blanco (0.55 x 0.55 x 0.20 m con chaflán 45°).
-    - Fuste con 28 hiladas de ladrillo rojo y llagas de mortero gris.
-    - Capitel blanco moldurado (0.52 x 0.52 x 0.15 m).
+    Construye las 8 Columnas Radiales (R = 3.05 m, v2.0):
+    - Plinto base blanco moldurado (0.55 x 0.55 x 0.20 m con chaflán 45°).
+    - Fuste con 28 hiladas de ladrillo rojo y llagas rehundidas de mortero gris.
+    - Capiteles pronunciados y anchos (0.58 x 0.58 m) que abrazan el anillo cilíndrico superior.
     - Faroles coloniales en Z = 3.10 m.
     """
     bm = bmesh.new()
@@ -573,7 +652,7 @@ def build_columns(mats, col):
         bmesh.ops.translate(bm, vec=col_pos + Vector((0, 0, 1.20 + 0.07)), verts=p_res['verts'])
         for v in p_res['verts']:
             for f in v.link_faces:
-                f.material_index = 1 # Estuco blanco
+                f.material_index = 1
 
         ch_res = bmesh.ops.create_cube(bm, size=1.0)
         bmesh.ops.scale(bm, vec=Vector((PLINTH_SIZE - 0.04, PLINTH_SIZE - 0.04, 0.06)), verts=ch_res['verts'])
@@ -581,11 +660,11 @@ def build_columns(mats, col):
         bmesh.ops.translate(bm, vec=col_pos + Vector((0, 0, 1.34 + 0.03)), verts=ch_res['verts'])
         for v in ch_res['verts']:
             for f in v.link_faces:
-                f.material_index = 1 # Estuco blanco
+                f.material_index = 1
 
-        # 2. Fuste de ladrillo aparente con hiladas y llagas de mortero (Z = 1.40 a 3.75 m)
+        # 2. Fuste de ladrillo aparente con hiladas y mortero (Z = 1.40 a 3.74 m)
         fuste_z_start = 1.40
-        fuste_z_end = 3.75
+        fuste_z_end = 3.74
         fuste_h = fuste_z_end - fuste_z_start
         num_courses = 28
         total_course_h = fuste_h / num_courses
@@ -593,7 +672,6 @@ def build_columns(mats, col):
         mortar_h = total_course_h * 0.18
 
         for c in range(num_courses):
-            # Bloque de ladrillo
             cz_brick = fuste_z_start + c * total_course_h + brick_h / 2.0
             c_size = COLUMN_SIZE - (0.004 if c % 2 == 0 else 0.001)
             b_res = bmesh.ops.create_cube(bm, size=1.0)
@@ -602,9 +680,8 @@ def build_columns(mats, col):
             bmesh.ops.translate(bm, vec=col_pos + Vector((0, 0, cz_brick)), verts=b_res['verts'])
             for v in b_res['verts']:
                 for f in v.link_faces:
-                    f.material_index = 0 # Ladrillo pilar
+                    f.material_index = 0
 
-            # Llaga de mortero gris (recesada 6 mm hacia adentro)
             if c < num_courses - 1:
                 cz_mortar = fuste_z_start + (c + 1) * total_course_h - mortar_h / 2.0
                 m_size = COLUMN_SIZE - 0.012
@@ -614,24 +691,32 @@ def build_columns(mats, col):
                 bmesh.ops.translate(bm, vec=col_pos + Vector((0, 0, cz_mortar)), verts=m_res['verts'])
                 for v in m_res['verts']:
                     for f in v.link_faces:
-                        f.material_index = 4 # Mortero gris
+                        f.material_index = 4
 
-        # 3. Capitel blanco moldurado (Z = 3.75 a 3.90 m)
+        # 3. Capitel blanco pronunciado v2.0 (Z = 3.74 a 3.92 m, ancho 0.58 m)
         c1_res = bmesh.ops.create_cube(bm, size=1.0)
-        bmesh.ops.scale(bm, vec=Vector((COLUMN_SIZE + 0.03, COLUMN_SIZE + 0.03, 0.05)), verts=c1_res['verts'])
+        bmesh.ops.scale(bm, vec=Vector((COLUMN_SIZE + 0.04, COLUMN_SIZE + 0.04, 0.04)), verts=c1_res['verts'])
         bmesh.ops.transform(bm, matrix=rot_mat, verts=c1_res['verts'])
-        bmesh.ops.translate(bm, vec=col_pos + Vector((0, 0, 3.75 + 0.025)), verts=c1_res['verts'])
+        bmesh.ops.translate(bm, vec=col_pos + Vector((0, 0, 3.74 + 0.02)), verts=c1_res['verts'])
         for v in c1_res['verts']:
             for f in v.link_faces:
-                f.material_index = 1 # Estuco blanco
+                f.material_index = 1
 
         c2_res = bmesh.ops.create_cube(bm, size=1.0)
-        bmesh.ops.scale(bm, vec=Vector((CAPITAL_SIZE, CAPITAL_SIZE, 0.10)), verts=c2_res['verts'])
+        bmesh.ops.scale(bm, vec=Vector((0.54, 0.54, 0.06)), verts=c2_res['verts'])
         bmesh.ops.transform(bm, matrix=rot_mat, verts=c2_res['verts'])
-        bmesh.ops.translate(bm, vec=col_pos + Vector((0, 0, 3.80 + 0.05)), verts=c2_res['verts'])
+        bmesh.ops.translate(bm, vec=col_pos + Vector((0, 0, 3.78 + 0.03)), verts=c2_res['verts'])
         for v in c2_res['verts']:
             for f in v.link_faces:
-                f.material_index = 1 # Estuco blanco
+                f.material_index = 1
+
+        c3_res = bmesh.ops.create_cube(bm, size=1.0)
+        bmesh.ops.scale(bm, vec=Vector((CAPITAL_SIZE, CAPITAL_SIZE, 0.08)), verts=c3_res['verts'])
+        bmesh.ops.transform(bm, matrix=rot_mat, verts=c3_res['verts'])
+        bmesh.ops.translate(bm, vec=col_pos + Vector((0, 0, 3.84 + 0.04)), verts=c3_res['verts'])
+        for v in c3_res['verts']:
+            for f in v.link_faces:
+                f.material_index = 1
 
         # 4. Farol Colonial (Z = 3.10 m) en la cara exterior
         outer_face_offset = rot_mat @ Vector((0.0, COLUMN_SIZE / 2.0, 0.0))
@@ -657,6 +742,12 @@ def build_columns(mats, col):
 
 
 def build_perimeter_railings(mats, col):
+    """
+    Construye los Barandales Perimetrales (7 vanos, omitiendo escalera):
+    - Solera inferior a Z = 1.28 m, sub-solera a Z = 1.98 m, pasamanos a Z = 2.10 m.
+    - Cenefa de aros decorativos de Ø 0.08 m.
+    - Balaustres verticales espaciados cada 0.11 m.
+    """
     bm = bmesh.new()
     base_angle = -math.pi / 2.0 - math.pi / 8.0
 
@@ -703,7 +794,7 @@ def build_perimeter_railings(mats, col):
             ring_mat = Matrix.Translation(ring_pos) @ rot_mat
             create_annular_ring(bm, r_in=0.032, r_out=0.046, thick=0.012, segments=12, matrix=ring_mat)
 
-        # 5. Balaustres verticales (cada 0.11 m)
+        # 5. Balaustres verticales
         num_balusters = int(clear_span / 0.11)
         bal_step = clear_span / max(num_balusters, 1)
         bal_h = 1.98 - 1.28
@@ -711,7 +802,7 @@ def build_perimeter_railings(mats, col):
             t = (bi + 0.5) * bal_step - clear_span / 2.0
             bal_pos = span_mid + span_dir * t + Vector((0, 0, 1.28 + bal_h / 2.0))
             bal_res = bmesh.ops.create_cube(bm, size=1.0)
-            bmesh.ops.scale(bm, vec=Vector((0.018, 0.018, bal_h)), verts=bal_res['verts'])
+            bmesh.ops.scale(bm, vec=Vector((0.020, 0.020, bal_h)), verts=bal_res['verts'])
             bmesh.ops.transform(bm, matrix=rot_mat, verts=bal_res['verts'])
             bmesh.ops.translate(bm, vec=bal_pos, verts=bal_res['verts'])
 
@@ -731,8 +822,8 @@ def build_perimeter_railings(mats, col):
 
 def build_openwork_arches(mats, col):
     """
-    Construye los 8 Arcos Calados de Herrería Superiores (Z = 3.50 a 3.90 m):
-    - Arcos escarzanos con barrotes colgantes de crestería.
+    Construye los 8 Arcos Calados de Herrería Superiores (Z = 3.50 a 3.86 m, v2.0):
+    - Arcos escarzanos con crestería de barrotes colgantes de longitud graduada.
     - Volutas / espirales de forja en las esquinas de unión con los capiteles.
     """
     bm = bmesh.new()
@@ -754,15 +845,15 @@ def build_openwork_arches(mats, col):
         rot_angle = math.atan2(span_dir.y, span_dir.x)
         rot_mat = Matrix.Rotation(rot_angle, 4, 'Z')
 
-        # 1. Solera superior (Z = 3.88 m)
+        # 1. Solera superior recta en Z = 3.85 m
         top_bar = bmesh.ops.create_cube(bm, size=1.0)
         bmesh.ops.scale(bm, vec=Vector((clear_span, 0.03, 0.02)), verts=top_bar['verts'])
         bmesh.ops.transform(bm, matrix=rot_mat, verts=top_bar['verts'])
-        bmesh.ops.translate(bm, vec=span_mid + Vector((0, 0, 3.88)), verts=top_bar['verts'])
+        bmesh.ops.translate(bm, vec=span_mid + Vector((0, 0, 3.85)), verts=top_bar['verts'])
 
-        # 2. Arco escarzano curvo
+        # 2. Arco escarzano curvo inferior
         arc_segments = 16
-        z_spring = 3.82
+        z_spring = 3.80
         z_crown = 3.50
         half_s = clear_span / 2.0
 
@@ -786,10 +877,9 @@ def build_openwork_arches(mats, col):
 
             prev_pt = curr_pt
 
-            # Barrotes verticales de crestería
             if s > 0 and s < arc_segments and s % 2 == 0:
                 bar_bot = z_curve
-                bar_top = 3.88
+                bar_top = 3.85
                 bar_len = bar_top - bar_bot
                 if bar_len > 0.03:
                     bar_res = bmesh.ops.create_cube(bm, size=1.0)
@@ -797,9 +887,9 @@ def build_openwork_arches(mats, col):
                     bmesh.ops.transform(bm, matrix=rot_mat, verts=bar_res['verts'])
                     bmesh.ops.translate(bm, vec=span_mid + span_dir * t + Vector((0, 0, (bar_bot + bar_top) / 2.0)), verts=bar_res['verts'])
 
-        # 3. Volutas decorativas en las enjutas/esquinas superiores
+        # 3. Volutas ornamentales en las enjutas superiores
         for side_s in [-1.0, 1.0]:
-            scroll_pos = span_mid + span_dir * (side_s * (half_s - 0.12)) + Vector((0, 0, 3.75))
+            scroll_pos = span_mid + span_dir * (side_s * (half_s - 0.12)) + Vector((0, 0, 3.73))
             sc_mat = Matrix.Translation(scroll_pos) @ rot_mat
             create_annular_ring(bm, r_in=0.035, r_out=0.050, thick=0.012, segments=12, matrix=sc_mat)
 
@@ -819,19 +909,25 @@ def build_openwork_arches(mats, col):
 
 def build_entablature_ring(mats, col):
     """
-    Construye el Anillo de Entablamento Continuo (Z = 3.90 a 4.35 m):
-    - Cilindro continuo liso blanco (Ø ext 7.40 m, Ø int 6.30 m).
-    - Moldura perimetral superior saliente.
-    - Plafón interior horizontal.
+    Construye el Anillo de Entablamento Cilíndrico Continuo y Cielo Interior (v2.0):
+    - Cilindro continuo perfecto (96 segmentos, Smooth Shading).
+    - Espesor vertical prominente H = 0.55 m (Z = 3.85 a 4.40 m).
+    - Moldura inferior (astrágalo) en Z = 3.85 a 3.90 m (Ø 7.44 m).
+    - Tambor cilíndrico central en Z = 3.90 a 4.25 m (Ø 7.50 m).
+    - Cornisa perimetral superior saliente en Z = 4.25 a 4.40 m (Ø 7.70 m).
+    - Bóveda cónica interior enlucida (Soffit) que asciende de Z = 4.00 a 4.60 m.
     """
     bm = bmesh.new()
-    segments = 64
+    segments = 96
 
-    z_bot = RING_Z_BOTTOM
-    z_mid = z_bot + RING_HEIGHT - 0.06
-    z_top = z_bot + RING_HEIGHT
+    z_bot = RING_Z_BOTTOM      # 3.85 m
+    z_astragal = 3.90          # 3.90 m
+    z_mid = 4.25               # 4.25 m
+    z_cornice_lip = 4.34       # 4.34 m
+    z_top = RING_Z_TOP         # 4.40 m
 
     v_ext_bot = []
+    v_ext_astragal = []
     v_ext_mid = []
     v_ext_lip = []
     v_ext_top = []
@@ -843,32 +939,38 @@ def build_entablature_ring(mats, col):
         cos_a = math.cos(ang)
         sin_a = math.sin(ang)
 
-        v_ext_bot.append(bm.verts.new(Vector((RING_R_OUT * cos_a, RING_R_OUT * sin_a, z_bot))))
+        v_ext_bot.append(bm.verts.new(Vector(((RING_R_OUT - 0.03) * cos_a, (RING_R_OUT - 0.03) * sin_a, z_bot))))
+        v_ext_astragal.append(bm.verts.new(Vector(((RING_R_OUT - 0.01) * cos_a, (RING_R_OUT - 0.01) * sin_a, z_astragal))))
         v_ext_mid.append(bm.verts.new(Vector((RING_R_OUT * cos_a, RING_R_OUT * sin_a, z_mid))))
-        v_ext_lip.append(bm.verts.new(Vector(((RING_R_OUT + 0.05) * cos_a, (RING_R_OUT + 0.05) * sin_a, z_mid + 0.03))))
-        v_ext_top.append(bm.verts.new(Vector(((RING_R_OUT + 0.04) * cos_a, (RING_R_OUT + 0.04) * sin_a, z_top))))
+        v_ext_lip.append(bm.verts.new(Vector((RING_R_CORNICE * cos_a, RING_R_CORNICE * sin_a, z_cornice_lip))))
+        v_ext_top.append(bm.verts.new(Vector(((RING_R_CORNICE - 0.02) * cos_a, (RING_R_CORNICE - 0.02) * sin_a, z_top))))
 
-        v_int_bot.append(bm.verts.new(Vector((RING_R_IN * cos_a, RING_R_IN * sin_a, z_bot))))
+        v_int_bot.append(bm.verts.new(Vector((RING_R_IN * cos_a, RING_R_IN * sin_a, z_bot + 0.15))))
         v_int_top.append(bm.verts.new(Vector((RING_R_IN * cos_a, RING_R_IN * sin_a, z_top))))
 
     for i in range(segments):
         nxt = (i + 1) % segments
 
-        f1 = bm.faces.new([v_ext_bot[i], v_ext_bot[nxt], v_ext_mid[nxt], v_ext_mid[i]])
-        f2 = bm.faces.new([v_ext_mid[i], v_ext_mid[nxt], v_ext_lip[nxt], v_ext_lip[i]])
-        f3 = bm.faces.new([v_ext_lip[i], v_ext_lip[nxt], v_ext_top[nxt], v_ext_top[i]])
+        f1 = bm.faces.new([v_ext_bot[i], v_ext_bot[nxt], v_ext_astragal[nxt], v_ext_astragal[i]])
+        f2 = bm.faces.new([v_ext_astragal[i], v_ext_astragal[nxt], v_ext_mid[nxt], v_ext_mid[i]])
+        f3 = bm.faces.new([v_ext_mid[i], v_ext_mid[nxt], v_ext_lip[nxt], v_ext_lip[i]])
+        f4 = bm.faces.new([v_ext_lip[i], v_ext_lip[nxt], v_ext_top[nxt], v_ext_top[i]])
+
         f_in = bm.faces.new([v_int_top[i], v_int_top[nxt], v_int_bot[nxt], v_int_bot[i]])
         f_bot = bm.faces.new([v_ext_bot[i], v_int_bot[i], v_int_bot[nxt], v_ext_bot[nxt]])
         f_top = bm.faces.new([v_ext_top[i], v_ext_top[nxt], v_int_top[nxt], v_int_top[i]])
 
-        for f in [f1, f2, f3, f_in, f_bot, f_top]:
+        for f in [f1, f2, f3, f4, f_in, f_bot, f_top]:
             f.material_index = 0
             f.smooth = True
 
-    # Plafón interior enlucido blanco
-    f_ceiling = bm.faces.new(v_int_top)
-    f_ceiling.material_index = 0
-    f_ceiling.smooth = True
+    # Bóveda cónica interior enlucida
+    v_center_dome = bm.verts.new(Vector((0.0, 0.0, 4.60)))
+    for i in range(segments):
+        nxt = (i + 1) % segments
+        f_dome = bm.faces.new([v_int_bot[nxt], v_int_bot[i], v_center_dome])
+        f_dome.material_index = 0
+        f_dome.smooth = True
 
     mesh = bpy.data.meshes.new("Mesh_Anillo_Entablamento")
     bm.to_mesh(mesh)
@@ -882,106 +984,106 @@ def build_entablature_ring(mats, col):
 
 def build_conical_roof(mats, col):
     """
-    Construye la Cubierta Cónica Tradicional con Hileras de Teja Española (Z = 4.35 a 5.55 m):
-    - Hileras concéntricas escalonadas de teja curva (canal y cobija).
-    - Alero perimetral festoneado sobresaliente.
-    - 8 limatesas / caballetes radiales en los ejes octagonales.
-    - Cúspide cónica con remate cerámico a Z = 5.55 m.
+    Construye la Cubierta Cónica con Tejas Españolas Curvas 3D y Mapeo UV (v2.0):
+    - Cono circular puro aplanado (pendiente 18°, R_base = 3.90 m, apex Z = 5.55 m).
+    - 48 columnas radiales de tejas curvas (canal y cobija) con modulación sinusoidal.
+    - 8 hiladas concéntricas escalonadas con solape real y UVs para mapas PBR de tejas.
+    - Alero perimetral festoneado ondulado sobresaliente.
+    - Remate cónico cerámico suave en la cúspide (Z = 5.55 m).
     """
     bm = bmesh.new()
-    segments = 64
+    uv_layer = bm.loops.layers.uv.verify()
+
+    num_radial_tiles = 48
+    segments = 96
+    num_tiers = 8
     z_eave = ROOF_Z_EAVE
     z_peak = ROOF_Z_PEAK
 
-    # 1. Anillos concéntricos de tejas escalonadas (6 hiladas concéntricas)
-    num_rings = 6
-    prev_ring_verts = []
-
-    # Borde de alero con festoneado ondulado (48 ondas radiales de tejas)
+    # 1. Borde festoneado del alero inferior
+    prev_tier_verts = []
     v_under = []
+
     for i in range(segments):
         ang = (2.0 * math.pi * i) / segments
-        wave = math.sin(ang * 48.0)
-        r_wave = ROOF_R_BASE + 0.03 * wave
-        z_wave = z_eave + 0.015 * wave
+        wave = math.sin(ang * num_radial_tiles)
+        r_wave = ROOF_R_BASE + 0.045 * wave
+        z_wave = z_eave + 0.025 * wave
         cos_a = math.cos(ang)
         sin_a = math.sin(ang)
 
-        prev_ring_verts.append(bm.verts.new(Vector((r_wave * cos_a, r_wave * sin_a, z_wave))))
-        v_under.append(bm.verts.new(Vector(((r_wave - 0.08) * cos_a, (r_wave - 0.08) * sin_a, z_wave - 0.04))))
+        v_t = bm.verts.new(Vector((r_wave * cos_a, r_wave * sin_a, z_wave)))
+        v_u = bm.verts.new(Vector(((r_wave - 0.10) * cos_a, (r_wave - 0.10) * sin_a, z_wave - 0.05)))
+        prev_tier_verts.append(v_t)
+        v_under.append(v_u)
 
-    # Canto inferior del alero
     for i in range(segments):
         nxt = (i + 1) % segments
-        f_edge = bm.faces.new([v_under[i], v_under[nxt], prev_ring_verts[nxt], prev_ring_verts[i]])
+        f_edge = bm.faces.new([v_under[i], v_under[nxt], prev_tier_verts[nxt], prev_tier_verts[i]])
         f_edge.material_index = 0
         f_edge.smooth = True
 
-    # Generación de las bandas de teja
-    for ring_idx in range(1, num_rings + 1):
-        frac = ring_idx / float(num_rings)
-        r_current = ROOF_R_BASE * (1.0 - frac) + 0.20 * frac
-        z_current = z_eave + (z_peak - z_eave - 0.15) * (frac ** 0.95)
+    # 2. Generación de las 8 hiladas concéntricas escalonadas con asignación UV
+    for tier in range(1, num_tiers + 1):
+        frac = tier / float(num_tiers)
+        r_base_tier = ROOF_R_BASE * (1.0 - frac) + 0.22 * frac
+        z_base_tier = z_eave + (z_peak - z_eave - 0.12) * (frac ** 0.96)
 
-        curr_ring_verts = []
+        curr_tier_verts = []
         for i in range(segments):
             ang = (2.0 * math.pi * i) / segments
-            wave = math.sin(ang * 48.0) * (1.0 - frac * 0.7)
-            r_w = r_current + 0.02 * wave
-            z_w = z_current + 0.012 * wave
+            tile_amp = (1.0 - frac * 0.65)
+            wave = math.sin(ang * num_radial_tiles)
+            r_w = r_base_tier + (0.035 * tile_amp) * wave
+            z_w = z_base_tier + (0.020 * tile_amp) * wave
             cos_a = math.cos(ang)
             sin_a = math.sin(ang)
-            curr_ring_verts.append(bm.verts.new(Vector((r_w * cos_a, r_w * sin_a, z_w))))
+            curr_tier_verts.append(bm.verts.new(Vector((r_w * cos_a, r_w * sin_a, z_w))))
 
-        # Conectar quads entre el anillo anterior y el actual
+        # Conectar quads con asignación UV (48 repeticiones en U, 8 en V)
         for i in range(segments):
             nxt = (i + 1) % segments
-            f_tier = bm.faces.new([prev_ring_verts[i], prev_ring_verts[nxt], curr_ring_verts[nxt], curr_ring_verts[i]])
-            f_tier.material_index = 0
-            f_tier.smooth = True
+            f_tile = bm.faces.new([prev_tier_verts[i], prev_tier_verts[nxt], curr_tier_verts[nxt], curr_tier_verts[i]])
+            f_tile.material_index = 0
+            f_tile.smooth = True
 
-        prev_ring_verts = curr_ring_verts
+            u1 = (i / segments) * num_radial_tiles
+            u2 = ((i + 1) / segments) * num_radial_tiles
+            v1 = (tier - 1) * 1.0
+            v2 = tier * 1.0
 
-    # Cúspide final del cono
-    v_peak = bm.verts.new(Vector((0.0, 0.0, z_peak - 0.08)))
+            loops = list(f_tile.loops)
+            loops[0][uv_layer].uv = Vector((u1, v1))
+            loops[1][uv_layer].uv = Vector((u2, v1))
+            loops[2][uv_layer].uv = Vector((u2, v2))
+            loops[3][uv_layer].uv = Vector((u1, v2))
+
+        prev_tier_verts = curr_tier_verts
+
+    # 3. Cúspide del cono
+    v_top_cone = bm.verts.new(Vector((0.0, 0.0, z_peak - 0.06)))
     for i in range(segments):
         nxt = (i + 1) % segments
-        f_top = bm.faces.new([prev_ring_verts[i], prev_ring_verts[nxt], v_peak])
-        f_top.material_index = 0
-        f_top.smooth = True
+        f_cone_top = bm.faces.new([prev_tier_verts[i], prev_tier_verts[nxt], v_top_cone])
+        f_cone_top.material_index = 0
+        f_cone_top.smooth = True
+        u1 = (i / segments) * num_radial_tiles
+        u2 = ((i + 1) / segments) * num_radial_tiles
+        loops = list(f_cone_top.loops)
+        loops[0][uv_layer].uv = Vector((u1, 7.0))
+        loops[1][uv_layer].uv = Vector((u2, 7.0))
+        loops[2][uv_layer].uv = Vector(((u1+u2)/2.0, 8.0))
 
-    # 2. Limatesas / Caballetes radiales en los 8 vértices del octágono
-    base_angle = -math.pi / 2.0 - math.pi / 8.0
-    for k in range(8):
-        ang = base_angle + k * (math.pi / 4.0)
-        cos_a = math.cos(ang)
-        sin_a = math.sin(ang)
-
-        p_base = Vector((ROOF_R_BASE * cos_a, ROOF_R_BASE * sin_a, z_eave))
-        p_top = Vector((0.18 * cos_a, 0.18 * sin_a, z_peak - 0.08))
-        dir_vec = p_top - p_base
-        rib_len = dir_vec.length
-        rot_quat = Vector((0, 0, 1)).rotation_difference(dir_vec)
-
-        rib_res = bmesh.ops.create_cube(bm, size=1.0)
-        bmesh.ops.scale(bm, vec=Vector((0.08, 0.05, rib_len)), verts=rib_res['verts'])
-        bmesh.ops.rotate(bm, cent=Vector((0, 0, 0)), matrix=rot_quat.to_matrix(), verts=rib_res['verts'])
-        bmesh.ops.translate(bm, vec=(p_base + p_top) / 2.0 + Vector((0, 0, 0.025)), verts=rib_res['verts'])
-        for v in rib_res['verts']:
-            for f in v.link_faces:
-                f.material_index = 0
-                f.smooth = True
-
-    # 3. Remate cerámico de cúspide (Z = 5.45 a 5.55 m)
-    finial_base = bmesh.ops.create_cone(bm, cap_ends=True, segments=16, radius1=0.25, radius2=0.08, depth=0.14)
-    bmesh.ops.translate(bm, vec=Vector((0.0, 0.0, z_peak - 0.04)), verts=finial_base['verts'])
+    # 4. Remate cónico cerámico suave (Z = 5.46 a 5.55 m)
+    finial_base = bmesh.ops.create_cone(bm, cap_ends=True, segments=24, radius1=0.28, radius2=0.10, depth=0.14)
+    bmesh.ops.translate(bm, vec=Vector((0.0, 0.0, z_peak - 0.02)), verts=finial_base['verts'])
     for v in finial_base['verts']:
         for f in v.link_faces:
             f.material_index = 0
             f.smooth = True
 
-    finial_tip = bmesh.ops.create_cone(bm, cap_ends=True, segments=16, radius1=0.08, radius2=0.01, depth=0.10)
-    bmesh.ops.translate(bm, vec=Vector((0.0, 0.0, z_peak + 0.05)), verts=finial_tip['verts'])
+    finial_tip = bmesh.ops.create_cone(bm, cap_ends=True, segments=24, radius1=0.10, radius2=0.015, depth=0.10)
+    bmesh.ops.translate(bm, vec=Vector((0.0, 0.0, z_peak + 0.06)), verts=finial_tip['verts'])
     for v in finial_tip['verts']:
         for f in v.link_faces:
             f.material_index = 0
@@ -998,7 +1100,6 @@ def build_conical_roof(mats, col):
 
 
 def setup_lighting_and_cameras():
-    # Suelo receptor de sombras para realismo visual en renders
     ground_mesh = bpy.data.meshes.new("Mesh_Suelo_Plaza")
     bm_g = bmesh.new()
     bmesh.ops.create_circle(bm_g, cap_ends=True, radius=14.0, segments=48)
@@ -1008,39 +1109,38 @@ def setup_lighting_and_cameras():
     ground_obj.is_shadow_catcher = True
     bpy.context.scene.collection.objects.link(ground_obj)
 
-    # 1. Luz Solar Principal (Key Light)
+    # 1. Luz Solar Principal (Calibrada para no saturar albedo)
     sun_key_d = bpy.data.lights.new('Luz_Key_Sun', type='SUN')
-    sun_key_d.energy = 5.5
-    sun_key_d.color = (1.0, 0.96, 0.90)
+    sun_key_d.energy = 3.6
+    sun_key_d.color = (1.0, 0.97, 0.92)
     sun_key = bpy.data.objects.new('Luz_Key_Sun', sun_key_d)
     bpy.context.scene.collection.objects.link(sun_key)
     sun_key.rotation_euler = (math.radians(48.0), math.radians(22.0), math.radians(-32.0))
 
-    # 2. Luz de Relleno (Fill Light)
+    # 2. Luz de Relleno
     sun_fill_d = bpy.data.lights.new('Luz_Fill_Sun', type='SUN')
-    sun_fill_d.energy = 2.8
+    sun_fill_d.energy = 1.8
     sun_fill_d.color = (0.78, 0.88, 1.0)
     sun_fill = bpy.data.objects.new('Luz_Fill_Sun', sun_fill_d)
     bpy.context.scene.collection.objects.link(sun_fill)
     sun_fill.rotation_euler = (math.radians(62.0), math.radians(-28.0), math.radians(145.0))
 
-    # 3. Luz Trasera de Contorno (Rim Light)
+    # 3. Luz Trasera de Contorno
     sun_rim_d = bpy.data.lights.new('Luz_Rim_Sun', type='SUN')
-    sun_rim_d.energy = 3.2
+    sun_rim_d.energy = 2.2
     sun_rim_d.color = (1.0, 0.95, 0.85)
     sun_rim = bpy.data.objects.new('Luz_Rim_Sun', sun_rim_d)
     bpy.context.scene.collection.objects.link(sun_rim)
     sun_rim.rotation_euler = (math.radians(25.0), math.radians(-45.0), math.radians(-160.0))
 
-    # Entorno
     world = bpy.context.scene.world
     if not world:
         world = bpy.data.worlds.new('World')
         bpy.context.scene.world = world
     bg = world.node_tree.nodes.get('Background')
     if bg:
-        bg.inputs['Color'].default_value = (0.82, 0.88, 0.94, 1.0)
-        bg.inputs['Strength'].default_value = 1.0
+        bg.inputs['Color'].default_value = (0.75, 0.82, 0.90, 1.0)
+        bg.inputs['Strength'].default_value = 0.8
 
     bpy.context.scene.render.engine = 'CYCLES'
     bpy.context.scene.cycles.device = 'CPU'
@@ -1120,7 +1220,7 @@ def render_views():
 
 def main():
     print("================================================================")
-    print(" GENERADOR PARAMÉTRICO: KIOSCO PARQUE HIDALGO (TECATE, B.C.)    ")
+    print(" GENERADOR PARAMÉTRICO: KIOSCO PARQUE HIDALGO (v2.0 FINAL)      ")
     print("================================================================")
     clean_scene()
 
@@ -1174,7 +1274,6 @@ def main():
     bpy.ops.wm.save_as_mainfile(filepath=blend_path)
     print(f"--> Archivo maestro Blender guardado: {blend_path}")
 
-    # Exportación GLB limpia para Godot (excluyendo el shadow catcher del render)
     bpy.ops.object.select_all(action='DESELECT')
     root_empty.select_set(True)
     for comp in all_components:
@@ -1195,7 +1294,7 @@ def main():
     render_views()
 
     print("================================================================")
-    print(" GENERACIÓN DEL KIOSCO FINALIZADA EXITOSAMENTE                 ")
+    print(" GENERACIÓN DEL KIOSCO v2.0 FINALIZADA EXITOSAMENTE            ")
     print("================================================================")
 
 if __name__ == '__main__':
