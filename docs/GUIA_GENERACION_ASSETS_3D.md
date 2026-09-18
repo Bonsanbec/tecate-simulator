@@ -116,3 +116,13 @@ Para reproducir este mismo resultado con cualquier otro objeto del entorno de Te
 3. **Fase 3 - Render de Estudio**: Renderizar 3 a 4 vistas técnicas (general, acercamiento y detalles clave) a `docs/images/`.
 4. **Fase 4 - Validación Visual**: Inspeccionar los renders con `view_file` para asegurar que las proporciones coinciden con las fotos reales de Tecate.
 5. **Fase 5 - Documentación y Snippet de Motor**: Generar el documento técnico en `docs/<nombre_asset>.md` con tabla de cotas, slots de material y código de integración en Godot.
+
+
+---
+
+## 5. Extensión para Monumentos y Assets Arquitectónicos Complejos
+
+Para estructuras arquitectónicas de gran envergadura (kioscos, templos, arcos de bienvenida, estaciones ferroviarias o monumentos cívicos), la complejidad morfológica supera a la del mobiliario urbano simple. 
+
+Para consultar el **análisis de aprendizajes del Kiosco de Parque Hidalgo**, la **plantilla técnica de 6 niveles (Bottom-Up)** y las **5 reglas de oro de Prompt Engineering arquitectónico**, consulta el documento dedicado:
+👉 [**Framework Metodológico: Aprendizajes, Plantilla de Especificación y Prompting para Assets Arquitectónicos Complejos**](APRENDIZAJES_Y_PLANTILLA_ASSETS_ARQUITECTONICOS.md).

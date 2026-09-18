@@ -112,3 +112,10 @@ Kiosco_Root (Node3D / Empty en 0,0,0)
 4. **`scripts/generate_brick_texture.py`**: Generador de mapas PBR para ladrillo decimonónico.
 5. **`scripts/generate_kiosko_tecate.py`**: Script de generación automatizada v3.0.
 6. **`docs/images/kiosko_*.png`**: Renders oficiales de alta resolución.
+
+---
+
+## 7. Metodología de Diseño, Aprendizajes y Prompting
+
+Para consultar la bitácora completa de los 6 aprendizajes morfológicos (tejas 3D volumétricas, arcos `|_^_|`, escalinatas saw-tooth, morteros decimonónicos y lateralidad), así como la plantilla técnica estandarizada y las 5 reglas de Prompt Engineering para futuros monumentos de Tecate, consulta:
+👉 [**Framework Metodológico: Aprendizajes, Plantilla de Especificación y Prompting para Assets Arquitectónicos Complejos**](APRENDIZAJES_Y_PLANTILLA_ASSETS_ARQUITECTONICOS.md).
