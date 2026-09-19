@@ -19,9 +19,9 @@ Documento técnico de especificación morfológica, paramétrica, fenestración,
   - **Prohibición estricta cumplida**: El asset 3D (`hotel_tecate.glb`) no embebe banquetas, cordones ni asfalto.
 - **Integración en Escena Principal Godot (`godot_project/main.tscn`)**:
   - Instancia: `[node name="Hotel_Tecate" parent="." instance=ExtResource("13_hotel_tecate")]`
-  - `transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -46.5, 398.88, 41.5)`
+  - `transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -44.06, 398.79, 45.40)`
   - **Rotación Cardinal Pura**: Rotación ortogonal estricta de $-90^\circ$ ($270^\circ$) alrededor del eje vertical $Y$, alineando el eje local $+X$ con el sur ($+Z_{\text{mundo}}$) a lo largo de Calle Pdte. Lázaro Cárdenas, y el eje local $-Z$ con el oriente ($+X_{\text{mundo}}$) a lo largo de Callejón Libertad.
-  - **Cota Rasante**: $Y = 398.88\text{ m}$, posando la planta baja a ras de la plataforma de la manzana (`manzanas_baked.glb`) y dejando el zócalo basal enterrado herméticamente hasta $Y = 397.63\text{ m}$.
+  - **Cota Rasante**: $Y = 398.79\text{ m}$, posando la planta baja a ras de la plataforma de la manzana catastral (`UrbanManzanas`) y dejando el zócalo basal enterrado herméticamente hasta $Y = 397.54\text{ m}$.
   - **Colisiones Analíticas**: Escena `hotel_tecate.tscn` con 9 cuerpos `BoxShape3D` coordinados con los ejes locales de glTF, preservando el zaguán de acceso de $4.80\text{ m} \times 3.20\text{ m}$ totalmente transitable sin paredes invisibles.
 
 ---

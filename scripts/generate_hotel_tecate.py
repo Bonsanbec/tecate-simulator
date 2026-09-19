@@ -133,33 +133,55 @@ def create_materials():
             bsdf.inputs["IOR"].default_value = ior
         return mat
 
-    # 1. Estuco Terracota Salmón Cálido Fotorrealista (#BE6045)
-    m_stucco = _make_mat("M_Estuco_Terracota", (0.71, 0.35, 0.23, 1.0), rough=0.88)
+    # 1. Estuco Terracota Salmón Cálido Fotorrealista PBR (media_1789814168997)
+    albedo_path = os.path.abspath("godot_project/assets/textures/hotel_tecate_stucco_albedo.png")
+    normal_path = os.path.abspath("godot_project/assets/textures/hotel_tecate_stucco_normal.png")
+    rough_path = os.path.abspath("godot_project/assets/textures/hotel_tecate_stucco_roughness.png")
+
+    m_stucco = _make_mat("M_Estuco_Terracota", (0.70, 0.62, 0.58, 1.0), rough=0.86)
     nodes = m_stucco.node_tree.nodes
     links = m_stucco.node_tree.links
     bsdf_st = nodes.get("Principled BSDF")
-    if bsdf_st:
-        # Micro-grano fino de arena (Scale 280)
-        tex_fine = nodes.new('ShaderNodeTexNoise')
-        tex_fine.inputs['Scale'].default_value = 280.0
-        tex_fine.inputs['Detail'].default_value = 6.0
-        tex_fine.inputs['Roughness'].default_value = 0.70
-        # Textura suave de llana de albañilería (Scale 22)
-        tex_coarse = nodes.new('ShaderNodeTexNoise')
-        tex_coarse.inputs['Scale'].default_value = 22.0
-        tex_coarse.inputs['Detail'].default_value = 3.0
-        # Mezcla de texturas
-        mix_noise = nodes.new('ShaderNodeMix')
-        mix_noise.data_type = 'FLOAT'
-        mix_noise.inputs['Factor'].default_value = 0.35
-        links.new(tex_fine.outputs['Fac'], mix_noise.inputs[2])
-        links.new(tex_coarse.outputs['Fac'], mix_noise.inputs[3])
-        # Bump normal
-        bump_st = nodes.new('ShaderNodeBump')
-        bump_st.inputs['Strength'].default_value = 0.14
-        bump_st.inputs['Distance'].default_value = 0.05
-        links.new(mix_noise.outputs['Result'], bump_st.inputs['Height'])
-        links.new(bump_st.outputs['Normal'], bsdf_st.inputs['Normal'])
+    if bsdf_st and os.path.exists(albedo_path):
+        tex_coord = nodes.new('ShaderNodeTexCoord')
+        mapping = nodes.new('ShaderNodeMapping')
+        mapping.inputs['Scale'].default_value = (0.60, 0.60, 0.60)
+        links.new(tex_coord.outputs['Object'], mapping.inputs['Vector'])
+
+        # Albedo map
+        img_alb = bpy.data.images.load(albedo_path)
+        node_alb = nodes.new('ShaderNodeTexImage')
+        node_alb.image = img_alb
+        node_alb.projection = 'BOX'
+        node_alb.projection_blend = 0.25
+        links.new(mapping.outputs['Vector'], node_alb.inputs['Vector'])
+        links.new(node_alb.outputs['Color'], bsdf_st.inputs['Base Color'])
+
+        # Normal map
+        if os.path.exists(normal_path):
+            img_nrm = bpy.data.images.load(normal_path)
+            img_nrm.colorspace_settings.name = 'Non-Color'
+            node_nrm = nodes.new('ShaderNodeTexImage')
+            node_nrm.image = img_nrm
+            node_nrm.projection = 'BOX'
+            node_nrm.projection_blend = 0.25
+            links.new(mapping.outputs['Vector'], node_nrm.inputs['Vector'])
+
+            nrm_map = nodes.new('ShaderNodeNormalMap')
+            nrm_map.inputs['Strength'].default_value = 0.90
+            links.new(node_nrm.outputs['Color'], nrm_map.inputs['Color'])
+            links.new(nrm_map.outputs['Normal'], bsdf_st.inputs['Normal'])
+
+        # Roughness map
+        if os.path.exists(rough_path):
+            img_rgh = bpy.data.images.load(rough_path)
+            img_rgh.colorspace_settings.name = 'Non-Color'
+            node_rgh = nodes.new('ShaderNodeTexImage')
+            node_rgh.image = img_rgh
+            node_rgh.projection = 'BOX'
+            node_rgh.projection_blend = 0.25
+            links.new(mapping.outputs['Vector'], node_rgh.inputs['Vector'])
+            links.new(node_rgh.outputs['Color'], bsdf_st.inputs['Roughness'])
     mats["estuco"] = m_stucco
 
     # 2. Zócalo Basal Subterráneo (Concreto Grafito Oscuro)
@@ -225,9 +247,10 @@ def create_materials():
     # 14. Toldo Verde Oscuro / Azul Marino (Internet World)
     mats["toldo_verde_oscuro"] = _make_mat("M_Toldo_Verde_Oscuro", (0.05, 0.16, 0.11, 1.0), rough=0.68)
 
-    # 15. Franquicia SUBWAY (Amarillo y Verde Institucional)
-    mats["subway_amarillo"] = _make_mat("M_Subway_Amarillo", (0.98, 0.82, 0.04, 1.0), rough=0.28, metal=0.05)
-    mats["subway_verde"] = _make_mat("M_Subway_Verde", (0.02, 0.40, 0.16, 1.0), rough=0.28, metal=0.05)
+    # 15. Franquicia SUBWAY (Verde institucional, Blanco y Amarillo Dorado)
+    mats["subway_verde"] = _make_mat("M_Subway_Verde", (0.00, 0.45, 0.18, 1.0), rough=0.35, metal=0.05)
+    mats["subway_blanco"] = _make_mat("M_Subway_Blanco", (0.95, 0.95, 0.95, 1.0), rough=0.25, metal=0.05)
+    mats["subway_amarillo"] = _make_mat("M_Subway_Amarillo", (1.00, 0.76, 0.05, 1.0), rough=0.25, metal=0.05)
 
     # 16. Carpas / Sombrillas Rojas de Terraza
     mats["sombrilla_roja"] = _make_mat("M_Sombrilla_Roja", (0.85, 0.04, 0.05, 1.0), rough=0.55)
@@ -389,6 +412,10 @@ def build_ochava_corner(mats, col):
     add_oriented_box(bm_glass, center_xy, tangent_xy, normal_xy, -1.20, -0.04, -0.02, 0.02, 0.10, 2.70)
     add_oriented_box(bm_glass, center_xy, tangent_xy, normal_xy, 0.04, 1.20, -0.02, 0.02, 0.10, 2.70)
 
+    # Respaldo opaco interior para erradicar transparencias en ochava
+    add_oriented_box(bm_dark, center_xy, tangent_xy, normal_xy, -0.95, 0.95, -0.16, -0.06, 3.65, 5.85)
+    add_oriented_box(bm_dark, center_xy, tangent_xy, normal_xy, -1.25, 1.25, -0.16, -0.06, 0.00, 2.80)
+
     # 7. Mástil y Luminaria Vertical en Fachada
     # Mástil tubular
     add_box(bm_white, 0.20, 0.28, 2.45, 2.53, 4.40, 6.20)
@@ -447,6 +474,26 @@ def build_north_facade_libertad(mats, col):
     bm_toldo_negro = bmesh.new()
     bm_sombrillas = bmesh.new()
 
+    # -----------------------------------------------------------------------
+    # Planta Baja: Muros Macizos Continuos y Dinteles (Z: 0.00 a 3.20 m)
+    # -----------------------------------------------------------------------
+    # Paños ciegos entre locales de PB:
+    add_box(bm_wall, 0.00, 0.35, 2.80, 3.10, 0.00, 3.20)   # Junto a Ochava
+    add_box(bm_wall, 0.00, 0.35, 6.10, 6.60, 0.00, 3.20)   # Entre Casa Paris y Subway
+    add_box(bm_wall, 0.00, 0.35, 7.60, 7.80, 0.00, 3.20)   # Entre puerta Subway y escaparate
+    add_box(bm_wall, 0.00, 0.35, 10.60, 11.00, 0.00, 3.20)  # Entre Subway y Michoacana
+    add_box(bm_wall, 0.00, 0.35, 14.00, 14.40, 0.00, 3.20)  # Entre Michoacana y N2
+    add_box(bm_wall, 0.00, 0.35, 17.30, 17.70, 0.00, 3.20)  # Entre N2 y N1 (Lolos)
+    add_box(bm_wall, 0.00, 0.35, 20.20, 20.40, 0.00, 3.20)  # Extremo oriente
+
+    # Dinteles sobre vanos comerciales de PB:
+    add_box(bm_wall, 0.00, 0.35, 3.10, 6.10, 2.80, 3.20)    # Sobre Casa Paris
+    add_box(bm_wall, 0.00, 0.35, 6.60, 7.60, 2.75, 3.20)    # Sobre puerta acceso Subway
+    add_box(bm_wall, 0.00, 0.35, 7.80, 10.60, 2.75, 3.20)   # Sobre escaparate Subway
+    add_box(bm_wall, 0.00, 0.35, 11.00, 14.00, 2.75, 3.20)  # Sobre Michoacana
+    add_box(bm_wall, 0.00, 0.35, 14.40, 17.30, 2.75, 3.20)  # Sobre N2
+    add_box(bm_wall, 0.00, 0.35, 17.70, 20.20, 2.75, 3.20)  # Sobre Lolos
+
     # Muro base antepecho PA (Z: 3.20 a 4.55 m)
     add_box(bm_wall, 0.00, 0.35, 2.80, 20.40, 3.20, 4.55)
     # Dintel superior corrido PA (Z: 6.25 a 7.15 m)
@@ -473,9 +520,13 @@ def build_north_facade_libertad(mats, col):
     add_box(bm_white, 0.10, 0.16, 3.60, 5.60, 4.55, 6.25)
     add_box(bm_white, 0.12, 0.18, 4.55, 4.65, 4.60, 6.20)
     add_box(bm_glass, 0.13, 0.15, 3.65, 5.55, 4.60, 6.20)
+    # Respaldo opaco interior ventana N5
+    add_box(bm_dark, 0.30, 0.35, 3.55, 5.65, 4.50, 6.30)
+
     # PB: Cancel comercial y Toldo Negro Casa Paris
     add_box(bm_dark, 0.08, 0.12, 3.10, 6.10, 0.00, 2.80)
     add_box(bm_glass, 0.09, 0.11, 3.15, 6.05, 0.10, 2.70)
+    add_box(bm_dark, 0.30, 0.35, 3.05, 6.15, 0.00, 2.85) # Respaldo opaco PB
     # Toldo rectangular negro
     add_box(bm_toldo_negro, -0.95, 0.05, 3.00, 6.20, 2.80, 3.35)
     add_box(bm_toldo_negro, -1.00, -0.95, 3.00, 6.20, 2.55, 2.80)
@@ -487,34 +538,48 @@ def build_north_facade_libertad(mats, col):
     add_box(bm_wall, 0.00, 0.35, 6.40, 6.90, 4.55, 6.25)
     add_box(bm_wall, 0.00, 0.35, 7.80, 8.30, 4.55, 6.25)
     add_box(bm_wall, 0.00, 0.35, 10.30, 10.80, 4.55, 6.25)
-    # Ventana vertical N4a (Y: 6.90 a 7.80 m)
+    # Relleno de muro macizo arriba/abajo de ventana vertical N4a (Z: 4.60 a 6.20 m)
+    add_box(bm_wall, 0.00, 0.35, 6.90, 7.80, 4.55, 4.60)
+    add_box(bm_wall, 0.00, 0.35, 6.90, 7.80, 6.20, 6.25)
     add_box(bm_white, 0.10, 0.16, 6.90, 7.80, 4.60, 6.20)
     add_box(bm_glass, 0.13, 0.15, 6.95, 7.75, 4.65, 6.15)
-    # Ventana ancha horizontal N4b (Y: 8.30 a 10.30 m)
+    add_box(bm_dark, 0.30, 0.35, 6.85, 7.85, 4.55, 6.25)
+
+    # Relleno de muro macizo arriba/abajo de ventana ancha N4b (Z: 4.70 a 6.10 m)
+    add_box(bm_wall, 0.00, 0.35, 8.30, 10.30, 4.55, 4.70)
+    add_box(bm_wall, 0.00, 0.35, 8.30, 10.30, 6.10, 6.25)
     add_box(bm_white, 0.10, 0.16, 8.30, 10.30, 4.70, 6.10)
     add_box(bm_white, 0.12, 0.18, 9.25, 9.35, 4.75, 6.05)
     add_box(bm_glass, 0.13, 0.15, 8.35, 10.25, 4.75, 6.05)
+    add_box(bm_dark, 0.30, 0.35, 8.25, 10.35, 4.65, 6.15)
 
     # PB Subway: Puerta vidriada izq + escaparate con persiana enrollable
     add_box(bm_dark, 0.08, 0.12, 6.60, 7.60, 0.00, 2.75) # Puerta acceso vidriada
     add_box(bm_glass, 0.09, 0.11, 6.65, 7.55, 0.10, 2.65)
+    add_box(bm_dark, 0.30, 0.35, 6.55, 7.65, 0.00, 2.80)
     add_box(bm_dark, 0.08, 0.12, 7.80, 10.60, 0.00, 2.75) # Escaparate
     add_box(bm_glass, 0.09, 0.11, 7.85, 10.55, 0.10, 2.10)
     add_box(bm_shutter, 0.10, 0.12, 7.85, 10.55, 2.10, 2.75) # Persiana semi-abierta
+    add_box(bm_dark, 0.30, 0.35, 7.75, 10.65, 0.00, 2.80)
 
     # -----------------------------------------------------------------------
     # Crujía N3 — La Michoacana / Reja de Servicio (Y: 10.80 a 14.20 m)
     # -----------------------------------------------------------------------
     add_box(bm_wall, 0.00, 0.35, 10.80, 12.20, 4.55, 6.25)
     add_box(bm_wall, 0.00, 0.35, 12.80, 14.20, 4.55, 6.25)
-    # Ventanita vertical PA (Y: 12.20 a 12.80 m)
+    # Relleno de muro macizo en ventanita N3 (Z: 4.85 a 5.85 m)
+    add_box(bm_wall, 0.00, 0.35, 12.20, 12.80, 4.55, 4.85)
+    add_box(bm_wall, 0.00, 0.35, 12.20, 12.80, 5.85, 6.25)
     add_box(bm_white, 0.10, 0.16, 12.20, 12.80, 4.85, 5.85)
     add_box(bm_glass, 0.13, 0.15, 12.25, 12.75, 4.90, 5.80)
+    add_box(bm_dark, 0.30, 0.35, 12.15, 12.85, 4.80, 5.90)
     # PB: Reja metálica de servicio y Local Michoacana
     add_box(bm_dark, 0.06, 0.12, 11.00, 11.80, 0.00, 2.75)
     for ry in [11.20, 11.40, 11.60]:
         add_box(bm_dark, 0.08, 0.10, ry - 0.02, ry + 0.02, 0.10, 2.65)
+    add_box(bm_dark, 0.30, 0.35, 10.95, 11.85, 0.00, 2.80)
     add_box(bm_shutter, 0.10, 0.12, 12.00, 14.00, 0.10, 2.75)
+    add_box(bm_dark, 0.30, 0.35, 11.95, 14.05, 0.00, 2.80)
     # Rótulo verde La Michoacana
     add_box(bm_wall, -0.06, 0.02, 11.90, 14.10, 2.80, 3.25)
 
@@ -527,9 +592,11 @@ def build_north_facade_libertad(mats, col):
     add_box(bm_white, 0.10, 0.16, 15.20, 16.60, 4.55, 6.25)
     add_box(bm_white, 0.12, 0.18, 15.85, 15.95, 4.60, 6.20)
     add_box(bm_glass, 0.13, 0.15, 15.25, 16.55, 4.60, 6.20)
+    add_box(bm_dark, 0.30, 0.35, 15.15, 16.65, 4.50, 6.30)
     # PB Persiana metálica cerrada
     add_box(bm_dark, 0.08, 0.12, 14.40, 17.30, 0.00, 2.75)
     add_box(bm_shutter, 0.10, 0.12, 14.45, 17.25, 0.10, 2.70)
+    add_box(bm_dark, 0.30, 0.35, 14.35, 17.35, 0.00, 2.80)
 
     # -----------------------------------------------------------------------
     # Crujía N1 (Oriente, Y: 17.50 a 20.40 m)
@@ -540,21 +607,70 @@ def build_north_facade_libertad(mats, col):
     # Ventana doble N1a (Y: 17.80 a 19.10 m)
     add_box(bm_white, 0.10, 0.16, 17.80, 19.10, 4.55, 6.25)
     add_box(bm_glass, 0.13, 0.15, 17.85, 19.05, 4.60, 6.20)
-    # Ventanita auxiliar N1b (Y: 19.40 a 19.90 m)
+    add_box(bm_dark, 0.30, 0.35, 17.75, 19.15, 4.50, 6.30)
+    # Relleno de muro macizo en ventanita auxiliar N1b (Z: 4.80 a 5.80 m)
+    add_box(bm_wall, 0.00, 0.35, 19.40, 19.90, 4.55, 4.80)
+    add_box(bm_wall, 0.00, 0.35, 19.40, 19.90, 5.80, 6.25)
     add_box(bm_white, 0.10, 0.16, 19.40, 19.90, 4.80, 5.80)
     add_box(bm_glass, 0.13, 0.15, 19.45, 19.85, 4.85, 5.75)
+    add_box(bm_dark, 0.30, 0.35, 19.35, 19.95, 4.75, 5.85)
+
     # Escudo / Logotipo Tecate "T" en muro (Z = 3.60 a 4.15 m)
     add_box(bm_dark, -0.06, 0.02, 18.20, 18.75, 3.60, 4.15)
     # PB: Local LOLOS y Terraza con sombrillas rojas
     add_box(bm_dark, 0.08, 0.12, 17.70, 20.20, 0.00, 2.75)
     add_box(bm_glass, 0.09, 0.11, 17.75, 20.15, 0.10, 2.70)
+    add_box(bm_dark, 0.30, 0.35, 17.65, 20.25, 0.00, 2.80)
     # Sombrillas rojas exteriores
     for sy in [18.20, 19.60]:
         add_box(bm_sombrillas, -1.80, -0.60, sy - 0.60, sy + 0.60, 2.30, 2.50)
         add_box(bm_sombrillas, -1.50, -0.90, sy - 0.30, sy + 0.30, 2.50, 2.80)
         add_box(bm_dark, -1.25, -1.15, sy - 0.05, sy + 0.05, 0.00, 2.30) # Mástil sombrilla
 
-    # Objetos en escena
+    # -----------------------------------------------------------------------
+    # Logotipo Institucional SUBWAY 3D (Silueta Verde, SUB Blanco, WAY Amarillo, Flechas)
+    # -----------------------------------------------------------------------
+    bm_subway_green = bmesh.new()
+    bm_arrow_w = bmesh.new()
+    bm_arrow_y = bmesh.new()
+
+    # 1. Silueta verde biselada / Contorno (#008938)
+    add_box(bm_subway_green, -0.06, 0.01, 7.60, 10.45, 3.32, 4.02)
+    add_box(bm_subway_green, -0.07, -0.04, 7.56, 10.49, 3.28, 4.06)
+
+    # 2. Flechas 3D canónicas del logotipo:
+    def add_arrow_left(bm, x_min, x_max, y_tip, y_base, z_center, z_half):
+        v1 = bm.verts.new((x_min, y_tip, z_center))
+        v2 = bm.verts.new((x_min, y_base, z_center + z_half))
+        v3 = bm.verts.new((x_min, y_base, z_center - z_half))
+        v4 = bm.verts.new((x_max, y_tip, z_center))
+        v5 = bm.verts.new((x_max, y_base, z_center + z_half))
+        v6 = bm.verts.new((x_max, y_base, z_center - z_half))
+        bm.faces.new((v1, v2, v3))
+        bm.faces.new((v4, v6, v5))
+        bm.faces.new((v1, v4, v5, v2))
+        bm.faces.new((v2, v5, v6, v3))
+        bm.faces.new((v3, v6, v4, v1))
+
+    def add_arrow_right(bm, x_min, x_max, y_tip, y_base, z_center, z_half):
+        v1 = bm.verts.new((x_min, y_tip, z_center))
+        v2 = bm.verts.new((x_min, y_base, z_center - z_half))
+        v3 = bm.verts.new((x_min, y_base, z_center + z_half))
+        v4 = bm.verts.new((x_max, y_tip, z_center))
+        v5 = bm.verts.new((x_max, y_base, z_center - z_half))
+        v6 = bm.verts.new((x_max, y_base, z_center + z_half))
+        bm.faces.new((v1, v2, v3))
+        bm.faces.new((v4, v6, v5))
+        bm.faces.new((v1, v4, v5, v2))
+        bm.faces.new((v2, v5, v6, v3))
+        bm.faces.new((v3, v6, v4, v1))
+
+    # Flecha izquierda blanca en 'S' (Y: 10.15 a 10.35, Z = 3.86, apunta hacia +Y/izquierda)
+    add_arrow_left(bm_arrow_w, -0.12, -0.06, 10.35, 10.15, 3.86, 0.10)
+    # Flecha derecha amarilla en 'Y' (Y: 7.65 a 7.85, Z = 3.86, apunta hacia -Y/derecha)
+    add_arrow_right(bm_arrow_y, -0.12, -0.06, 7.65, 7.85, 3.86, 0.10)
+
+    # Objetos de malla
     obj_wall_n = create_mesh_object("Fachada_Norte_Muro", bm_wall, mats["estuco"], col)
     obj_dark_n = create_mesh_object("Fachada_Norte_AlumOscuro", bm_dark, mats["alum_oscuro"], col)
     obj_glass_n = create_mesh_object("Fachada_Norte_Vidrio", bm_glass, mats["vidrio"], col)
@@ -562,18 +678,25 @@ def build_north_facade_libertad(mats, col):
     obj_shutter_n = create_mesh_object("Fachada_Norte_Cortinas", bm_shutter, mats["cortina_metalica"], col)
     obj_toldo_n = create_mesh_object("Fachada_Norte_ToldoNegro", bm_toldo_negro, mats["toldo_negro"], col)
     obj_somb = create_mesh_object("Fachada_Norte_Sombrillas", bm_sombrillas, mats["sombrilla_roja"], col)
+    obj_sub_plate = create_mesh_object("Subway_Placa_Verde", bm_subway_green, mats["subway_verde"], col)
+    obj_arr_w = create_mesh_object("Subway_Flecha_S", bm_arrow_w, mats["subway_blanco"], col)
+    obj_arr_y = create_mesh_object("Subway_Flecha_Y", bm_arrow_y, mats["subway_amarillo"], col)
 
-    # Logotipo 3D SUBWAY institucional directo en el muro
-    t_subway = create_3d_text("Texto_Subway", "SUBWAY", 0.62, 0.07, mats["subway_amarillo"], col)
-    t_subway.location = Vector((-0.08, 8.85, 3.55))
-    t_subway.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
+    # Textos 3D Subway (SUB a la izquierda en blanco, WAY a la derecha en amarillo)
+    t_sub = create_3d_text("Texto_SUB", "SUB", 0.52, 0.05, mats["subway_blanco"], col)
+    t_sub.location = Vector((-0.07, 10.18, 3.42))
+    t_sub.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
+
+    t_way = create_3d_text("Texto_WAY", "WAY", 0.52, 0.05, mats["subway_amarillo"], col)
+    t_way.location = Vector((-0.07, 9.08, 3.42))
+    t_way.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
 
     # Rótulo Casa Paris en toldo negro
     t_paris = create_3d_text("Texto_CasaParis", "CASA PARIS", 0.16, 0.02, mats["panel_blanco"], col)
     t_paris.location = Vector((-1.01, 4.60, 2.68))
     t_paris.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
 
-    return [obj_wall_n, obj_dark_n, obj_glass_n, obj_white_n, obj_shutter_n, obj_toldo_n, obj_somb, t_subway, t_paris]
+    return [obj_wall_n, obj_dark_n, obj_glass_n, obj_white_n, obj_shutter_n, obj_toldo_n, obj_somb, obj_sub_plate, obj_arr_w, obj_arr_y, t_sub, t_way, t_paris]
 
 def build_west_facade_cardenas(mats, col):
     """
@@ -619,23 +742,35 @@ def build_west_facade_cardenas(mats, col):
     add_box(bm_wall, 4.80, 5.20, 0.00, 0.35, 4.55, 6.25)
     add_box(bm_wall, 5.80, 6.20, 0.00, 0.35, 4.55, 6.25)
     add_box(bm_wall, 6.70, 6.80, 0.00, 0.35, 4.55, 6.25)
+    # Relleno de muros ciegos en PA sobre y bajo vanos
+    add_box(bm_wall, 5.20, 5.80, 0.00, 0.35, 4.55, 5.20)
+    add_box(bm_wall, 5.20, 5.80, 0.00, 0.35, 5.80, 6.25)
+    add_box(bm_wall, 6.20, 6.70, 0.00, 0.35, 4.55, 4.70)
+    add_box(bm_wall, 6.20, 6.70, 0.00, 0.35, 5.70, 6.25)
     # Ventana 1a: Corredera grande blanca (X: 3.30 a 4.80 m)
     add_box(bm_white, 3.30, 4.80, 0.10, 0.16, 4.55, 6.25)
     add_box(bm_white, 4.00, 4.10, 0.12, 0.18, 4.60, 6.20)
     add_box(bm_glass, 3.35, 4.75, 0.13, 0.15, 4.60, 6.20)
+    add_box(bm_dark, 3.25, 4.85, 0.30, 0.35, 4.50, 6.30)
     # Ventanita 1b: Cuadrada alta (X: 5.20 a 5.80 m)
     add_box(bm_white, 5.20, 5.80, 0.10, 0.16, 5.20, 5.80)
     add_box(bm_glass, 5.25, 5.75, 0.13, 0.15, 5.25, 5.75)
+    add_box(bm_dark, 5.15, 5.85, 0.30, 0.35, 5.15, 5.85)
     # Compresor Minisplit A/C en fachada (debajo de ventanita 1b)
     add_box(bm_minisplit, 5.05, 5.85, -0.42, -0.05, 3.75, 4.35)
     add_box(bm_dark, 5.45, 5.80, -0.44, -0.41, 3.82, 4.28) # Rejilla ventilador
     # Ventanita 1c: Vertical (X: 6.20 a 6.70 m)
     add_box(bm_white, 6.20, 6.70, 0.10, 0.16, 4.70, 5.70)
     add_box(bm_glass, 6.25, 6.65, 0.13, 0.15, 4.75, 5.65)
-    # PB: Cancel comercial con persiana enrollable
+    add_box(bm_dark, 6.15, 6.75, 0.30, 0.35, 4.65, 5.75)
+    # PB Módulo 1: Muro continuo, cancel y dintel
+    add_box(bm_wall, 2.80, 3.10, 0.00, 0.35, 0.00, 3.20)
+    add_box(bm_wall, 3.10, 6.50, 0.00, 0.35, 2.80, 3.20)
+    add_box(bm_wall, 6.50, 6.80, 0.00, 0.35, 0.00, 3.20)
     add_box(bm_dark, 3.10, 6.50, 0.08, 0.12, 0.00, 2.80)
     add_box(bm_glass, 3.15, 6.45, 0.09, 0.11, 0.10, 2.20)
     add_box(bm_shutter, 3.15, 6.45, 0.10, 0.12, 2.20, 2.80)
+    add_box(bm_dark, 3.05, 6.55, 0.30, 0.35, 0.00, 2.80)
 
     # -----------------------------------------------------------------------
     # Módulo 2 (X: 6.80 a 11.20 m)
@@ -644,28 +779,46 @@ def build_west_facade_cardenas(mats, col):
     add_box(bm_wall, 7.80, 8.10, 0.00, 0.35, 4.55, 6.25)
     add_box(bm_wall, 8.80, 9.20, 0.00, 0.35, 4.55, 6.25)
     add_box(bm_wall, 10.60, 10.80, 0.00, 0.35, 4.55, 6.25)
+    # Relleno de muros ciegos en PA
+    add_box(bm_wall, 7.10, 7.80, 0.00, 0.35, 4.55, 5.20)
+    add_box(bm_wall, 7.10, 7.80, 0.00, 0.35, 5.70, 6.25)
+    add_box(bm_wall, 8.10, 8.80, 0.00, 0.35, 4.55, 4.60)
+    add_box(bm_wall, 8.10, 8.80, 0.00, 0.35, 6.10, 6.25)
+    add_box(bm_wall, 10.80, 11.15, 0.00, 0.35, 4.55, 4.80)
+    add_box(bm_wall, 10.80, 11.15, 0.00, 0.35, 5.70, 6.25)
     # Ventanita 2a: Horizontal alargada (X: 7.10 a 7.80 m)
     add_box(bm_white, 7.10, 7.80, 0.10, 0.16, 5.20, 5.70)
     add_box(bm_glass, 7.15, 7.75, 0.13, 0.15, 5.25, 5.65)
+    add_box(bm_dark, 7.05, 7.85, 0.30, 0.35, 5.15, 5.75)
     # Ventana 2b: Vertical corredera (X: 8.10 a 8.80 m)
     add_box(bm_white, 8.10, 8.80, 0.10, 0.16, 4.60, 6.10)
     add_box(bm_glass, 8.15, 8.75, 0.13, 0.15, 4.65, 6.05)
+    add_box(bm_dark, 8.05, 8.85, 0.30, 0.35, 4.55, 6.15)
     # Ventana 2c: Doble grande blanca (X: 9.20 a 10.60 m)
     add_box(bm_white, 9.20, 10.60, 0.10, 0.16, 4.55, 6.25)
     add_box(bm_white, 9.85, 9.95, 0.12, 0.18, 4.60, 6.20)
     add_box(bm_glass, 9.25, 10.55, 0.13, 0.15, 4.60, 6.20)
+    add_box(bm_dark, 9.15, 10.65, 0.30, 0.35, 4.50, 6.30)
     # Ventanita 2d: Vertical delgada (X: 10.80 a 11.15 m)
     add_box(bm_white, 10.80, 11.15, 0.10, 0.16, 4.80, 5.70)
     add_box(bm_glass, 10.85, 11.10, 0.13, 0.15, 4.85, 5.65)
-    # PB Módulo 2: Cancel comercial, display circular y puerta ciega
+    add_box(bm_dark, 10.75, 11.20, 0.30, 0.35, 4.75, 5.75)
+    # PB Módulo 2: Muro macizo, cancel comercial, display circular y puerta ciega
+    add_box(bm_wall, 6.80, 7.10, 0.00, 0.35, 0.00, 3.20)
+    add_box(bm_wall, 7.10, 9.50, 0.00, 0.35, 2.80, 3.20)
+    add_box(bm_wall, 9.50, 10.30, 0.00, 0.35, 0.00, 3.20)
+    add_box(bm_wall, 10.30, 11.10, 0.00, 0.35, 2.40, 3.20)
+    add_box(bm_wall, 11.10, 11.20, 0.00, 0.35, 0.00, 3.20)
     add_box(bm_dark, 7.10, 9.50, 0.08, 0.12, 0.00, 2.80)
     add_box(bm_glass, 7.15, 9.45, 0.09, 0.11, 0.10, 2.20)
     add_box(bm_shutter, 7.15, 9.45, 0.10, 0.12, 2.20, 2.80)
+    add_box(bm_dark, 7.05, 9.55, 0.30, 0.35, 0.00, 2.80)
     # Display circular negro en pared (X = 9.80, Z = 3.20)
     add_box(bm_dark, 9.60, 10.00, -0.06, 0.02, 3.00, 3.40)
     add_box(bm_white, 9.65, 9.95, -0.08, -0.05, 3.05, 3.35)
     # Puerta peatonal ciega
     add_box(bm_dark, 10.30, 11.10, 0.06, 0.12, 0.00, 2.40)
+    add_box(bm_dark, 10.25, 11.15, 0.30, 0.35, 0.00, 2.40)
 
     # -----------------------------------------------------------------------
     # Módulo 3 (X: 11.20 a 16.00 m)
@@ -676,33 +829,54 @@ def build_west_facade_cardenas(mats, col):
     add_box(bm_wall, 14.15, 14.25, 0.00, 0.35, 4.55, 6.25) # Entre ventanitas gemelas
     add_box(bm_wall, 14.70, 15.00, 0.00, 0.35, 4.55, 6.25)
     add_box(bm_wall, 15.80, 16.00, 0.00, 0.35, 4.55, 6.25)
+    # Rellenos de muros ciegos en PA sobre y bajo vanos
+    add_box(bm_wall, 11.40, 11.90, 0.00, 0.35, 4.55, 4.80)
+    add_box(bm_wall, 11.40, 11.90, 0.00, 0.35, 5.80, 6.25)
+    add_box(bm_wall, 12.20, 13.40, 0.00, 0.35, 4.55, 4.70)
+    add_box(bm_wall, 12.20, 13.40, 0.00, 0.35, 6.00, 6.25)
+    add_box(bm_wall, 13.70, 14.70, 0.00, 0.35, 4.55, 4.90)
+    add_box(bm_wall, 13.70, 14.70, 0.00, 0.35, 5.60, 6.25)
     # Ventanita 3a: Vertical (X: 11.40 a 11.90 m)
     add_box(bm_white, 11.40, 11.90, 0.10, 0.16, 4.80, 5.80)
     add_box(bm_glass, 11.45, 11.85, 0.13, 0.15, 4.85, 5.75)
+    add_box(bm_dark, 11.35, 11.95, 0.30, 0.35, 4.75, 5.85)
     # Ventana 3b: Horizontal (X: 12.20 a 13.40 m)
     add_box(bm_white, 12.20, 13.40, 0.10, 0.16, 4.70, 6.00)
     add_box(bm_glass, 12.25, 13.35, 0.13, 0.15, 4.75, 5.95)
+    add_box(bm_dark, 12.15, 13.45, 0.30, 0.35, 4.65, 6.05)
     # Par de ventanitas gemelas cuadradas [][]:
     add_box(bm_white, 13.70, 14.15, 0.10, 0.16, 4.90, 5.60)
     add_box(bm_glass, 13.75, 14.10, 0.13, 0.15, 4.95, 5.55)
     add_box(bm_white, 14.25, 14.70, 0.10, 0.16, 4.90, 5.60)
     add_box(bm_glass, 14.30, 14.65, 0.13, 0.15, 4.95, 5.55)
+    add_box(bm_dark, 13.65, 14.75, 0.30, 0.35, 4.85, 5.65)
     # Ventana 3c: Rectangular con persianas verticales interiores (X: 15.00 a 15.80 m)
     add_box(bm_white, 15.00, 15.80, 0.10, 0.16, 4.55, 6.25)
     add_box(bm_glass, 15.05, 15.75, 0.13, 0.15, 4.60, 6.20)
-    # PB Módulo 3: Persiana cerrada y DOS TOLDOS CONTIGUOS COLOR ARENA
+    add_box(bm_dark, 14.95, 15.85, 0.30, 0.35, 4.50, 6.30)
+    # PB Módulo 3: Muros continuos, persiana cerrada y DOS TOLDOS CONTIGUOS COLOR ARENA
+    add_box(bm_wall, 11.20, 11.30, 0.00, 0.35, 0.00, 3.20)
+    add_box(bm_wall, 11.30, 12.60, 0.00, 0.35, 2.75, 3.20)
+    add_box(bm_wall, 12.60, 12.75, 0.00, 0.35, 0.00, 3.20)
+    add_box(bm_wall, 12.75, 14.30, 0.00, 0.35, 2.65, 3.20)
+    add_box(bm_wall, 14.30, 14.50, 0.00, 0.35, 0.00, 3.20)
+    add_box(bm_wall, 14.50, 15.90, 0.00, 0.35, 2.65, 3.20)
+    add_box(bm_wall, 15.90, 16.00, 0.00, 0.35, 0.00, 3.20)
     add_box(bm_dark, 11.30, 12.60, 0.08, 0.12, 0.00, 2.75)
     add_box(bm_shutter, 11.35, 12.55, 0.10, 0.12, 0.10, 2.70)
+    add_box(bm_dark, 11.25, 12.65, 0.30, 0.35, 0.00, 2.80)
     # Toldo Arena 1 (X: 12.70 a 14.35 m, saliente 1.15 m)
     add_box(bm_toldo_arena, 12.70, 14.35, -1.15, 0.05, 2.75, 3.25)
     add_box(bm_toldo_arena, 12.70, 14.35, -1.20, -1.15, 2.50, 2.75)
     add_box(bm_dark, 12.75, 14.30, 0.08, 0.12, 0.00, 2.65)
     add_box(bm_glass, 12.80, 14.25, 0.09, 0.11, 0.10, 2.55)
+    add_box(bm_dark, 12.70, 14.35, 0.30, 0.35, 0.00, 2.70)
     # Toldo Arena 2 (X: 14.45 a 15.95 m, saliente 1.15 m)
     add_box(bm_toldo_arena, 14.45, 15.95, -1.15, 0.05, 2.75, 3.25)
     add_box(bm_toldo_arena, 14.45, 15.95, -1.20, -1.15, 2.50, 2.75)
     add_box(bm_dark, 14.50, 15.90, 0.08, 0.12, 0.00, 2.65)
     add_box(bm_glass, 14.55, 15.85, 0.09, 0.11, 0.10, 2.55)
+    add_box(bm_dark, 14.45, 15.95, 0.30, 0.35, 0.00, 2.70)
 
     # -----------------------------------------------------------------------
     # Módulo 4 (Zaguán y Taquería Los Gallos, X: 16.00 a 24.80 m)
@@ -713,30 +887,46 @@ def build_west_facade_cardenas(mats, col):
     add_box(bm_wall, 19.30, 19.80, 0.00, 0.35, 4.55, 6.25)
     add_box(bm_wall, 21.20, 21.80, 0.00, 0.35, 4.55, 6.25)
     add_box(bm_wall, 23.40, 24.80, 0.00, 0.35, 4.55, 6.25)
+    # Rellenos de muros ciegos en PA sobre y bajo vanos
+    add_box(bm_wall, 17.80, 18.30, 0.00, 0.35, 4.55, 5.00)
+    add_box(bm_wall, 17.80, 18.30, 0.00, 0.35, 5.60, 6.25)
+    add_box(bm_wall, 18.60, 19.30, 0.00, 0.35, 4.55, 4.60)
+    add_box(bm_wall, 18.60, 19.30, 0.00, 0.35, 6.10, 6.25)
     # Ventanas PA:
     # 4a (X: 16.30 a 17.50 m)
     add_box(bm_white, 16.30, 17.50, 0.10, 0.16, 4.55, 6.25)
     add_box(bm_glass, 16.35, 17.45, 0.13, 0.15, 4.60, 6.20)
+    add_box(bm_dark, 16.25, 17.55, 0.30, 0.35, 4.50, 6.30)
     # 4b (X: 17.80 a 18.30 m)
     add_box(bm_white, 17.80, 18.30, 0.10, 0.16, 5.00, 5.60)
     add_box(bm_glass, 17.85, 18.25, 0.13, 0.15, 5.05, 5.55)
+    add_box(bm_dark, 17.75, 18.35, 0.30, 0.35, 4.95, 5.65)
     # 4c (X: 18.60 a 19.30 m)
     add_box(bm_white, 18.60, 19.30, 0.10, 0.16, 4.60, 6.10)
     add_box(bm_glass, 18.65, 19.25, 0.13, 0.15, 4.65, 6.05)
+    add_box(bm_dark, 18.55, 19.35, 0.30, 0.35, 4.55, 6.15)
     # 4d (X: 19.80 a 21.20 m)
     add_box(bm_white, 19.80, 21.20, 0.10, 0.16, 4.55, 6.25)
     add_box(bm_glass, 19.85, 21.15, 0.13, 0.15, 4.60, 6.20)
+    add_box(bm_dark, 19.75, 21.25, 0.30, 0.35, 4.50, 6.30)
     # 4e (X: 21.80 a 23.40 m)
     add_box(bm_white, 21.80, 23.40, 0.10, 0.16, 4.55, 6.25)
     add_box(bm_glass, 21.85, 23.35, 0.13, 0.15, 4.60, 6.20)
+    add_box(bm_dark, 21.75, 23.45, 0.30, 0.35, 4.50, 6.30)
 
     # Franja superior corrida de pavés sobre el zaguán (Z: 3.20 a 3.80 m)
     add_box(bm_paves, 20.05, 24.75, 0.05, 0.30, 3.25, 3.75)
     add_box(bm_dark, 20.00, 24.80, 0.02, 0.33, 3.20, 3.25)
     add_box(bm_dark, 20.00, 24.80, 0.02, 0.33, 3.75, 3.80)
+    add_box(bm_dark, 20.00, 24.80, 0.30, 0.35, 3.20, 3.80) # Respaldo interior oscuro pavés
+    # Antepecho macizo de estuco sobre pavés y bajo ventanas 4d/4e (Z: 3.80 a 4.55 m)
+    add_box(bm_wall, 20.00, 24.80, 0.00, 0.35, 3.80, 4.55)
     # Frontón ornamental escalonado central sobre zaguán
     add_box(bm_wall, 21.80, 23.00, -0.06, 0.41, 7.25, 7.60)
     add_box(bm_wall, 22.10, 22.70, -0.08, 0.43, 7.60, 7.80)
+
+    # PB Módulo 4: Muro macizo antes de zaguán
+    add_box(bm_wall, 16.00, 20.00, 0.00, 0.35, 0.00, 3.20)
 
     # PB Zaguán Túnel Transitable:
     add_box(bm_wall, 19.70, 20.00, 0.35, 10.00, 0.00, 3.50) # Muro norte
@@ -758,9 +948,14 @@ def build_west_facade_cardenas(mats, col):
     add_box(bm_white, 26.30, 26.40, 0.12, 0.18, 4.60, 6.20)
     add_box(bm_white, 27.00, 27.10, 0.12, 0.18, 4.60, 6.20)
     add_box(bm_glass, 25.65, 27.75, 0.13, 0.15, 4.60, 6.20)
-    # PB: Cancel comercial y Toldo Verde Oscuro / Azul Marino
+    add_box(bm_dark, 25.55, 27.85, 0.30, 0.35, 4.50, 6.30)
+    # PB Módulo 5: Muros macizos, cancel comercial y Toldo Verde Oscuro / Azul Marino
+    add_box(bm_wall, 24.80, 25.20, 0.00, 0.35, 0.00, 3.20)
+    add_box(bm_wall, 25.20, 28.20, 0.00, 0.35, 2.80, 3.20)
+    add_box(bm_wall, 28.20, 28.60, 0.00, 0.35, 0.00, 3.20)
     add_box(bm_dark, 25.20, 28.20, 0.08, 0.12, 0.00, 2.80)
     add_box(bm_glass, 25.25, 28.15, 0.09, 0.11, 0.10, 2.70)
+    add_box(bm_dark, 25.15, 28.25, 0.30, 0.35, 0.00, 2.80)
     add_box(bm_toldo_azul, 25.00, 28.40, -1.20, 0.05, 2.75, 3.25)
     add_box(bm_toldo_azul, 25.00, 28.40, -1.25, -1.20, 2.50, 2.75)
 
@@ -807,7 +1002,8 @@ def build_courtyard_rear_and_roof(mats, col):
 
     # 3. Alas Interiores y Patio Central (X: 8.00 a 20.00 m, Y: 6.00 a 14.00 m)
     add_box(bm_wall, 7.70, 8.00, 6.00, 20.05, 0.00, 7.10)  # Ala Norte
-    add_box(bm_wall, 8.00, 19.70, 5.70, 6.00, 0.00, 7.10)  # Ala Oeste
+    add_box(bm_wall, 8.00, 19.70, 5.70, 6.00, 0.00, 7.10)  # Ala Oeste PB y PA
+    add_box(bm_wall, 19.70, 24.80, 5.70, 6.00, 3.20, 7.10) # Ala Oeste PA (sobre el túnel del zaguán)
     add_box(bm_wall, 24.80, 25.10, 6.00, 20.05, 0.00, 7.10) # Ala Sur
     add_box(bm_wall, 8.00, 24.80, 14.00, 14.30, 0.00, 7.10) # Ala Oriente
 
@@ -815,15 +1011,23 @@ def build_courtyard_rear_and_roof(mats, col):
     add_box(bm_corridor, 8.00, 19.70, 6.00, 7.20, 3.45, 3.55)
     add_box(bm_iron, 8.00, 19.70, 7.15, 7.20, 3.55, 4.55)
 
+    # 3b. Entrepisos Horizontales Opacos (Aislamiento vertical hermético entre PB y PA)
+    # Ala Oeste (Cárdenas): X: 2.80 a 28.60, Y: 0.00 a 6.00, Z: 3.20 a 3.45 m
+    add_box(bm_roof, 2.80, 28.60, 0.00, 6.00, 3.20, 3.45)
+    # Ala Norte (Libertad): X: 0.00 a 8.00, Y: 2.80 a 20.40, Z: 3.20 a 3.45 m
+    add_box(bm_roof, 0.00, 8.00, 2.80, 20.40, 3.20, 3.45)
+    # Esquina Ochavada
+    center_xy = (1.40, 1.40)
+    tangent_xy = (-0.7071, 0.7071)
+    normal_xy = (-0.7071, -0.7071)
+    add_oriented_box(bm_roof, center_xy, tangent_xy, normal_xy, -1.98, 1.98, -2.80, 0.35, 3.20, 3.45)
+
     # 4. Sellado Hermético Total de Azotea (Losa Impermeabilizada en Z = 6.95 m)
     add_box(bm_roof, 2.80, 28.60, 0.35, 6.00, 6.90, 7.00)
     add_box(bm_roof, 0.35, 8.00, 2.80, 20.40, 6.90, 7.00)
     add_box(bm_roof, 24.80, 28.60, 6.00, 20.40, 6.90, 7.00)
     add_box(bm_roof, 8.00, 24.80, 14.00, 20.40, 6.90, 7.00)
     # Sellado de la esquina ochavada hacia el interior
-    center_xy = (1.40, 1.40)
-    tangent_xy = (-0.7071, 0.7071)
-    normal_xy = (-0.7071, -0.7071)
     add_oriented_box(bm_roof, center_xy, tangent_xy, normal_xy, -1.98, 1.98, -2.80, -0.35, 6.90, 7.00)
 
     obj_wall_rear = create_mesh_object("Interior_Muros_Patio", bm_wall, mats["estuco"], col)
