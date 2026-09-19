@@ -1,0 +1,21 @@
+[gd_scene load_steps=5 format=3 uid="uid://banqueta_bbva_tecate_001"]
+
+[ext_resource type="PackedScene" path="res://assets/buildings/banqueta_bbva_tecate.glb" id="1_mesh"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_banqueta_juarez"]
+size = Vector3(34.6, 0.18, 3.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_banqueta_cardenas"]
+size = Vector3(3.8, 0.18, 32.0)
+
+[node name="Banqueta_BBVA" type="StaticBody3D"]
+
+[node name="ModelInstance" parent="." instance=ExtResource("1_mesh")]
+
+[node name="Col_Banqueta_Juarez" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 0.09, 1.9)
+shape = SubResource("BoxShape3D_banqueta_juarez")
+
+[node name="Col_Banqueta_Cardenas" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9, 0.09, -16.0)
+shape = SubResource("BoxShape3D_banqueta_cardenas")

@@ -12,8 +12,8 @@ Documento técnico de especificación morfológica, paramétrica, PBR y consensu
   - En la proyección urbana de Godot, la esquina apunta hacia el cruce vial.
 - **Coordenadas en Escena Godot (`main.tscn`)**:
   - `Position = Vector3(-66.8, 400.18, -24.81)`
-  - `Basis = Transform3D(-0.995762, 0, 0.092022, 0, 1, 0, -0.092022, 0, -0.995762)` (rotación calibrada de $-174.72^\circ$ asegurando paralelismo estricto con el alineamiento vial de Av. Benito Juárez).
-  - Nodo raíz: `BBVA_Tecate (StaticBody3D)` con colisionadores analíticos `BoxShape3D`.
+  - `Basis = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1)` (rotación pura de $180.0^\circ$ garantizando paralelismo geométrico estricto con la banqueta de Av. Benito Juárez, sin reducción de sección hacia el poniente).
+  - Nodo raíz: `BBVA_Tecate (StaticBody3D)` con colisionadores analíticos para edificio y banqueta perimetral.
 
 ---
 
@@ -111,7 +111,8 @@ El edificio se compone de los siguientes cuerpos arquitectónicos fidedignamente
    - `godot_project/assets/buildings/bbva_tecate_centro.glb`
 3. **Asset 3D Modular de Banqueta Urbana**:
    - `godot_project/assets/buildings/banqueta_bbva_tecate.glb`
-4. **Escena Instanciable Godot 4**:
-   - `godot_project/assets/buildings/bbva_tecate_centro.tscn` (con colisionadores analíticos `StaticBody3D`).
+4. **Escenas Instanciables Godot 4**:
+   - `godot_project/assets/buildings/bbva_tecate_centro.tscn`: escena unificada que ensambla el edificio (`bbva_tecate_centro.glb`), la banqueta modular (`banqueta_bbva_tecate.glb`) y todos los colisionadores de suelo y fachada.
+   - `godot_project/assets/buildings/banqueta_bbva_tecate.tscn`: escena modular independiente de la banqueta con cordón perimetral.
 5. **Integración en Escena Principal (`main.tscn`)**:
-   - Emplazado en la intersección Juárez $\cap$ Cárdenas (`Position = Vector3(-66.8, 400.18, -24.81)`, Yaw = $-174.72^\circ$).
+   - Emplazado en la intersección Juárez $\cap$ Cárdenas (`Position = Vector3(-66.8, 400.18, -24.81)`, Yaw = $180.0^\circ$).
