@@ -1010,8 +1010,8 @@ def build_west_facade_cardenas(mats, col):
     add_box(bm_struct, 0.02, 0.30, Y_start, Y_max, 4.30, 5.10)
     add_box(bm_struct, 0.02, 0.30, Y_start, Y_max, 6.75, H_wall)
     
-    # Muro medianero norte que cierra el inmueble (Y = 30.00)
-    add_box(bm_struct, -0.05, 4.20, Y_max, Y_max + 0.30, -1.20, H_wall)
+    # Muro medianero norte (construido integralmente en build_south_and_inward_arc_facade en Y = 30.00)
+    # add_box(bm_struct, -0.05, 4.20, Y_max, Y_max + 0.30, -1.20, H_wall)
     
     # Cornisa corrida blanca a lo largo de los 30 metros
     add_box(bm_struct, -0.20, 0.40, Y_start, Y_max + 0.20, 7.10, 7.25)
@@ -1539,8 +1539,8 @@ def build_east_facade_and_parking(mats, col):
     add_box(bm_east, X_east - 0.45, X_east + 0.05, 0.40, Y_east_max, 7.10, 7.25) # Albardilla coping
     
     # Losa interior de azotea hermética
-    # Bloque Sur hasta la pared sur lisa (X = 4.20 a 17.40, Y = 0.40 a 25.20)
-    add_box(bm_east, 4.20, 17.40, 0.40, 25.20, 7.00, 7.25)
+    # Bloque Sur hasta la pared sur lisa (X = 4.20 a 17.40, Y = 0.40 a 30.00)
+    add_box(bm_east, 4.20, 17.40, 0.40, 30.00, 7.00, 7.25)
     # Bloque Este hasta la fachada este (X = 17.40 a X_east, Y = 0.40 a Y_east_max)
     add_box(bm_east, 17.40, X_east, 0.40, Y_east_max, 7.00, 7.25)
     # Losa ala Cárdenas (X = 0.40 a 4.20, Y = 4.20 a 30.00)
@@ -1786,190 +1786,249 @@ def build_east_facade_and_parking(mats, col):
     return obj_east, [obj_e_al, obj_e_gl, obj_e_bl, o_ed, obj_hvac, obj_pw, obj_wd], obj_rampa, obj_rail, obj_caseta, obj_sgn, o_sgn
 
 def build_south_and_inward_arc_facade(mats, col):
-    """Construye la Fachada Sur posterior lisa, la pared en arco cóncavo hacia adentro
-    y el cierre angulado a 45º (contraesquina de Guajardo) que conecta en (22.80, 20.80 m).
-    Mantiene el pilar central y las dos ventanas rectangulares pequeñas con repisas."""
+    """Construye la Fachada Sur posterior lisa (en Y = 30.00 m, alineada con el final de Cárdenas/DENTISTA)
+    y la pared en arco cóncavo hacia adentro ampliada que es el ÚNICO elemento cerrando directamente
+    entre la Cara Sur (17.40, 30.00 m) y la Cara Estacionamiento (22.80, 20.80 m).
+    Restaura y detalla el pilar central saliente coronado sobre el pretil y las dos ventanas rectangulares
+    pequeñas en planta alta con repisas de piedra salientes y cancelería visible (Ground Truth media_1789784140324)."""
     bm_south = bmesh.new()
     bm_roof_arc = bmesh.new()
     bm_alum = bmesh.new()
     bm_glass = bmesh.new()
     
-    Y_south = 25.20
+    Y_south = 30.00
     H_wall = 7.10
     
-    # 1. PARED SUR LISA (X = 0.00 a 17.40 m, Y = 25.20 m)
+    # Helper para cajas orientadas según un marco ortonormal 2D (tangente, normal)
+    def add_oriented_box(bm, center_xy, tangent_xy, normal_xy, s_min, s_max, n_min, n_max, z_min, z_max):
+        verts = []
+        for s in (s_min, s_max):
+            for n in (n_min, n_max):
+                for z in (z_min, z_max):
+                    vx = center_xy[0] + s * tangent_xy[0] + n * normal_xy[0]
+                    vy = center_xy[1] + s * tangent_xy[1] + n * normal_xy[1]
+                    verts.append(bm.verts.new((vx, vy, z)))
+        faces = [
+            (0, 1, 3, 2), # s_min
+            (4, 6, 7, 5), # s_max
+            (0, 4, 5, 1), # n_min
+            (2, 3, 7, 6), # n_max
+            (0, 2, 6, 4), # z_min
+            (1, 5, 7, 3), # z_max
+        ]
+        for f in faces:
+            bm.faces.new((verts[f[0]], verts[f[1]], verts[f[2]], verts[f[3]]))
+
+    # 1. PARED SUR LISA (X = -0.05 a 17.40 m, Y = 30.00 m)
+    # Parte exactamente desde donde termina cara Cárdenas (X = -0.05, Y = 30.00)
     # Plinto basal (Z = -1.20 a 0.40)
-    add_box(bm_south, -0.05, 17.40, Y_south - 0.28, Y_south + 0.12, -1.20, 0.40)
+    add_box(bm_south, -0.05, 17.40, Y_south - 0.35, Y_south + 0.05, -1.20, 0.40)
     # Muro principal liso (Z = 0.40 a 7.10)
-    add_box(bm_south, -0.05, 17.40, Y_south - 0.28, Y_south + 0.12, 0.40, H_wall)
-    # Moldura intermedia a media altura
-    add_box(bm_south, -0.05, 17.40, Y_south + 0.12, Y_south + 0.22, 3.16, 3.28)
-    # Albardilla / pretil coping
-    add_box(bm_south, -0.05, 17.40, Y_south - 0.35, Y_south + 0.18, 7.10, 7.25)
-    # Columna esquinera de transición en X = 17.40
-    add_box(bm_south, 17.20, 17.60, Y_south - 0.32, Y_south + 0.25, -1.20, 7.35)
+    add_box(bm_south, -0.05, 17.40, Y_south - 0.35, Y_south + 0.05, 0.40, H_wall)
+    # Moldura intermedia a media altura (exterior hacia +Y, coincidente con foto media_1789784140324)
+    add_box(bm_south, -0.05, 17.40, Y_south + 0.05, Y_south + 0.16, 3.16, 3.28)
+    # Albardilla / pretil coping (Z = 7.10 a 7.25)
+    add_box(bm_south, -0.05, 17.40, Y_south - 0.40, Y_south + 0.12, 7.10, 7.25)
+    # Pilastra esquinera de transición en X = 17.40
+    add_box(bm_south, 17.20, 17.60, Y_south - 0.38, Y_south + 0.18, -1.20, 7.35)
 
-    # 2. PARED EN ARCO CÓNCAVO HACIA ADENTRO: desde (17.40, 25.20) hasta (21.00, 22.60)
-    # El arco se curva hacia el interior del edificio (sagita hacia el centro)
-    # y en (21.00, 22.60) su tangente empalma suavemente con el chaflán a 45º.
-    p_start = (17.40, 25.20)
-    p_end = (21.00, 22.60)
-    n_segments = 14
+    # 2. PARED EN ARCO CÓNCAVO HACIA ADENTRO AMPLIADA (ÚNICO ELEMENTO DE CIERRE)
+    # Desde (17.40, 30.00) directo hasta (22.80, 20.80 m).
+    p_start = (17.40, 30.00)
+    p_end = (22.80, 20.80)
+    n_segments = 20
     thick = 0.35
-    sagitta = 0.85 # Profundidad de concavidad hacia el interior
+    sagitta = 1.20  # Profundidad cóncava hacia el interior del inmueble
     
-    # Vector normal perpendicular hacia el interior
-    dx_c = p_end[0] - p_start[0]
-    dy_c = p_end[1] - p_start[1]
-    L_c = math.hypot(dx_c, dy_c)
-    # Normal hacia el interior (sentido -X, -Y)
-    nx_in = dy_c / L_c
-    ny_in = -dx_c / L_c
-    if ny_in > 0:
-        nx_in, ny_in = -nx_in, -ny_in
-    # Normal hacia el exterior
-    nx_out, ny_out = -nx_in, -ny_in
+    dx_c = p_end[0] - p_start[0] # +5.40
+    dy_c = p_end[1] - p_start[1] # -9.20
+    L_c = math.hypot(dx_c, dy_c) # ~10.668
+    
+    # Normal unitaria hacia el exterior (sentido +X, +Y)
+    nx_out = -dy_c / L_c  # +9.20 / 10.668 > 0
+    ny_out = dx_c / L_c   # +5.40 / 10.668 > 0
+    # Normal unitaria hacia el interior (sentido -X, -Y)
+    nx_in = -nx_out
+    ny_in = -ny_out
 
-    arc_points = []
+    arc_inner_pts = []
+    
     for i in range(n_segments + 1):
         u = i / float(n_segments)
-        # Punto sobre la cuerda recta
         cx = p_start[0] + u * dx_c
         cy = p_start[1] + u * dy_c
-        # Desplazamiento cóncavo parabólico hacia adentro
+        # Curvatura cóncava sinusoidal hacia adentro
         disp = sagitta * math.sin(math.pi * u)
-        x = cx + disp * nx_in
-        y = cy + disp * ny_in
-        arc_points.append((x, y))
+        px_inner = cx + disp * nx_in
+        py_inner = cy + disp * ny_in
+        arc_inner_pts.append((px_inner, py_inner))
 
-    # Construir caras del arco
+    # Construir las dovelas/paneles del arco cóncavo
     for i in range(n_segments):
-        x1, y1 = arc_points[i]
-        x2, y2 = arc_points[i+1]
+        x1_in, y1_in = arc_inner_pts[i]
+        x2_in, y2_in = arc_inner_pts[i+1]
         
-        dx = x2 - x1
-        dy = y2 - y1
-        L = math.hypot(dx, dy)
-        if L > 0:
-            nx = -dy / L * thick
-            ny = dx / L * thick
+        # Tangente local del segmento
+        sdx = x2_in - x1_in
+        sdy = y2_in - y1_in
+        sL = math.hypot(sdx, sdy)
+        if sL > 0:
+            snx = -sdy / sL
+            sny = sdx / sL
         else:
-            nx, ny = 0.0, -thick
+            snx, sny = nx_out, ny_out
             
-        # Asegurar orientación hacia el exterior
-        if ny < 0 and nx > 0:
-            nx, ny = -nx, -ny
-
-        # Plinto basal (Z = -1.20 a 0.40)
-        v_b1 = bm_south.verts.new((x1, y1, -1.20))
-        v_b2 = bm_south.verts.new((x2, y2, -1.20))
-        v_b3 = bm_south.verts.new((x2 + nx, y2 + ny, -1.20))
-        v_b4 = bm_south.verts.new((x1 + nx, y1 + ny, -1.20))
+        # Puntos de la cara exterior desplazados por el espesor del muro
+        x1_out = x1_in + snx * thick
+        y1_out = y1_in + sny * thick
+        x2_out = x2_in + snx * thick
+        y2_out = y2_in + sny * thick
         
-        v_t1 = bm_south.verts.new((x1, y1, 0.40))
-        v_t2 = bm_south.verts.new((x2, y2, 0.40))
-        v_t3 = bm_south.verts.new((x2 + nx, y2 + ny, 0.40))
-        v_t4 = bm_south.verts.new((x1 + nx, y1 + ny, 0.40))
+        # Coping / albardilla exterior sobresaliente
+        x1_cop = x1_in + snx * (thick + 0.08)
+        y1_cop = y1_in + sny * (thick + 0.08)
+        x2_cop = x2_in + snx * (thick + 0.08)
+        y2_cop = y2_in + sny * (thick + 0.08)
+
+        # A. Plinto basal (Z = -1.20 a 0.40)
+        v_b1 = bm_south.verts.new((x1_in, y1_in, -1.20))
+        v_b2 = bm_south.verts.new((x2_in, y2_in, -1.20))
+        v_b3 = bm_south.verts.new((x2_out, y2_out, -1.20))
+        v_b4 = bm_south.verts.new((x1_out, y1_out, -1.20))
+        
+        v_t1 = bm_south.verts.new((x1_in, y1_in, 0.40))
+        v_t2 = bm_south.verts.new((x2_in, y2_in, 0.40))
+        v_t3 = bm_south.verts.new((x2_out, y2_out, 0.40))
+        v_t4 = bm_south.verts.new((x1_out, y1_out, 0.40))
         
         bm_south.faces.new((v_b1, v_b2, v_t2, v_t1))
         bm_south.faces.new((v_b2, v_b3, v_t3, v_t2))
         bm_south.faces.new((v_b3, v_b4, v_t4, v_t3))
         bm_south.faces.new((v_b4, v_b1, v_t1, v_t4))
         
-        # Muro principal (Z = 0.40 a 7.10)
-        v_w1 = bm_south.verts.new((x1, y1, H_wall))
-        v_w2 = bm_south.verts.new((x2, y2, H_wall))
-        v_w3 = bm_south.verts.new((x2 + nx, y2 + ny, H_wall))
-        v_w4 = bm_south.verts.new((x1 + nx, y1 + ny, H_wall))
+        # B. Muro principal curvo (Z = 0.40 a 7.10)
+        v_w1 = bm_south.verts.new((x1_in, y1_in, H_wall))
+        v_w2 = bm_south.verts.new((x2_in, y2_in, H_wall))
+        v_w3 = bm_south.verts.new((x2_out, y2_out, H_wall))
+        v_w4 = bm_south.verts.new((x1_out, y1_out, H_wall))
         
         bm_south.faces.new((v_t1, v_t2, v_w2, v_w1))
         bm_south.faces.new((v_t2, v_t3, v_w3, v_w2))
         bm_south.faces.new((v_t3, v_t4, v_w4, v_w3))
         bm_south.faces.new((v_t4, v_t1, v_w1, v_w4))
-        bm_south.faces.new((v_w1, v_w2, v_w3, v_w4)) # Tapa pretil
         
-        # Losa de azotea hermética detrás del arco (conecta con Y = 20.80 de la losa este)
-        vr1 = bm_roof_arc.verts.new((x1, y1, 7.00))
-        vr2 = bm_roof_arc.verts.new((x2, y2, 7.00))
-        vr3 = bm_roof_arc.verts.new((x2, 20.80, 7.00))
-        vr4 = bm_roof_arc.verts.new((x1, 20.80, 7.00))
-        bm_roof_arc.faces.new((vr1, vr2, vr3, vr4))
-        vr1t = bm_roof_arc.verts.new((x1, y1, 7.25))
-        vr2t = bm_roof_arc.verts.new((x2, y2, 7.25))
-        vr3t = bm_roof_arc.verts.new((x2, 20.80, 7.25))
-        vr4t = bm_roof_arc.verts.new((x1, 20.80, 7.25))
-        bm_roof_arc.faces.new((vr4t, vr3t, vr2t, vr1t))
+        # C. Pretil y albardilla corrida (Z = 7.10 a 7.25)
+        v_cp1 = bm_south.verts.new((x1_in - snx * 0.05, y1_in - sny * 0.05, 7.25))
+        v_cp2 = bm_south.verts.new((x2_in - snx * 0.05, y2_in - sny * 0.05, 7.25))
+        v_cp3 = bm_south.verts.new((x2_cop, y2_cop, 7.25))
+        v_cp4 = bm_south.verts.new((x1_cop, y1_cop, 7.25))
+        
+        bm_south.faces.new((v_w1, v_w2, v_cp2, v_cp1))
+        bm_south.faces.new((v_w2, v_w3, v_cp3, v_cp2))
+        bm_south.faces.new((v_w3, v_w4, v_cp4, v_cp3))
+        bm_south.faces.new((v_w4, v_w1, v_cp1, v_cp4))
+        bm_south.faces.new((v_cp1, v_cp2, v_cp3, v_cp4)) # Cara superior pretil
+        
+        # D. Losa de azotea hermética triangular/abanico conectada a la esquina interior (17.40, 20.80)
+        vr_c_bot = bm_roof_arc.verts.new((17.40, 20.80, 7.00))
+        vr_1_bot = bm_roof_arc.verts.new((x1_in, y1_in, 7.00))
+        vr_2_bot = bm_roof_arc.verts.new((x2_in, y2_in, 7.00))
+        bm_roof_arc.faces.new((vr_c_bot, vr_1_bot, vr_2_bot))
+        
+        vr_c_top = bm_roof_arc.verts.new((17.40, 20.80, 7.25))
+        vr_1_top = bm_roof_arc.verts.new((x1_in, y1_in, 7.25))
+        vr_2_top = bm_roof_arc.verts.new((x2_in, y2_in, 7.25))
+        bm_roof_arc.faces.new((vr_c_top, vr_2_top, vr_1_top))
+        bm_roof_arc.faces.new((vr_1_bot, vr_2_bot, vr_2_top, vr_1_top))
 
-    # 3. CIERRE ANGULADO A 45º (CONTRAESQUINA DE GUAJARDO)
-    # Desde (21.00, 22.60) hasta (22.80, 20.80 m)
-    # Delta X = +1.80, Delta Y = -1.80 (ángulo exacto de 45º)
-    x_c1, y_c1 = 21.00, 22.60
-    x_c2, y_c2 = 22.80, 20.80
-    nx_cham = 0.25
-    ny_cham = 0.25 # Normal hacia el exterior (sentido +X, +Y)
+    # 3. PILAR VERTICAL SALIENTE EN EL CENTRO EXACTO DEL ARCO (Ground Truth media_1789784140324)
+    # Ubicado en u = 0.5 del arco cóncavo
+    u_mid = 0.5
+    cx_m = p_start[0] + u_mid * dx_c
+    cy_m = p_start[1] + u_mid * dy_c
+    disp_m = sagitta * math.sin(math.pi * u_mid)
+    pm_in = (cx_m + disp_m * nx_in, cy_m + disp_m * ny_in)
     
-    # Plinto basal chaflán
-    v_cb1 = bm_south.verts.new((x_c1, y_c1, -1.20))
-    v_cb2 = bm_south.verts.new((x_c2, y_c2, -1.20))
-    v_cb3 = bm_south.verts.new((x_c2 + nx_cham, y_c2 + ny_cham, -1.20))
-    v_cb4 = bm_south.verts.new((x_c1 + nx_cham, y_c1 + ny_cham, -1.20))
-    v_ct1 = bm_south.verts.new((x_c1, y_c1, 0.40))
-    v_ct2 = bm_south.verts.new((x_c2, y_c2, 0.40))
-    v_ct3 = bm_south.verts.new((x_c2 + nx_cham, y_c2 + ny_cham, 0.40))
-    v_ct4 = bm_south.verts.new((x_c1 + nx_cham, y_c1 + ny_cham, 0.40))
-    bm_south.faces.new((v_cb1, v_cb2, v_ct2, v_ct1))
-    bm_south.faces.new((v_cb2, v_cb3, v_ct3, v_ct2))
-    bm_south.faces.new((v_cb3, v_cb4, v_ct4, v_ct3))
-    bm_south.faces.new((v_cb4, v_cb1, v_ct1, v_ct4))
-
-    # Muro principal chaflán
-    v_cw1 = bm_south.verts.new((x_c1, y_c1, H_wall))
-    v_cw2 = bm_south.verts.new((x_c2, y_c2, H_wall))
-    v_cw3 = bm_south.verts.new((x_c2 + nx_cham, y_c2 + ny_cham, H_wall))
-    v_cw4 = bm_south.verts.new((x_c1 + nx_cham, y_c1 + ny_cham, H_wall))
-    bm_south.faces.new((v_ct1, v_ct2, v_cw2, v_cw1))
-    bm_south.faces.new((v_ct2, v_ct3, v_cw3, v_cw2))
-    bm_south.faces.new((v_ct3, v_ct4, v_cw4, v_cw3))
-    bm_south.faces.new((v_ct4, v_ct1, v_cw1, v_cw4))
-    bm_south.faces.new((v_cw1, v_cw2, v_cw3, v_cw4)) # Pretil
+    # Tangente y normal en u = 0.5
+    t_mid = (dx_c / L_c, dy_c / L_c)
+    n_mid = (nx_out, ny_out)
     
-    # Losa de azotea chaflán
-    v_cr1 = bm_roof_arc.verts.new((x_c1, y_c1, 7.00))
-    v_cr2 = bm_roof_arc.verts.new((x_c2, y_c2, 7.00))
-    v_cr3 = bm_roof_arc.verts.new((x_c1, 20.80, 7.00))
-    bm_roof_arc.faces.new((v_cr1, v_cr2, v_cr3))
-    v_cr1t = bm_roof_arc.verts.new((x_c1, y_c1, 7.25))
-    v_cr2t = bm_roof_arc.verts.new((x_c2, y_c2, 7.25))
-    v_cr3t = bm_roof_arc.verts.new((x_c1, 20.80, 7.25))
-    bm_roof_arc.faces.new((v_cr3t, v_cr2t, v_cr1t))
+    # Machón del pilar: anchura 0.45 m, sobresale 0.42 m respecto a la cara exterior del muro (Z = -1.20 a 7.45)
+    # Corona notablemente por encima del pretil (7.25 m), coincidiendo con la foto
+    add_oriented_box(bm_south, pm_in, t_mid, n_mid,
+                     s_min=-0.225, s_max=0.225,
+                     n_min=-0.05, n_max=thick + 0.42,
+                     z_min=-1.20, z_max=7.45)
+    # Capitel / moldura superior de remate del pilar (Z = 7.35 a 7.50 m)
+    add_oriented_box(bm_south, pm_in, t_mid, n_mid,
+                     s_min=-0.275, s_max=0.275,
+                     n_min=-0.08, n_max=thick + 0.47,
+                     z_min=7.35, z_max=7.50)
 
-    # 4. PILAR DELGADO SALIENTE EN EL CENTRO DEL ARCO (Ground Truth media_1789784140324)
-    # Centro del arco (u = 0.5)
-    mid_idx = n_segments // 2
-    px_mid, py_mid = arc_points[mid_idx]
-    # El pilar se orienta hacia el exterior con saliente marcada
-    add_box(bm_south, px_mid - 0.20, px_mid + 0.20, py_mid - 0.15, py_mid + 0.55, -1.20, 7.45)
+    # 4. DOS VENTANAS RECTANGULARES PEQUEÑAS EN PLANTA ALTA CON REPISAS DE PIEDRA SALIENTES
+    # Ventana 1: En u = 0.25 (lado cara Sur)
+    # Ventana 2: En u = 0.75 (lado cara Estacionamiento)
+    for u_win in [0.25, 0.75]:
+        cx_w = p_start[0] + u_win * dx_c
+        cy_w = p_start[1] + u_win * dy_c
+        disp_w = sagitta * math.sin(math.pi * u_win)
+        pw_in = (cx_w + disp_w * nx_in, cy_w + disp_w * ny_in)
+        
+        # Derivada de la curva para obtener la tangente local exacta
+        # P(u) = C(u) + sagitta * sin(pi*u) * n_in
+        # P'(u) = (dx_c, dy_c) + sagitta * pi * cos(pi*u) * n_in
+        dpx = dx_c + sagitta * math.pi * math.cos(math.pi * u_win) * nx_in
+        dpy = dy_c + sagitta * math.pi * math.cos(math.pi * u_win) * ny_in
+        dpL = math.hypot(dpx, dpy)
+        t_w = (dpx / dpL, dpy / dpL)
+        n_w = (-t_w[1], t_w[0]) # Normal exterior
+        if n_w[0] * nx_out + n_w[1] * ny_out < 0:
+            n_w = (-n_w[0], -n_w[1])
+            
+        # Repisa de piedra saliente (sill) en Z = 5.24 a 5.38 m (en bm_south)
+        add_oriented_box(bm_south, pw_in, t_w, n_w,
+                         s_min=-0.55, s_max=0.55,
+                         n_min=thick - 0.05, n_max=thick + 0.22,
+                         z_min=5.24, z_max=5.38)
+                         
+        # Nicho interior oscuro detrás de la ventana (para evitar ver pared blanca sólida tras el cristal)
+        add_oriented_box(bm_alum, pw_in, t_w, n_w,
+                         s_min=-0.44, s_max=0.44,
+                         n_min=thick - 0.02, n_max=thick + 0.02,
+                         z_min=5.38, z_max=6.35)
 
-    # 5. DOS VENTANAS RECTANGULARES PEQUEÑAS EN PLANTA ALTA CON REPISAS
-    # Ventana 1 (hacia el lado de cara Sur, u ~ 0.25)
-    w1_idx = int(n_segments * 0.28)
-    w1_x, w1_y = arc_points[w1_idx]
-    add_box(bm_south, w1_x - 0.55, w1_x + 0.55, w1_y - 0.05, w1_y + 0.35, 5.28, 5.42) # Repisa
-    add_box(bm_alum, w1_x - 0.48, w1_x + 0.48, w1_y + 0.05, w1_y + 0.25, 5.42, 5.46)
-    add_box(bm_alum, w1_x - 0.48, w1_x + 0.48, w1_y + 0.05, w1_y + 0.25, 6.30, 6.35)
-    add_box(bm_alum, w1_x - 0.48, w1_x - 0.44, w1_y + 0.05, w1_y + 0.25, 5.42, 6.35)
-    add_box(bm_alum, w1_x + 0.44, w1_x + 0.48, w1_y + 0.05, w1_y + 0.25, 5.42, 6.35)
-    add_box(bm_glass, w1_x - 0.44, w1_x + 0.44, w1_y + 0.12, w1_y + 0.18, 5.48, 6.28)
-
-    # Ventana 2 (hacia el lado del chaflán, u ~ 0.72)
-    w2_idx = int(n_segments * 0.72)
-    w2_x, w2_y = arc_points[w2_idx]
-    add_box(bm_south, w2_x - 0.55, w2_x + 0.55, w2_y - 0.05, w2_y + 0.35, 5.28, 5.42) # Repisa
-    add_box(bm_alum, w2_x - 0.48, w2_x + 0.48, w2_y + 0.05, w2_y + 0.25, 5.42, 5.46)
-    add_box(bm_alum, w2_x - 0.48, w2_x + 0.48, w2_y + 0.05, w2_y + 0.25, 6.30, 6.35)
-    add_box(bm_alum, w2_x - 0.48, w2_x - 0.44, w2_y + 0.05, w2_y + 0.25, 5.42, 6.35)
-    add_box(bm_alum, w2_x + 0.44, w2_x + 0.48, w2_y + 0.05, w2_y + 0.25, 5.42, 6.35)
-    add_box(bm_glass, w2_x - 0.44, w2_x + 0.44, w2_y + 0.12, w2_y + 0.18, 5.48, 6.28)
+        # Cancelería de aluminio oscuro (Z = 5.38 a 6.35 m, ancho 0.88 m)
+        # Marco perimetral
+        add_oriented_box(bm_alum, pw_in, t_w, n_w,
+                         s_min=-0.44, s_max=0.44,
+                         n_min=thick + 0.01, n_max=thick + 0.08,
+                         z_min=5.38, z_max=5.44) # Travesaño inferior
+        add_oriented_box(bm_alum, pw_in, t_w, n_w,
+                         s_min=-0.44, s_max=0.44,
+                         n_min=thick + 0.01, n_max=thick + 0.08,
+                         z_min=6.29, z_max=6.35) # Travesaño superior
+        add_oriented_box(bm_alum, pw_in, t_w, n_w,
+                         s_min=-0.44, s_max=-0.38,
+                         n_min=thick + 0.01, n_max=thick + 0.08,
+                         z_min=5.38, z_max=6.35) # Montante izquierdo
+        add_oriented_box(bm_alum, pw_in, t_w, n_w,
+                         s_min=0.38, s_max=0.44,
+                         n_min=thick + 0.01, n_max=thick + 0.08,
+                         z_min=5.38, z_max=6.35) # Montante derecho
+        add_oriented_box(bm_alum, pw_in, t_w, n_w,
+                         s_min=-0.03, s_max=0.03,
+                         n_min=thick + 0.01, n_max=thick + 0.08,
+                         z_min=5.38, z_max=6.35) # Parteluz central vertical
+                         
+        # Vidrio reflectante
+        add_oriented_box(bm_glass, pw_in, t_w, n_w,
+                         s_min=-0.38, s_max=-0.03,
+                         n_min=thick + 0.04, n_max=thick + 0.06,
+                         z_min=5.44, z_max=6.29)
+        add_oriented_box(bm_glass, pw_in, t_w, n_w,
+                         s_min=0.03, s_max=0.38,
+                         n_min=thick + 0.04, n_max=thick + 0.06,
+                         z_min=5.44, z_max=6.29)
 
     bmesh.ops.recalc_face_normals(bm_south, faces=bm_south.faces)
     m_sth = bpy.data.meshes.new("Mesh_South_Inward_Arc")
@@ -2155,13 +2214,13 @@ def setup_lighting_and_render(col):
     c7.rotation_euler = dir7.to_track_quat('-Z', 'Y').to_euler()
     cams["east_ground_truth"] = c7
 
-    # 8. Cámara 'South_Inward_Arc': Perspectiva hacia el arco cóncavo posterior y cierre angulado a 45º
+    # 8. Cámara 'South_Inward_Arc': Perspectiva hacia el arco cóncavo posterior y cara Sur (Ground Truth media_1789784140324)
     c8_data = bpy.data.cameras.new("Cam_South_Inward_Arc")
     c8_data.lens = 28
     c8 = bpy.data.objects.new("Cam_South_Inward_Arc", c8_data)
     col.objects.link(c8)
-    loc8 = Vector((17.50, 34.50, 2.40))
-    tgt8 = Vector((19.80, 22.50, 3.80))
+    loc8 = Vector((25.00, 36.00, 3.50))
+    tgt8 = Vector((19.50, 25.00, 3.50))
     dir8 = tgt8 - loc8
     c8.location = loc8
     c8.rotation_euler = dir8.to_track_quat('-Z', 'Y').to_euler()
@@ -2170,9 +2229,10 @@ def setup_lighting_and_render(col):
     return cams
 
 def generate_godot_tscn(tscn_path, glb_rel_path):
-    """Genera la escena .tscn de Godot 4 con colisionadores analíticos rectificados para V8.0:
-    - Col_East_Wall ajustado a 20.40 m (6 subdivisiones).
-    - Col_Contraesquina_Chamfer a 45º conectando en (22.80, 20.80 m).
+    """Genera la escena .tscn de Godot 4 con colisionadores analíticos rectificados para V9.0:
+    - Col_South_Wall alineado en Y = 30.00 m (Z = -29.80 en Godot).
+    - Arco continuo ampliado cerrado directamente entre Cara Sur y Cara Estacionamiento (Col_Inward_Arc_1 y Col_Inward_Arc_2).
+    - Col_East_Wall en 20.40 m (6 subdivisiones).
     - Peldaños transitables en DENTISTA y rampa sin obstáculos."""
     tscn_content = f"""[gd_scene load_steps=23 format=3 uid="uid://bbva_tecate_centro_010"]
 
@@ -2212,11 +2272,11 @@ size = Vector3(5.8, 9.1, 0.35)
 [sub_resource type="BoxShape3D" id="BoxShape3D_south_wall"]
 size = Vector3(17.4, 8.5, 0.4)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_inward_arc"]
-size = Vector3(3.8, 8.5, 0.4)
+[sub_resource type="BoxShape3D" id="BoxShape3D_inward_arc_1"]
+size = Vector3(0.4, 8.5, 5.5)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_contraesquina_chamfer"]
-size = Vector3(0.4, 8.5, 2.6)
+[sub_resource type="BoxShape3D" id="BoxShape3D_inward_arc_2"]
+size = Vector3(0.4, 8.5, 5.5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_east_wall"]
 size = Vector3(0.4, 8.5, 20.4)
@@ -2280,16 +2340,16 @@ transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 
 shape = SubResource("BoxShape3D_puertas")
 
 [node name="Col_South_Wall" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.7, 3.05, -25.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.7, 3.05, -29.80)
 shape = SubResource("BoxShape3D_south_wall")
 
-[node name="Col_Inward_Arc" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.81, 0, 0.585, 0, 1, 0, -0.585, 0, 0.81, 19.2, 3.05, -23.9)
-shape = SubResource("BoxShape3D_inward_arc")
+[node name="Col_Inward_Arc_1" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.952, 0, 0.306, 0, 1, 0, -0.306, 0, 0.952, 18.24, 3.05, -27.40)
+shape = SubResource("BoxShape3D_inward_arc_1")
 
-[node name="Col_Contraesquina_Chamfer" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 21.90, 3.05, -21.70)
-shape = SubResource("BoxShape3D_contraesquina_chamfer")
+[node name="Col_Inward_Arc_2" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.730, 0, 0.683, 0, 1, 0, -0.683, 0, 0.730, 20.94, 3.05, -22.80)
+shape = SubResource("BoxShape3D_inward_arc_2")
 
 [node name="Col_East_Wall" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.6, 3.05, -10.60)

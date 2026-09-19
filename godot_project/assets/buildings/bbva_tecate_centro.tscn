@@ -36,11 +36,11 @@ size = Vector3(5.8, 9.1, 0.35)
 [sub_resource type="BoxShape3D" id="BoxShape3D_south_wall"]
 size = Vector3(17.4, 8.5, 0.4)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_inward_arc"]
-size = Vector3(3.8, 8.5, 0.4)
+[sub_resource type="BoxShape3D" id="BoxShape3D_inward_arc_1"]
+size = Vector3(0.4, 8.5, 5.5)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_contraesquina_chamfer"]
-size = Vector3(0.4, 8.5, 2.6)
+[sub_resource type="BoxShape3D" id="BoxShape3D_inward_arc_2"]
+size = Vector3(0.4, 8.5, 5.5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_east_wall"]
 size = Vector3(0.4, 8.5, 20.4)
@@ -104,16 +104,16 @@ transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 
 shape = SubResource("BoxShape3D_puertas")
 
 [node name="Col_South_Wall" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.7, 3.05, -25.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.7, 3.05, -29.80)
 shape = SubResource("BoxShape3D_south_wall")
 
-[node name="Col_Inward_Arc" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.81, 0, 0.585, 0, 1, 0, -0.585, 0, 0.81, 19.2, 3.05, -23.9)
-shape = SubResource("BoxShape3D_inward_arc")
+[node name="Col_Inward_Arc_1" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.952, 0, 0.306, 0, 1, 0, -0.306, 0, 0.952, 18.24, 3.05, -27.40)
+shape = SubResource("BoxShape3D_inward_arc_1")
 
-[node name="Col_Contraesquina_Chamfer" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 21.90, 3.05, -21.70)
-shape = SubResource("BoxShape3D_contraesquina_chamfer")
+[node name="Col_Inward_Arc_2" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.730, 0, 0.683, 0, 1, 0, -0.683, 0, 0.730, 20.94, 3.05, -22.80)
+shape = SubResource("BoxShape3D_inward_arc_2")
 
 [node name="Col_East_Wall" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.6, 3.05, -10.60)

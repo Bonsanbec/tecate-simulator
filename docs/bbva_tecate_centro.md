@@ -1,6 +1,6 @@
-# Ficha Técnica Arquitectónica: Banco BBVA Tecate Centro (V8.0 Ground-Truth Histórico 2009)
+# Ficha Técnica Arquitectónica: Banco BBVA Tecate Centro (V9.0 Ground-Truth Histórico 2009)
 
-Documento técnico de especificación morfológica, paramétrica, PBR y consensus multi-perspectiva para la reconstrucción fidedigna del edificio comercial/financiero del **Banco BBVA** (esquina Av. Benito Juárez y Calle Presidente Lázaro Cárdenas, Tecate, B.C.) en Blender 5.1 y Godot Engine 4.
+Documento técnico de especificación morfológica, paramétrica, PBR y consenso multi-perspectiva para la reconstrucción fidedigna del edificio comercial/financiero del **Banco BBVA** (esquina Av. Benito Juárez y Calle Presidente Lázaro Cárdenas, Tecate, B.C.) en Blender 5.1 y Godot Engine 4.
 
 ---
 
@@ -13,7 +13,7 @@ Documento técnico de especificación morfológica, paramétrica, PBR y consensu
   - `Position = Vector3(-66.8, 400.38, -24.81)`
   - `Basis = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1)` (rotación pura de $180.0^\circ$ garantizando paralelismo geométrico estricto con la banqueta de Av. Benito Juárez, sin reducción de sección hacia el poniente).
   - **Calibración de Rasante y Zócalo Subterráneo**: La Calle Lázaro Cárdenas presenta un descenso topográfico de $-0.67\text{ m}$ hacia el norte. El zócalo basal de concreto grafito se extiende en profundidad hasta $Z = -1.20\text{ m}$ bajo cota de apoyo, quedando herméticamente anclado en la rasante vial de Godot sin desniveles flotantes ni inclinaciones aparentes.
-  - Nodo raíz: `BBVA_Tecate (StaticBody3D)` con colisionadores analíticos descompuestos que eliminan cualquier barrera invisible en la rampa y permiten el ingreso físico al recibidor de DENTISTA.
+  - Nodo raíz: `BBVA_Tecate (StaticBody3D)` con colisionadores analíticos rectificados para V9.0 que eliminan cualquier barrera invisible en la rampa y permiten el ingreso físico al recibidor de DENTISTA.
 
 ---
 
@@ -68,13 +68,12 @@ El edificio se compone de los siguientes cuerpos arquitectónicos fidedignamente
    - 5 apliques lumínicos exteriores montados en las pilastras de planta baja.
    - Rampa vehicular descendente con barandal tubular blanco, murete exterior en $X = 27.35\text{ m}$ y letrero ortogonal `ENTRADA BBVA ➔`.
 
-5. **Contraesquina Posterior y Cierre Angulado a 45º (Ground Truth `media_1789784140324`)**:
-   - **Cierre Angulado en Chaflán a 45º**: Al término de la fachada Este ($X = 22.80\text{ m}, Y = 20.80\text{ m}$), la edificación gira hacia la contraesquina en un chaflán a $45^\circ$ ($\Delta X = 1.80\text{ m}, \Delta Y = -1.80\text{ m}$), conectando en $(X = 21.00\text{ m}, Y = 22.60\text{ m}$).
-   - **Pared en Arco Cóncavo hacia Adentro**: Enlaza desde el chaflán ($X = 21.00\text{ m}, Y = 22.60\text{ m}$) hasta la cara Sur lisa ($X = 17.40\text{ m}, Y = 25.20\text{ m}$), curvándose con sagita de concavidad hacia el interior.
-   - **Pilar Central Saliente**: Machón vertical de $0.40\text{ m}$ de frente orientado hacia el exterior y rematando sobre el pretil ($Z = 7.45\text{ m}$).
-   - **Dos Ventanas Rectangulares Pequeñas en Planta Alta**: A ambos lados del pilar, equipadas con repisas exteriores de piedra natural (sills).
-   - **Pared Sur Lisa**: Paño continuo en $Y = 25.20\text{ m}$ desde Cárdenas ($X = 0.0\text{ m}$) hasta $X = 17.40\text{ m}$, provisto de moldura horizontal intermedia a $Z = 3.20\text{ m}$.
-   - **Sellado Hermético Total de Azotea**: Losas continuas sin aberturas ni picos triangulares agudos en vista aérea.
+5. **Posterior: Cara Sur en Rasante Cárdenas y Arco Cóncavo Directo (Ground Truth `media_1789784140324`)**:
+   - **Cara Sur Lisa a Cota $Y = 30.00\text{ m}$**: Parte directamente desde donde concluye la fachada de Cárdenas ($X = -0.05\text{ m}, Y = 30.00\text{ m}$), extendiéndose de manera continua y lisa a lo largo de $17.40\text{ m}$ (hasta $X = 17.40\text{ m}, Y = 30.00\text{ m}$). Suprime el patio o retranqueo residual previo, sellando íntegramente la parte posterior del ala de consultorios DENTISTA. Cuenta con moldura horizontal intermedia a $Z = 3.20\text{ m}$, albardilla continua a $Z = 7.10 - 7.25\text{ m}$ y pilastra esquinera de remate en $X = 17.40\text{ m}$.
+   - **Arco Cóncavo Ampliado (Cierre Único y Directo)**: Suprime por completo la protuberancia de pared plana a $45^\circ$. El muro en arco cóncavo hacia adentro es el **único elemento volumétrico** que cierra la transición entre la Cara Sur ($X = 17.40\text{ m}, Y = 30.00\text{ m}$) y la Cara Estacionamiento ($X = 22.80\text{ m}, Y = 20.80\text{ m}$). Presenta una cuerda de $10.67\text{ m}$ y una sagita cóncava de $1.20\text{ m}$ hacia el interior del inmueble.
+   - **Pilar Central Saliente Coronado**: Machón vertical de $0.45\text{ m}$ de anchura en $u = 0.5$, proyectándose $0.42\text{ m}$ hacia afuera del paramento curvo y coronando con capitel a $Z = 7.45 - 7.50\text{ m}$ por encima del pretil.
+   - **Dos Ventanas Rectangulares en Planta Alta con Repisas**: Dispuestas simétricamente a ambos lados del machón central ($u = 0.25$ y $u = 0.75$), con repisas salientes de piedra en $Z \in [5.24, 5.38\text{ m}]$, cancelería de aluminio oscuro ($Z \in [5.38, 6.35\text{ m}]$), parteluz central y vidrio reflectante sobre nicho interior oscuro.
+   - **Sellado Hermético Total de Azotea**: Losa continua triangulada en abanico que cubre la totalidad de la huella posterior sin ningún hueco interior.
 
 ---
 
@@ -85,7 +84,7 @@ El edificio se compone de los siguientes cuerpos arquitectónicos fidedignamente
 2. **Asset 3D Optimizado Godot 4**:
    - `godot_project/assets/buildings/bbva_tecate_centro.glb`
 3. **Escena Instanciable Godot 4**:
-   - `godot_project/assets/buildings/bbva_tecate_centro.tscn` (colisionadores analíticos rectificados para 6 crujías, chaflán a $45^\circ$ y rampa libre).
+   - `godot_project/assets/buildings/bbva_tecate_centro.tscn` (colisionadores analíticos rectificados para V9.0 con cara Sur en $Y = 30.00\text{ m}$, arco continuo y rampa libre).
 4. **Integración en Escena Principal (`main.tscn`)**:
    - `Position = Vector3(-66.8, 400.38, -24.81)`, `Basis = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1)`.
 5. **Renders Técnicos de Validación (`docs/images/bbva/`)**:
