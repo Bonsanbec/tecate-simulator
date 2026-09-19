@@ -1,139 +1,213 @@
 """
-GENERADOR PROCEDURAL 3D - FUENTE DE LA PAZ (PARQUE MIGUEL HIDALGO, 2009)
-Tecate Simulator - Godot Engine 4 / Blender Python Headless API
+Tecate Simulator - Reconstrucción 3D Procedural Fidedigna: Fuente de la Paz (Parque Hidalgo, 2009)
+Generador Headless de Blender Python para Asset Patrimonial V5.0 (PBR Real & UV Mapping)
 
-Ubicación: Esquina Noroeste del Parque Miguel Hidalgo (Av. Benito Juárez y Calle Pdte. Lázaro Cárdenas)
-Coordenadas GPS: 32.573366°N, -116.626902°W
-Manzana: block_lat_32.57293_lon_-116.62685
-Época Histórica: 2009
-
-Fidelidad Total Ground-Truth 2009 (V4.0 Definitiva):
-  - Perímetro lobulado simétrico fidedigno a la vista aérea 'aerial_fuente.png' y fotos a pie de calle.
-  - Murete exterior en estuco amarillo municipal (#ECC673) con buña/ranura intermedia y zócalo a Z = -1.30 m.
-  - Albardilla de asiento en barro cocido terracota vidriado (#8F3018).
-  - Vaso interior con mosaico turquesa (#1C667E) y espejo de agua cristalina a Z = 0.28 m.
-  - Núcleo central monumental de 8 sectores:
-    * Friso vertical octagonal con azulejos Talavera en damero azul cobalto y oro.
-    * Cornisa moldurada de cantera con 16 toberas/esferas cerámicas azules.
-    * Cascada piramidal inclinada con 8 nervaduras/mochetas radiales continuas de cantera
-      y 3 resaltes/peldaños intermedios de rotura de agua.
-    * Pedestal central torneado y copa/tazón labrado superior (#C4BCAC) con surtidor central de agua.
-  - Colisiones analíticas en Godot 4 (BoxShape3D segmentadas + CylinderShape3D escalonadas).
+Características clave:
+1. Materiales PBR reales con texturas de imagen (.png) vinculadas vía ShaderNodeTexImage
+   (Damero Talavera, Cantera labrada, Estuco con buña, Cotto terracota mate, Mosaico sumergido y Agua translúcida).
+2. Asignación sistemática de coordenadas UV (UVMap) en cada cara de la malla geométrica.
+3. Perímetro lobulado simétrico cuadrifolio con línea de corte/apertura hacia NW (Juárez y Cárdenas).
+4. Zócalo basal continuo enterrado a Z = -1.30 m (absorción topográfica obligatoria Z <= -1.20 m).
+5. 8 mochetas radiales continuas de cantera y pirámide de cascada con sombreado Flat en aristas.
+6. Exportación dual: Blender maestro (.blend) y glTF optimizado (.glb) sin banquetas embebidas.
+7. Generación de escena analítica Godot 4 (.tscn) con 24 colisionadores BoxShape3D tangentes.
+8. Validación visual autónoma con 5 tomas fotográficas en Cycles.
 """
 
 import bpy
 import bmesh
 import math
-import os
 from mathutils import Vector
+import os
+import sys
 
 # ==============================================================================
-# 1. LIMPIEZA DE ESCENA Y SUITE DE MATERIALES PBR
+# 1. SETUP DE ESCENA Y MATERIALES PBR REALES CON TEXTURAS
 # ==============================================================================
 
-def clean_scene():
+def init_clean_scene():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene = bpy.context.scene
     col = bpy.data.collections.new("Fuente_Parque_Hidalgo_Collection")
     scene.collection.children.link(col)
     return col
 
-def create_materials():
+def setup_pbr_material(mat, alb_path=None, nrm_path=None, rgh_path=None, 
+                       base_color=(0.8, 0.8, 0.8, 1.0), roughness=0.5, metallic=0.0, 
+                       normal_strength=1.0, is_transparent=False, alpha=1.0):
+    mat.use_nodes = True
+    nt = mat.node_tree
+    nt.nodes.clear()
+    
+    out_node = nt.nodes.new("ShaderNodeOutputMaterial")
+    try:
+        bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    except Exception:
+        bsdf = nt.nodes.new("ShaderNodePrincipledBSDF")
+    nt.links.new(bsdf.outputs["BSDF"], out_node.inputs["Surface"])
+    
+    bsdf.inputs["Base Color"].default_value = base_color
+    bsdf.inputs["Roughness"].default_value = roughness
+    if "Metallic" in bsdf.inputs:
+        bsdf.inputs["Metallic"].default_value = metallic
+        
+    x_offset = -400
+    
+    # 1. Albedo / Base Color
+    if alb_path and os.path.exists(alb_path):
+        img_alb = bpy.data.images.load(alb_path)
+        node_alb = nt.nodes.new("ShaderNodeTexImage")
+        node_alb.image = img_alb
+        node_alb.location = (x_offset, 300)
+        nt.links.new(node_alb.outputs["Color"], bsdf.inputs["Base Color"])
+        if is_transparent and "Alpha" in bsdf.inputs:
+            nt.links.new(node_alb.outputs["Alpha"], bsdf.inputs["Alpha"])
+    elif is_transparent and "Alpha" in bsdf.inputs:
+        bsdf.inputs["Alpha"].default_value = alpha
+
+    # 2. Roughness Map
+    if rgh_path and os.path.exists(rgh_path):
+        img_rgh = bpy.data.images.load(rgh_path)
+        img_rgh.colorspace_settings.name = "Non-Color"
+        node_rgh = nt.nodes.new("ShaderNodeTexImage")
+        node_rgh.image = img_rgh
+        node_rgh.location = (x_offset, 0)
+        nt.links.new(node_rgh.outputs["Color"], bsdf.inputs["Roughness"])
+
+    # 3. Normal Map
+    if nrm_path and os.path.exists(nrm_path):
+        img_nrm = bpy.data.images.load(nrm_path)
+        img_nrm.colorspace_settings.name = "Non-Color"
+        node_nrm = nt.nodes.new("ShaderNodeTexImage")
+        node_nrm.image = img_nrm
+        node_nrm.location = (x_offset - 300, -300)
+        
+        node_norm_map = nt.nodes.new("ShaderNodeNormalMap")
+        node_norm_map.inputs["Strength"].default_value = normal_strength
+        node_norm_map.location = (x_offset, -300)
+        
+        nt.links.new(node_nrm.outputs["Color"], node_norm_map.inputs["Color"])
+        nt.links.new(node_norm_map.outputs["Normal"], bsdf.inputs["Normal"])
+
+    if is_transparent:
+        if hasattr(mat, "blend_method"):
+            mat.blend_method = 'BLEND'
+
+def create_materials(tex_dir):
     mats = {}
 
-    # 1. Estuco Amarillo/Ocre Municipal (Murete exterior de banca)
+    # 1. Estuco Ocre Municipal con buña terracota
     m_ocre = bpy.data.materials.new("M_Murete_Ocre")
-    m_ocre.use_nodes = True
-    bsdf_o = m_ocre.node_tree.nodes.get("Principled BSDF")
-    bsdf_o.inputs["Base Color"].default_value = (0.84, 0.70, 0.40, 1.0) # Amarillo tecatense
-    bsdf_o.inputs["Roughness"].default_value = 0.80
+    setup_pbr_material(
+        m_ocre,
+        alb_path=os.path.join(tex_dir, "fuente_murete_albedo.png"),
+        nrm_path=os.path.join(tex_dir, "fuente_murete_normal.png"),
+        rgh_path=os.path.join(tex_dir, "fuente_murete_roughness.png"),
+        base_color=(0.78, 0.69, 0.51, 1.0),
+        roughness=0.85
+    )
     mats["ocre"] = m_ocre
 
-    # 2. Zócalo Basal Enterrado (Concreto/estuco basal continuo Z <= -1.20 m)
+    # 2. Zócalo Basal Enterrado (Concreto basal continuo Z <= -1.20 m)
     m_zoc = bpy.data.materials.new("M_Zocalo_Basal")
-    m_zoc.use_nodes = True
-    bsdf_z = m_zoc.node_tree.nodes.get("Principled BSDF")
-    bsdf_z.inputs["Base Color"].default_value = (0.42, 0.38, 0.32, 1.0)
-    bsdf_z.inputs["Roughness"].default_value = 0.95
+    setup_pbr_material(
+        m_zoc,
+        base_color=(0.42, 0.38, 0.32, 1.0),
+        roughness=0.95
+    )
     mats["zocalo"] = m_zoc
 
-    # 3. Albardilla Terracota / Barro Cocido (Remate de asiento)
+    # 3. Albardilla Terracota / Cotto Mate para Asiento de Banca
     m_terracota = bpy.data.materials.new("M_Albardilla_Terracota")
-    m_terracota.use_nodes = True
-    bsdf_t = m_terracota.node_tree.nodes.get("Principled BSDF")
-    bsdf_t.inputs["Base Color"].default_value = (0.56, 0.18, 0.08, 1.0) # Rojo terracota cerámico
-    bsdf_t.inputs["Roughness"].default_value = 0.35
+    setup_pbr_material(
+        m_terracota,
+        alb_path=os.path.join(tex_dir, "fuente_banca_albedo.png"),
+        nrm_path=os.path.join(tex_dir, "fuente_banca_normal.png"),
+        rgh_path=os.path.join(tex_dir, "fuente_banca_roughness.png"),
+        base_color=(0.54, 0.32, 0.23, 1.0),
+        roughness=0.82
+    )
     mats["terracota"] = m_terracota
 
-    # 4. Friso Talavera Mexicano (Damero decorativo azul cobalto y oro)
+    # 4. Friso de Azulejos Talavera Mexicanos (Damero Azul Cobalto y Oro)
     m_talavera = bpy.data.materials.new("M_Talavera_Friso")
-    m_talavera.use_nodes = True
-    nt = m_talavera.node_tree
-    bsdf_tal = nt.nodes.get("Principled BSDF")
-    bsdf_tal.inputs["Roughness"].default_value = 0.18
-    tex_checker = nt.nodes.new('ShaderNodeTexChecker')
-    tex_checker.inputs["Color1"].default_value = (0.08, 0.20, 0.52, 1.0) # Azul cobalto profundo
-    tex_checker.inputs["Color2"].default_value = (0.86, 0.60, 0.10, 1.0) # Oro ocre Talavera
-    tex_checker.inputs["Scale"].default_value = 14.0
-    nt.links.new(tex_checker.outputs["Color"], bsdf_tal.inputs["Base Color"])
+    setup_pbr_material(
+        m_talavera,
+        alb_path=os.path.join(tex_dir, "fuente_talavera_albedo.png"),
+        nrm_path=os.path.join(tex_dir, "fuente_talavera_normal.png"),
+        rgh_path=os.path.join(tex_dir, "fuente_talavera_roughness.png"),
+        base_color=(0.10, 0.22, 0.45, 1.0),
+        roughness=0.18,
+        normal_strength=1.2
+    )
     mats["talavera"] = m_talavera
 
-    # 5. Esferas / Toberas Azules de Azulejo
+    # 5. Esferas / Toberas Cerámicas Azules Vidriadas
     m_azul = bpy.data.materials.new("M_Azul_Ceramica")
-    m_azul.use_nodes = True
-    bsdf_at = m_azul.node_tree.nodes.get("Principled BSDF")
-    bsdf_at.inputs["Base Color"].default_value = (0.06, 0.18, 0.48, 1.0)
-    bsdf_at.inputs["Roughness"].default_value = 0.18
+    setup_pbr_material(
+        m_azul,
+        base_color=(0.06, 0.16, 0.44, 1.0),
+        roughness=0.18,
+        metallic=0.05
+    )
     mats["azul_ceramica"] = m_azul
 
-    # 6. Cantera Cascada (Pirámide escalonada y cornisas)
+    # 6. Cantera Cascada (Pirámide escalonada, mochetas y cornisas)
     m_cantera = bpy.data.materials.new("M_Cantera_Cascada")
-    m_cantera.use_nodes = True
-    bsdf_c = m_cantera.node_tree.nodes.get("Principled BSDF")
-    bsdf_c.inputs["Base Color"].default_value = (0.75, 0.71, 0.63, 1.0) # Cantera beige cálida
-    bsdf_c.inputs["Roughness"].default_value = 0.78
+    setup_pbr_material(
+        m_cantera,
+        alb_path=os.path.join(tex_dir, "fuente_cantera_albedo.png"),
+        nrm_path=os.path.join(tex_dir, "fuente_cantera_normal.png"),
+        rgh_path=os.path.join(tex_dir, "fuente_cantera_roughness.png"),
+        base_color=(0.76, 0.73, 0.67, 1.0),
+        roughness=0.78,
+        normal_strength=0.9
+    )
     mats["cantera"] = m_cantera
 
     # 7. Copa Superior / Tazón Labrado
     m_copa = bpy.data.materials.new("M_Copa_Superior")
-    m_copa.use_nodes = True
-    bsdf_copa = m_copa.node_tree.nodes.get("Principled BSDF")
-    bsdf_copa.inputs["Base Color"].default_value = (0.71, 0.67, 0.59, 1.0)
-    bsdf_copa.inputs["Roughness"].default_value = 0.65
+    setup_pbr_material(
+        m_copa,
+        alb_path=os.path.join(tex_dir, "fuente_cantera_albedo.png"),
+        nrm_path=os.path.join(tex_dir, "fuente_cantera_normal.png"),
+        base_color = (0.42, 0.30, 0.20, 1.0),
+        roughness=0.72
+    )
     mats["copa"] = m_copa
 
-    # 8. Fondo de Estanque Sumergido (Mosaico turquesa)
+    # 8. Fondo de Estanque Sumergido (Mosaico veneciano turquesa)
     m_fondo = bpy.data.materials.new("M_Fondo_Mosaico")
-    m_fondo.use_nodes = True
-    bsdf_f = m_fondo.node_tree.nodes.get("Principled BSDF")
-    bsdf_f.inputs["Base Color"].default_value = (0.12, 0.42, 0.54, 1.0)
-    bsdf_f.inputs["Roughness"].default_value = 0.30
+    setup_pbr_material(
+        m_fondo,
+        alb_path=os.path.join(tex_dir, "fuente_mosaico_albedo.png"),
+        base_color=(0.10, 0.42, 0.54, 1.0),
+        roughness=0.40
+    )
     mats["fondo"] = m_fondo
 
-    # 9. Lámina de Agua de Estanque
+    # 9. Lámina de Agua de Estanque (Translúcida con ondas)
     m_agua = bpy.data.materials.new("M_Agua_Superficie")
-    m_agua.use_nodes = True
-    bsdf_w = m_agua.node_tree.nodes.get("Principled BSDF")
-    bsdf_w.inputs["Base Color"].default_value = (0.24, 0.62, 0.76, 1.0)
-    bsdf_w.inputs["Roughness"].default_value = 0.06
-    if "Transmission Weight" in bsdf_w.inputs:
-        bsdf_w.inputs["Transmission Weight"].default_value = 0.85
-    elif "Transmission" in bsdf_w.inputs:
-        bsdf_w.inputs["Transmission"].default_value = 0.85
-    if "IOR" in bsdf_w.inputs:
-        bsdf_w.inputs["IOR"].default_value = 1.333
+    setup_pbr_material(
+        m_agua,
+        alb_path=os.path.join(tex_dir, "fuente_agua_albedo.png"),
+        nrm_path=os.path.join(tex_dir, "fuente_agua_normal.png"),
+        base_color=(0.20, 0.55, 0.68, 0.62),
+        roughness=0.08,
+        is_transparent=True,
+        alpha=0.62
+    )
     mats["agua"] = m_agua
 
     # 10. Chorro / Geiser de Agua Vertical
     m_chorro = bpy.data.materials.new("M_Chorro_Agua")
-    m_chorro.use_nodes = True
-    bsdf_ch = m_chorro.node_tree.nodes.get("Principled BSDF")
-    bsdf_ch.inputs["Base Color"].default_value = (0.88, 0.96, 0.98, 1.0)
-    bsdf_ch.inputs["Roughness"].default_value = 0.20
-    if "Transmission Weight" in bsdf_ch.inputs:
-        bsdf_ch.inputs["Transmission Weight"].default_value = 0.70
-    elif "Transmission" in bsdf_ch.inputs:
-        bsdf_ch.inputs["Transmission"].default_value = 0.70
+    setup_pbr_material(
+        m_chorro,
+        base_color=(0.88, 0.96, 0.98, 0.50),
+        roughness=0.15,
+        is_transparent=True,
+        alpha=0.50
+    )
     mats["chorro"] = m_chorro
 
     return mats
@@ -159,13 +233,6 @@ def catmull_rom_spline(p0, p1, p2, p3, num_points=6):
     return points
 
 def generate_perimeter_points(samples_per_seg=6):
-    """
-    Puntos de control para el perímetro lobulado según 'aerial_fuente.png':
-    - Apertura/corte frontal hacia +Y (Noroeste Juárez-Cárdenas).
-    - Dos hombreras/lóbulos frontales prominentes a ambos lados del corte.
-    - Cintura lateral y lóbulos posteriores.
-    - Lóbulo posterior central apuntando al sureste (interior del parque).
-    """
     half_cp = [
         (0.00, 4.40),   # 0: Centro de línea de corte frontal
         (1.80, 4.55),   # 1: Extremo de la línea de corte frontal
@@ -198,8 +265,13 @@ def generate_perimeter_points(samples_per_seg=6):
 
 
 # ==============================================================================
-# 3. GENERACIÓN GEOMÉTRICA FÍSICA (BMESH)
+# 3. GENERACIÓN GEOMÉTRICA FÍSICA Y ASIGNACIÓN DE UVs (BMESH)
 # ==============================================================================
+
+def set_face_uvs(face, uv_lay, uvs):
+    """Asigna coordenadas UV exactas a los loops de una cara."""
+    for loop, uv in zip(face.loops, uvs):
+        loop[uv_lay].uv = uv
 
 def build_fountain_geometry(col, mats):
     mesh = bpy.data.meshes.new("Fuente_Parque_Hidalgo_Mesh")
@@ -213,6 +285,7 @@ def build_fountain_geometry(col, mats):
         mat_indices[key] = idx
 
     bm = bmesh.new()
+    uv_lay = bm.loops.layers.uv.verify()
 
     # --------------------------------------------------------------------------
     # A. MURETE PERIMETRAL, ZÓCALO BASAL Y ALBARDILLA DE BANCA
@@ -220,7 +293,6 @@ def build_fountain_geometry(col, mats):
     pts = generate_perimeter_points(samples_per_seg=6)
     n = len(pts)
 
-    # Normales unitarias exteriores 2D (curva CCW -> nx = -ty, ny = tx)
     normals = []
     for i in range(n):
         prev_p = pts[(i - 1) % n]
@@ -236,7 +308,7 @@ def build_fountain_geometry(col, mats):
     wall_w = 0.42           # Ancho del muro
     coping_overhang = 0.05  # Vuelo de la albardilla
     coping_w = wall_w + 2 * coping_overhang
-    z_sub = -1.30           # Zócalo subterráneo enterrado (Z <= -1.20 m)
+    z_sub = -1.30           # Zócalo subterráneo continuo (Z <= -1.20 m)
     z_ground = 0.00         # Nivel de rasante de banqueta
     z_wall_groove_b = 0.20  # Ranura/buña estética del muro
     z_wall_groove_t = 0.24
@@ -274,104 +346,130 @@ def build_fountain_geometry(col, mats):
 
         rings.append((v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12))
 
+    u_repeat = 8.0 # Repeticiones de textura a lo largo del perímetro
+
     for i in range(n):
         j = (i + 1) % n
         r1 = rings[i]
         r2 = rings[j]
 
+        u1 = (i / float(n)) * u_repeat
+        u2 = ((i + 1) / float(n)) * u_repeat
+
         # 1. Zócalo basal exterior subterráneo (Z in [-1.30, 0.00 m])
         f_zoc = bm.faces.new((r1[0], r2[0], r2[1], r1[1]))
         f_zoc.material_index = mat_indices["zocalo"]
         f_zoc.smooth = True
+        set_face_uvs(f_zoc, uv_lay, [(u1, 0.0), (u2, 0.0), (u2, 1.0), (u1, 1.0)])
 
         # 2. Muro exterior bajo buña (Z in [0.00, 0.20 m], Estuco ocre)
         f_ext1 = bm.faces.new((r1[1], r2[1], r2[2], r1[2]))
         f_ext1.material_index = mat_indices["ocre"]
         f_ext1.smooth = True
+        set_face_uvs(f_ext1, uv_lay, [(u1, 0.0), (u2, 0.0), (u2, 0.43), (u1, 0.43)])
 
         # 3. Buña / Ranura decorativa (Z in [0.20, 0.24 m])
         f_groove = bm.faces.new((r1[2], r2[2], r2[3], r1[3]))
-        f_groove.material_index = mat_indices["zocalo"]
+        f_groove.material_index = mat_indices["ocre"]
         f_groove.smooth = True
+        set_face_uvs(f_groove, uv_lay, [(u1, 0.43), (u2, 0.43), (u2, 0.52), (u1, 0.52)])
 
         # 4. Muro exterior sobre buña (Z in [0.24, 0.46 m], Estuco ocre)
         f_ext2 = bm.faces.new((r1[3], r2[3], r2[4], r1[4]))
         f_ext2.material_index = mat_indices["ocre"]
         f_ext2.smooth = True
+        set_face_uvs(f_ext2, uv_lay, [(u1, 0.52), (u2, 0.52), (u2, 1.0), (u1, 1.0)])
 
         # 5. Volado inferior albardilla exterior (Terracota)
         f_v_ext = bm.faces.new((r1[4], r2[4], r2[5], r1[5]))
         f_v_ext.material_index = mat_indices["terracota"]
         f_v_ext.smooth = True
+        set_face_uvs(f_v_ext, uv_lay, [(u1, 0.0), (u2, 0.0), (u2, 0.15), (u1, 0.15)])
 
         # 6. Canto exterior albardilla (Terracota)
         f_c_ext = bm.faces.new((r1[5], r2[5], r2[6], r1[6]))
         f_c_ext.material_index = mat_indices["terracota"]
         f_c_ext.smooth = True
+        set_face_uvs(f_c_ext, uv_lay, [(u1, 0.15), (u2, 0.15), (u2, 0.35), (u1, 0.35)])
 
         # 7. Asiento superior albardilla (Terracota)
         f_top = bm.faces.new((r1[6], r2[6], r2[7], r1[7]))
         f_top.material_index = mat_indices["terracota"]
         f_top.smooth = True
+        set_face_uvs(f_top, uv_lay, [(u1, 0.35), (u2, 0.35), (u2, 0.65), (u1, 0.65)])
 
         # 8. Canto interior albardilla (Terracota)
         f_c_int = bm.faces.new((r1[7], r2[7], r2[8], r1[8]))
         f_c_int.material_index = mat_indices["terracota"]
         f_c_int.smooth = True
+        set_face_uvs(f_c_int, uv_lay, [(u1, 0.65), (u2, 0.65), (u2, 0.85), (u1, 0.85)])
 
         # 9. Volado interior albardilla (Terracota)
         f_v_int = bm.faces.new((r1[8], r2[8], r2[9], r1[9]))
         f_v_int.material_index = mat_indices["terracota"]
         f_v_int.smooth = True
+        set_face_uvs(f_v_int, uv_lay, [(u1, 0.85), (u2, 0.85), (u2, 1.0), (u1, 1.0)])
 
         # 10. Pared interior visible sobre agua (Z in [0.28, 0.46 m], Mosaico turquesa)
         f_int_top = bm.faces.new((r1[9], r2[9], r2[10], r1[10]))
         f_int_top.material_index = mat_indices["fondo"]
         f_int_top.smooth = True
+        set_face_uvs(f_int_top, uv_lay, [(u1, 0.6), (u2, 0.6), (u2, 1.0), (u1, 1.0)])
 
         # 11. Pared interior sumergida (Z in [-0.15, 0.28 m], Mosaico turquesa)
         f_int_sub = bm.faces.new((r1[10], r2[10], r2[11], r1[11]))
         f_int_sub.material_index = mat_indices["fondo"]
         f_int_sub.smooth = True
+        set_face_uvs(f_int_sub, uv_lay, [(u1, 0.0), (u2, 0.0), (u2, 0.6), (u1, 0.6)])
 
         # 12. Muro subterráneo interior de contención (Z in [-1.30, -0.15 m])
         f_sub_int = bm.faces.new((r1[11], r2[11], r2[12], r1[12]))
         f_sub_int.material_index = mat_indices["zocalo"]
         f_sub_int.smooth = True
+        set_face_uvs(f_sub_int, uv_lay, [(u1, 0.0), (u2, 0.0), (u2, 1.0), (u1, 1.0)])
 
         # 13. Fondo basal del cimiento subterráneo
         f_bot = bm.faces.new((r1[12], r2[12], r2[0], r1[0]))
         f_bot.material_index = mat_indices["zocalo"]
+        set_face_uvs(f_bot, uv_lay, [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)])
 
     # --------------------------------------------------------------------------
-    # B. FONDO DEL ESTANQUE Y ESPEJO DE AGUA
+    # B. FONDO DEL ESTANQUE Y ESPEJO DE AGUA (CON UVs PLANARES)
     # --------------------------------------------------------------------------
     vw_center = bm.verts.new((0.0, 0.0, z_water))
     vf_center = bm.verts.new((0.0, 0.0, z_floor))
 
     for i in range(n):
         j = (i + 1) % n
-        # Cara del espejo de agua (suave)
-        f_w = bm.faces.new((vw_center, rings[i][10], rings[j][10]))
-        f_w.material_index = mat_indices["agua"]
-        f_w.smooth = True
+        r1 = rings[i]
+        r2 = rings[j]
 
-        # Cara del fondo de mosaico (suave)
-        f_f = bm.faces.new((vf_center, rings[j][11], rings[i][11]))
-        f_f.material_index = mat_indices["fondo"]
-        f_f.smooth = True
+        # Vértices de agua
+        f_wat = bm.faces.new((r1[10], r2[10], vw_center))
+        f_wat.material_index = mat_indices["agua"]
+        f_wat.smooth = True
+        uv_w1 = (0.5 + r1[10].co.x / 14.0, 0.5 + r1[10].co.y / 14.0)
+        uv_w2 = (0.5 + r2[10].co.x / 14.0, 0.5 + r2[10].co.y / 14.0)
+        set_face_uvs(f_wat, uv_lay, [uv_w1, uv_w2, (0.5, 0.5)])
+
+        # Vértices del piso sumergido de mosaico
+        f_flr = bm.faces.new((r1[11], vf_center, r2[11]))
+        f_flr.material_index = mat_indices["fondo"]
+        f_flr.smooth = True
+        uv_f1 = (0.5 + r1[11].co.x / 3.5, 0.5 + r1[11].co.y / 3.5)
+        uv_f2 = (0.5 + r2[11].co.x / 3.5, 0.5 + r2[11].co.y / 3.5)
+        set_face_uvs(f_flr, uv_lay, [uv_f1, (0.5, 0.5), uv_f2])
 
     # --------------------------------------------------------------------------
-    # C. NÚCLEO MONUMENTAL CENTRAL (8 CARAS OCTAGONALES)
+    # C. NÚCLEO CENTRAL OCTAGONAL MONUMENTAL
     # --------------------------------------------------------------------------
-    # 1. Anillo vertical octagonal con friso Talavera
     num_sides = 8
-    r_talavera = 2.30
-    z_tal_bot = 0.05
+    r_talavera = 2.35
+    z_tal_bot = 0.00
     z_tal_top = 0.68
+
     tal_verts_bot = []
     tal_verts_top = []
-
     for k in range(num_sides):
         ang = k * (2.0 * math.pi / num_sides) + math.radians(22.5)
         vx = r_talavera * math.cos(ang)
@@ -383,10 +481,11 @@ def build_fountain_geometry(col, mats):
 
     for k in range(num_sides):
         nxt = (k + 1) % num_sides
-        # Friso de azulejos
+        # Friso de azulejos Talavera: UVs cuadradas 1:1 por cada cara
         f_tal = bm.faces.new((tal_verts_bot[k], tal_verts_bot[nxt], tal_verts_top[nxt], tal_verts_top[k]))
         f_tal.material_index = mat_indices["talavera"]
         f_tal.smooth = False
+        set_face_uvs(f_tal, uv_lay, [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)])
 
         # Base sumergida hasta el fondo del estanque
         vx1, vy1 = tal_verts_bot[k].co.x, tal_verts_bot[k].co.y
@@ -396,6 +495,7 @@ def build_fountain_geometry(col, mats):
         f_sub = bm.faces.new((vs1, vs2, tal_verts_bot[nxt], tal_verts_bot[k]))
         f_sub.material_index = mat_indices["fondo"]
         f_sub.smooth = False
+        set_face_uvs(f_sub, uv_lay, [(0.0, 0.0), (1.0, 0.0), (1.0, 0.5), (0.0, 0.5)])
 
     # Cornisa corrida de cantera sobre el friso Talavera (Z = 0.68 a 0.76 m, R = 2.42 m)
     r_corn = 2.42
@@ -417,9 +517,12 @@ def build_fountain_geometry(col, mats):
         f_c1 = bm.faces.new((tal_verts_top[k], tal_verts_top[nxt], corn_verts_mid[nxt], corn_verts_mid[k]))
         f_c1.material_index = mat_indices["cantera"]
         f_c1.smooth = False
+        set_face_uvs(f_c1, uv_lay, [(0.0, 0.0), (1.0, 0.0), (1.0, 0.5), (0.0, 0.5)])
+
         f_c2 = bm.faces.new((corn_verts_mid[k], corn_verts_mid[nxt], corn_verts_top[nxt], corn_verts_top[k]))
         f_c2.material_index = mat_indices["cantera"]
         f_c2.smooth = False
+        set_face_uvs(f_c2, uv_lay, [(0.0, 0.5), (1.0, 0.5), (1.0, 1.0), (0.0, 1.0)])
 
     # 2. Toberas / Esferas Cerámicas Azules en la cornisa
     num_spheres = 16
@@ -429,11 +532,9 @@ def build_fountain_geometry(col, mats):
         sy = (r_talavera + 0.04) * math.sin(s_ang)
         sz = z_corn_mid + 0.06
         sr = 0.065
-        add_faceted_sphere(bm, (sx, sy, sz), sr, mat_indices["azul_ceramica"])
+        add_faceted_sphere(bm, (sx, sy, sz), sr, mat_indices["azul_ceramica"], uv_lay)
 
-    # 3. Pirámide Inclinada con Mochetas Radiales Continuas de Cantera (Ground Truth)
-    # En lugar de tiras separadas, la pirámide tiene 8 nervaduras radiales integradas
-    # y paños inclinados con 3 resaltes de rotura de cascada.
+    # 3. Pirámide Inclinada con Mochetas Radiales Continuas de Cantera
     z_pyr_bot = 0.76
     z_pyr_top = 1.80
     r_pyr_bot = 2.30
@@ -447,7 +548,6 @@ def build_fountain_geometry(col, mats):
         r_s = r_pyr_bot + frac * (r_pyr_top - r_pyr_bot)
         step_levels.append((r_s, z_s))
 
-    # Anillos para los paños de la cascada
     pyr_rings = []
     for r_s, z_s in step_levels:
         ring = []
@@ -459,15 +559,17 @@ def build_fountain_geometry(col, mats):
             ring.append(v)
         pyr_rings.append(ring)
 
-    # Caras de los paños inclinados
     for s in range(num_steps):
         r_lower = pyr_rings[s]
         r_upper = pyr_rings[s + 1]
+        v1 = s / float(num_steps)
+        v2 = (s + 1) / float(num_steps)
         for k in range(num_sides):
             nxt = (k + 1) % num_sides
             f_pyr = bm.faces.new((r_lower[k], r_lower[nxt], r_upper[nxt], r_upper[k]))
             f_pyr.material_index = mat_indices["cantera"]
             f_pyr.smooth = False
+            set_face_uvs(f_pyr, uv_lay, [(0.0, v1), (1.0, v1), (1.0, v2), (0.0, v2)])
 
     # 8 Nervaduras / Mochetas Radiales Continuas en las aristas (Cantera maciza)
     rib_w = 0.09 # Semiancho de nervadura (18 cm total)
@@ -479,7 +581,6 @@ def build_fountain_geometry(col, mats):
         px = -sa * rib_w
         py =  ca * rib_w
 
-        # Vértices de la nervadura en la base y en la cúspide
         p_bot = (r_pyr_bot * ca, r_pyr_bot * sa, z_pyr_bot)
         p_top = (r_pyr_top * ca, r_pyr_top * sa, z_pyr_top)
 
@@ -492,6 +593,7 @@ def build_fountain_geometry(col, mats):
         f_rib_top = bm.faces.new((v_b1, v_b2, v_t2, v_t1))
         f_rib_top.material_index = mat_indices["cantera"]
         f_rib_top.smooth = False
+        set_face_uvs(f_rib_top, uv_lay, [(0.0, 0.0), (1.0, 0.0), (1.0, 3.0), (0.0, 3.0)])
 
         # Cara frontal/pie de la nervadura
         v_bf1 = bm.verts.new((p_bot[0] + px, p_bot[1] + py, p_bot[2]))
@@ -499,6 +601,7 @@ def build_fountain_geometry(col, mats):
         f_rib_foot = bm.faces.new((v_bf1, v_bf2, v_b2, v_b1))
         f_rib_foot.material_index = mat_indices["cantera"]
         f_rib_foot.smooth = False
+        set_face_uvs(f_rib_foot, uv_lay, [(0.0, 0.0), (1.0, 0.0), (1.0, 0.3), (0.0, 0.3)])
 
         # Costados laterales de la nervadura
         v_tf1 = bm.verts.new((p_top[0] + px, p_top[1] + py, p_top[2]))
@@ -506,9 +609,12 @@ def build_fountain_geometry(col, mats):
         f_rib_l = bm.faces.new((v_bf1, v_b1, v_t1, v_tf1))
         f_rib_l.material_index = mat_indices["cantera"]
         f_rib_l.smooth = False
+        set_face_uvs(f_rib_l, uv_lay, [(0.0, 0.0), (0.3, 0.0), (0.3, 3.0), (0.0, 3.0)])
+
         f_rib_r = bm.faces.new((v_b2, v_bf2, v_tf2, v_t2))
         f_rib_r.material_index = mat_indices["cantera"]
         f_rib_r.smooth = False
+        set_face_uvs(f_rib_r, uv_lay, [(0.0, 0.0), (0.3, 0.0), (0.3, 3.0), (0.0, 3.0)])
 
     # 4. Plataforma superior y Pedestal Central
     z_ped_base = 1.80
@@ -530,7 +636,6 @@ def build_fountain_geometry(col, mats):
         ped_torus_verts.append(vt_mid)
         ped_top_verts.append(vt)
 
-    # Conectar plataforma octagonal al pedestal
     top_pyr_ring = pyr_rings[-1]
     for k in range(num_sides):
         nxt = (k + 1) % num_sides
@@ -540,19 +645,27 @@ def build_fountain_geometry(col, mats):
         f_plat1 = bm.faces.new((top_pyr_ring[k], top_pyr_ring[nxt], ped_base_verts[p2], ped_base_verts[pm]))
         f_plat1.material_index = mat_indices["cantera"]
         f_plat1.smooth = False
+        set_face_uvs(f_plat1, uv_lay, [(0.0, 0.0), (1.0, 0.0), (0.8, 1.0), (0.2, 1.0)])
+
         f_plat2 = bm.faces.new((top_pyr_ring[k], ped_base_verts[pm], ped_base_verts[p1]))
         f_plat2.material_index = mat_indices["cantera"]
         f_plat2.smooth = False
+        set_face_uvs(f_plat2, uv_lay, [(0.0, 0.0), (0.5, 1.0), (0.0, 1.0)])
 
     # Fuste y moldura toro del pedestal (Suave)
     for k in range(16):
         nxt = (k + 1) % 16
+        u_k1 = k / 16.0 * 2.0
+        u_k2 = (k + 1) / 16.0 * 2.0
         f_p1 = bm.faces.new((ped_base_verts[k], ped_base_verts[nxt], ped_torus_verts[nxt], ped_torus_verts[k]))
         f_p1.material_index = mat_indices["copa"]
         f_p1.smooth = True
+        set_face_uvs(f_p1, uv_lay, [(u_k1, 0.0), (u_k2, 0.0), (u_k2, 0.5), (u_k1, 0.5)])
+
         f_p2 = bm.faces.new((ped_torus_verts[k], ped_torus_verts[nxt], ped_top_verts[nxt], ped_top_verts[k]))
         f_p2.material_index = mat_indices["copa"]
         f_p2.smooth = True
+        set_face_uvs(f_p2, uv_lay, [(u_k1, 0.5), (u_k2, 0.5), (u_k2, 1.0), (u_k1, 1.0)])
 
     # 5. Copa / Tazón Labrado Superior (Z in [2.15, 2.48 m])
     r_cup_belly = 0.58
@@ -585,25 +698,33 @@ def build_fountain_geometry(col, mats):
 
     for k in range(16):
         nxt = (k + 1) % 16
+        u_k1 = k / 16.0 * 2.0
+        u_k2 = (k + 1) / 16.0 * 2.0
+
         f_cb = bm.faces.new((ped_top_verts[k], ped_top_verts[nxt], cup_belly_verts[nxt], cup_belly_verts[k]))
         f_cb.material_index = mat_indices["copa"]
         f_cb.smooth = True
+        set_face_uvs(f_cb, uv_lay, [(u_k1, 0.0), (u_k2, 0.0), (u_k2, 0.3), (u_k1, 0.3)])
 
         f_cr = bm.faces.new((cup_belly_verts[k], cup_belly_verts[nxt], cup_rim_verts[nxt], cup_rim_verts[k]))
         f_cr.material_index = mat_indices["copa"]
         f_cr.smooth = True
+        set_face_uvs(f_cr, uv_lay, [(u_k1, 0.3), (u_k2, 0.3), (u_k2, 0.7), (u_k1, 0.7)])
 
         f_cl = bm.faces.new((cup_rim_verts[k], cup_rim_verts[nxt], cup_lip_verts[nxt], cup_lip_verts[k]))
         f_cl.material_index = mat_indices["copa"]
         f_cl.smooth = True
+        set_face_uvs(f_cl, uv_lay, [(u_k1, 0.7), (u_k2, 0.7), (u_k2, 1.0), (u_k1, 1.0)])
 
         f_ci = bm.faces.new((cup_lip_verts[k], cup_lip_verts[nxt], cup_in_verts[nxt], cup_in_verts[k]))
         f_ci.material_index = mat_indices["copa"]
         f_ci.smooth = True
+        set_face_uvs(f_ci, uv_lay, [(u_k1, 1.0), (u_k2, 1.0), (u_k2, 0.8), (u_k1, 0.8)])
 
         f_cc = bm.faces.new((cup_in_verts[k], cup_in_verts[nxt], v_cup_center))
         f_cc.material_index = mat_indices["fondo"]
         f_cc.smooth = True
+        set_face_uvs(f_cc, uv_lay, [(u_k1, 0.8), (u_k2, 0.8), (0.5, 0.5)])
 
     # 6. Geiser / Chorro Vertical y Penacho de Agua (Z in [2.45, 3.10 m])
     jet_base_verts = []
@@ -622,12 +743,17 @@ def build_fountain_geometry(col, mats):
 
     for k in range(12):
         nxt = (k + 1) % 12
+        u1 = k / 12.0
+        u2 = (k + 1) / 12.0
         f_jb = bm.faces.new((jet_base_verts[k], jet_base_verts[nxt], jet_mid_verts[nxt], jet_mid_verts[k]))
         f_jb.material_index = mat_indices["chorro"]
         f_jb.smooth = True
+        set_face_uvs(f_jb, uv_lay, [(u1, 0.0), (u2, 0.0), (u2, 0.6), (u1, 0.6)])
+
         f_jt = bm.faces.new((jet_mid_verts[k], jet_mid_verts[nxt], jet_top_vert))
         f_jt.material_index = mat_indices["chorro"]
         f_jt.smooth = True
+        set_face_uvs(f_jt, uv_lay, [(u1, 0.6), (u2, 0.6), (0.5, 1.0)])
 
     # Finalizar BMesh
     bm.to_mesh(mesh)
@@ -644,42 +770,34 @@ def build_fountain_geometry(col, mats):
     return obj
 
 
-def add_faceted_sphere(bm, center, radius, mat_idx):
-    """Crea una tobera esférica decorativa."""
+def add_faceted_sphere(bm, center, radius, mat_idx, uv_lay):
+    """Crea una tobera esférica decorativa con UVs."""
     cx, cy, cz = center
     num_lat, num_lon = 4, 8
-    v_bottom = bm.verts.new((cx, cy, cz - radius))
-    v_top    = bm.verts.new((cx, cy, cz + radius))
-
-    levels = []
-    for i in range(1, num_lat):
-        phi = -math.pi * 0.5 + i * (math.pi / num_lat)
+    rings = []
+    for lat in range(num_lat + 1):
+        phi = -math.pi * 0.5 + math.pi * (lat / float(num_lat))
         z = cz + radius * math.sin(phi)
-        r_ring = radius * math.cos(phi)
+        r = radius * math.cos(phi)
         ring = []
-        for j in range(num_lon):
-            theta = j * (2.0 * math.pi / num_lon)
-            ring.append(bm.verts.new((cx + r_ring * math.cos(theta), cy + r_ring * math.sin(theta), z)))
-        levels.append(ring)
+        for lon in range(num_lon):
+            theta = lon * (2.0 * math.pi / float(num_lon))
+            x = cx + r * math.cos(theta)
+            y = cy + r * math.sin(theta)
+            ring.append(bm.verts.new((x, y, z)))
+        rings.append(ring)
 
-    for j in range(num_lon):
-        nxt = (j + 1) % num_lon
-        f = bm.faces.new((v_bottom, levels[0][nxt], levels[0][j]))
-        f.material_index = mat_idx
-        f.smooth = True
-
-    for i in range(len(levels) - 1):
-        for j in range(num_lon):
-            nxt = (j + 1) % num_lon
-            f = bm.faces.new((levels[i][j], levels[i][nxt], levels[i+1][nxt], levels[i+1][j]))
+    for lat in range(num_lat):
+        v_low = lat / float(num_lat)
+        v_high = (lat + 1) / float(num_lat)
+        for lon in range(num_lon):
+            nxt = (lon + 1) % num_lon
+            u_low = lon / float(num_lon)
+            u_high = (lon + 1) / float(num_lon)
+            f = bm.faces.new((rings[lat][lon], rings[lat][nxt], rings[lat + 1][nxt], rings[lat + 1][lon]))
             f.material_index = mat_idx
             f.smooth = True
-
-    for j in range(num_lon):
-        nxt = (j + 1) % num_lon
-        f = bm.faces.new((levels[-1][j], levels[-1][nxt], v_top))
-        f.material_index = mat_idx
-        f.smooth = True
+            set_face_uvs(f, uv_lay, [(u_low, v_low), (u_high, v_low), (u_high, v_high), (u_low, v_high)])
 
 
 # ==============================================================================
@@ -758,7 +876,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
 shape = SubResource("BoxShape3D_fondo_estanque")
 '''
 
-    total_steps = len(sub_resources) + 4 + 1 + 1 # banca + 4 formas centrales + 1 ext_res + 1 escena
+    body_header = '''
+[node name="Fuente_Parque_Hidalgo" type="StaticBody3D"]
+
+[node name="Fuente_Model" parent="." instance=ExtResource("1_mesh")]
+'''
+
+    total_steps = len(sub_resources) + 4 + 1 + 1 # banca + 4 centrales + 1 ext_res + 1 escena
     header = f'''[gd_scene load_steps={total_steps} format=3 uid="uid://fuente_parque_hidalgo_2009"]
 
 [ext_resource type="PackedScene" path="{glb_res_path}" id="1_mesh"]
@@ -843,23 +967,24 @@ def main():
     glb_path   = os.path.join(root_dir, "godot_project", "assets", "fuente_parque_hidalgo.glb")
     tscn_path  = os.path.join(root_dir, "godot_project", "assets", "fuente_parque_hidalgo.tscn")
     render_dir = os.path.join(root_dir, "docs", "images", "fuente_parque_hidalgo")
+    tex_dir    = os.path.join(root_dir, "godot_project", "assets", "textures")
 
     os.makedirs(os.path.dirname(blend_path), exist_ok=True)
     os.makedirs(os.path.dirname(glb_path), exist_ok=True)
     os.makedirs(render_dir, exist_ok=True)
 
-    print(">>> 1. Inicializando escena y creando materiales PBR refinados V4.0...")
-    col = clean_scene()
-    mats = create_materials()
+    print(">>> 1. Inicializando escena y configurando materiales PBR con texturas V5.0...")
+    col = init_clean_scene()
+    mats = create_materials(tex_dir)
 
-    print(">>> 2. Construyendo geometría física procedural de la Fuente de la Paz V4.0...")
+    print(">>> 2. Construyendo geometría física procedural con UVs asignadas...")
     fountain_obj = build_fountain_geometry(col, mats)
 
     print(">>> 3. Guardando archivo maestro Blender (.blend)...")
     bpy.ops.wm.save_as_mainfile(filepath=blend_path)
     print(f"[Blender] Archivo maestro guardado en: {blend_path}")
 
-    print(">>> 4. Exportando runtime de producción GLB...")
+    print(">>> 4. Exportando runtime de producción GLB con texturas PBR embebidas...")
     bpy.ops.object.select_all(action='DESELECT')
     fountain_obj.select_set(True)
     bpy.context.view_layer.objects.active = fountain_obj
@@ -869,6 +994,7 @@ def main():
         use_selection=True,
         export_format='GLB',
         export_apply=True,
+        export_materials='EXPORT',
         export_yup=True
     )
     print(f"[GLTF] Runtime exportado exitosamente en: {glb_path}")
@@ -880,7 +1006,7 @@ def main():
     cams = setup_lighting_and_cameras(col)
     render_validation_views(cams, render_dir)
 
-    print(">>> PROCESO DE GENERACIÓN PROCEDURAL V4.0 COMPLETADO EXITOSAMENTE.")
+    print(">>> PROCESO DE GENERACIÓN PROCEDURAL V5.0 COMPLETADO EXITOSAMENTE.")
 
 if __name__ == "__main__":
     main()

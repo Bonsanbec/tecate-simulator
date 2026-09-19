@@ -83,20 +83,20 @@
 
 ---
 
-## 4. Especificación de Materiales PBR
+## 4. Especificación de Materiales PBR y Mapas de Textura
 
-| Material | Elementos Asignados | Color Base / Textura | Roughness | Metallic | Sombreado |
+| Material | Elementos Asignados | Mapas PBR Dedicados (PNG) | Roughness | Metallic | Sombreado |
 | :--- | :--- | :--- | :---: | :---: | :---: |
-| `M_Estuco_Ocre` | Paramento exterior del murete | Ocre amarillo colonial (`#D4B36A`) | 0.85 | 0.00 | Smooth |
-| `M_Zocalo_Basal` | Cimentación subterránea ($Z \le 0.00\text{ m}$) | Concreto basal gris medio (`#7A7870`) | 0.95 | 0.00 | Flat |
-| `M_Terracota_Banca`| Albardilla toro perimetral | Terracota tostada cocida (`#C27351`) | 0.40 | 0.00 | Smooth |
-| `M_Talavera_Checker`| Friso del pedestal octagonal | Damero cerámico Azul Cobalto / Amarillo Oro | 0.18 | 0.05 | Flat |
-| `M_Azul_Tobera` | Esferas y toberas de descarga | Azul ultramar vidriado (`#1B3F8B`) | 0.20 | 0.00 | Smooth |
-| `M_Cantera_Cascada`| Planos y nervaduras de cascada | Cantera gris perla claro (`#DCDCD8`) | 0.75 | 0.00 | Flat |
-| `M_Copa_Cantera` | Pedestal y tazón superior | Cantera beige claro (`#D8D3C8`) | 0.60 | 0.00 | Smooth |
-| `M_Fondo_Estanque` | Vaso interior sumergido | Mosaico vítreo turquesa (`#288A9E`) | 0.50 | 0.00 | Smooth |
-| `M_Agua_Espejo` | Superficie del agua del estanque | Turquesa translúcido / reflectivo | 0.05 | 0.00 | Smooth |
-| `M_Chorro_Agua` | Penacho del surtidor central | Blanco azulado translúcido | 0.10 | 0.00 | Smooth |
+| `M_Estuco_Ocre` | Paramento exterior del murete | `fuente_murete_albedo.png`, `_normal.png`, `_roughness.png` | 0.85 | 0.00 | Smooth |
+| `M_Zocalo_Basal` | Cimentación subterránea ($Z \le 0.00\text{ m}$) | Concreto basal gris continuo | 0.95 | 0.00 | Flat |
+| `M_Terracota_Banca`| Albardilla toro perimetral | `fuente_banca_albedo.png`, `_normal.png`, `_roughness.png` | 0.82 | 0.00 | Smooth |
+| `M_Talavera_Checker`| Friso del pedestal octagonal | `fuente_talavera_albedo.png`, `_normal.png`, `_roughness.png` | 0.18 | 0.05 | Flat |
+| `M_Azul_Tobera` | Esferas y toberas de descarga | Esmalte azul ultramar vidriado | 0.18 | 0.05 | Smooth |
+| `M_Cantera_Cascada`| Planos y nervaduras de cascada | `fuente_cantera_albedo.png`, `_normal.png`, `_roughness.png` | 0.78 | 0.00 | Flat |
+| `M_Copa_Cantera` | Pedestal y tazón superior | `fuente_cantera_albedo.png`, `_normal.png` | 0.72 | 0.00 | Smooth |
+| `M_Fondo_Estanque` | Vaso interior sumergido | `fuente_mosaico_albedo.png` | 0.40 | 0.00 | Smooth |
+| `M_Agua_Espejo` | Superficie del agua del estanque | `fuente_agua_albedo.png`, `_normal.png` (Alpha = 0.62) | 0.08 | 0.00 | Smooth |
+| `M_Chorro_Agua` | Penacho del surtidor central | Blanco azulado translúcido (Alpha = 0.50) | 0.15 | 0.00 | Smooth |
 
 ---
 
