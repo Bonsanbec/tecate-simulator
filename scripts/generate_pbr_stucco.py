@@ -53,8 +53,8 @@ def generate_pbr_maps():
     bot = quad[y1, :, :][:, x0, :] * (1.0 - wx) + quad[y1, :, :][:, x1, :] * wx
     seamless_albedo = top * (1.0 - wy) + bot * wy
     
-    # Calibración exacta de color al swatch
-    target_mean = np.array([0.4495, 0.3489, 0.3044], dtype=np.float32)
+    # Calibración exacta de color: estuco naranja terracota histórico 2009
+    target_mean = np.array([0.58, 0.28, 0.14], dtype=np.float32)
     current_mean = seamless_albedo.mean(axis=(0,1))
     seamless_albedo = np.clip(seamless_albedo * (target_mean / np.maximum(current_mean, 1e-4)), 0.0, 1.0)
     

@@ -19,9 +19,12 @@ Documento técnico de especificación morfológica, paramétrica, fenestración,
   - **Prohibición estricta cumplida**: El asset 3D (`hotel_tecate.glb`) no embebe banquetas, cordones ni asfalto.
 - **Integración en Escena Principal Godot (`godot_project/main.tscn`)**:
   - Instancia: `[node name="Hotel_Tecate" parent="." instance=ExtResource("13_hotel_tecate")]`
-  - `transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -44.06, 398.79, 45.40)`
-  - **Rotación Cardinal Pura**: Rotación ortogonal estricta de $-90^\circ$ ($270^\circ$) alrededor del eje vertical $Y$, alineando el eje local $+X$ con el sur ($+Z_{\text{mundo}}$) a lo largo de Calle Pdte. Lázaro Cárdenas, y el eje local $-Z$ con el oriente ($+X_{\text{mundo}}$) a lo largo de Callejón Libertad.
-  - **Cota Rasante**: $Y = 398.79\text{ m}$, posando la planta baja a ras de la plataforma de la manzana catastral (`UrbanManzanas`) y dejando el zócalo basal enterrado herméticamente hasta $Y = 397.54\text{ m}$.
+  - `transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -44.06, 398.79, 45.40)`
+  - **Rotación Cardinal Pura hacia el Noroeste (NW)**:
+    - La ochava apunta estrictamente al **Noroeste (NW)** hacia el Parque Miguel Hidalgo.
+    - La fachada oeste asienta a lo largo de Calle Pdte. Lázaro Cárdenas ($X = -44.06\text{ m}$, extendida hacia el sur $Z \in [48.20, 74.00\text{ m}]$) con normal exterior hacia el **Oeste**.
+    - La fachada norte asienta a lo largo de Callejón Libertad ($Z = 45.40\text{ m}$, extendida hacia el oriente $X \in [-41.26, -23.66\text{ m}]$) con normal exterior hacia el **Norte**.
+  - **Cota Rasante**: $Y = 398.79\text{ m}$, posando la planta baja a ras de la plataforma de la manzana catastral (`UrbanManzanas`) y dejando el zócalo basal enterrado herméticamente hasta $Y = 397.59\text{ m}$ ($Z = -1.20\text{ m}$).
   - **Colisiones Analíticas**: Escena `hotel_tecate.tscn` con 9 cuerpos `BoxShape3D` coordinados con los ejes locales de glTF, preservando el zaguán de acceso de $4.80\text{ m} \times 3.20\text{ m}$ totalmente transitable sin paredes invisibles.
 
 ---
@@ -91,7 +94,7 @@ El inmueble se compone de los siguientes cuerpos arquitectónicos fidedignamente
 
 | Material | Base Color / Textura | Roughness | Metallic | Características PBR |
 | :--- | :--- | :--- | :--- | :--- |
-| `M_Estuco_Terracota` | `#BE6045` `(0.71, 0.35, 0.23)` | 0.88 | 0.00 | Micro-relieve dual: grano fino de arena (escala 280) + textura de llana (escala 22) con bump normal de 0.14 |
+| `M_Estuco_Terracota` | `#CC5828` `(0.58, 0.28, 0.14)` | 0.86 | 0.00 | Estuco naranja terracota histórico 2009 con proyección triplanar PBR seamless continuo |
 | `M_Moldura_Crema` | `#F0E6D2` `(0.92, 0.88, 0.80)` | 0.75 | 0.00 | Molduras perimetrales, cornisas, ménsulas y antepechos |
 | `M_Zocalo_Basal` | `#2D2B2A` `(0.18, 0.17, 0.16)` | 0.90 | 0.00 | Concreto rugoso zócalo subterráneo hasta $Z = -1.25\text{ m}$ |
 | `M_Paves_Vidrio` | `#D8ECE8` `(0.85, 0.92, 0.91)` | 0.15 | 0.00 | Bloques de vidrio con cuadrícula y rugosidad refractante |

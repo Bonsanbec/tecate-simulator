@@ -138,7 +138,7 @@ def create_materials():
     normal_path = os.path.abspath("godot_project/assets/textures/hotel_tecate_stucco_normal.png")
     rough_path = os.path.abspath("godot_project/assets/textures/hotel_tecate_stucco_roughness.png")
 
-    m_stucco = _make_mat("M_Estuco_Terracota", (0.70, 0.62, 0.58, 1.0), rough=0.86)
+    m_stucco = _make_mat("M_Estuco_Terracota", (0.58, 0.28, 0.14, 1.0), rough=0.86)
     nodes = m_stucco.node_tree.nodes
     links = m_stucco.node_tree.links
     bsdf_st = nodes.get("Principled BSDF")
