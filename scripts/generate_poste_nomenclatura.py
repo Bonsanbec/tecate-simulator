@@ -361,7 +361,7 @@ def build_lower_plate(mat_placa, mat_relieve, mat_blanco, col):
             bm_w.verts.new((x_right, y_w,  H2 - bw)),
             bm_w.verts.new((x_left, y_w,  H2 - bw)),
         ]
-        if side_sign < 0:
+        if side_sign > 0:
             v_w = list(reversed(v_w))
         bm_w.faces.new(v_w)
 
@@ -604,7 +604,7 @@ def build_upper_plate(mat_placa, mat_relieve, mat_blanco, col):
             bm_w.verts.new((x_right, y_w,  H2 - bw)),
             bm_w.verts.new((x_left, y_w,  H2 - bw)),
         ]
-        if side_sign < 0:
+        if side_sign > 0:
             v_w = list(reversed(v_w))
         bm_w.faces.new(v_w)
 

@@ -556,7 +556,8 @@ def build_baked_texts(corners: list, bvh_terrain=None, out_path: str = OUT_TEXTO
         bsdf_t.inputs["Roughness"].default_value = 0.35
         bsdf_t.inputs["Metallic"].default_value = 0.0
 
-    bm_consolidated = bmesh.new()
+    CHUNK_SIZE = 300.0
+    chunk_bms = {}
     mesh_cache = {}
 
     for corner_idx, c_info in enumerate(corners):
@@ -580,14 +581,17 @@ def build_baked_texts(corners: list, bvh_terrain=None, out_path: str = OUT_TEXTO
         else:
             yaw_rad = calculate_optimal_post_orientation(v1, v2)
 
-        # Matriz del poste en coordenadas nativas de Blender:
-        # X = East (lx), Y = North (ly), Z = Up (lz), rotación en Z (yaw_rad)
         mat_post_blender = Matrix.Translation(Vector((lx, ly, lz))) @ Matrix.Rotation(yaw_rad, 4, 'Z')
+
+        chunk_key = (int(math.floor(lx / CHUNK_SIZE)), int(math.floor(ly / CHUNK_SIZE)))
+        if chunk_key not in chunk_bms:
+            chunk_bms[chunk_key] = bmesh.new()
+        bm_dest = chunk_bms[chunk_key]
 
         # Placa Inferior
         p1, m1 = standardize_street_name(st1)
         _accumulate_plate_text(
-            bm_dest=bm_consolidated,
+            bm_dest=bm_dest,
             scene=scene,
             depsgraph=depsgraph,
             mesh_cache=mesh_cache,
@@ -601,7 +605,7 @@ def build_baked_texts(corners: list, bvh_terrain=None, out_path: str = OUT_TEXTO
         # Placa Superior
         p2, m2 = standardize_street_name(st2)
         _accumulate_plate_text(
-            bm_dest=bm_consolidated,
+            bm_dest=bm_dest,
             scene=scene,
             depsgraph=depsgraph,
             mesh_cache=mesh_cache,
@@ -612,20 +616,26 @@ def build_baked_texts(corners: list, bvh_terrain=None, out_path: str = OUT_TEXTO
             plate_z=2.74
         )
 
-    print("\n[Textos] Convirtiendo BMesh consolidado a objeto de Blender...")
-    final_mesh = bpy.data.meshes.new("Nomenclatura_Textos_Malla")
-    bm_consolidated.to_mesh(final_mesh)
-    bm_consolidated.free()
+    print(f"\n[Textos] Convirtiendo {len(chunk_bms)} cuadrantes espaciales de textos a objetos...")
+    chunk_objs = []
+    for (cx, cy), bm_c in chunk_bms.items():
+        if len(bm_c.verts) == 0:
+            bm_c.free()
+            continue
+        mesh_c = bpy.data.meshes.new(f"Mesh_Textos_{cx}_{cy}")
+        bm_c.to_mesh(mesh_c)
+        bm_c.free()
+        obj_c = bpy.data.objects.new(f"Nomenclatura_Textos_Chunk_{cx}_{cy}", mesh_c)
+        scene.collection.objects.link(obj_c)
+        obj_c.data.materials.append(mat_white)
+        chunk_objs.append(obj_c)
 
-    obj_consolidated = bpy.data.objects.new("Nomenclatura_Textos_Consolidados", final_mesh)
-    scene.collection.objects.link(obj_consolidated)
-    obj_consolidated.data.materials.append(mat_white)
-
-    print(f"[Textos] Exportando archivo consolidado: {out_path}...")
+    print(f"[Textos] Exportando {len(chunk_objs)} cuadrantes de textos a {out_path}...")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     bpy.ops.object.select_all(action='DESELECT')
-    obj_consolidated.select_set(True)
-    bpy.context.view_layer.objects.active = obj_consolidated
+    for o in chunk_objs:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = chunk_objs[0]
 
     bpy.ops.export_scene.gltf(
         filepath=out_path,
@@ -643,10 +653,10 @@ def build_baked_texts(corners: list, bvh_terrain=None, out_path: str = OUT_TEXTO
 # ─────────────────────────────────────────────────────────────────────────────
 def build_baked_icons(items: list, icons_paths: list, out_path: str = OUT_ICONOS_GLB):
     """
-    Construye la malla combinada de calcomanías para todas las esquinas en coordenadas Blender.
-    Al exportar con export_yup=True, glTF alinea perfectamente con Godot 4.
+    Construye la malla combinada de calcomanías particionada por cuadrantes en coordenadas Blender.
+    Utiliza alphaMode MASK (Alpha Scissor) y backface culling estricto para evitar artefactos de transparencia.
     """
-    print(f"\n[Iconos] Compilando quads de calcomanías para {len(items)} esquinas...")
+    print(f"\n[Iconos] Compilando quads de calcomanías particionados para {len(items)} esquinas...")
     t_start = time.time()
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -665,17 +675,20 @@ def build_baked_icons(items: list, icons_paths: list, out_path: str = OUT_ICONOS
         img = bpy.data.images.load(os.path.abspath(p_icon))
         tex_node.image = img
 
+        math_round = nodes.new("ShaderNodeMath")
+        math_round.operation = 'ROUND'
+
         links.new(tex_node.outputs["Color"], bsdf_i.inputs["Base Color"])
         if "Alpha" in tex_node.outputs and "Alpha" in bsdf_i.inputs:
-            links.new(tex_node.outputs["Alpha"], bsdf_i.inputs["Alpha"])
+            links.new(tex_node.outputs["Alpha"], math_round.inputs[0])
+            links.new(math_round.outputs["Value"], bsdf_i.inputs["Alpha"])
         bsdf_i.inputs["Roughness"].default_value = 0.4
-        m_ico.blend_method = 'BLEND'
+        m_ico.blend_method = 'CLIP'
+        m_ico.alpha_threshold = 0.5
         if hasattr(m_ico, "use_backface_culling"):
             m_ico.use_backface_culling = True
         icon_materials.append(m_ico)
 
-    bm = bmesh.new()
-    uv_layer = bm.loops.layers.uv.new("UVMap")
     w_half = 0.11
     h_half = 0.08
     base_pts = [
@@ -698,18 +711,27 @@ def build_baked_icons(items: list, icons_paths: list, out_path: str = OUT_ICONOS
         (Vector((0.0105, 0.295, 2.74)), Euler((math.radians(90.0), 0.0, math.radians(90.0)))),
     ]
 
+    CHUNK_SIZE = 300.0
+    chunk_ico_data = {}
+
     for item in items:
         if isinstance(item, dict):
             lx, ly = item["pos"]
             lz = item.get("lz", 400.0)
             yaw_rad = item.get("yaw_rad", 0.0)
         else:
-            # item es [gx, gy, gz, rot_y]
             gx, gy, gz, rot_y = item
             lx = gx
             ly = -gz
             lz = gy
             yaw_rad = rot_y
+
+        chunk_key = (int(math.floor(lx / CHUNK_SIZE)), int(math.floor(ly / CHUNK_SIZE)))
+        if chunk_key not in chunk_ico_data:
+            bm = bmesh.new()
+            uv = bm.loops.layers.uv.new("UVMap")
+            chunk_ico_data[chunk_key] = (bm, uv)
+        bm, uv_layer = chunk_ico_data[chunk_key]
 
         mat_world = Matrix.Translation(Vector((lx, ly, lz))) @ Matrix.Rotation(yaw_rad, 4, 'Z')
         ico_idx = (hash((round(lx, 1), round(ly, 1))) & 0x7FFFFFFF) % len(icon_materials)
@@ -724,19 +746,28 @@ def build_baked_icons(items: list, icons_paths: list, out_path: str = OUT_ICONOS
             f.loops[2][uv_layer].uv = (1.0, 1.0)
             f.loops[3][uv_layer].uv = (0.0, 1.0)
 
-    mesh = bpy.data.meshes.new("Nomenclatura_Iconos_Malla")
-    bm.to_mesh(mesh)
-    bm.free()
+    print(f"\n[Iconos] Convirtiendo {len(chunk_ico_data)} cuadrantes espaciales de íconos a objetos...")
+    chunk_objs = []
+    for (cx, cy), (bm, uv_layer) in chunk_ico_data.items():
+        if len(bm.verts) == 0:
+            bm.free()
+            continue
+        mesh = bpy.data.meshes.new(f"Mesh_Iconos_{cx}_{cy}")
+        bm.to_mesh(mesh)
+        bm.free()
+        obj = bpy.data.objects.new(f"Nomenclatura_Iconos_Chunk_{cx}_{cy}", mesh)
+        scene.collection.objects.link(obj)
+        for m in icon_materials:
+            obj.data.materials.append(m)
+        chunk_objs.append(obj)
 
-    obj = bpy.data.objects.new("Nomenclatura_Iconos_Consolidados", mesh)
-    scene.collection.objects.link(obj)
-    for m in icon_materials:
-        obj.data.materials.append(m)
-
+    print(f"[Iconos] Exportando {len(chunk_objs)} cuadrantes de íconos a {out_path}...")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     bpy.ops.object.select_all(action='DESELECT')
-    obj.select_set(True)
-    bpy.context.view_layer.objects.active = obj
+    for o in chunk_objs:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = chunk_objs[0]
+
     bpy.ops.export_scene.gltf(
         filepath=out_path,
         export_format='GLB',
@@ -770,10 +801,47 @@ extends Node3D
 @export var post_model: PackedScene = preload("res://assets/poste_nomenclatura_tecate.glb")
 const DATA_PATH = "res://assets/nomenclatura_data.json"
 
+# Parámetros de Culling y Rendimiento Espacial
+# Chunks espaciales de 300m requieren un rango de visibilidad >= 300m para no descartar esquinas cercanas
+const TEXT_VISIBILITY_END = 300.0       # Descarte de textos e iconos a más de 300m
+const TEXT_VISIBILITY_MARGIN = 35.0     # Fade out suave de 265m a 300m
+const POST_VISIBILITY_END = 300.0       # Descarte de postes a más de 300m
+const POST_VISIBILITY_MARGIN = 35.0     # Fade out suave de 265m a 300m
+const POST_CHUNK_SIZE = 350.0           # Tamaño de cuadrante espacial para postes
+
 func _ready() -> void:
-	var mm_node = get_node_or_null("MultiMeshInstance3D") as MultiMeshInstance3D
-	if not mm_node:
+	# 1. Configurar culling por distancia en los cuadrantes de Textos e Íconos
+	_apply_visibility_culling(get_node_or_null("TextosBaked"), TEXT_VISIBILITY_END, TEXT_VISIBILITY_MARGIN)
+	_apply_visibility_culling(get_node_or_null("IconosBaked"), TEXT_VISIBILITY_END, TEXT_VISIBILITY_MARGIN)
+
+	# 2. Cargar e instanciar los postes con partición espacial MultiMesh
+	_setup_partitioned_postes()
+
+func _apply_visibility_culling(parent_node: Node, max_dist: float, margin: float) -> void:
+	if not parent_node:
 		return
+	if parent_node is GeometryInstance3D:
+		parent_node.visibility_range_end = max_dist
+		parent_node.visibility_range_end_margin = margin
+		parent_node.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+	for child in parent_node.get_children():
+		_apply_visibility_culling(child, max_dist, margin)
+
+func _setup_partitioned_postes() -> void:
+	# Limpiar o deshabilitar nodo legacy si existe
+	var legacy_mm = get_node_or_null("MultiMeshInstance3D")
+	if legacy_mm:
+		legacy_mm.visible = false
+		legacy_mm.multimesh = null
+
+	var container = get_node_or_null("PostesChunks")
+	if not container:
+		container = Node3D.new()
+		container.name = "PostesChunks"
+		add_child(container)
+	else:
+		for ch in container.get_children():
+			ch.queue_free()
 
 	if not FileAccess.file_exists(DATA_PATH):
 		push_warning("[Nomenclatura] No se encontró el archivo: " + DATA_PATH)
@@ -785,29 +853,76 @@ func _ready() -> void:
 	if not json_data or not (json_data is Array):
 		return
 
-	var count = json_data.size()
-	var mm = MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.instance_count = count
-
 	# Extraer la malla canónica de poste_nomenclatura_tecate.glb
+	var canonical_mesh: Mesh = null
 	if post_model:
 		var tmp_inst = post_model.instantiate()
 		var mesh_inst = _find_mesh(tmp_inst)
 		if mesh_inst and mesh_inst.mesh:
-			mm.mesh = mesh_inst.mesh
+			canonical_mesh = mesh_inst.mesh
 		tmp_inst.queue_free()
 
-	for i in range(count):
-		var item = json_data[i]
+	if not canonical_mesh:
+		push_warning("[Nomenclatura] No se pudo obtener la malla canónica del poste.")
+		return
+
+	# Agrupar postes en cuadrantes espaciales de POST_CHUNK_SIZE
+	var chunks: Dictionary = {}
+	for item in json_data:
 		var pos = Vector3(item[0], item[1], item[2])
 		var rot_y = item[3]
-		var basis = Basis(Vector3.UP, rot_y)
-		var t = Transform3D(basis, pos)
-		mm.set_instance_transform(i, t)
+		var cx = int(floor(pos.x / POST_CHUNK_SIZE))
+		var cz = int(floor(pos.z / POST_CHUNK_SIZE))
+		var key = Vector2i(cx, cz)
+		if not chunks.has(key):
+			chunks[key] = []
+		chunks[key].append([pos, rot_y])
 
-	mm_node.multimesh = mm
-	print("[Nomenclatura] Instanciados con éxito ", count, " postes urbanos vía MultiMesh.")
+	var total_instanced = 0
+	for key in chunks.keys():
+		var items_chunk = chunks[key]
+		var count = items_chunk.size()
+		if count == 0:
+			continue
+
+		# Calcular AABB del cuadrante para posicionar el nodo en el centro real
+		var first_pos: Vector3 = items_chunk[0][0]
+		var chunk_aabb := AABB(first_pos, Vector3.ZERO)
+		for it in items_chunk:
+			chunk_aabb = chunk_aabb.expand(it[0])
+
+		var chunk_center: Vector3 = chunk_aabb.get_center()
+		var local_aabb := AABB(first_pos - chunk_center, Vector3.ZERO)
+
+		var mm = MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.instance_count = count
+		mm.mesh = canonical_mesh
+
+		for i in range(count):
+			var it = items_chunk[i]
+			var pos: Vector3 = it[0]
+			var rot_y: float = it[1]
+			var local_pos = pos - chunk_center
+			local_aabb = local_aabb.expand(local_pos)
+			var basis = Basis(Vector3.UP, rot_y)
+			var t = Transform3D(basis, local_pos)
+			mm.set_instance_transform(i, t)
+
+		mm.custom_aabb = local_aabb.grow(5.0)
+
+		var mm_node = MultiMeshInstance3D.new()
+		mm_node.name = "Chunk_%d_%d" % [key.x, key.y]
+		mm_node.position = chunk_center
+		mm_node.multimesh = mm
+		mm_node.visibility_range_end = POST_VISIBILITY_END
+		mm_node.visibility_range_end_margin = POST_VISIBILITY_MARGIN
+		mm_node.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+
+		container.add_child(mm_node)
+		total_instanced += count
+
+	print("[Nomenclatura] Instanciados %d postes en %d cuadrantes espaciales con culling activo." % [total_instanced, chunks.size()])
 
 func _find_mesh(node: Node) -> MeshInstance3D:
 	if node is MeshInstance3D:
