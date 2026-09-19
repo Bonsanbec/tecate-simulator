@@ -1,0 +1,16 @@
+[gd_scene load_steps=5 format=3 uid="uid://nomenclatura_urbana_tecate_001"]
+
+[ext_resource type="Script" path="res://assets/nomenclatura_urbana.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/nomenclatura_textos_baked.glb" id="2_text_glb"]
+
+[sub_resource type="MultiMesh" id="MultiMesh_postes"]
+transform_format = 1
+
+[node name="NomenclaturaUrbana" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="MultiMeshInstance3D" type="MultiMeshInstance3D" parent="."]
+multimesh = SubResource("MultiMesh_postes")
+
+[node name="TextosBaked" parent="." instance=ExtResource("2_text_glb")]
+

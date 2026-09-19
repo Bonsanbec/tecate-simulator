@@ -924,22 +924,33 @@ def main():
     bpy.ops.wm.save_as_mainfile(filepath=blend_path)
     print(f"--> Archivo maestro guardado: {blend_path}")
 
-    # 9. Exportar versión modular limpia para Godot (sin textos de muestra)
+    # 9. Exportar versión modular limpia para Godot (malla única optimizada para MultiMesh)
     bpy.ops.object.select_all(action='DESELECT')
     for o in all_objs:
         o.select_set(True)
     bpy.context.view_layer.objects.active = obj_poste
+    bpy.ops.object.duplicate()
+    dup_objs = bpy.context.selected_objects
+    bpy.ops.object.join()
+    obj_clean_joined = bpy.context.active_object
+    obj_clean_joined.name = "Poste_Nomenclatura_Mesh"
+
+    bpy.ops.object.select_all(action='DESELECT')
+    obj_clean_joined.select_set(True)
+    bpy.context.view_layer.objects.active = obj_clean_joined
 
     glb_clean_path = "godot_project/assets/poste_nomenclatura_tecate.glb"
     bpy.ops.export_scene.gltf(
         filepath=glb_clean_path,
         export_format='GLB',
         use_selection=True,
-        export_apply=False,
+        export_apply=True,
         export_materials='EXPORT',
         export_yup=True
     )
-    print(f"--> Asset Godot modular exportado: {glb_clean_path}")
+    print(f"--> Asset Godot modular exportado (malla única): {glb_clean_path}")
+    bpy.data.objects.remove(obj_clean_joined, do_unlink=True)
+
 
     # 10. Exportar versión demo con texto
     bpy.ops.object.select_all(action='DESELECT')

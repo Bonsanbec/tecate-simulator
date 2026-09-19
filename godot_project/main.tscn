@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://db7572d55c7a"]
+[gd_scene load_steps=8 format=3 uid="uid://db7572d55c7a"]
 
 [ext_resource type="Script" path="res://apply_shader.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://assets/osm2world_baked.glb" id="2_geometry"]
@@ -11,6 +11,8 @@
 [ext_resource type="PackedScene" path="res://assets/manzanas_baked.glb" id="9_manzanas"]
 [ext_resource type="PackedScene" path="res://assets/kiosko_parque_hidalgo.tscn" id="10_kiosko"]
 [ext_resource type="PackedScene" path="res://assets/buildings/bbva_tecate_centro.tscn" id="11_bbva"]
+[ext_resource type="PackedScene" path="res://assets/nomenclatura_urbana.tscn" id="12_nomenclatura"]
+
 
 [sub_resource type="Environment" id="Environment_tct"]
 background_mode = 1
@@ -45,6 +47,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6844, 400.0132, 2.6878)
 
 [node name="BBVA" parent="." instance=ExtResource("11_bbva")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -66.8, 400.38, -24.81)
+
+[node name="Nomenclatura" parent="." instance=ExtResource("12_nomenclatura")]
 
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
