@@ -997,11 +997,9 @@ def build_west_facade_cardenas(mats, col):
     
     # 2. Machones / Pilastras verticales a lo largo de las 6 crujías
     # 7 machones: 6 delimitan las 5 crujías + machón 7 de remate norte
-    col_y = [4.20, 8.40, 12.60, 16.80, 21.00, 25.20]
+    col_y = [4.20, 8.40, 12.60, 16.80, 21.00, 25.20, 29.40]
     for cy in col_y:
         add_box(bm_struct, -0.04, 0.35, cy, cy + 0.60, 0.40, H_wall)
-        
-    # Machón norte de remate: Suprimido polígono redundante gris para evitar clipeo con la barda del vecino (Ground Truth)
     
     # Muros rehundidos horizontales
     add_box(bm_struct, 0.02, 0.30, Y_start, Y_max, 3.20, 3.30)
