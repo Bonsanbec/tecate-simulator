@@ -254,13 +254,14 @@ def build_lower_plate(mat_placa, mat_relieve, mat_blanco, col):
     for side_sign in [1.0, -1.0]:
         y_b = side_sign * t_half
         dy = side_sign * h_relief
+        div_x_side = -div_x if side_sign > 0 else div_x
 
         # Filete divisor
         vf = [
-            bm_rel.verts.new((div_x - bw*0.5, y_b, -H2 + bw)),
-            bm_rel.verts.new((div_x + bw*0.5, y_b, -H2 + bw)),
-            bm_rel.verts.new((div_x + bw*0.5, y_b,  H2 - bw)),
-            bm_rel.verts.new((div_x - bw*0.5, y_b,  H2 - bw)),
+            bm_rel.verts.new((div_x_side - bw*0.5, y_b, -H2 + bw)),
+            bm_rel.verts.new((div_x_side + bw*0.5, y_b, -H2 + bw)),
+            bm_rel.verts.new((div_x_side + bw*0.5, y_b,  H2 - bw)),
+            bm_rel.verts.new((div_x_side - bw*0.5, y_b,  H2 - bw)),
         ]
         ff = bm_rel.faces.new(vf)
         res_f = bmesh.ops.extrude_face_region(bm_rel, geom=[ff])
@@ -331,11 +332,19 @@ def build_lower_plate(mat_placa, mat_relieve, mat_blanco, col):
     bm_w = bmesh.new()
     for side_sign in [1.0, -1.0]:
         y_w = side_sign * (t_half + 0.0005) # Ligeramente por encima del fondo
+        div_x_side = -div_x if side_sign > 0 else div_x
+        if side_sign > 0:
+            x_left = -L2 + bw
+            x_right = div_x_side - bw * 0.5
+        else:
+            x_left = div_x_side + bw * 0.5
+            x_right = L2 - bw
+
         v_w = [
-            bm_w.verts.new((div_x + bw*0.5, y_w, -H2 + bw)),
-            bm_w.verts.new((L2 - bw, y_w, -H2 + bw)),
-            bm_w.verts.new((L2 - bw, y_w,  H2 - bw)),
-            bm_w.verts.new((div_x + bw*0.5, y_w,  H2 - bw)),
+            bm_w.verts.new((x_left, y_w, -H2 + bw)),
+            bm_w.verts.new((x_right, y_w, -H2 + bw)),
+            bm_w.verts.new((x_right, y_w,  H2 - bw)),
+            bm_w.verts.new((x_left, y_w,  H2 - bw)),
         ]
         if side_sign < 0:
             v_w = list(reversed(v_w))
@@ -345,10 +354,17 @@ def build_lower_plate(mat_placa, mat_relieve, mat_blanco, col):
     for face in bm_w.faces:
         for loop in face.loops:
             p = loop.vert.co
-            u = (p.x - (div_x + bw*0.5)) / (L2 - bw - (div_x + bw*0.5))
+            if p.y > 0:
+                div_x_side = -div_x
+                xr = div_x_side - bw * 0.5
+                xl = -L2 + bw
+                u = (xr - p.x) / (xr - xl)
+            else:
+                div_x_side = div_x
+                xl = div_x_side + bw * 0.5
+                xr = L2 - bw
+                u = (p.x - xl) / (xr - xl)
             v = (p.z + H2 - bw) / (2.0 * (H2 - bw))
-            if p.y < 0:
-                u = 1.0 - u
             loop[uv_w].uv = (u, v)
 
     mesh_w = bpy.data.meshes.new("Placa_Inferior_WhiteMesh")
@@ -456,13 +472,14 @@ def build_upper_plate(mat_placa, mat_relieve, mat_blanco, col):
     for side_sign in [1.0, -1.0]:
         y_b = side_sign * t_half
         dy = side_sign * h_relief
+        div_x_side = -div_x if side_sign > 0 else div_x
 
         # Filete divisor
         vf = [
-            bm_rel.verts.new((div_x - bw*0.5, y_b, -H2 + bw)),
-            bm_rel.verts.new((div_x + bw*0.5, y_b, -H2 + bw)),
-            bm_rel.verts.new((div_x + bw*0.5, y_b,  H2 - bw)),
-            bm_rel.verts.new((div_x - bw*0.5, y_b,  H2 - bw)),
+            bm_rel.verts.new((div_x_side - bw*0.5, y_b, -H2 + bw)),
+            bm_rel.verts.new((div_x_side + bw*0.5, y_b, -H2 + bw)),
+            bm_rel.verts.new((div_x_side + bw*0.5, y_b,  H2 - bw)),
+            bm_rel.verts.new((div_x_side - bw*0.5, y_b,  H2 - bw)),
         ]
         ff = bm_rel.faces.new(vf)
         res_f = bmesh.ops.extrude_face_region(bm_rel, geom=[ff])
@@ -558,11 +575,19 @@ def build_upper_plate(mat_placa, mat_relieve, mat_blanco, col):
     bm_w = bmesh.new()
     for side_sign in [1.0, -1.0]:
         y_w = side_sign * (t_half + 0.0005)
+        div_x_side = -div_x if side_sign > 0 else div_x
+        if side_sign > 0:
+            x_left = -L2 + bw
+            x_right = div_x_side - bw * 0.5
+        else:
+            x_left = div_x_side + bw * 0.5
+            x_right = L2 - bw
+
         v_w = [
-            bm_w.verts.new((div_x + bw*0.5, y_w, -H2 + bw)),
-            bm_w.verts.new((L2 - bw, y_w, -H2 + bw)),
-            bm_w.verts.new((L2 - bw, y_w,  H2 - bw)),
-            bm_w.verts.new((div_x + bw*0.5, y_w,  H2 - bw)),
+            bm_w.verts.new((x_left, y_w, -H2 + bw)),
+            bm_w.verts.new((x_right, y_w, -H2 + bw)),
+            bm_w.verts.new((x_right, y_w,  H2 - bw)),
+            bm_w.verts.new((x_left, y_w,  H2 - bw)),
         ]
         if side_sign < 0:
             v_w = list(reversed(v_w))
@@ -572,10 +597,17 @@ def build_upper_plate(mat_placa, mat_relieve, mat_blanco, col):
     for face in bm_w.faces:
         for loop in face.loops:
             p = loop.vert.co
-            u = (p.x - (div_x + bw*0.5)) / (L2 - bw - (div_x + bw*0.5))
+            if p.y > 0:
+                div_x_side = -div_x
+                xr = div_x_side - bw * 0.5
+                xl = -L2 + bw
+                u = (xr - p.x) / (xr - xl)
+            else:
+                div_x_side = div_x
+                xl = div_x_side + bw * 0.5
+                xr = L2 - bw
+                u = (p.x - xl) / (xr - xl)
             v = (p.z + H2 - bw) / (2.0 * (H2 - bw))
-            if p.y < 0:
-                u = 1.0 - u
             loop[uv_w].uv = (u, v)
 
     mesh_w = bpy.data.meshes.new("Placa_Superior_WhiteMesh")
@@ -690,7 +722,13 @@ def build_demo_street_texts(mat_relieve):
 
     created_objs = []
     # Placa Inferior (z = 2.52 m)
-    for side_sign, y_pos, rot_x, rot_z in [(1.0, 0.010, 90.0, 0.0), (-1.0, -0.010, 90.0, 180.0)]:
+    # Cara +Y (observador al norte mirando al sur):
+    # - Texto en verde (izq del observador = +X): X = +0.14, Euler (90, 0, 180)
+    # - Patrocinador en blanco (der del observador = -X): X = -0.295, Euler (90, 0, 180)
+    # Cara -Y (observador al sur mirando al norte):
+    # - Texto en verde (izq del observador = -X): X = -0.14, Euler (90, 0, 0)
+    # - Patrocinador en blanco (der del observador = +X): X = +0.295, Euler (90, 0, 0)
+    for side_sign, y_pos, rot_z in [(1.0, 0.010, 180.0), (-1.0, -0.010, 0.0)]:
         t_c = bpy.data.curves.new(f"Txt_EstebanCantu_{'F' if side_sign > 0 else 'B'}", type='FONT')
         t_c.body = "ESTEBAN CANTU"
         t_c.size = 0.062
@@ -698,8 +736,8 @@ def build_demo_street_texts(mat_relieve):
         t_c.align_x = 'CENTER'
         t_c.align_y = 'CENTER'
         o_c = bpy.data.objects.new(f"Texto_EstebanCantu_{'F' if side_sign > 0 else 'B'}", t_c)
-        o_c.location = (-0.14 * side_sign, y_pos, 2.52)
-        o_c.rotation_euler = (math.radians(rot_x), 0.0, math.radians(rot_z))
+        o_c.location = (0.14 * side_sign, y_pos, 2.52)
+        o_c.rotation_euler = (math.radians(90.0), 0.0, math.radians(rot_z))
         o_c.data.materials.append(mat_relieve)
         demo_col.objects.link(o_c)
         created_objs.append(o_c)
@@ -713,14 +751,20 @@ def build_demo_street_texts(mat_relieve):
         t_cp.align_x = 'CENTER'
         t_cp.align_y = 'CENTER'
         o_cp = bpy.data.objects.new(f"Texto_Patrocinador1_{'F' if side_sign > 0 else 'B'}", t_cp)
-        o_cp.location = (0.295 * side_sign, y_pos, 2.52)
-        o_cp.rotation_euler = (math.radians(rot_x), 0.0, math.radians(rot_z))
+        o_cp.location = (-0.295 * side_sign, y_pos, 2.52)
+        o_cp.rotation_euler = (math.radians(90.0), 0.0, math.radians(rot_z))
         o_cp.data.materials.append(mat_relieve)
         demo_col.objects.link(o_cp)
         created_objs.append(o_cp)
 
     # Placa Superior (z = 2.74 m, a 90°)
-    for side_sign, x_pos, rot_x, rot_z in [(-1.0, -0.010, 90.0, 90.0), (1.0, 0.010, 90.0, -90.0)]:
+    # Cara -X (observador al oeste mirando al este):
+    # - Texto en verde (izq del observador = +Y): Y = +0.14, Euler (90, 0, -90)
+    # - Patrocinador en blanco (der del observador = -Y): Y = -0.295, Euler (90, 0, -90)
+    # Cara +X (observador al este mirando al oeste):
+    # - Texto en verde (izq del observador = -Y): Y = -0.14, Euler (90, 0, 90)
+    # - Patrocinador en blanco (der del observador = +Y): Y = +0.295, Euler (90, 0, 90)
+    for side_sign, x_pos, rot_z in [(-1.0, -0.010, -90.0), (1.0, 0.010, 90.0)]:
         t_j = bpy.data.curves.new(f"Txt_BenitoJuarez_{'F' if side_sign < 0 else 'B'}", type='FONT')
         t_j.body = "BENITO JUAREZ"
         t_j.size = 0.062
@@ -728,8 +772,8 @@ def build_demo_street_texts(mat_relieve):
         t_j.align_x = 'CENTER'
         t_j.align_y = 'CENTER'
         o_j = bpy.data.objects.new(f"Texto_BenitoJuarez_{'F' if side_sign < 0 else 'B'}", t_j)
-        o_j.location = (x_pos, -0.14 * (-side_sign), 2.74)
-        o_j.rotation_euler = (math.radians(rot_x), 0.0, math.radians(rot_z))
+        o_j.location = (x_pos, -0.14 * side_sign, 2.74)
+        o_j.rotation_euler = (math.radians(90.0), 0.0, math.radians(rot_z))
         o_j.data.materials.append(mat_relieve)
         demo_col.objects.link(o_j)
         created_objs.append(o_j)
@@ -742,8 +786,8 @@ def build_demo_street_texts(mat_relieve):
         t_cp2.align_x = 'CENTER'
         t_cp2.align_y = 'CENTER'
         o_cp2 = bpy.data.objects.new(f"Texto_Patrocinador2_{'F' if side_sign < 0 else 'B'}", t_cp2)
-        o_cp2.location = (x_pos, 0.295 * (-side_sign), 2.74)
-        o_cp2.rotation_euler = (math.radians(rot_x), 0.0, math.radians(rot_z))
+        o_cp2.location = (x_pos, 0.295 * side_sign, 2.74)
+        o_cp2.rotation_euler = (math.radians(90.0), 0.0, math.radians(rot_z))
         o_cp2.data.materials.append(mat_relieve)
         demo_col.objects.link(o_cp2)
         created_objs.append(o_cp2)

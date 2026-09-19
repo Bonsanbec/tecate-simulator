@@ -230,7 +230,7 @@ def standardize_street_name(raw_name: str) -> tuple[str, str]:
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. Extracción Geométrica de Intersecciones y Esquinas de Manzana
 # ─────────────────────────────────────────────────────────────────────────────
-def extract_corners_with_debounce(road_osm_path: str, min_debounce_m: float = 5.0):
+def extract_corners_with_debounce(road_osm_path: str, min_debounce_m: float = 15.0):
     """
     Construye el grafo vial de OSM y extrae las esquinas de manzana de cada cruce,
     incluyendo entronques en T e intersecciones históricas/peatonales (ej. BBVA).
@@ -459,22 +459,36 @@ def _accumulate_plate_text(bm_dest, scene, depsgraph, mesh_cache, mat_world, pre
         f_size_pref = 0.0
 
     if is_lower:
+        # Placa Inferior:
+        # Cara +Y (observador mirando al sur hacia -Y):
+        # - Recuadro verde (izq): X = +0.14, Prefijo en X = +0.41
+        # - Rotación: Euler((90, 0, 180)) -> Right=(-1,0,0), Up=(0,0,1), Normal=(0,1,0)
+        # Cara -Y (observador mirando al norte hacia +Y):
+        # - Recuadro verde (izq): X = -0.14, Prefijo en X = -0.41
+        # - Rotación: Euler((90, 0, 0)) -> Right=(1,0,0), Up=(0,0,1), Normal=(0,-1,0)
         sides = [
-            (1.0, Vector((-0.14, 0.0105, plate_z - (0.015 if prefix else 0.0))),
-                  Vector((-0.41, 0.0105, plate_z + 0.06)) if prefix else None,
-                  Euler((math.radians(90.0), 0.0, 0.0))),
-            (-1.0, Vector((0.14, -0.0105, plate_z - (0.015 if prefix else 0.0))),
-                   Vector((0.41, -0.0105, plate_z + 0.06)) if prefix else None,
-                   Euler((math.radians(90.0), 0.0, math.radians(180.0)))),
+            (1.0, Vector((0.14, 0.0105, plate_z - (0.015 if prefix else 0.0))),
+                  Vector((0.41, 0.0105, plate_z + 0.06)) if prefix else None,
+                  Euler((math.radians(90.0), 0.0, math.radians(180.0)))),
+            (-1.0, Vector((-0.14, -0.0105, plate_z - (0.015 if prefix else 0.0))),
+                   Vector((-0.41, -0.0105, plate_z + 0.06)) if prefix else None,
+                   Euler((math.radians(90.0), 0.0, 0.0))),
         ]
     else:
+        # Placa Superior (eje Y, rotada 90°):
+        # Cara -X (observador mirando al este hacia +X):
+        # - Recuadro verde (izq): Y = +0.14, Prefijo en Y = +0.41
+        # - Rotación: Euler((90, 0, -90)) -> Right=(0,-1,0), Up=(0,0,1), Normal=(-1,0,0)
+        # Cara +X (observador mirando al oeste hacia -X):
+        # - Recuadro verde (izq): Y = -0.14, Prefijo en Y = -0.41
+        # - Rotación: Euler((90, 0, 90)) -> Right=(0,1,0), Up=(0,0,1), Normal=(1,0,0)
         sides = [
-            (-1.0, Vector((-0.0105, -0.14, plate_z - (0.015 if prefix else 0.0))),
-                   Vector((-0.0105, -0.41, plate_z + 0.06)) if prefix else None,
-                   Euler((math.radians(90.0), 0.0, math.radians(90.0)))),
-            (1.0, Vector((0.0105, 0.14, plate_z - (0.015 if prefix else 0.0))),
-                  Vector((0.0105, 0.41, plate_z + 0.06)) if prefix else None,
-                  Euler((math.radians(90.0), 0.0, math.radians(-90.0)))),
+            (-1.0, Vector((-0.0105, 0.14, plate_z - (0.015 if prefix else 0.0))),
+                   Vector((-0.0105, 0.41, plate_z + 0.06)) if prefix else None,
+                   Euler((math.radians(90.0), 0.0, math.radians(-90.0)))),
+            (1.0, Vector((0.0105, -0.14, plate_z - (0.015 if prefix else 0.0))),
+                  Vector((0.0105, -0.41, plate_z + 0.06)) if prefix else None,
+                  Euler((math.radians(90.0), 0.0, math.radians(90.0)))),
         ]
 
     for side_sign, t_loc, p_loc, rot_e in sides:
@@ -491,7 +505,7 @@ def _accumulate_plate_text(bm_dest, scene, depsgraph, mesh_cache, mat_world, pre
 
         # 2. Texto de prefijo (si existe)
         if prefix and p_loc:
-            align_pref = 'LEFT' if side_sign > 0 else 'RIGHT'
+            align_pref = 'LEFT'
             me_pref = _get_or_create_text_mesh(scene, depsgraph, mesh_cache, prefix, f_size_pref, align_pref, 'TOP')
             mat_pref_final = mat_world @ Matrix.Translation(p_loc) @ rot_mat
 
@@ -635,6 +649,8 @@ def build_baked_icons(items: list, icons_paths: list, out_path: str = OUT_ICONOS
             links.new(tex_node.outputs["Alpha"], bsdf_i.inputs["Alpha"])
         bsdf_i.inputs["Roughness"].default_value = 0.4
         m_ico.blend_method = 'BLEND'
+        if hasattr(m_ico, "use_backface_culling"):
+            m_ico.use_backface_culling = True
         icon_materials.append(m_ico)
 
     bm = bmesh.new()
@@ -651,14 +667,14 @@ def build_baked_icons(items: list, icons_paths: list, out_path: str = OUT_ICONOS
     # Configuraciones de las 4 caras de placas:
     # (loc_relativa, rot_euler)
     plates_config = [
-        # Placa Inferior Frente (+Y)
-        (Vector((0.295, 0.0105, 2.52)), Euler((math.radians(90.0), 0.0, 0.0))),
-        # Placa Inferior Dorso (-Y)
-        (Vector((-0.295, -0.0105, 2.52)), Euler((math.radians(90.0), 0.0, math.radians(180.0)))),
-        # Placa Superior Frente (-X)
-        (Vector((-0.0105, 0.295, 2.74)), Euler((math.radians(90.0), 0.0, math.radians(90.0)))),
-        # Placa Superior Dorso (+X)
-        (Vector((0.0105, -0.295, 2.74)), Euler((math.radians(90.0), 0.0, math.radians(-90.0)))),
+        # Placa Inferior Frente (+Y) -> Recuadro blanco a la derecha (-X)
+        (Vector((-0.295, 0.0105, 2.52)), Euler((math.radians(90.0), 0.0, math.radians(180.0)))),
+        # Placa Inferior Dorso (-Y) -> Recuadro blanco a la derecha (+X)
+        (Vector((0.295, -0.0105, 2.52)), Euler((math.radians(90.0), 0.0, 0.0))),
+        # Placa Superior Frente (-X) -> Recuadro blanco a la derecha (-Y)
+        (Vector((-0.0105, -0.295, 2.74)), Euler((math.radians(90.0), 0.0, math.radians(-90.0)))),
+        # Placa Superior Dorso (+X) -> Recuadro blanco a la derecha (+Y)
+        (Vector((0.0105, 0.295, 2.74)), Euler((math.radians(90.0), 0.0, math.radians(90.0)))),
     ]
 
     for item in items:
@@ -846,7 +862,7 @@ def ensure_corners_metadata():
 
     print("[Caché] Generando caché de esquinas y cotas topográficas...")
     bvh = build_terrain_bvh(TERRAIN_GLB_PATH)
-    raw_corners = extract_corners_with_debounce(ROAD_OSM_PATH, min_debounce_m=5.0)
+    raw_corners = extract_corners_with_debounce(ROAD_OSM_PATH, min_debounce_m=15.0)
 
     corners_data = []
     for c in raw_corners:
@@ -920,7 +936,7 @@ def main():
     # ── MODO 3: FLUJO COMPLETO (--full / -f) ──
     print("[Modo Completo] Ejecutando análisis geométrico, topográfico y pre-bake...")
     bvh_terrain = build_terrain_bvh(TERRAIN_GLB_PATH)
-    raw_corners = extract_corners_with_debounce(ROAD_OSM_PATH, min_debounce_m=5.0)
+    raw_corners = extract_corners_with_debounce(ROAD_OSM_PATH, min_debounce_m=15.0)
     if not raw_corners:
         print("[Error] No se detectaron esquinas válidas.")
         return 1
