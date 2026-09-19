@@ -984,7 +984,6 @@ def build_west_facade_cardenas(mats, col):
     bm_corbels = bmesh.new()
     bm_dent_stair = bmesh.new()
     bm_dent_canopy = bmesh.new()
-    bm_dent_mosaic = bmesh.new()
     
     Y_start = 4.20
     Y_end = 29.40   # 6 crujías de 4.20 m: 4.20 a 29.40 m
@@ -1002,8 +1001,7 @@ def build_west_facade_cardenas(mats, col):
     for cy in col_y:
         add_box(bm_struct, -0.04, 0.35, cy, cy + 0.60, 0.40, H_wall)
         
-    # Machón norte de remate (Y = 29.40 a 30.00): Recubierto de mosaico vítreo oscuro (Ground Truth media_1789778345732)
-    add_box(bm_dent_mosaic, -0.05, 0.40, 29.40, Y_max, -1.20, H_wall)
+    # Machón norte de remate: Suprimido polígono redundante gris para evitar clipeo con la barda del vecino (Ground Truth)
     
     # Muros rehundidos horizontales
     add_box(bm_struct, 0.02, 0.30, Y_start, Y_max, 3.20, 3.30)
@@ -1153,14 +1151,7 @@ def build_west_facade_cardenas(mats, col):
         else:
             p.material_index = 0
 
-    # Machón norte con mosaico
-    bmesh.ops.recalc_face_normals(bm_dent_mosaic, faces=bm_dent_mosaic.faces)
-    m_dm = bpy.data.meshes.new("Mesh_Dentista_Columna_Mosaico")
-    bm_dent_mosaic.to_mesh(m_dm)
-    bm_dent_mosaic.free()
-    obj_mosaic_col = bpy.data.objects.new("Dentista_Columna_Mosaico", m_dm)
-    col.objects.link(obj_mosaic_col)
-    obj_mosaic_col.data.materials.append(mats["mosaico_guajardo"])
+    # Machón norte mosaico suprimido
 
     # Escalera y zaguán de Dentista
     bmesh.ops.recalc_face_normals(bm_dent_stair, faces=bm_dent_stair.faces)
@@ -1514,7 +1505,7 @@ def build_west_facade_cardenas(mats, col):
     col.objects.link(obj_tejas)
     obj_tejas.data.materials.append(mats["teja"])
 
-    fascia_group = [obj_fascia_b, obj_stripe_c, obj_rec_c, obj_fascia_s, obj_atm_box, obj_canopy, obj_mosaic_col, obj_stair]
+    fascia_group = [obj_fascia_b, obj_stripe_c, obj_rec_c, obj_fascia_s, obj_atm_box, obj_canopy, obj_stair]
     return obj_struct, obj_corbels, obj_alum, obj_glass, obj_blind, fascia_group, text_objs, obj_tejas
 
 def build_east_facade_and_parking(mats, col):
@@ -2229,15 +2220,15 @@ def setup_lighting_and_render(col):
     return cams
 
 def generate_godot_tscn(tscn_path, glb_rel_path):
-    """Genera la escena .tscn de Godot 4 con colisionadores analíticos rectificados para V9.0:
+    """Genera la escena .tscn de Godot 4 con colisionadores analíticos rectificados:
+    - Excluida la banqueta del simulador (según instrucción directa del usuario).
     - Col_South_Wall alineado en Y = 30.00 m (Z = -29.80 en Godot).
     - Arco continuo ampliado cerrado directamente entre Cara Sur y Cara Estacionamiento (Col_Inward_Arc_1 y Col_Inward_Arc_2).
     - Col_East_Wall en 20.40 m (6 subdivisiones).
     - Peldaños transitables en DENTISTA y rampa sin obstáculos."""
-    tscn_content = f"""[gd_scene load_steps=23 format=3 uid="uid://bbva_tecate_centro_010"]
+    tscn_content = f"""[gd_scene load_steps=20 format=3 uid="uid://bbva_tecate_centro_010"]
 
 [ext_resource type="PackedScene" path="{glb_rel_path}" id="1_mesh"]
-[ext_resource type="PackedScene" path="res://assets/buildings/banqueta_bbva_tecate.glb" id="2_banqueta"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_juarez"]
 size = Vector3(18.6, 8.5, 16.0)
@@ -2287,17 +2278,9 @@ size = Vector3(0.3, 1.7, 14.0)
 [sub_resource type="BoxShape3D" id="BoxShape3D_rampa_floor"]
 size = Vector3(4.4, 0.2, 14.0)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_banqueta_juarez"]
-size = Vector3(34.6, 0.18, 3.8)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_banqueta_cardenas"]
-size = Vector3(3.8, 0.18, 32.0)
-
 [node name="BBVA_Tecate" type="StaticBody3D"]
 
 [node name="ModelInstance" parent="." instance=ExtResource("1_mesh")]
-
-[node name="BanquetaInstance" parent="." instance=ExtResource("2_banqueta")]
 
 [node name="Col_Juarez" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 3.05, -8.0)
@@ -2362,18 +2345,10 @@ shape = SubResource("BoxShape3D_rampa_murete")
 [node name="Col_Rampa_Floor" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.0, -0.1, -7.0)
 shape = SubResource("BoxShape3D_rampa_floor")
-
-[node name="Col_Banqueta_Juarez" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 0.09, 1.9)
-shape = SubResource("BoxShape3D_banqueta_juarez")
-
-[node name="Col_Banqueta_Cardenas" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9, 0.09, -16.0)
-shape = SubResource("BoxShape3D_banqueta_cardenas")
 """
     with open(tscn_path, "w", encoding="utf-8") as f:
         f.write(tscn_content)
-    print(f"--> Escena Godot generada: {tscn_path}")
+    print(f"--> Escena Godot generada (sin banqueta): {tscn_path}")
 
 def main():
     print("================================================================")

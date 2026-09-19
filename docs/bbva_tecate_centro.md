@@ -13,7 +13,7 @@ Documento técnico de especificación morfológica, paramétrica, PBR y consenso
   - `Position = Vector3(-66.8, 400.38, -24.81)`
   - `Basis = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1)` (rotación pura de $180.0^\circ$ garantizando paralelismo geométrico estricto con la banqueta de Av. Benito Juárez, sin reducción de sección hacia el poniente).
   - **Calibración de Rasante y Zócalo Subterráneo**: La Calle Lázaro Cárdenas presenta un descenso topográfico de $-0.67\text{ m}$ hacia el norte. El zócalo basal de concreto grafito se extiende en profundidad hasta $Z = -1.20\text{ m}$ bajo cota de apoyo, quedando herméticamente anclado en la rasante vial de Godot sin desniveles flotantes ni inclinaciones aparentes.
-  - Nodo raíz: `BBVA_Tecate (StaticBody3D)` con colisionadores analíticos rectificados para V9.0 que eliminan cualquier barrera invisible en la rampa y permiten el ingreso físico al recibidor de DENTISTA.
+  - Nodo raíz: `BBVA_Tecate (StaticBody3D)` con colisionadores analíticos rectificados para V9.0. La banqueta perimetral se excluye deliberadamente del simulador para integrarse de forma limpia con la infraestructura urbana base existente.
 
 ---
 
@@ -56,6 +56,7 @@ El edificio se compone de los siguientes cuerpos arquitectónicos fidedignamente
      - Alero/marquesina horizontal en voladizo ($1.15\text{ m}$ de saliente sobre banqueta).
      - Rótulo colgante blanco perpendicular a 90º centrado bajo el alero, con textos legibles en ambas caras.
      - Recibidor/zaguán transitable con escalera interior de 4 peldaños y colisionadores escalonados en Godot.
+     - **Esquina Norponiente**: Se suprimió el machón/polígono redundante de mosaico gris para eliminar cualquier tipo de empalme o *Z-fighting* con la barda colindante existente en el simulador.
 
 4. **Fachada Este hacia Estacionamiento (Ground Truth `media_1789781403754`)**:
    - **Longitud modulada en 6 subdivisiones**: $20.80\text{ m}$ continuos (concluye al término de la crujía 6, suprimida la crujía 7).
