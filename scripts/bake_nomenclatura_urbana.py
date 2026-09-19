@@ -5,22 +5,22 @@ Compilador Pre-Bake de Nomenclatura Urbana - Tecate Simulator
 Este script automatiza la generación ultraeficiente e idempotente de la red
 de postes de nomenclatura urbana para todo el simulador (Godot Engine 4):
 1. Ingesta el grafo vial de OpenStreetMap (road_osm.json).
-2. Detecta esquinas de manzana en todas las intersecciones viales con debounce >= 5.0m.
-3. Calcula la orientación óptima de yaw para alinear ambas placas en paralelo
-   a las vías de la intersección.
+2. Detecta esquinas de manzana y entronques en T con debounce >= 5.0m.
+3. Posiciona los postes firmemente sobre las banquetas/manzanas calculando
+   el semiancho vial clasificado de cada calle más margen de guarnición.
 4. Muestrea la elevación exacta del terreno en tecate2.glb (BVHTree).
-5. Estandariza los nombres de calles en mayúsculas rigurosas con prefijos en la
-   esquina superior izquierda del recuadro verde.
-6. Reserva el recuadro blanco para iconos PNG deterministas (ciclados desde assets/nomenclatura_icons/).
-7. Genera de forma desacoplada:
+5. Calcula la orientación óptima de yaw para alinear ambas placas en paralelo
+   a las vías de la intersección.
+6. Estandariza los nombres de calles en mayúsculas con acentuación estricta y prefijos.
+7. Genera de forma desacoplada y con alineación milimétrica a Godot:
    - nomenclatura_textos_baked.glb (Malla consolidada de textos 3D en blanco, Bfont).
    - nomenclatura_iconos_baked.glb (Quads de calcomanías UV mapeadas para iconos PNG).
-8. Soporta banderas de compilación incremental:
-   --icons-only (-i): Regenera únicamente las imágenes/iconos en < 1.5s conservando los textos ya procesados.
+8. Soporta compilación incremental:
+   --icons-only (-i): Regenera únicamente las imágenes/iconos en < 1.5s conservando textos.
    --text-only (-t): Regenera únicamente los textos 3D conservando los iconos.
-   --full (-f): Ejecuta el flujo completo (análisis topográfico, textos, iconos y escenas).
-9. Escribe los datos de posicionamiento en nomenclatura_data.json y nomenclatura_corners.json,
-   generando la escena nomenclatura_urbana.tscn con MultiMeshInstance3D referenciando
+   --full (-f): Flujo completo (análisis geométrico, rasante topográfica, textos, iconos y escenas).
+9. Escribe nomenclatura_data.json y nomenclatura_corners.json, generando
+   nomenclatura_urbana.tscn con MultiMeshInstance3D referenciando
    poste_nomenclatura_tecate.glb (CERO copiado, actualización 100% idempotente).
 =============================================================================
 """
@@ -39,7 +39,7 @@ try:
     import bpy
     import bmesh
     import mathutils
-    from mathutils import Vector, Matrix
+    from mathutils import Vector, Matrix, Euler
     from mathutils.bvhtree import BVHTree
 except ImportError:
     bpy = None
@@ -47,6 +47,7 @@ except ImportError:
     mathutils = None
     Vector = None
     Matrix = None
+    Euler = None
     BVHTree = None
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -77,6 +78,28 @@ def gps_to_local(lat: float, lon: float) -> tuple[float, float]:
     x = EARTH_RADIUS * (lon_rad - LON_C_RAD) * COS_LAT_C
     y = EARTH_RADIUS * (lat_rad - LAT_C_RAD)
     return x, y
+
+def get_road_half_width(name: str, highway: str = "") -> float:
+    """
+    Determina el semiancho vial (metros) según la taxonomía GIS del simulador:
+    - Bulevares / Autopistas: 7.0m (ancho 14m)
+    - Vías troncales / Carreteras: 6.0m (ancho 12m)
+    - Avenidas / Vías primarias / secundarias: 5.0m (ancho 10m)
+    - Calles / Vías terciarias / residenciales: 3.5m (ancho 7m)
+    - Callejones / Privadas / Servicio: 2.5m (ancho 5m)
+    """
+    name_norm = (name or "").lower()
+    hw = (highway or "").lower()
+    if "carr" in name_norm or "carretera" in name_norm or hw in ("motorway", "motorway_link", "trunk", "trunk_link"):
+        return 6.0
+    elif "blvd" in name_norm or "boulevard" in name_norm or "blvrd" in name_norm:
+        return 7.0
+    elif "av" in name_norm or "avenida" in name_norm or "paseo" in name_norm or hw in ("primary", "primary_link", "secondary", "secondary_link"):
+        return 5.0
+    elif "callej" in name_norm or "cjon" in name_norm or hw in ("service", "living_street", "unclassified"):
+        return 2.5
+    else:
+        return 3.5
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. BVHTree de Terreno para Rasante Vertical
@@ -209,7 +232,9 @@ def standardize_street_name(raw_name: str) -> tuple[str, str]:
 # ─────────────────────────────────────────────────────────────────────────────
 def extract_corners_with_debounce(road_osm_path: str, min_debounce_m: float = 5.0):
     """
-    Construye el grafo vial de OSM y extrae las esquinas de manzana de cada cruce.
+    Construye el grafo vial de OSM y extrae las esquinas de manzana de cada cruce,
+    incluyendo entronques en T e intersecciones históricas/peatonales (ej. BBVA).
+    Aplica cálculo dinámico del semiancho vial para ubicar postes firmemente en la banqueta.
     Aplica filtro de debounce espacial >= 5.0m para evitar duplicidades.
     """
     print(f"[OSM] Cargando datos viales desde: {road_osm_path}")
@@ -223,6 +248,7 @@ def extract_corners_with_debounce(road_osm_path: str, min_debounce_m: float = 5.
 
     for w in named_ways:
         name = w["tags"]["name"]
+        hw = w.get("tags", {}).get("highway", "residential")
         nodes = w.get("nodes", [])
         geom = w.get("geometry", [])
         for i in range(len(nodes)):
@@ -235,8 +261,11 @@ def extract_corners_with_debounce(road_osm_path: str, min_debounce_m: float = 5.
             vx, vy = node_coords[v]
             d = math.hypot(vx - ux, vy - uy)
             if d > 0.1:
-                adj[u].append((v, name, (vx - ux)/d, (vy - uy)/d, math.atan2(vy - uy, vx - ux)))
-                adj[v].append((u, name, (ux - vx)/d, (uy - vy)/d, math.atan2(uy - vy, ux - vx)))
+                dir_x = (vx - ux) / d
+                dir_y = (vy - uy) / d
+                angle = math.atan2(dir_y, dir_x)
+                adj[u].append((v, name, hw, dir_x, dir_y, angle))
+                adj[v].append((u, name, hw, -dir_x, -dir_y, math.atan2(-dir_y, -dir_x)))
 
     raw_corners = []
     for nid, branches in adj.items():
@@ -245,11 +274,12 @@ def extract_corners_with_debounce(road_osm_path: str, min_debounce_m: float = 5.
             continue
 
         cx, cy = node_coords[nid]
-        branches_sorted = sorted(branches, key=lambda b: (b[4] + 2*math.pi) % (2*math.pi))
+        branches_sorted = sorted(branches, key=lambda b: (b[5] + 2*math.pi) % (2*math.pi))
         m = len(branches_sorted)
         if m < 2:
             continue
 
+        # 1. Esquinas estándar entre ramas consecutivas distintas
         for i in range(m):
             b1 = branches_sorted[i]
             b2 = branches_sorted[(i + 1) % m]
@@ -258,26 +288,77 @@ def extract_corners_with_debounce(road_osm_path: str, min_debounce_m: float = 5.
             if b1[1] == b2[1]:
                 continue
 
-            a1 = (b1[4] + 2*math.pi) % (2*math.pi)
-            a2 = (b2[4] + 2*math.pi) % (2*math.pi)
+            a1 = (b1[5] + 2*math.pi) % (2*math.pi)
+            a2 = (b2[5] + 2*math.pi) % (2*math.pi)
             delta_a = (a2 - a1) % (2*math.pi)
 
             # Detectar esquina entre 25° y 160°
             if math.radians(25) <= delta_a <= math.radians(160):
-                bisector = a1 + delta_a / 2.0
+                w1 = get_road_half_width(b1[1], b1[2])
+                w2 = get_road_half_width(b2[1], b2[2])
+                w_max = max(w1, w2)
                 sin_half = math.sin(delta_a / 2.0)
-                offset_dist = min(max(3.6 / sin_half, 3.8), 7.0)
+                # Semiancho vial + margen de banqueta (1.2m), acotado entre 5.5m y 14.0m
+                offset_dist = min(max(w_max / sin_half + 1.2, 5.5), 14.0)
 
+                bisector = a1 + delta_a / 2.0
                 px = cx + offset_dist * math.cos(bisector)
                 py = cy + offset_dist * math.sin(bisector)
 
                 raw_corners.append({
                     "pos": (px, py),
                     "streets": (b1[1], b2[1]),
-                    "v1": (b1[2], b1[3]),
-                    "v2": (b2[2], b2[3]),
+                    "v1": (b1[3], b1[4]),
+                    "v2": (b2[3], b2[4]),
                     "node_id": nid
                 })
+
+        # 2. Entronques en T: calles que desembocan en una vía continua
+        # Genera las esquinas enfrentadas sobre la banqueta opuesta (ej. esquina BBVA)
+        for i in range(m):
+            b_t = branches_sorted[i]
+            for j in range(m):
+                if j == i:
+                    continue
+                for k in range(j + 1, m):
+                    if k == i:
+                        continue
+                    b1, b2 = branches_sorted[j], branches_sorted[k]
+                    # Verificar si b1 y b2 forman una vía pasante continua (ángulo > 140°)
+                    dot = b1[3]*b2[3] + b1[4]*b2[4]
+                    if dot < -0.76:
+                        # b_t es calle lateral y b1-b2 es vía pasante
+                        same_through = (b1[1] == b2[1]) or (standardize_street_name(b1[1])[1] == standardize_street_name(b2[1])[1])
+                        diff_side = (b_t[1] != b1[1]) and (b_t[1] != b2[1])
+                        if same_through and diff_side:
+                            # Vector perpendicular cruzando la vía pasante hacia la acera opuesta
+                            v_across = (-b_t[3], -b_t[4])
+                            w_through = max(get_road_half_width(b1[1], b1[2]), get_road_half_width(b2[1], b2[2]))
+                            w_side = get_road_half_width(b_t[1], b_t[2])
+                            d_across = w_through + 1.2
+                            d_along = w_side + 1.2
+
+                            # Esquina opuesta 1 (hacia flanco b1)
+                            px1 = cx + d_across * v_across[0] + d_along * b1[3]
+                            py1 = cy + d_across * v_across[1] + d_along * b1[4]
+                            raw_corners.append({
+                                "pos": (px1, py1),
+                                "streets": (b1[1], b_t[1]),
+                                "v1": (b1[3], b1[4]),
+                                "v2": (b_t[3], b_t[4]),
+                                "node_id": nid
+                            })
+
+                            # Esquina opuesta 2 (hacia flanco b2, ej. Esquina BBVA)
+                            px2 = cx + d_across * v_across[0] + d_along * b2[3]
+                            py2 = cy + d_across * v_across[1] + d_along * b2[4]
+                            raw_corners.append({
+                                "pos": (px2, py2),
+                                "streets": (b2[1], b_t[1]),
+                                "v1": (b2[3], b2[4]),
+                                "v2": (b_t[3], b_t[4]),
+                                "node_id": nid
+                            })
 
     print(f"[Geometría] Esquinas candidatas detectadas: {len(raw_corners)}")
 
@@ -301,7 +382,7 @@ def extract_corners_with_debounce(road_osm_path: str, min_debounce_m: float = 5.
 # ─────────────────────────────────────────────────────────────────────────────
 def calculate_optimal_post_orientation(v1: tuple[float, float], v2: tuple[float, float]) -> float:
     """
-    Calcula el ángulo de yaw óptimo (radianes) para que:
+    Calcula el ángulo de yaw óptimo en radianes (alrededor de Z en Blender) para que:
     - Placa Inferior (eje X local) quede lo más paralela posible a Street 1.
     - Placa Superior (eje Y local, a 90°) quede lo más paralela posible a Street 2.
     Devuelve: yaw_rad.
@@ -329,7 +410,7 @@ def calculate_optimal_post_orientation(v1: tuple[float, float], v2: tuple[float,
     return best_yaw
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 6. Generador de Textos 3D en Blender (BMesh Ultra-Rápido, Desacoplado)
+# 6. Generador de Textos 3D en Blender (Coordenadas Nativas de Blender)
 # ─────────────────────────────────────────────────────────────────────────────
 def _get_or_create_text_mesh(scene, depsgraph, mesh_cache, text_body, font_size, align_x, align_y):
     """Obtiene de caché o crea una malla a partir de una curva tipográfica."""
@@ -362,7 +443,7 @@ def _get_or_create_text_mesh(scene, depsgraph, mesh_cache, text_body, font_size,
 def _accumulate_plate_text(bm_dest, scene, depsgraph, mesh_cache, mat_world, prefix, main_name, plate_type, plate_z):
     """
     Acumula exclusivamente las letras 3D de una placa (frente y dorso) en bm_dest.
-    Material slot: 0 (M_Texto_Rotulo_Blanco).
+    Utiliza el sistema canónico de coordenadas de Blender (Z=Up, Y=North, X=East).
     """
     is_lower = (plate_type == "LOWER")
 
@@ -377,24 +458,31 @@ def _accumulate_plate_text(bm_dest, scene, depsgraph, mesh_cache, mat_world, pre
             f_size_main = max(0.035, 0.56 / (len(main_name) * 0.82))
         f_size_pref = 0.0
 
-    mat_upright = Matrix.Rotation(math.radians(90.0), 4, 'X')
+    if is_lower:
+        sides = [
+            (1.0, Vector((-0.14, 0.0105, plate_z - (0.015 if prefix else 0.0))),
+                  Vector((-0.41, 0.0105, plate_z + 0.06)) if prefix else None,
+                  Euler((math.radians(90.0), 0.0, 0.0))),
+            (-1.0, Vector((0.14, -0.0105, plate_z - (0.015 if prefix else 0.0))),
+                   Vector((0.41, -0.0105, plate_z + 0.06)) if prefix else None,
+                   Euler((math.radians(90.0), 0.0, math.radians(180.0)))),
+        ]
+    else:
+        sides = [
+            (-1.0, Vector((-0.0105, -0.14, plate_z - (0.015 if prefix else 0.0))),
+                   Vector((-0.0105, -0.41, plate_z + 0.06)) if prefix else None,
+                   Euler((math.radians(90.0), 0.0, math.radians(90.0)))),
+            (1.0, Vector((0.0105, 0.14, plate_z - (0.015 if prefix else 0.0))),
+                  Vector((0.0105, 0.41, plate_z + 0.06)) if prefix else None,
+                  Euler((math.radians(90.0), 0.0, math.radians(-90.0)))),
+        ]
 
-    for side in [1.0, -1.0]:
-        if is_lower:
-            y_offset = 0.0105 * side
-            rot_local = Matrix.Rotation(0.0 if side > 0 else math.pi, 4, 'Y')
-            t_loc = Vector((-0.13 * side, plate_z - (0.015 if prefix else 0.0), y_offset))
-            p_loc = Vector((-0.41 * side, plate_z + 0.06, y_offset)) if prefix else None
-        else:
-            x_offset = 0.0105 * side
-            rot_local = Matrix.Rotation(math.pi / 2.0 if side > 0 else -math.pi / 2.0, 4, 'Y')
-            t_loc = Vector((x_offset, plate_z - (0.015 if prefix else 0.0), -0.13 * (-side)))
-            p_loc = Vector((x_offset, plate_z + 0.06, -0.41 * (-side))) if prefix else None
+    for side_sign, t_loc, p_loc, rot_e in sides:
+        rot_mat = rot_e.to_matrix().to_4x4()
 
         # 1. Texto principal
         me_main = _get_or_create_text_mesh(scene, depsgraph, mesh_cache, main_name, f_size_main, 'CENTER', 'CENTER')
-        mat_text_local = Matrix.Translation(t_loc) @ rot_local @ mat_upright
-        mat_text_final = mat_world @ mat_text_local
+        mat_text_final = mat_world @ Matrix.Translation(t_loc) @ rot_mat
 
         v_start = len(bm_dest.verts)
         bm_dest.from_mesh(me_main)
@@ -403,10 +491,9 @@ def _accumulate_plate_text(bm_dest, scene, depsgraph, mesh_cache, mat_world, pre
 
         # 2. Texto de prefijo (si existe)
         if prefix and p_loc:
-            align_pref = 'LEFT' if side > 0 else 'RIGHT'
+            align_pref = 'LEFT' if side_sign > 0 else 'RIGHT'
             me_pref = _get_or_create_text_mesh(scene, depsgraph, mesh_cache, prefix, f_size_pref, align_pref, 'TOP')
-            mat_pref_local = Matrix.Translation(p_loc) @ rot_local @ mat_upright
-            mat_pref_final = mat_world @ mat_pref_local
+            mat_pref_final = mat_world @ Matrix.Translation(p_loc) @ rot_mat
 
             v_start_p = len(bm_dest.verts)
             bm_dest.from_mesh(me_pref)
@@ -416,7 +503,8 @@ def _accumulate_plate_text(bm_dest, scene, depsgraph, mesh_cache, mat_world, pre
 def build_baked_texts(corners: list, bvh_terrain=None, out_path: str = OUT_TEXTOS_GLB):
     """
     Construye la malla combinada de textos 3D en mayúsculas (blancos, Bfont extruido)
-    para toda la ciudad. Exclusivamente textos, sin caras de iconos.
+    para toda la ciudad en coordenadas nativas de Blender.
+    Al exportar con export_yup=True, glTF alinea perfectamente con Godot 4.
     """
     print(f"\n[Textos] Compilando textos 3D para {len(corners)} esquinas en toda la ciudad...")
     t_start = time.time()
@@ -457,17 +545,9 @@ def build_baked_texts(corners: list, bvh_terrain=None, out_path: str = OUT_TEXTO
         else:
             yaw_rad = calculate_optimal_post_orientation(v1, v2)
 
-        gx, gy, gz = lx, lz, -ly
-        g_rot_y = -yaw_rad
-
-        cos_g = math.cos(g_rot_y)
-        sin_g = math.sin(g_rot_y)
-        mat_post_godot = Matrix((
-            (cos_g,  0.0, sin_g, gx),
-            (0.0,    1.0, 0.0,   gy),
-            (-sin_g, 0.0, cos_g, gz),
-            (0.0,    0.0, 0.0,   1.0)
-        ))
+        # Matriz del poste en coordenadas nativas de Blender:
+        # X = East (lx), Y = North (ly), Z = Up (lz), rotación en Z (yaw_rad)
+        mat_post_blender = Matrix.Translation(Vector((lx, ly, lz))) @ Matrix.Rotation(yaw_rad, 4, 'Z')
 
         # Placa Inferior
         p1, m1 = standardize_street_name(st1)
@@ -476,7 +556,7 @@ def build_baked_texts(corners: list, bvh_terrain=None, out_path: str = OUT_TEXTO
             scene=scene,
             depsgraph=depsgraph,
             mesh_cache=mesh_cache,
-            mat_world=mat_post_godot,
+            mat_world=mat_post_blender,
             prefix=p1,
             main_name=m1,
             plate_type="LOWER",
@@ -490,7 +570,7 @@ def build_baked_texts(corners: list, bvh_terrain=None, out_path: str = OUT_TEXTO
             scene=scene,
             depsgraph=depsgraph,
             mesh_cache=mesh_cache,
-            mat_world=mat_post_godot,
+            mat_world=mat_post_blender,
             prefix=p2,
             main_name=m2,
             plate_type="UPPER",
@@ -524,12 +604,12 @@ def build_baked_texts(corners: list, bvh_terrain=None, out_path: str = OUT_TEXTO
     print(f"[Textos] Exportación de textos finalizada con éxito en {t_end - t_start:.2f} segundos.")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 7. Generador de Iconos/Calcomanías en Blender (Ultra-Rápido, Desacoplado)
+# 7. Generador de Iconos/Calcomanías en Blender (Coordenadas Nativas de Blender)
 # ─────────────────────────────────────────────────────────────────────────────
 def build_baked_icons(items: list, icons_paths: list, out_path: str = OUT_ICONOS_GLB):
     """
-    Construye la malla combinada de calcomanías/cuadros de iconos para todas las esquinas.
-    Ultra-rápido: genera 16,528 quads y exporta a GLB en < 1 segundo.
+    Construye la malla combinada de calcomanías para todas las esquinas en coordenadas Blender.
+    Al exportar con export_yup=True, glTF alinea perfectamente con Godot 4.
     """
     print(f"\n[Iconos] Compilando quads de calcomanías para {len(items)} esquinas...")
     t_start = time.time()
@@ -559,8 +639,8 @@ def build_baked_icons(items: list, icons_paths: list, out_path: str = OUT_ICONOS
 
     bm = bmesh.new()
     uv_layer = bm.loops.layers.uv.new("UVMap")
-    mat_upright = Matrix.Rotation(math.radians(90.0), 4, 'X')
-    w_half, h_half = 0.11, 0.08
+    w_half = 0.11
+    h_half = 0.08
     base_pts = [
         Vector((-w_half, -h_half, 0.0)),
         Vector((w_half, -h_half, 0.0)),
@@ -569,36 +649,36 @@ def build_baked_icons(items: list, icons_paths: list, out_path: str = OUT_ICONOS
     ]
 
     # Configuraciones de las 4 caras de placas:
-    # (loc_relativa, rot_relativa)
+    # (loc_relativa, rot_euler)
     plates_config = [
-        (Vector((0.31, 2.52, 0.0105)), Matrix.Identity(4)),
-        (Vector((-0.31, 2.52, -0.0105)), Matrix.Rotation(math.pi, 4, 'Y')),
-        (Vector((0.0105, 2.74, -0.31)), Matrix.Rotation(math.pi / 2.0, 4, 'Y')),
-        (Vector((-0.0105, 2.74, 0.31)), Matrix.Rotation(-math.pi / 2.0, 4, 'Y')),
+        # Placa Inferior Frente (+Y)
+        (Vector((0.295, 0.0105, 2.52)), Euler((math.radians(90.0), 0.0, 0.0))),
+        # Placa Inferior Dorso (-Y)
+        (Vector((-0.295, -0.0105, 2.52)), Euler((math.radians(90.0), 0.0, math.radians(180.0)))),
+        # Placa Superior Frente (-X)
+        (Vector((-0.0105, 0.295, 2.74)), Euler((math.radians(90.0), 0.0, math.radians(90.0)))),
+        # Placa Superior Dorso (+X)
+        (Vector((0.0105, -0.295, 2.74)), Euler((math.radians(90.0), 0.0, math.radians(-90.0)))),
     ]
 
     for item in items:
         if isinstance(item, dict):
-            gx = item.get("gx", item["pos"][0])
-            gy = item.get("gy", item.get("lz", 400.0))
-            gz = item.get("gz", -item["pos"][1])
-            rot_y = item.get("g_rot_y", -item.get("yaw_rad", 0.0))
+            lx, ly = item["pos"]
+            lz = item.get("lz", 400.0)
+            yaw_rad = item.get("yaw_rad", 0.0)
         else:
+            # item es [gx, gy, gz, rot_y]
             gx, gy, gz, rot_y = item
+            lx = gx
+            ly = -gz
+            lz = gy
+            yaw_rad = rot_y
 
-        cos_g = math.cos(rot_y)
-        sin_g = math.sin(rot_y)
-        mat_world = Matrix((
-            (cos_g,  0.0, sin_g, gx),
-            (0.0,    1.0, 0.0,   gy),
-            (-sin_g, 0.0, cos_g, gz),
-            (0.0,    0.0, 0.0,   1.0)
-        ))
+        mat_world = Matrix.Translation(Vector((lx, ly, lz))) @ Matrix.Rotation(yaw_rad, 4, 'Z')
+        ico_idx = (hash((round(lx, 1), round(ly, 1))) & 0x7FFFFFFF) % len(icon_materials)
 
-        ico_idx = (hash((round(gx, 1), round(-gz, 1))) & 0x7FFFFFFF) % len(icon_materials)
-
-        for loc, rot in plates_config:
-            m_final = mat_world @ Matrix.Translation(loc) @ rot @ mat_upright
+        for loc, rot_e in plates_config:
+            m_final = mat_world @ Matrix.Translation(loc) @ rot_e.to_matrix().to_4x4()
             v = [bm.verts.new(m_final @ p) for p in base_pts]
             f = bm.faces.new(v)
             f.material_index = ico_idx
@@ -776,7 +856,6 @@ def ensure_corners_metadata():
         lz = get_terrain_height(bvh, lx, ly, default_h=400.0)
         yaw_rad = calculate_optimal_post_orientation(v1, v2)
         gx, gy, gz = lx, lz, -ly
-        g_rot_y = -yaw_rad
         corners_data.append({
             "pos": [round(lx, 3), round(ly, 3)],
             "streets": [st1, st2],
@@ -787,7 +866,7 @@ def ensure_corners_metadata():
             "gx": round(gx, 3),
             "gy": round(gy, 3),
             "gz": round(gz, 3),
-            "g_rot_y": round(g_rot_y, 4)
+            "g_rot_y": round(yaw_rad, 4)
         })
 
     with open(OUT_CORNERS_JSON, "w", encoding="utf-8") as f:
@@ -814,12 +893,15 @@ def main():
     # ── MODO 1: SOLO ICONOS (--icons-only / -i) ──
     if mode == "icons":
         print("[Modo Incremental] Reprocesando únicamente imágenes e iconos...")
-        if os.path.exists(OUT_DATA_JSON):
+        if os.path.exists(OUT_CORNERS_JSON):
+            with open(OUT_CORNERS_JSON, "r", encoding="utf-8") as f:
+                items = json.load(f)
+        elif os.path.exists(OUT_DATA_JSON):
             with open(OUT_DATA_JSON, "r", encoding="utf-8") as f:
                 items = json.load(f)
         else:
             corners = ensure_corners_metadata()
-            items = [[c["gx"], c["gy"], c["gz"], c["g_rot_y"]] for c in corners]
+            items = corners
 
         build_baked_icons(items, icons_list, OUT_ICONOS_GLB)
         print("\n--> Procesamiento de imágenes completado conservando intactos los textos.")
@@ -852,7 +934,6 @@ def main():
         lz = get_terrain_height(bvh_terrain, lx, ly, default_h=400.0)
         yaw_rad = calculate_optimal_post_orientation(v1, v2)
         gx, gy, gz = lx, lz, -ly
-        g_rot_y = -yaw_rad
         corners_data.append({
             "pos": [round(lx, 3), round(ly, 3)],
             "streets": [st1, st2],
@@ -863,15 +944,15 @@ def main():
             "gx": round(gx, 3),
             "gy": round(gy, 3),
             "gz": round(gz, 3),
-            "g_rot_y": round(g_rot_y, 4)
+            "g_rot_y": round(yaw_rad, 4)
         })
-        transforms.append([round(gx, 3), round(gy, 3), round(gz, 3), round(g_rot_y, 4)])
+        transforms.append([round(gx, 3), round(gy, 3), round(gz, 3), round(yaw_rad, 4)])
 
     with open(OUT_CORNERS_JSON, "w", encoding="utf-8") as f:
         json.dump(corners_data, f, indent=2)
 
     build_baked_texts(corners_data, bvh_terrain, OUT_TEXTOS_GLB)
-    build_baked_icons(transforms, icons_list, OUT_ICONOS_GLB)
+    build_baked_icons(corners_data, icons_list, OUT_ICONOS_GLB)
     generate_godot_integration(transforms)
 
     print("\n" + "=" * 75)
