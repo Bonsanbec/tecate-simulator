@@ -70,6 +70,19 @@ OUT_DATA_JSON = "godot_project/assets/nomenclatura_data.json"
 OUT_CORNERS_JSON = "godot_project/assets/nomenclatura_corners.json"
 OUT_SCENE_TSCN = "godot_project/assets/nomenclatura_urbana.tscn"
 OUT_SCRIPT_GD = "godot_project/assets/nomenclatura_urbana.gd"
+FONT_CAST_METAL_PATH = "godot_project/assets/fonts/DIN_Condensed_Bold.ttf"
+
+def get_cast_metal_font():
+    """Carga y devuelve la tipografía histórica de fundición DIN 1451 Engschrift / Grotesque Condensed."""
+    if bpy and os.path.exists(FONT_CAST_METAL_PATH):
+        for f in bpy.data.fonts:
+            if "DIN" in f.name:
+                return f
+        try:
+            return bpy.data.fonts.load(os.path.abspath(FONT_CAST_METAL_PATH))
+        except Exception:
+            pass
+    return None
 
 def gps_to_local(lat: float, lon: float) -> tuple[float, float]:
     """Convierte WGS84 GPS a coordenadas locales Cartesianas (metros) centradas en Parque Hidalgo."""
@@ -413,14 +426,19 @@ def calculate_optimal_post_orientation(v1: tuple[float, float], v2: tuple[float,
 # 6. Generador de Textos 3D en Blender (Coordenadas Nativas de Blender)
 # ─────────────────────────────────────────────────────────────────────────────
 def _get_or_create_text_mesh(scene, depsgraph, mesh_cache, text_body, font_size, align_x, align_y):
-    """Obtiene de caché o crea una malla a partir de una curva tipográfica."""
+    """Obtiene de caché o crea una malla a partir de una curva tipográfica con tipografía de fundición."""
     key = (text_body, round(font_size, 4), align_x, align_y)
     if key in mesh_cache:
         return mesh_cache[key]
 
+    f_font = get_cast_metal_font()
+
     c = bpy.data.curves.new(type="FONT", name="T_Temp")
+    if f_font:
+        c.font = f_font
     c.body = text_body
     c.size = font_size
+    c.space_character = 1.05
     c.resolution_u = 1
     c.extrude = 0.0
     c.align_x = align_x
@@ -443,20 +461,23 @@ def _get_or_create_text_mesh(scene, depsgraph, mesh_cache, text_body, font_size,
 def _accumulate_plate_text(bm_dest, scene, depsgraph, mesh_cache, mat_world, prefix, main_name, plate_type, plate_z):
     """
     Acumula exclusivamente las letras 3D de una placa (frente y dorso) en bm_dest.
-    Utiliza el sistema canónico de coordenadas de Blender (Z=Up, Y=North, X=East).
+    Utiliza el sistema canónico de coordenadas de Blender (Z=Up, Y=North, X=East) y tipografía de molde.
     """
     is_lower = (plate_type == "LOWER")
 
+    # Calibración de proporciones condensadas (DIN 1451 Engschrift / Cast Metal Lettering)
     if prefix:
-        f_size_main = 0.052
-        if len(main_name) > 13:
-            f_size_main = max(0.032, 0.54 / (len(main_name) * 0.82))
-        f_size_pref = 0.024
+        f_size_pref = 0.028
+        if len(main_name) <= 15:
+            f_size_main = 0.068
+        else:
+            f_size_main = max(0.042, 0.52 / (len(main_name) * 0.48))
     else:
-        f_size_main = 0.058
-        if len(main_name) > 13:
-            f_size_main = max(0.035, 0.56 / (len(main_name) * 0.82))
         f_size_pref = 0.0
+        if len(main_name) <= 15:
+            f_size_main = 0.075
+        else:
+            f_size_main = max(0.045, 0.55 / (len(main_name) * 0.48))
 
     if is_lower:
         # Placa Inferior:

@@ -25,10 +25,25 @@ Este script automatiza la creación completa del asset de señalización urbana:
 =============================================================================
 """
 
+import os
 import bpy
 import bmesh
 import math
-from mathutils import Vector
+from mathutils import Vector, Matrix, Euler
+
+FONT_CAST_METAL = "godot_project/assets/fonts/DIN_Condensed_Bold.ttf"
+
+def get_cast_metal_font():
+    """Carga y devuelve la tipografía histórica de fundición DIN 1451 Engschrift / Grotesque Condensed."""
+    if os.path.exists(FONT_CAST_METAL):
+        for f in bpy.data.fonts:
+            if "DIN" in f.name:
+                return f
+        try:
+            return bpy.data.fonts.load(os.path.abspath(FONT_CAST_METAL))
+        except Exception:
+            pass
+    return None
 
 def clean_scene():
     """Elimina todos los objetos, mallas y materiales residuales."""
@@ -626,6 +641,7 @@ def build_upper_plate(mat_placa, mat_relieve, mat_blanco, col):
     span_deg = 126.0
     start_deg = 90.0 - span_deg / 2.0
 
+    f_font = get_cast_metal_font()
     for side_sign in [1.0, -1.0]:
         y_txt = side_sign * (t_half + 0.0025)
 
@@ -633,35 +649,50 @@ def build_upper_plate(mat_placa, mat_relieve, mat_blanco, col):
         for i, ch in enumerate(word):
             ang_deg = start_deg + i * (span_deg / (n_chars - 1))
             ang_rad = math.radians(ang_deg)
-            tilt = ang_rad - math.pi / 2.0
 
             if side_sign > 0:
                 px = r_arc_txt * math.cos(ang_rad)
-                rot_z = math.radians(180.0) + tilt
+                pz = H2 + r_arc_txt * math.sin(ang_rad)
+                # Cara +Y: Normal = (0, 1, 0), Up = radial (cos, 0, sin), Right = tangente (-sin, 0, cos)
+                vr = Vector((-math.sin(ang_rad), 0.0, math.cos(ang_rad)))
+                vu = Vector((math.cos(ang_rad), 0.0, math.sin(ang_rad)))
+                vn = Vector((0.0, 1.0, 0.0))
             else:
                 px = -r_arc_txt * math.cos(ang_rad)
-                rot_z = 0.0 - tilt
+                pz = H2 + r_arc_txt * math.sin(ang_rad)
+                # Cara -Y: Normal = (0, -1, 0), Up = radial (-cos, 0, sin), Right = tangente (sin, 0, cos)
+                vr = Vector((math.sin(ang_rad), 0.0, math.cos(ang_rad)))
+                vu = Vector((-math.cos(ang_rad), 0.0, math.sin(ang_rad)))
+                vn = Vector((0.0, -1.0, 0.0))
 
-            pz = H2 + r_arc_txt * math.sin(ang_rad)
+            mat_rot = Matrix.Identity(3)
+            mat_rot.col[0] = vr
+            mat_rot.col[1] = vu
+            mat_rot.col[2] = vn
+            rot_euler = mat_rot.to_euler()
 
             txt_d = bpy.data.curves.new(f"Txt_Ayto_{ch}_{i}_{side_sign}", type='FONT')
+            if f_font:
+                txt_d.font = f_font
             txt_d.body = ch
-            txt_d.size = 0.016
+            txt_d.size = 0.017
             txt_d.extrude = 0.0022
             txt_d.align_x = 'CENTER'
             txt_d.align_y = 'CENTER'
 
             o_ch = bpy.data.objects.new(f"Obj_Ayto_{ch}_{i}_{side_sign}", txt_d)
             o_ch.location = (px, y_txt, pz)
-            o_ch.rotation_euler = (math.radians(90.0), 0.0, rot_z)
+            o_ch.rotation_euler = rot_euler
             o_ch.data.materials.append(mat_relieve)
             col.objects.link(o_ch)
             heraldic_objs.append(o_ch)
 
         # Número 17 en el centro geométrico
         txt_17 = bpy.data.curves.new(f"Txt_Num17_{side_sign}", type='FONT')
+        if f_font:
+            txt_17.font = f_font
         txt_17.body = "17"
-        txt_17.size = 0.046 # ~45 mm de altura (45% del arco)
+        txt_17.size = 0.048 # ~48 mm de altura
         txt_17.extrude = 0.0025
         txt_17.align_x = 'CENTER'
         txt_17.align_y = 'CENTER'
@@ -720,6 +751,7 @@ def build_demo_street_texts(mat_relieve):
     demo_col = bpy.data.collections.new("Texto_Demostracion_Ejemplo")
     bpy.context.scene.collection.children.link(demo_col)
 
+    f_font = get_cast_metal_font()
     created_objs = []
     # Placa Inferior (z = 2.52 m)
     # Cara +Y (observador al norte mirando al sur):
@@ -730,8 +762,11 @@ def build_demo_street_texts(mat_relieve):
     # - Patrocinador en blanco (der del observador = +X): X = +0.295, Euler (90, 0, 0)
     for side_sign, y_pos, rot_z in [(1.0, 0.010, 180.0), (-1.0, -0.010, 0.0)]:
         t_c = bpy.data.curves.new(f"Txt_EstebanCantu_{'F' if side_sign > 0 else 'B'}", type='FONT')
+        if f_font:
+            t_c.font = f_font
         t_c.body = "ESTEBAN CANTU"
         t_c.size = 0.062
+        t_c.space_character = 1.05
         t_c.extrude = 0.0022
         t_c.align_x = 'CENTER'
         t_c.align_y = 'CENTER'
@@ -744,9 +779,12 @@ def build_demo_street_texts(mat_relieve):
 
         # En el recuadro blanco de patrocinador
         t_cp = bpy.data.curves.new(f"Txt_Patrocinador1_{'F' if side_sign > 0 else 'B'}", type='FONT')
+        if f_font:
+            t_cp.font = f_font
         t_cp.body = "HOSPITAL\nSANTA CATARINA\nC.P. 21400"
         t_cp.size = 0.024
         t_cp.space_line = 1.15
+        t_cp.space_character = 1.05
         t_cp.extrude = 0.0018
         t_cp.align_x = 'CENTER'
         t_cp.align_y = 'CENTER'
@@ -766,8 +804,11 @@ def build_demo_street_texts(mat_relieve):
     # - Patrocinador en blanco (der del observador = +Y): Y = +0.295, Euler (90, 0, 90)
     for side_sign, x_pos, rot_z in [(-1.0, -0.010, -90.0), (1.0, 0.010, 90.0)]:
         t_j = bpy.data.curves.new(f"Txt_BenitoJuarez_{'F' if side_sign < 0 else 'B'}", type='FONT')
+        if f_font:
+            t_j.font = f_font
         t_j.body = "BENITO JUAREZ"
         t_j.size = 0.062
+        t_j.space_character = 1.05
         t_j.extrude = 0.0022
         t_j.align_x = 'CENTER'
         t_j.align_y = 'CENTER'
@@ -779,9 +820,12 @@ def build_demo_street_texts(mat_relieve):
         created_objs.append(o_j)
 
         t_cp2 = bpy.data.curves.new(f"Txt_Patrocinador2_{'F' if side_sign < 0 else 'B'}", type='FONT')
+        if f_font:
+            t_cp2.font = f_font
         t_cp2.body = "CLINICA\nHOSPITAL\nSANTA CATARINA"
         t_cp2.size = 0.024
         t_cp2.space_line = 1.15
+        t_cp2.space_character = 1.05
         t_cp2.extrude = 0.0018
         t_cp2.align_x = 'CENTER'
         t_cp2.align_y = 'CENTER'
