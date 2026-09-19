@@ -29,10 +29,44 @@ El objetivo de esta guía es proporcionar a cualquier **Agente de IA** (o desarr
    - Un agente nunca asume que su modelo es correcto sin evidencia empírica.
    - Todo script de generación debe incluir una batería de cámaras fijas y generar renders técnicos en alta resolución que el agente inspecciona obligatoriamente con sus herramientas de visión antes de dar por concluida la tarea.
 
+5. **Desacoplamiento Estricto entre Descripción Semántica y Generación de Código**:
+   - Se debe mantener una separación tajante entre la **especificación arquitectónica preliminar** (memoria de cotas, fenestración, materiales y rótulos) y la **programación del script en Python** (`bpy`/`bmesh`).
+   - Generar directamente código sin una descripción previa estructurada dispara exponencialmente el consumo de tokens y produce alucinaciones volumétricas que obligan a reescribir la geometría desde cero.
+
+6. **Estrategia de Expansión Radial Urbana**:
+   - La reconstrucción masiva de la ciudad no debe realizarse de forma aleatoria o dispersa.
+   - El proceso se ejecuta de manera sistemática iniciando desde el epicentro cívico e histórico (**Parque Miguel Hidalgo**) y avanzando radial y concéntricamente manzana por manzana hacia la periferia urbana.
+
+7. **Planificación Previa Obligatoria (Gate de Aprobación de Cotas)**:
+   - Antes de escribir una sola línea de código procedural o ejecutar cómputo en Blender, es imperativo formalizar un plan de implementación técnico (`implementation_plan.md`).
+   - El plan debe inventariar las fuentes fotográficas descargadas, las cotas maestras de huella y altura, y la descomposición de colisionadores, asegurando alineación total antes de proceder.
+
 ---
 
 ## 2. Fase 1: Ingesta y Triangulación de Verdad de Terreno (Ground Truth Protocol)
 
+### A. El Protocolo de Infraestructura de Datos: Regla SCP/SSH Anti-Congelamiento
+El banco de datos de fotogrametría urbana contiene más de **82 GB** de panoramas de alta resolución y capturas alojadas en un servidor remoto accesible vía red privada virtual (Tailscale). Para evitar fallos catastróficos en el agente, se establecen las siguientes directrices de infraestructura:
+
+> [!CAUTION]
+> **Prohibición Categórica de Exploración en Runtime de Volúmenes de Red**:  
+> Queda terminantemente prohibido ejecutar comandos de exploración abierta (`ls`, `find`, `glob` recursivo o lecturas masivas) sobre el punto de montaje SMB remoto (`/Volumes/tecate-backup/data/`). Debido a la latencia de red y el tamaño masivo del catálogo (82 GB), la exploración en runtime provoca el **congelamiento irrecuperable del agente (*I/O hang*)**, bloqueando indefinidamente la ejecución del simulador.
+
+1. **Consulta Exclusiva de Índices y Cachés Ligeros JSON**:
+   - El agente no navega el sistema de archivos remoto. Consulta **únicamente** los catálogos e índices estructurados locales:
+     - `panoramas_cache.json`: Coordenadas geográficas, ángulos de orientación (*yaw*) y nombres de archivo de panoramas.
+     - `facades_cache.json`: Agrupación y segmentación de fachadas por calle y tramo vial.
+     - `blocks_cache.json`: Polígonos catastrales e identificación de manzanas urbanas.
+   - Mediante estos índices, el agente deduce los nombres exactos de los archivos necesarios para el inmueble en curso.
+
+2. **Transferencia Quirúrgica Punto a Punto vía `scp` / `ssh`**:
+   - La adquisición de imágenes debe realizarse de forma puntual, archivo por archivo, mediante transferencia directa SSH/SCP hacia el disco local de trabajo (`scratch/staging/[edificio]/`):
+     ```bash
+     scp Usuario@host.tailscale.net:D:/tecate-backup/data/screenshots/pano/[nombre_exacto].png /ruta/local/scratch/staging/[edificio]/
+     ```
+   - El acceso directo al volumen montado `/Volumes/...` queda restringido exclusivamente como recurso extraordinario de última instancia cuando no exista conectividad SSH directa.
+
+### B. Triangulación de Capas de Información
 Antes de programar la geometría, el agente debe recolectar y triangular tres capas de información:
 
 ```mermaid
