@@ -1210,7 +1210,7 @@ def build_west_facade_cardenas(mats, col):
 
     # Crujía 3: Despacho Jurídico Quezada (Y in [13.20, 16.80], sobre el cajero automático)
     f_q1 = bpy.data.curves.new(type="FONT", name="Font_C_Quezada1")
-    f_q1.body = "DESPACHO JURIDICO\nQUEZADA Y ASOCIADOS\nTel. 52-22"
+    f_q1.body = "DESPACHO JURIDICO\nQUEZADA Y ASOCIADOS\nTel. 4-52-22"
     f_q1.size = 0.15
     f_q1.extrude = 0.008
     f_q1.align_x = 'CENTER'
