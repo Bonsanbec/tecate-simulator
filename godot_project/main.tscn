@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" path="res://assets/buildings/bbva_tecate_centro.tscn" id="11_bbva"]
 [ext_resource type="PackedScene" path="res://assets/nomenclatura_urbana.tscn" id="12_nomenclatura"]
 [ext_resource type="PackedScene" path="res://assets/buildings/hotel_tecate.tscn" id="13_hotel_tecate"]
+[ext_resource type="PackedScene" path="res://assets/palacio_municipal_2009.tscn" id="14_palacio_municipal"]
 
 
 [sub_resource type="Environment" id="Environment_tct"]
@@ -51,6 +52,9 @@ transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -66.8, 400.38, -24.81)
 
 [node name="Hotel_Tecate" parent="." instance=ExtResource("13_hotel_tecate")]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -44.06, 398.79, 45.40)
+
+[node name="Palacio_Municipal" parent="." instance=ExtResource("14_palacio_municipal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47.75, 400.0, 33.06)
 
 [node name="Nomenclatura" parent="." instance=ExtResource("12_nomenclatura")]
 
