@@ -1,0 +1,158 @@
+[gd_scene load_steps=30 format=3 uid="uid://fuente_parque_hidalgo_2009"]
+
+[ext_resource type="PackedScene" path="res://assets/fuente_parque_hidalgo.glb" id="1_mesh"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_nucleo_base"]
+height = 0.65
+radius = 2.35
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_cascada_cuerpo"]
+height = 1.05
+radius = 1.65
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_copa_superior"]
+height = 0.75
+radius = 0.75
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fondo_estanque"]
+size = Vector3(11.5, 0.20, 11.5)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_0"]
+size = Vector3(0.44, 0.52, 1.582)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_1"]
+size = Vector3(0.44, 0.52, 1.789)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_2"]
+size = Vector3(0.44, 0.52, 1.782)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_3"]
+size = Vector3(0.44, 0.52, 2.073)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_4"]
+size = Vector3(0.44, 0.52, 1.799)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_5"]
+size = Vector3(0.44, 0.52, 1.831)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_6"]
+size = Vector3(0.44, 0.52, 1.394)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_7"]
+size = Vector3(0.44, 0.52, 1.818)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_8"]
+size = Vector3(0.44, 0.52, 1.729)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_9"]
+size = Vector3(0.44, 0.52, 1.869)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_10"]
+size = Vector3(0.44, 0.52, 2.090)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_11"]
+size = Vector3(0.44, 0.52, 2.665)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_12"]
+size = Vector3(0.44, 0.52, 2.665)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_13"]
+size = Vector3(0.44, 0.52, 2.090)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_14"]
+size = Vector3(0.44, 0.52, 1.869)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_15"]
+size = Vector3(0.44, 0.52, 1.729)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_16"]
+size = Vector3(0.44, 0.52, 1.818)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_17"]
+size = Vector3(0.44, 0.52, 1.394)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_18"]
+size = Vector3(0.44, 0.52, 1.831)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_19"]
+size = Vector3(0.44, 0.52, 1.799)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_20"]
+size = Vector3(0.44, 0.52, 2.073)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_21"]
+size = Vector3(0.44, 0.52, 1.782)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_22"]
+size = Vector3(0.44, 0.52, 1.789)
+[sub_resource type="BoxShape3D" id="BoxShape3D_banca_23"]
+size = Vector3(0.44, 0.52, 1.582)
+
+[node name="Fuente_Parque_Hidalgo" type="StaticBody3D"]
+
+[node name="Fuente_Model" parent="." instance=ExtResource("1_mesh")]
+[node name="Col_Banca_0" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.050091, 0, 0.998745, 0, 1, 0, -0.998745, 0, 0.050091, 0.750, 0.250, -4.438)
+shape = SubResource("BoxShape3D_banca_0")
+[node name="Col_Banca_1" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.494577, 0, 0.869134, 0, 1, 0, -0.869134, 0, 0.494577, 2.243, 0.250, -4.898)
+shape = SubResource("BoxShape3D_banca_1")
+[node name="Col_Banca_2" type="CollisionShape3D" parent="."]
+transform = Transform3D(-0.168082, 0, 0.985773, 0, 1, 0, -0.985773, 0, -0.168082, 3.824, 0.250, -5.177)
+shape = SubResource("BoxShape3D_banca_2")
+[node name="Col_Banca_3" type="CollisionShape3D" parent="."]
+transform = Transform3D(-0.730997, 0, 0.682380, 0, 1, 0, -0.682380, 0, -0.730997, 5.342, 0.250, -4.306)
+shape = SubResource("BoxShape3D_banca_3")
+[node name="Col_Banca_4" type="CollisionShape3D" parent="."]
+transform = Transform3D(-0.984264, 0, 0.176704, 0, 1, 0, -0.176704, 0, -0.984264, 6.174, 0.250, -2.732)
+shape = SubResource("BoxShape3D_banca_4")
+[node name="Col_Banca_5" type="CollisionShape3D" parent="."]
+transform = Transform3D(-0.848740, 0, -0.528810, 0, 1, 0, 0.528810, 0, -0.848740, 5.863, 0.250, -1.143)
+shape = SubResource("BoxShape3D_banca_5")
+[node name="Col_Banca_6" type="CollisionShape3D" parent="."]
+transform = Transform3D(-0.999214, 0, -0.039651, 0, 1, 0, 0.039651, 0, -0.999214, 5.374, 0.250, 0.256)
+shape = SubResource("BoxShape3D_banca_6")
+[node name="Col_Banca_7" type="CollisionShape3D" parent="."]
+transform = Transform3D(-0.932812, 0, 0.360362, 0, 1, 0, -0.360362, 0, -0.932812, 5.661, 0.250, 1.723)
+shape = SubResource("BoxShape3D_banca_7")
+[node name="Col_Banca_8" type="CollisionShape3D" parent="."]
+transform = Transform3D(-0.987941, 0, -0.154831, 0, 1, 0, 0.154831, 0, -0.987941, 5.846, 0.250, 3.348)
+shape = SubResource("BoxShape3D_banca_8")
+[node name="Col_Banca_9" type="CollisionShape3D" parent="."]
+transform = Transform3D(-0.697797, 0, -0.716296, 0, 1, 0, 0.716296, 0, -0.697797, 5.078, 0.250, 4.787)
+shape = SubResource("BoxShape3D_banca_9")
+[node name="Col_Banca_10" type="CollisionShape3D" parent="."]
+transform = Transform3D(-0.354630, 0, -0.935007, 0, 1, 0, 0.935007, 0, -0.354630, 3.497, 0.250, 5.767)
+shape = SubResource("BoxShape3D_banca_10")
+[node name="Col_Banca_11" type="CollisionShape3D" parent="."]
+transform = Transform3D(-0.145494, 0, -0.989359, 0, 1, 0, 0.989359, 0, -0.145494, 1.279, 0.250, 6.312)
+shape = SubResource("BoxShape3D_banca_11")
+[node name="Col_Banca_12" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.145494, 0, -0.989359, 0, 1, 0, 0.989359, 0, 0.145494, -1.279, 0.250, 6.312)
+shape = SubResource("BoxShape3D_banca_12")
+[node name="Col_Banca_13" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.354630, 0, -0.935007, 0, 1, 0, 0.935007, 0, 0.354630, -3.497, 0.250, 5.767)
+shape = SubResource("BoxShape3D_banca_13")
+[node name="Col_Banca_14" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.697797, 0, -0.716296, 0, 1, 0, 0.716296, 0, 0.697797, -5.078, 0.250, 4.787)
+shape = SubResource("BoxShape3D_banca_14")
+[node name="Col_Banca_15" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.987941, 0, -0.154831, 0, 1, 0, 0.154831, 0, 0.987941, -5.846, 0.250, 3.348)
+shape = SubResource("BoxShape3D_banca_15")
+[node name="Col_Banca_16" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.932812, 0, 0.360362, 0, 1, 0, -0.360362, 0, 0.932812, -5.661, 0.250, 1.723)
+shape = SubResource("BoxShape3D_banca_16")
+[node name="Col_Banca_17" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.999214, 0, -0.039651, 0, 1, 0, 0.039651, 0, 0.999214, -5.374, 0.250, 0.256)
+shape = SubResource("BoxShape3D_banca_17")
+[node name="Col_Banca_18" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.848740, 0, -0.528810, 0, 1, 0, 0.528810, 0, 0.848740, -5.863, 0.250, -1.143)
+shape = SubResource("BoxShape3D_banca_18")
+[node name="Col_Banca_19" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.984264, 0, 0.176704, 0, 1, 0, -0.176704, 0, 0.984264, -6.174, 0.250, -2.732)
+shape = SubResource("BoxShape3D_banca_19")
+[node name="Col_Banca_20" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.730997, 0, 0.682380, 0, 1, 0, -0.682380, 0, 0.730997, -5.342, 0.250, -4.306)
+shape = SubResource("BoxShape3D_banca_20")
+[node name="Col_Banca_21" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.168082, 0, 0.985773, 0, 1, 0, -0.985773, 0, 0.168082, -3.824, 0.250, -5.177)
+shape = SubResource("BoxShape3D_banca_21")
+[node name="Col_Banca_22" type="CollisionShape3D" parent="."]
+transform = Transform3D(-0.494577, 0, 0.869134, 0, 1, 0, -0.869134, 0, -0.494577, -2.243, 0.250, -4.898)
+shape = SubResource("BoxShape3D_banca_22")
+[node name="Col_Banca_23" type="CollisionShape3D" parent="."]
+transform = Transform3D(-0.050091, 0, 0.998745, 0, 1, 0, -0.998745, 0, -0.050091, -0.750, 0.250, -4.438)
+shape = SubResource("BoxShape3D_banca_23")
+
+[node name="Col_Nucleo_Base" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0)
+shape = SubResource("CylinderShape3D_nucleo_base")
+
+[node name="Col_Cascada_Cuerpo" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.28, 0)
+shape = SubResource("CylinderShape3D_cascada_cuerpo")
+
+[node name="Col_Copa_Superior" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.15, 0)
+shape = SubResource("CylinderShape3D_copa_superior")
+
+[node name="Col_Fondo_Estanque" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+shape = SubResource("BoxShape3D_fondo_estanque")
