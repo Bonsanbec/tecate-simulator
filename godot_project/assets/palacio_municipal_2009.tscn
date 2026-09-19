@@ -1,55 +1,127 @@
-[gd_scene load_steps=8 format=3 uid="uid://palacio_municipal_2009"]
+[gd_scene load_steps=15 format=3 uid="uid://palacio_municipal_2009"]
 
 [ext_resource type="PackedScene" path="res://assets/palacio_municipal_2009.glb" id="1_mesh"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_ala_oriente"]
-size = Vector3(19.80, 9.05, 11.00)
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_ala_oriente"]
+size = Vector3(19.80, 9.05, 0.40)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_ala_norte"]
-size = Vector3(11.00, 9.05, 16.20)
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_ala_norte"]
+size = Vector3(0.40, 9.05, 16.20)
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_columna"]
-height = 3.40
-radius = 0.25
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_sur"]
+size = Vector3(0.40, 9.05, 11.00)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_balcon"]
-size = Vector3(5.50, 1.20, 2.20)
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_poniente"]
+size = Vector3(11.00, 9.05, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_patio_norte"]
+size = Vector3(0.40, 9.05, 10.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_patio_oriente"]
+size = Vector3(14.00, 9.05, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jamba_chaflan"]
+size = Vector3(1.20, 3.40, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dintel_chaflan"]
+size = Vector3(5.20, 0.70, 0.40)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_muro_chaflan_sup"]
-size = Vector3(5.20, 3.20, 0.40)
+size = Vector3(5.20, 3.80, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_plinto_columna"]
+size = Vector3(0.56, 1.05, 0.56)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_columna"]
+height = 2.45
+radius = 0.22
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_losa_balcon"]
+size = Vector3(5.60, 0.25, 2.20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_antepecho_balcon"]
+size = Vector3(6.10, 1.00, 0.25)
 
 [node name="PalacioMunicipal2009" type="StaticBody3D"]
 
 [node name="ModelInstance" parent="." instance=ExtResource("1_mesh")]
 
-[node name="Col_Ala_Oriente" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.10, 3.025, 5.50)
-shape = SubResource("BoxShape3D_ala_oriente")
+[node name="Col_Muro_Ala_Oriente" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.10, 3.025, 0.20)
+shape = SubResource("BoxShape3D_muro_ala_oriente")
 
-[node name="Col_Ala_Norte" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.50, 3.025, 13.30)
-shape = SubResource("BoxShape3D_ala_norte")
+[node name="Col_Muro_Ala_Norte" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.20, 3.025, -13.30)
+shape = SubResource("BoxShape3D_muro_ala_norte")
 
-[node name="Col_Pilar_1" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 1.70, 3.27)
-shape = SubResource("CylinderShape3D_columna")
+[node name="Col_Muro_Sur" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.80, 3.025, -5.50)
+shape = SubResource("BoxShape3D_muro_sur")
 
-[node name="Col_Pilar_2" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87, 1.70, 2.07)
-shape = SubResource("CylinderShape3D_columna")
+[node name="Col_Muro_Poniente" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.50, 3.025, -21.20)
+shape = SubResource("BoxShape3D_muro_poniente")
 
-[node name="Col_Pilar_3" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.07, 1.70, 0.87)
-shape = SubResource("CylinderShape3D_columna")
+[node name="Col_Muro_Patio_Norte" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.80, 3.025, -16.20)
+shape = SubResource("BoxShape3D_muro_patio_norte")
 
-[node name="Col_Pilar_4" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.27, 1.70, -0.33)
-shape = SubResource("CylinderShape3D_columna")
+[node name="Col_Muro_Patio_Oriente" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.00, 3.025, -10.80)
+shape = SubResource("BoxShape3D_muro_patio_oriente")
 
-[node name="Col_Balcon" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 1.47, 4.00, 1.47)
-shape = SubResource("BoxShape3D_balcon")
+[node name="Col_Jamba_Izq" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 1.19, 1.70, -4.01)
+shape = SubResource("BoxShape3D_jamba_chaflan")
+
+[node name="Col_Jamba_Der" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 4.01, 1.70, -1.19)
+shape = SubResource("BoxShape3D_jamba_chaflan")
+
+[node name="Col_Dintel_Portal" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 2.60, 3.05, -2.60)
+shape = SubResource("BoxShape3D_dintel_chaflan")
 
 [node name="Col_Muro_Chaflan_Sup" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 2.60, 5.80, 2.60)
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 2.60, 5.60, -2.60)
 shape = SubResource("BoxShape3D_muro_chaflan_sup")
+
+[node name="Col_Plinto_1" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 0.425, -3.27)
+shape = SubResource("BoxShape3D_plinto_columna")
+
+[node name="Col_Fuste_1" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 2.175, -3.27)
+shape = SubResource("CylinderShape3D_columna")
+
+[node name="Col_Plinto_2" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87, 0.425, -2.07)
+shape = SubResource("BoxShape3D_plinto_columna")
+
+[node name="Col_Fuste_2" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87, 2.175, -2.07)
+shape = SubResource("CylinderShape3D_columna")
+
+[node name="Col_Plinto_3" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.07, 0.425, -0.87)
+shape = SubResource("BoxShape3D_plinto_columna")
+
+[node name="Col_Fuste_3" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.07, 2.175, -0.87)
+shape = SubResource("CylinderShape3D_columna")
+
+[node name="Col_Plinto_4" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.27, 0.425, 0.33)
+shape = SubResource("BoxShape3D_plinto_columna")
+
+[node name="Col_Fuste_4" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.27, 2.175, 0.33)
+shape = SubResource("CylinderShape3D_columna")
+
+[node name="Col_Losa_Balcon" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 2.07, 3.525, -2.07)
+shape = SubResource("BoxShape3D_losa_balcon")
+
+[node name="Col_Antepecho_Balcon" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 1.47, 4.125, -1.47)
+shape = SubResource("BoxShape3D_antepecho_balcon")

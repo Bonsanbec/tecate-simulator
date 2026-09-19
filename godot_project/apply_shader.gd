@@ -57,7 +57,7 @@ func _ready():
 func _hide_replaced_buildings(node: Node):
 	if node is MeshInstance3D:
 		var n = node.name
-		if n.begins_with("Building_BBVA_") or n.begins_with("Building_HotelTecate_") or n.begins_with("Building_Hotel_Tecate_"):
+		if n.begins_with("Building_BBVA_") or n.begins_with("Building_HotelTecate_") or n.begins_with("Building_Hotel_Tecate_") or n.begins_with("Building_Ayuntamiento_de_Tecate"):
 			node.visible = false
 	for child in node.get_children():
 		_hide_replaced_buildings(child)

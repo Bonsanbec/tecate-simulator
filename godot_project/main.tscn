@@ -48,13 +48,13 @@ transform = Transform3D(0.84277856, 0, 0, 0, 0.84277856, 0, 0, 0, 0.84277856, 28
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6844, 400.0132, 2.6878)
 
 [node name="BBVA" parent="." instance=ExtResource("11_bbva")]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -66.8, 400.38, -24.81)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -66.8, 400, -24.81)
 
 [node name="Hotel_Tecate" parent="." instance=ExtResource("13_hotel_tecate")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -44.06, 398.79, 45.40)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -41.06, 398.79, 45.40)
 
 [node name="Palacio_Municipal" parent="." instance=ExtResource("14_palacio_municipal")]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 47.75, 400.0, 33.06)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 47.75, 398.79, 42.40)
 
 [node name="Nomenclatura" parent="." instance=ExtResource("12_nomenclatura")]
 

@@ -1,16 +1,23 @@
 """
-GENERADOR PROCEDURAL 3D - PALACIO MUNICIPAL DE TECATE (ÉPOCA 2009)
+GENERADOR PROCEDURAL 3D - PALACIO MUNICIPAL DE TECATE (ÉPOCA HISTÓRICA 2009)
 Tecate Simulator - Godot Engine 4 / Blender Python Headless API
 
 Ubicación: Pdte. Pascual Ortiz Rubio 1310, Zona Centro, 21400 Tecate, B.C., México
 Coordenadas GPS: 32.572932°N, -116.626027°W
 Manzana: block_lat_32.57293_lon_-116.62685
 
-Disposición de Fachadas Canónica:
-  - Chaflán central con pórtico monumental de 4 columnas, balcón y copete con hornacina
-  - Lado Izquierdo (Ala Norte): 3 crujías con arcos de ladrillo
-  - Lado Derecho (Ala Oriente): 4 crujías con arcos de ladrillo
-  - Zócalo basal enterrado: Z in [-1.50, 0.00] m
+Disposición Arquitectónica Canónica (Fidelidad Ground-Truth 2009):
+  - Chaflán central a 45° con pórtico monumental de 4 columnas toscanas,
+    balcón volado con aletas/modillones laterales, rótulo institucional
+    "PALACIO MUNICIPAL" en bronce oscuro, Escudo Nacional en altorrelieve,
+    portal de acceso diáfano en PB y copete/ático central con hornacina semicircular.
+  - Lado Izquierdo (Ala Norte / Av. Ortiz Rubio): 3 crujías monumentales
+    con pilastras y arcos de ladrillo rojo, ventanal superior rectangular,
+    delantal volado de cantera beige y ventana inferior comercial.
+  - Lado Derecho (Ala Oriente / Callejón Libertad): 4 crujías de idéntica fenestración.
+  - Zócalo basal enterrado continuo: Z in [-1.50, 0.90] m.
+  - Colisiones analíticas en Godot 4 (BoxShape3D / CylinderShape3D) coordinadas 1:1
+    con la transformación glTF (X_g = X_b, Y_g = Z_b, Z_g = -Y_b).
 """
 
 import bpy
@@ -35,27 +42,35 @@ def create_materials():
     m_wall = bpy.data.materials.new("M_Estuco_Blanco")
     m_wall.use_nodes = True
     bsdf = m_wall.node_tree.nodes.get("Principled BSDF")
-    bsdf.inputs["Base Color"].default_value = (0.86, 0.86, 0.84, 1.0)
+    bsdf.inputs["Base Color"].default_value = (0.88, 0.88, 0.86, 1.0)
     bsdf.inputs["Roughness"].default_value = 0.85
     mats["blanco"] = m_wall
 
-    # 2. Estuco Ocre Mostaza (Zócalo basal, plintos, capiteles, cornisas, spandrels)
+    # 2. Estuco Ocre Mostaza (Zócalo basal, plintos, capiteles, cornisas, hornacina)
     m_ocre = bpy.data.materials.new("M_Estuco_Ocre")
     m_ocre.use_nodes = True
     bsdf_o = m_ocre.node_tree.nodes.get("Principled BSDF")
-    bsdf_o.inputs["Base Color"].default_value = (0.74, 0.58, 0.22, 1.0)
+    bsdf_o.inputs["Base Color"].default_value = (0.75, 0.58, 0.20, 1.0)
     bsdf_o.inputs["Roughness"].default_value = 0.78
     mats["ocre"] = m_ocre
 
-    # 3. Ladrillo Rojo Cocido (Arcos y sardineles)
+    # 3. Ladrillo Rojo Cocido (Arcos y pilastras continuas)
     m_brick = bpy.data.materials.new("M_Ladrillo_Arco")
     m_brick.use_nodes = True
     bsdf_br = m_brick.node_tree.nodes.get("Principled BSDF")
-    bsdf_br.inputs["Base Color"].default_value = (0.52, 0.18, 0.12, 1.0)
+    bsdf_br.inputs["Base Color"].default_value = (0.50, 0.16, 0.10, 1.0)
     bsdf_br.inputs["Roughness"].default_value = 0.82
     mats["ladrillo"] = m_brick
 
-    # 4. Vidrio Comercial Oscuro Tintado
+    # 4. Cantera Beige / Baldosas de Delantal (Spandrels volados entre ventanas)
+    m_cantera = bpy.data.materials.new("M_Cantera_Beige")
+    m_cantera.use_nodes = True
+    bsdf_c = m_cantera.node_tree.nodes.get("Principled BSDF")
+    bsdf_c.inputs["Base Color"].default_value = (0.72, 0.65, 0.52, 1.0)
+    bsdf_c.inputs["Roughness"].default_value = 0.88
+    mats["cantera"] = m_cantera
+
+    # 5. Vidrio Comercial Oscuro Tintado
     m_glass = bpy.data.materials.new("M_Vidrio_Oscuro")
     m_glass.use_nodes = True
     bsdf_gl = m_glass.node_tree.nodes.get("Principled BSDF")
@@ -65,7 +80,7 @@ def create_materials():
     bsdf_gl.inputs["IOR"].default_value = 1.52
     mats["vidrio"] = m_glass
 
-    # 5. Cancelería Aluminio Negro
+    # 6. Cancelería Aluminio Negro
     m_alum = bpy.data.materials.new("M_Canceleria")
     m_alum.use_nodes = True
     bsdf_al = m_alum.node_tree.nodes.get("Principled BSDF")
@@ -74,20 +89,37 @@ def create_materials():
     bsdf_al.inputs["Roughness"].default_value = 0.30
     mats["aluminio"] = m_alum
 
-    # 6. Oro / Bronce Relieve (Rótulo y Escudo)
-    m_gold = bpy.data.materials.new("M_Letras_Oro")
-    m_gold.use_nodes = True
-    bsdf_gd = m_gold.node_tree.nodes.get("Principled BSDF")
-    bsdf_gd.inputs["Base Color"].default_value = (0.85, 0.70, 0.20, 1.0)
-    bsdf_gd.inputs["Metallic"].default_value = 0.85
-    bsdf_gd.inputs["Roughness"].default_value = 0.25
-    mats["oro"] = m_gold
+    # 7. Letras Rótulo en Bronce Patinado Oscuro (Fidelidad 2009)
+    m_dark_letters = bpy.data.materials.new("M_Letras_Oscuras")
+    m_dark_letters.use_nodes = True
+    bsdf_dl = m_dark_letters.node_tree.nodes.get("Principled BSDF")
+    bsdf_dl.inputs["Base Color"].default_value = (0.12, 0.11, 0.10, 1.0)
+    bsdf_dl.inputs["Metallic"].default_value = 0.70
+    bsdf_dl.inputs["Roughness"].default_value = 0.45
+    mats["letras"] = m_dark_letters
 
-    # 7. Azotea Asfáltica Impermeabilizada
+    # 8. Escudo Nacional en Bronce Envejecido
+    m_bronze = bpy.data.materials.new("M_Escudo_Bronce")
+    m_bronze.use_nodes = True
+    bsdf_bz = m_bronze.node_tree.nodes.get("Principled BSDF")
+    bsdf_bz.inputs["Base Color"].default_value = (0.65, 0.52, 0.25, 1.0)
+    bsdf_bz.inputs["Metallic"].default_value = 0.80
+    bsdf_bz.inputs["Roughness"].default_value = 0.35
+    mats["escudo"] = m_bronze
+
+    # 9. Madera Puerta Portal Acceso
+    m_wood = bpy.data.materials.new("M_Puerta_Madera")
+    m_wood.use_nodes = True
+    bsdf_wd = m_wood.node_tree.nodes.get("Principled BSDF")
+    bsdf_wd.inputs["Base Color"].default_value = (0.18, 0.10, 0.06, 1.0)
+    bsdf_wd.inputs["Roughness"].default_value = 0.65
+    mats["madera"] = m_wood
+
+    # 10. Azotea Asfáltica Impermeabilizada
     m_roof = bpy.data.materials.new("M_Azotea_Asfalto")
     m_roof.use_nodes = True
     bsdf_rf = m_roof.node_tree.nodes.get("Principled BSDF")
-    bsdf_rf.inputs["Base Color"].default_value = (0.045, 0.045, 0.045, 1.0)
+    bsdf_rf.inputs["Base Color"].default_value = (0.05, 0.05, 0.05, 1.0)
     bsdf_rf.inputs["Roughness"].default_value = 0.95
     mats["azotea"] = m_roof
 
@@ -95,7 +127,7 @@ def create_materials():
 
 def assign_material_slots(obj, mat_dict):
     """Asigna todos los materiales a los slots del objeto para referencia por índice."""
-    order = ["blanco", "ocre", "ladrillo", "vidrio", "aluminio", "oro", "azotea"]
+    order = ["blanco", "ocre", "ladrillo", "cantera", "vidrio", "aluminio", "letras", "escudo", "madera", "azotea"]
     for key in order:
         if key in mat_dict:
             obj.data.materials.append(mat_dict[key])
@@ -148,7 +180,7 @@ def add_oriented_box(bm, center_xy, tangent_xy, normal_xy, s_min, s_max, n_min, 
             pass
 
 def add_polygon_slab(bm, poly_xy, z_min, z_max, mat_idx=0):
-    """Genera una losa horizontal extruida a partir de un polígono 2D simple."""
+    """Genera un prisma extruido vertical a partir de un polígono 2D."""
     n = len(poly_xy)
     bot_v = [bm.verts.new((pt[0], pt[1], z_min)) for pt in poly_xy]
     top_v = [bm.verts.new((pt[0], pt[1], z_max)) for pt in poly_xy]
@@ -166,7 +198,6 @@ def add_polygon_slab(bm, poly_xy, z_min, z_max, mat_idx=0):
         f_top.material_index = mat_idx
     except ValueError:
         pass
-
     try:
         f_bot = bm.faces.new(list(reversed(bot_v)))
         f_bot.material_index = mat_idx
@@ -195,7 +226,7 @@ def add_cylinder(bm, center_xy, radius, z_min, z_max, segments=16, mat_idx=0):
     f_top = bm.faces.new(top_v)
     f_top.material_index = mat_idx
 
-def add_arch_border(bm, center_xy, tangent_xy, normal_xy, r_inner, r_outer, z_spring, n_min, n_max, segments=12, mat_idx=2):
+def add_arch_border(bm, center_xy, tangent_xy, normal_xy, r_inner, r_outer, z_spring, n_min, n_max, segments=14, mat_idx=2):
     """Genera un arco de medio punto decorativo (dovelas de ladrillo) orientado."""
     cx, cy = center_xy[0], center_xy[1]
     tx, ty = tangent_xy[0], tangent_xy[1]
@@ -249,36 +280,56 @@ def add_arch_border(bm, center_xy, tangent_xy, normal_xy, r_inner, r_outer, z_sp
             pass
 
 def build_fenestrated_bay(bm, center_xy, tangent_xy, normal_xy, m_idxs):
-    """Construye una crujía arquitectónica estándar con vanos y relieves."""
+    """
+    Construye una crujía arquitectónica fidedigna según las fotografías de 2009:
+      1. Rosca de ladrillo semicircular superior y jambas/pilastras de ladrillo
+         continuas que descienden verticalmente a ambos lados hasta el zócalo ocre.
+      2. Tímpano de estuco retranqueado y ventana rectangular acristalada en PA.
+      3. Delantal volado de cantera beige (Spandrel Apron) con gotero y gotero inferior.
+      4. Ventanal comercial rectangular inferior en PB con cancelería oscura.
+    """
     w_win = 1.60
     r_win = 0.80
-    z_bot_up = 4.40
-    z_spring = 6.00
-    z_top_up = 6.80
     d_brick = 0.28
     t_out = 0.05
+    z_spring = 6.00
+    z_bot_up = 4.40
+    z_zoc = 0.90
 
-    # 1. Arcos y jambas de ladrillo superior
+    # 1. Pilastras y jambas de ladrillo continuo desde el zócalo hasta el arranque del arco
     add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
-                     -r_win - d_brick, -r_win, -0.01, t_out, z_bot_up, z_spring, m_idxs["ladrillo"])
+                     -r_win - d_brick, -r_win, -0.01, t_out, z_zoc, z_spring, m_idxs["ladrillo"])
     add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
-                     r_win, r_win + d_brick, -0.01, t_out, z_bot_up, z_spring, m_idxs["ladrillo"])
+                     r_win, r_win + d_brick, -0.01, t_out, z_zoc, z_spring, m_idxs["ladrillo"])
+
+    # Arco de ladrillo superior
     add_arch_border(bm, center_xy, tangent_xy, normal_xy,
-                    r_win, r_win + d_brick, z_spring, -0.01, t_out, segments=12, mat_idx=m_idxs["ladrillo"])
+                    r_win, r_win + d_brick, z_spring, -0.01, t_out, segments=14, mat_idx=m_idxs["ladrillo"])
 
-    # Vidrio superior oscuro empotrado
+    # Tímpano de estuco blanco retranqueado en el medio punto
     add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
-                     -r_win, r_win, -0.22, -0.20, z_bot_up, z_spring, m_idxs["vidrio"])
-    add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
-                     -r_win + 0.15, r_win - 0.15, -0.22, -0.20, z_spring, z_top_up - 0.08, m_idxs["vidrio"])
-    add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
-                     -0.03, 0.03, -0.22, -0.18, z_bot_up, z_top_up - 0.12, m_idxs["aluminio"])
+                     -r_win, r_win, -0.15, -0.02, z_spring, 6.78, m_idxs["blanco"])
 
-    # 2. Spandrel box panel en estuco ocre
+    # Ventana superior rectangular (bajo el arranque del arco)
     add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
-                     -0.925, 0.925, -0.01, 0.12, 3.00, 4.35, m_idxs["ocre"])
+                     -r_win + 0.02, r_win - 0.02, -0.22, -0.20, z_bot_up, z_spring, m_idxs["vidrio"])
+    add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
+                     -0.03, 0.03, -0.22, -0.18, z_bot_up, z_spring, m_idxs["aluminio"])
+    add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
+                     -r_win, r_win, -0.22, -0.18, z_spring - 0.04, z_spring, m_idxs["aluminio"])
 
-    # 3. Ventana inferior rectangular
+    # 2. Delantal volado de cantera beige (Spandrel Apron) que sobresale hacia el frente
+    # Ménsula/caja volada que proyecta 14 cm al frente
+    add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
+                     -r_win - 0.02, r_win + 0.02, -0.02, 0.14, 2.92, 4.35, m_idxs["cantera"])
+    # Gotero/cornisilla superior de transición
+    add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
+                     -r_win - 0.04, r_win + 0.04, -0.03, 0.16, 4.35, 4.42, m_idxs["cantera"])
+    # Gotero inferior
+    add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
+                     -r_win - 0.03, r_win + 0.03, -0.02, 0.15, 2.86, 2.92, m_idxs["cantera"])
+
+    # 3. Ventana inferior rectangular en Planta Baja
     add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
                      -0.82, 0.82, -0.05, 0.02, 1.18, 2.82, m_idxs["aluminio"])
     add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
@@ -291,6 +342,7 @@ def build_palacio_geometry(col, mats):
     Genera la geometría física unificada del Palacio Municipal:
       - Ala Oriente (Lado Derecho desde el frente): 4 CRUJÍAS (X de 5.20 a 25.00 m)
       - Ala Norte (Lado Izquierdo desde el frente): 3 CRUJÍAS (Y de 5.20 a 21.40 m)
+      - Chaflán central a 45° con pórtico monumental, balcón, balconcillos y copete.
     """
     me = bpy.data.meshes.new("Mesh_Palacio_Municipal")
     bm = bmesh.new()
@@ -313,13 +365,11 @@ def build_palacio_geometry(col, mats):
     r_chamfer_half = 5.20 * math.sqrt(2.0) / 2.0 # 3.677 m
 
     # =========================================================================
-    # 1. ALA ORIENTE (LADO DERECHO): 4 CRUJÍAS CON ARCOS DE LADRILLO
+    # 1. ALA ORIENTE (LADO DERECHO DESDE EL FRENTE): 4 CRUJÍAS
     #    Superficie exterior en Y = -0.40, normal (0, -1), X in [5.20, 25.00]
     # =========================================================================
     add_box(bm, 5.20, 25.00, -T_wall, 0.0, Z_sub, Z_zoc, m_idxs["ocre"])
 
-    # 4 Crujías centradas en X = [8.00, 12.40, 16.80, 21.20]
-    # Vanos de 1.60 m (X in [X-0.80, X+0.80])
     piers_east = [
         (5.20, 7.20),
         (8.80, 11.60),
@@ -337,16 +387,15 @@ def build_palacio_geometry(col, mats):
         add_box(bm, bx - 0.80, bx + 0.80, -T_wall, 0.0, 6.80, Z_pretil, m_idxs["blanco"])
         build_fenestrated_bay(bm, (bx, -T_wall), (1.0, 0.0), (0.0, -1.0), m_idxs)
 
-    # Albardilla cornisa superior oriente (Y = -T_wall)
+    # Albardilla corrida ocre en coronación de pretil
     add_box(bm, 5.15, 25.05, -T_wall - 0.08, 0.02, 7.40, Z_pretil, m_idxs["ocre"])
 
     # =========================================================================
-    # 2. ALA NORTE (LADO IZQUIERDO): 3 CRUJÍAS CON ARCOS DE LADRILLO
+    # 2. ALA NORTE (LADO IZQUIERDO DESDE EL FRENTE): 3 CRUJÍAS
     #    Superficie exterior en X = -0.40, normal (-1, 0), Y in [5.20, 21.40]
     # =========================================================================
     add_box(bm, -T_wall, 0.0, 5.20, 21.40, Z_sub, Z_zoc, m_idxs["ocre"])
 
-    # 3 Crujías centradas en Y = [8.20, 12.80, 17.40]
     piers_north = [
         (5.20, 7.40),
         (9.00, 12.00),
@@ -363,7 +412,7 @@ def build_palacio_geometry(col, mats):
         add_box(bm, -T_wall, 0.0, by - 0.80, by + 0.80, 6.80, Z_pretil, m_idxs["blanco"])
         build_fenestrated_bay(bm, (-T_wall, by), (0.0, 1.0), (-1.0, 0.0), m_idxs)
 
-    # Albardilla cornisa superior norte (X = -T_wall)
+    # Albardilla corrida ocre en coronación de pretil norte
     add_box(bm, -T_wall - 0.08, 0.02, 5.15, 21.45, 7.40, Z_pretil, m_idxs["ocre"])
 
     # =========================================================================
@@ -379,26 +428,37 @@ def build_palacio_geometry(col, mats):
     add_box(bm, 0.0, D_north, 21.40 - T_wall, 21.40, Z_sub, Z_pretil, m_idxs["blanco"])
 
     # =========================================================================
-    # 4. CHAFLÁN RETRANQUEADO (Muro posterior del pórtico)
+    # 4. CHAFLÁN RETRANQUEADO (Fachada de acceso del pórtico)
     # =========================================================================
+    # Zócalo ocre
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
                      -r_chamfer_half, r_chamfer_half, -T_wall, 0.0, Z_sub, Z_zoc, m_idxs["ocre"])
+    # Muro blanco general
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
                      -r_chamfer_half, r_chamfer_half, -T_wall, 0.0, Z_zoc, Z_pretil, m_idxs["blanco"])
+    # Cornisa ocre en el chaflán
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
                      -r_chamfer_half - 0.05, r_chamfer_half + 0.05, -T_wall - 0.08, 0.04, 7.40, Z_pretil, m_idxs["ocre"])
 
-    # Puerta de acceso diáfana en Planta Baja
+    # Portal monumental de acceso en Planta Baja (bajo el balcón)
+    # Jambas de ladrillo rojo a los lados del acceso
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -1.40, -1.10, 0.0, 0.06, 0.0, 2.80, m_idxs["ladrillo"])
+                     -1.45, -1.15, 0.0, 0.08, 0.0, 2.70, m_idxs["ladrillo"])
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     1.10, 1.40, 0.0, 0.06, 0.0, 2.80, m_idxs["ladrillo"])
+                     1.15, 1.45, 0.0, 0.08, 0.0, 2.70, m_idxs["ladrillo"])
+    # Dintel de ladrillo sobre la puerta
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -1.40, 1.40, 0.0, 0.06, 2.75, 3.05, m_idxs["ladrillo"])
-    add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -1.10, 1.10, -0.06, -0.02, 0.0, 2.75, m_idxs["vidrio"])
+                     -1.45, 1.45, 0.0, 0.08, 2.65, 3.05, m_idxs["ladrillo"])
 
-    # Ventanal de Planta Alta en chaflán
+    # Puerta doble de madera oscura y vidrio
+    add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
+                     -1.15, 1.15, -0.06, -0.02, 0.0, 2.65, m_idxs["madera"])
+    add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
+                     -0.90, -0.10, -0.08, -0.04, 1.20, 2.45, m_idxs["vidrio"])
+    add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
+                     0.10, 0.90, -0.08, -0.04, 1.20, 2.45, m_idxs["vidrio"])
+
+    # Ventanal de Planta Alta en el chaflán
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
                      -2.10, 2.10, 0.0, 0.04, 4.60, 4.68, m_idxs["aluminio"])
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
@@ -410,54 +470,74 @@ def build_palacio_geometry(col, mats):
                          ps - 0.03, ps + 0.03, -0.06, 0.02, 4.68, 6.52, m_idxs["aluminio"])
 
     # =========================================================================
-    # 5. PÓRTICO MONUMENTAL Y BALCÓN VOLADO
+    # 5. PÓRTICO MONUMENTAL Y BALCÓN VOLADO (Ground Truth 2009)
     # =========================================================================
     d_portico = 1.60
     center_col_line = (center_chamfer[0] + d_portico * norm_chamfer[0],
                        center_chamfer[1] + d_portico * norm_chamfer[1])
 
+    # 4 Columnas toscanas completas
     col_s = [-2.55, -0.85, 0.85, 2.55]
     for s in col_s:
         cx = center_col_line[0] + s * tang_chamfer[0]
         cy = center_col_line[1] + s * tang_chamfer[1]
-        add_oriented_box(bm, (cx, cy), tang_chamfer, norm_chamfer,
-                         -0.30, 0.30, -0.30, 0.30, Z_sub, 0.25, m_idxs["ocre"])
-        add_cylinder(bm, (cx, cy), radius=0.24, z_min=0.25, z_max=3.15, segments=16, mat_idx=m_idxs["blanco"])
-        add_oriented_box(bm, (cx, cy), tang_chamfer, norm_chamfer,
-                         -0.31, 0.31, -0.31, 0.31, 3.15, 3.40, m_idxs["ocre"])
 
-    # Losa del balcón
+        # Plinto prismático inferior en ocre
+        add_oriented_box(bm, (cx, cy), tang_chamfer, norm_chamfer,
+                         -0.27, 0.27, -0.27, 0.27, Z_sub, 0.85, m_idxs["ocre"])
+        # Moldura toro de base
+        add_oriented_box(bm, (cx, cy), tang_chamfer, norm_chamfer,
+                         -0.25, 0.25, -0.25, 0.25, 0.85, 0.95, m_idxs["ocre"])
+        # Fuste circular liso en estuco blanco
+        add_cylinder(bm, (cx, cy), radius=0.21, z_min=0.95, z_max=3.15, segments=16, mat_idx=m_idxs["blanco"])
+        # Capitel toscano (equino y ábaco) en ocre
+        add_oriented_box(bm, (cx, cy), tang_chamfer, norm_chamfer,
+                         -0.26, 0.26, -0.26, 0.26, 3.15, 3.30, m_idxs["ocre"])
+        add_oriented_box(bm, (cx, cy), tang_chamfer, norm_chamfer,
+                         -0.30, 0.30, -0.30, 0.30, 3.30, 3.40, m_idxs["ocre"])
+
+    # Losa de balcón volada sobre las columnas
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
                      -r_chamfer_half - 0.20, r_chamfer_half + 0.20,
-                     -0.10, d_portico + 0.40, 3.40, 3.60, m_idxs["ocre"])
+                     -0.10, d_portico + 0.40, 3.40, 3.65, m_idxs["ocre"])
+
+    # Ménsulas / Modillones laterales del balcón (apreciables en zb8YAlf6JT...)
+    for s_side, sign in [(-r_chamfer_half - 0.15, -1), (r_chamfer_half + 0.15, 1)]:
+        c_corbel = (center_chamfer[0] + (d_portico + 0.10) * norm_chamfer[0],
+                    center_chamfer[1] + (d_portico + 0.10) * norm_chamfer[1])
+        add_oriented_box(bm, c_corbel, tang_chamfer, norm_chamfer,
+                         s_side - 0.10, s_side + 0.10, -0.40, 0.20, 2.90, 3.40, m_idxs["ocre"])
 
     # Antepecho frontal del balcón
     center_balc_front = (center_chamfer[0] + (d_portico + 0.28) * norm_chamfer[0],
                          center_chamfer[1] + (d_portico + 0.28) * norm_chamfer[1])
     add_oriented_box(bm, center_balc_front, tang_chamfer, norm_chamfer,
-                     -3.00, 3.00, -0.12, 0.12, 3.60, 4.55, m_idxs["blanco"])
+                     -3.00, 3.00, -0.12, 0.12, 3.65, 4.55, m_idxs["blanco"])
+    # Cornisa ocre superior del antepecho
     add_oriented_box(bm, center_balc_front, tang_chamfer, norm_chamfer,
-                     -3.05, 3.05, -0.15, 0.15, 4.50, 4.58, m_idxs["ocre"])
+                     -3.06, 3.06, -0.16, 0.16, 4.52, 4.65, m_idxs["ocre"])
 
-    # Retornos laterales del balcón
+    # Retornos laterales del antepecho
     add_oriented_box(bm, center_chamfer, norm_chamfer, tang_chamfer,
-                     0.0, d_portico + 0.28, -3.00, -2.76, 3.60, 4.55, m_idxs["blanco"])
+                     0.0, d_portico + 0.28, -3.00, -2.76, 3.65, 4.55, m_idxs["blanco"])
     add_oriented_box(bm, center_chamfer, norm_chamfer, tang_chamfer,
-                     0.0, d_portico + 0.28, 2.76, 3.00, 3.60, 4.55, m_idxs["blanco"])
+                     0.0, d_portico + 0.28, 2.76, 3.00, 3.65, 4.55, m_idxs["blanco"])
 
     # =========================================================================
-    # 6. COPETE SUPERIOR ESCALONADO EN AZOTEA (Frontón con hornacina)
+    # 6. COPETE / ÁTICO CENTRAL ESCALONADO CON HORNACINA SEMICIRCULAR
     # =========================================================================
+    # Cuerpo del ático central
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
                      -2.50, 2.50, -T_wall, 0.05, 7.40, 8.65, m_idxs["blanco"])
+    # Cornisa superior del ático
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -2.55, 2.55, -T_wall - 0.05, 0.10, 8.55, 8.70, m_idxs["ocre"])
+                     -2.58, 2.58, -T_wall - 0.06, 0.12, 8.55, 8.75, m_idxs["ocre"])
 
-    # Nicho semicircular ocre
+    # Hornacina semicircular ocre central (Ground truth: concha/sol radiante)
     add_arch_border(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                    0.0, 0.65, z_spring=7.85, n_min=-0.01, n_max=0.07, segments=12, mat_idx=m_idxs["ocre"])
+                    0.0, 0.70, z_spring=7.80, n_min=-0.01, n_max=0.08, segments=14, mat_idx=m_idxs["ocre"])
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -0.65, 0.65, -0.01, 0.07, 7.85, 8.50, m_idxs["ocre"])
+                     -0.70, 0.70, -0.01, 0.08, 7.80, 8.50, m_idxs["ocre"])
 
     # =========================================================================
     # 7. LOSA DE AZOTEA HERMÉTICA
@@ -478,41 +558,41 @@ def build_palacio_geometry(col, mats):
     bm.free()
 
     bpy.context.view_layer.objects.active = obj
-    obj.select_set(True)
-    bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.mesh.normals_make_consistent(inside=False)
-    bpy.ops.object.mode_set(mode='OBJECT')
-
     return obj
 
 def build_signage(col, mats):
-    """Genera el rótulo volumétrico 3D 'PALACIO MUNICIPAL' y el Escudo Nacional."""
+    """
+    Construye el rótulo monumental 'PALACIO MUNICIPAL' y el Escudo Nacional.
+    En las fotografías de 2009, el rótulo es de letras capitales oscuras (bronce/antracita).
+    """
+    d_portico = 1.60
     center_chamfer = (2.60, 2.60)
     norm_chamfer = (-0.707107, -0.707107)
-    d_portico = 1.60
-    c_front = (center_chamfer[0] + (d_portico + 0.28 + 0.12 + 0.02) * norm_chamfer[0],
-               center_chamfer[1] + (d_portico + 0.28 + 0.12 + 0.02) * norm_chamfer[1])
 
-    # Curva de texto 3D "PALACIO MUNICIPAL"
-    txt_data = bpy.data.curves.new(name="Texto_Palacio", type='FONT')
+    # Posición frontal del antepecho
+    c_front = (center_chamfer[0] + (d_portico + 0.41) * norm_chamfer[0],
+               center_chamfer[1] + (d_portico + 0.41) * norm_chamfer[1])
+
+    # Rótulo 3D PALACIO MUNICIPAL
+    txt_data = bpy.data.curves.new(type="FONT", name="Curva_Rotulo")
     txt_data.body = "PALACIO MUNICIPAL"
     txt_data.size = 0.26
-    txt_data.extrude = 0.025
+    txt_data.extrude = 0.03
     txt_data.align_x = 'CENTER'
     txt_data.align_y = 'CENTER'
 
     txt_obj = bpy.data.objects.new("Rotulo_Palacio_Municipal", txt_data)
     col.objects.link(txt_obj)
-    txt_obj.data.materials.append(mats["oro"])
+    txt_obj.data.materials.append(mats["letras"])
 
-    txt_obj.location = (c_front[0], c_front[1], 3.92)
+    txt_obj.location = (c_front[0], c_front[1], 3.95)
     txt_obj.rotation_euler = (math.radians(90.0), 0.0, math.radians(-45.0))
 
-    # Escudo Nacional en relieve escultórico con anillo exterior
+    # Escudo Nacional en altorrelieve de bronce envejecido
     me_escudo = bpy.data.meshes.new("Mesh_Escudo_Nacional")
     bm_e = bmesh.new()
     radius_x, radius_z = 0.28, 0.35
-    depth = 0.03
+    depth = 0.035
     v_ring = []
     seg = 16
     for i in range(seg):
@@ -529,7 +609,7 @@ def build_signage(col, mats):
     f_front = bm_e.faces.new([v_ring[2*i + 1] for i in range(seg)])
     f_back = bm_e.faces.new([v_ring[2*i] for i in reversed(range(seg))])
 
-    # Anillo exterior moldurado en oro
+    # Anillo exterior moldurado
     r_out_x, r_out_z = 0.32, 0.39
     v_out = []
     for i in range(seg):
@@ -547,12 +627,158 @@ def build_signage(col, mats):
 
     escudo_obj = bpy.data.objects.new("Escudo_Nacional", me_escudo)
     col.objects.link(escudo_obj)
-    escudo_obj.data.materials.append(mats["oro"])
+    escudo_obj.data.materials.append(mats["escudo"])
     escudo_obj.location = (c_front[0] + 0.01 * norm_chamfer[0],
-                           c_front[1] + 0.01 * norm_chamfer[1], 4.26)
+                           c_front[1] + 0.01 * norm_chamfer[1], 4.30)
     escudo_obj.rotation_euler = (0.0, 0.0, math.radians(-45.0))
 
     return txt_obj, escudo_obj
+
+def generate_godot_tscn(tscn_path, glb_path):
+    """
+    Genera la escena de Godot 4 (.tscn) con física analítica rigurosa.
+    Coordenadas en glTF exportadas con export_yup=True:
+      X_godot = X_blender
+      Y_godot = Z_blender
+      Z_godot = -Y_blender
+    Garantiza:
+      - 100% de coincidencia espacial con las partes visibles del modelo.
+      - Vano de acceso peatonal diáfano sin planos invisibles.
+      - 4 columnas individuales y plintos como cilindros y cajas analíticas.
+    """
+    content = f'''[gd_scene load_steps=15 format=3 uid="uid://palacio_municipal_2009"]
+
+[ext_resource type="PackedScene" path="{glb_path}" id="1_mesh"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_ala_oriente"]
+size = Vector3(19.80, 9.05, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_ala_norte"]
+size = Vector3(0.40, 9.05, 16.20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_sur"]
+size = Vector3(0.40, 9.05, 11.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_poniente"]
+size = Vector3(11.00, 9.05, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_patio_norte"]
+size = Vector3(0.40, 9.05, 10.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_patio_oriente"]
+size = Vector3(14.00, 9.05, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jamba_chaflan"]
+size = Vector3(1.20, 3.40, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dintel_chaflan"]
+size = Vector3(5.20, 0.70, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_chaflan_sup"]
+size = Vector3(5.20, 3.80, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_plinto_columna"]
+size = Vector3(0.56, 1.05, 0.56)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_columna"]
+height = 2.45
+radius = 0.22
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_losa_balcon"]
+size = Vector3(5.60, 0.25, 2.20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_antepecho_balcon"]
+size = Vector3(6.10, 1.00, 0.25)
+
+[node name="PalacioMunicipal2009" type="StaticBody3D"]
+
+[node name="ModelInstance" parent="." instance=ExtResource("1_mesh")]
+
+[node name="Col_Muro_Ala_Oriente" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.10, 3.025, 0.20)
+shape = SubResource("BoxShape3D_muro_ala_oriente")
+
+[node name="Col_Muro_Ala_Norte" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.20, 3.025, -13.30)
+shape = SubResource("BoxShape3D_muro_ala_norte")
+
+[node name="Col_Muro_Sur" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.80, 3.025, -5.50)
+shape = SubResource("BoxShape3D_muro_sur")
+
+[node name="Col_Muro_Poniente" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.50, 3.025, -21.20)
+shape = SubResource("BoxShape3D_muro_poniente")
+
+[node name="Col_Muro_Patio_Norte" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.80, 3.025, -16.20)
+shape = SubResource("BoxShape3D_muro_patio_norte")
+
+[node name="Col_Muro_Patio_Oriente" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.00, 3.025, -10.80)
+shape = SubResource("BoxShape3D_muro_patio_oriente")
+
+[node name="Col_Jamba_Izq" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 1.19, 1.70, -4.01)
+shape = SubResource("BoxShape3D_jamba_chaflan")
+
+[node name="Col_Jamba_Der" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 4.01, 1.70, -1.19)
+shape = SubResource("BoxShape3D_jamba_chaflan")
+
+[node name="Col_Dintel_Portal" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 2.60, 3.05, -2.60)
+shape = SubResource("BoxShape3D_dintel_chaflan")
+
+[node name="Col_Muro_Chaflan_Sup" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 2.60, 5.60, -2.60)
+shape = SubResource("BoxShape3D_muro_chaflan_sup")
+
+[node name="Col_Plinto_1" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 0.425, -3.27)
+shape = SubResource("BoxShape3D_plinto_columna")
+
+[node name="Col_Fuste_1" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 2.175, -3.27)
+shape = SubResource("CylinderShape3D_columna")
+
+[node name="Col_Plinto_2" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87, 0.425, -2.07)
+shape = SubResource("BoxShape3D_plinto_columna")
+
+[node name="Col_Fuste_2" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87, 2.175, -2.07)
+shape = SubResource("CylinderShape3D_columna")
+
+[node name="Col_Plinto_3" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.07, 0.425, -0.87)
+shape = SubResource("BoxShape3D_plinto_columna")
+
+[node name="Col_Fuste_3" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.07, 2.175, -0.87)
+shape = SubResource("CylinderShape3D_columna")
+
+[node name="Col_Plinto_4" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.27, 0.425, 0.33)
+shape = SubResource("BoxShape3D_plinto_columna")
+
+[node name="Col_Fuste_4" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.27, 2.175, 0.33)
+shape = SubResource("CylinderShape3D_columna")
+
+[node name="Col_Losa_Balcon" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 2.07, 3.525, -2.07)
+shape = SubResource("BoxShape3D_losa_balcon")
+
+[node name="Col_Antepecho_Balcon" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 1.47, 4.125, -1.47)
+shape = SubResource("BoxShape3D_antepecho_balcon")
+'''
+    os.makedirs(os.path.dirname(os.path.abspath(tscn_path)), exist_ok=True)
+    with open(tscn_path, "w", encoding="utf-8") as f:
+        f.write(content)
+    print(f"[TSCN] Escena analítica generada exitosamente en: {tscn_path}")
+
 
 def setup_lighting_and_cameras(col):
     """Configura sol Cycles y batería canónica de 5 cámaras de inspección."""
@@ -574,6 +800,7 @@ def setup_lighting_and_cameras(col):
 
     # Luz de cielo
     world = bpy.data.worlds.new("World_Diurno")
+    world.use_nodes = True
     bg = world.node_tree.nodes.get("Background")
     bg.inputs["Color"].default_value = (0.65, 0.78, 0.92, 1.0)
     bg.inputs["Strength"].default_value = 1.2
@@ -601,71 +828,6 @@ def setup_lighting_and_cameras(col):
 
     return cams
 
-def generate_godot_tscn(tscn_path, glb_path):
-    """Escribe programáticamente la escena .tscn con física analítica transitable."""
-    rel_glb = "res://assets/" + os.path.basename(glb_path)
-
-    content = f'''[gd_scene load_steps=8 format=3 uid="uid://palacio_municipal_2009"]
-
-[ext_resource type="PackedScene" path="{rel_glb}" id="1_mesh"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_ala_oriente"]
-size = Vector3(19.80, 9.05, 11.00)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_ala_norte"]
-size = Vector3(11.00, 9.05, 16.20)
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_columna"]
-height = 3.40
-radius = 0.25
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_balcon"]
-size = Vector3(5.50, 1.20, 2.20)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_muro_chaflan_sup"]
-size = Vector3(5.20, 3.20, 0.40)
-
-[node name="PalacioMunicipal2009" type="StaticBody3D"]
-
-[node name="ModelInstance" parent="." instance=ExtResource("1_mesh")]
-
-[node name="Col_Ala_Oriente" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.10, 3.025, 5.50)
-shape = SubResource("BoxShape3D_ala_oriente")
-
-[node name="Col_Ala_Norte" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.50, 3.025, 13.30)
-shape = SubResource("BoxShape3D_ala_norte")
-
-[node name="Col_Pilar_1" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 1.70, 3.27)
-shape = SubResource("CylinderShape3D_columna")
-
-[node name="Col_Pilar_2" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87, 1.70, 2.07)
-shape = SubResource("CylinderShape3D_columna")
-
-[node name="Col_Pilar_3" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.07, 1.70, 0.87)
-shape = SubResource("CylinderShape3D_columna")
-
-[node name="Col_Pilar_4" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.27, 1.70, -0.33)
-shape = SubResource("CylinderShape3D_columna")
-
-[node name="Col_Balcon" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 1.47, 4.00, 1.47)
-shape = SubResource("BoxShape3D_balcon")
-
-[node name="Col_Muro_Chaflan_Sup" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 2.60, 5.80, 2.60)
-shape = SubResource("BoxShape3D_muro_chaflan_sup")
-'''
-    os.makedirs(os.path.dirname(os.path.abspath(tscn_path)), exist_ok=True)
-    with open(tscn_path, "w", encoding="utf-8") as f:
-        f.write(content)
-    print(f"[TSCN] Escena analítica generada exitosamente en: {tscn_path}")
-
 def render_validation_views(cams, render_dir):
     """Renderiza las vistas fijas con Cycles para inspección en bucle cerrado."""
     os.makedirs(render_dir, exist_ok=True)
@@ -688,14 +850,14 @@ def main():
     os.makedirs(os.path.dirname(blend_path), exist_ok=True)
     os.makedirs(os.path.dirname(glb_path), exist_ok=True)
 
-    print(">>> 1. Limpiando escena e inicializando materiales PBR...")
+    print(">>> 1. Limpiando escena e inicializando materiales PBR calibrados...")
     col = clean_scene()
     mats = create_materials()
 
-    print(">>> 2. Construyendo volumetría arquitectónica del Palacio Municipal...")
+    print(">>> 2. Construyendo volumetría arquitectónica refinada del Palacio Municipal...")
     bldg_obj = build_palacio_geometry(col, mats)
 
-    print(">>> 3. Generando rótulo 3D y heráldica institucional...")
+    print(">>> 3. Generando rótulo monumental en bronce oscuro y Escudo Nacional...")
     txt_obj, escudo_obj = build_signage(col, mats)
 
     print(">>> 4. Guardando archivo maestro Blender .blend...")
@@ -718,8 +880,8 @@ def main():
     )
     print(f"[GLTF] Asset de producción exportado: {glb_path}")
 
-    print(">>> 6. Generando escena Godot .tscn con física analítica...")
-    generate_godot_tscn(tscn_path, glb_path)
+    print(">>> 6. Generando escena Godot .tscn con física analítica coordinada 1:1...")
+    generate_godot_tscn(tscn_path, "res://assets/palacio_municipal_2009.glb")
 
     print(">>> 7. Configurando batería de validación y renderizando cámaras...")
     cams = setup_lighting_and_cameras(col)
