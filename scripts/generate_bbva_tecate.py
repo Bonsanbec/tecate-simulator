@@ -40,41 +40,42 @@ def create_materials():
     """Crea la paleta PBR arquitectónica completa para la época 2009."""
     mats = {}
     
-    # 1. Torreón Guajardo: Mosaico Vítreo / Piedra Meteorizada (#252B3E)
+    # 1. Torreón Guajardo: Mosaico Vítreo / Piedra Meteorizada Violeta-Gris Desgastada
     mat_mosaico = bpy.data.materials.new(name="M_Guajardo_Mosaico")
     mat_mosaico.use_nodes = True
     nodes_m = mat_mosaico.node_tree.nodes
     links_m = mat_mosaico.node_tree.links
     bsdf_m = nodes_m.get("Principled BSDF")
     if bsdf_m:
-        bsdf_m.inputs["Base Color"].default_value = (0.022, 0.028, 0.058, 1.0)
-        bsdf_m.inputs["Metallic"].default_value = 0.05
-        bsdf_m.inputs["Roughness"].default_value = 0.55
+        # Tono violeta-grisáceo pizarra desgastado por la intemperie (Ground Truth media_1789777326353)
+        bsdf_m.inputs["Base Color"].default_value = (0.16, 0.15, 0.19, 1.0)
+        bsdf_m.inputs["Metallic"].default_value = 0.02
+        bsdf_m.inputs["Roughness"].default_value = 0.75
         tex_vor = nodes_m.new('ShaderNodeTexVoronoi')
         tex_vor.inputs['Scale'].default_value = 140.0
         bump_node = nodes_m.new('ShaderNodeBump')
-        bump_node.inputs['Strength'].default_value = 0.45
+        bump_node.inputs['Strength'].default_value = 0.35
         links_m.new(tex_vor.outputs['Distance'], bump_node.inputs['Height'])
         links_m.new(bump_node.outputs['Normal'], bsdf_m.inputs['Normal'])
     mats["mosaico_guajardo"] = mat_mosaico
 
-    # Remate de piedra desgastada en la cúspide del torreón
+    # Remate de piedra desgastada en la cúspide del torreón (coping)
     mat_coping = bpy.data.materials.new(name="M_Guajardo_Coping")
     mat_coping.use_nodes = True
     bsdf_cp = mat_coping.node_tree.nodes.get("Principled BSDF")
     if bsdf_cp:
-        bsdf_cp.inputs["Base Color"].default_value = (0.018, 0.020, 0.025, 1.0)
-        bsdf_cp.inputs["Roughness"].default_value = 0.85
+        bsdf_cp.inputs["Base Color"].default_value = (0.32, 0.31, 0.30, 1.0)
+        bsdf_cp.inputs["Roughness"].default_value = 0.80
     mats["coping_rocoso"] = mat_coping
 
-    # 2. Rótulo de Bronce Dorado Guajardo (#D4AF37)
+    # 2. Rótulo de Bronce Fundido Guajardo (Latón/Bronce con pátina dorada clara y legible)
     mat_bronce = bpy.data.materials.new(name="M_Guajardo_Bronce")
     mat_bronce.use_nodes = True
     bsdf_b = mat_bronce.node_tree.nodes.get("Principled BSDF")
     if bsdf_b:
-        bsdf_b.inputs["Base Color"].default_value = (0.68, 0.50, 0.16, 1.0)
-        bsdf_b.inputs["Metallic"].default_value = 0.90
-        bsdf_b.inputs["Roughness"].default_value = 0.25
+        bsdf_b.inputs["Base Color"].default_value = (0.85, 0.70, 0.22, 1.0)
+        bsdf_b.inputs["Metallic"].default_value = 0.85
+        bsdf_b.inputs["Roughness"].default_value = 0.20
     mats["bronce"] = mat_bronce
 
     # 3. Fascia y Espectacular 2009: Azul Cobalto BBVA Bancomer (#00288E)
@@ -106,7 +107,7 @@ def create_materials():
         bsdf_sil.inputs["Roughness"].default_value = 0.30
     mats["fascia_silver"] = mat_silver
 
-    # Letrero DENTISTA (Azul oscuro comercial #0C1635)
+    # Letrero DENTISTA (Azul marino oscuro comercial #0C1635)
     mat_dent = bpy.data.materials.new(name="M_Letrero_Dentista")
     mat_dent.use_nodes = True
     bsdf_dn = mat_dent.node_tree.nodes.get("Principled BSDF")
@@ -114,6 +115,61 @@ def create_materials():
         bsdf_dn.inputs["Base Color"].default_value = (0.008, 0.015, 0.045, 1.0)
         bsdf_dn.inputs["Roughness"].default_value = 0.35
     mats["letrero_dentista"] = mat_dent
+
+    # Letras 3D DENTISTA en relieve (Oro/latón dorado brillante, Ground Truth media_1789778345732)
+    mat_oro = bpy.data.materials.new(name="M_Dentista_Oro")
+    mat_oro.use_nodes = True
+    bsdf_oro = mat_oro.node_tree.nodes.get("Principled BSDF")
+    if bsdf_oro:
+        bsdf_oro.inputs["Base Color"].default_value = (0.88, 0.72, 0.28, 1.0)
+        bsdf_oro.inputs["Metallic"].default_value = 0.85
+        bsdf_oro.inputs["Roughness"].default_value = 0.22
+    mats["oro_letras"] = mat_oro
+
+    # Texto rojo secundario rótulo colgante Dr. Álvarez
+    mat_rojo_txt = bpy.data.materials.new(name="M_Dentista_Txt_Rojo")
+    mat_rojo_txt.use_nodes = True
+    bsdf_rt = mat_rojo_txt.node_tree.nodes.get("Principled BSDF")
+    if bsdf_rt:
+        bsdf_rt.inputs["Base Color"].default_value = (0.65, 0.05, 0.05, 1.0)
+        bsdf_rt.inputs["Roughness"].default_value = 0.30
+    mats["rojo_letras"] = mat_rojo_txt
+
+    # Póster institucional Bancomer en PB (Crujía 2)
+    mat_pos = bpy.data.materials.new(name="M_Bancomer_Poster")
+    mat_pos.use_nodes = True
+    bsdf_pos = mat_pos.node_tree.nodes.get("Principled BSDF")
+    if bsdf_pos:
+        bsdf_pos.inputs["Base Color"].default_value = (0.012, 0.045, 0.280, 1.0)
+        bsdf_pos.inputs["Roughness"].default_value = 0.30
+    mats["poster_azul"] = mat_pos
+
+    # Concreto peldaños escalera Dentista
+    mat_esc = bpy.data.materials.new(name="M_Escalera_Concreto")
+    mat_esc.use_nodes = True
+    bsdf_esc = mat_esc.node_tree.nodes.get("Principled BSDF")
+    if bsdf_esc:
+        bsdf_esc.inputs["Base Color"].default_value = (0.55, 0.53, 0.50, 1.0)
+        bsdf_esc.inputs["Roughness"].default_value = 0.85
+    mats["escalera_dentista"] = mat_esc
+
+    # Muros interiores zaguán Dentista (crema cálido)
+    mat_hall = bpy.data.materials.new(name="M_Hall_Dentista")
+    mat_hall.use_nodes = True
+    bsdf_hl = mat_hall.node_tree.nodes.get("Principled BSDF")
+    if bsdf_hl:
+        bsdf_hl.inputs["Base Color"].default_value = (0.80, 0.77, 0.70, 1.0)
+        bsdf_hl.inputs["Roughness"].default_value = 0.85
+    mats["interior_hall"] = mat_hall
+
+    # Bolardo amarillo de estacionamiento
+    mat_bol = bpy.data.materials.new(name="M_Bolardo_Amarillo")
+    mat_bol.use_nodes = True
+    bsdf_bol = mat_bol.node_tree.nodes.get("Principled BSDF")
+    if bsdf_bol:
+        bsdf_bol.inputs["Base Color"].default_value = (0.90, 0.75, 0.05, 1.0)
+        bsdf_bol.inputs["Roughness"].default_value = 0.40
+    mats["bolardo_amarillo"] = mat_bol
 
     # 5. Caja de Luz Cajero Automático Exterior (#001C58)
     mat_atm_box = bpy.data.materials.new(name="M_ATM_Caja_Azul")
@@ -366,19 +422,25 @@ def build_45deg_guajardo_corner(mats, col):
     add_wall_segment(bm_tower, -0.42, 4.22, 4.22, -0.42, 2.90, 3.20, thickness=0.50)
     
     # 4. Planta baja del chaflán: Acceso principal con puertas dobles
-    # Muros laterales de planta baja con zócalo
+    # Muros laterales de planta baja con zócalo (estucados en blanco, Ground Truth media_1789777326353)
     add_wall_segment(bm_tower, -0.40, 4.20, 1.05, 2.75, 0.0, 2.90, thickness=0.45)
     add_wall_segment(bm_tower, 2.75, 1.05, 4.20, -0.40, 0.0, 2.90, thickness=0.45)
     
-    # Cancelería de aluminio
-    add_wall_segment(bm_tower, 1.05, 2.75, 2.75, 1.05, 0.0, 0.08, thickness=0.12)
-    add_wall_segment(bm_tower, 1.05, 2.75, 2.75, 1.05, 2.82, 2.90, thickness=0.12)
-    add_wall_segment(bm_tower, 1.05, 2.75, 1.12, 2.68, 0.0, 2.90, thickness=0.12)
-    add_wall_segment(bm_tower, 2.68, 1.12, 2.75, 1.05, 0.0, 2.90, thickness=0.12)
-    add_wall_segment(bm_tower, 1.86, 1.94, 1.94, 1.86, 0.0, 2.90, thickness=0.12)
+    # Cancelería de aluminio anodizado brillante
+    add_wall_segment(bm_tower, 1.05, 2.75, 2.75, 1.05, 0.0, 0.08, thickness=0.12) # Umbral
+    add_wall_segment(bm_tower, 1.05, 2.75, 2.75, 1.05, 2.82, 2.90, thickness=0.12) # Dintel cancelería
+    add_wall_segment(bm_tower, 1.05, 2.75, 2.75, 1.05, 2.12, 2.18, thickness=0.12) # Travesaño montante
+    add_wall_segment(bm_tower, 1.05, 2.75, 1.12, 2.68, 0.0, 2.90, thickness=0.12) # Jamba izquierda
+    add_wall_segment(bm_tower, 2.68, 1.12, 2.75, 1.05, 0.0, 2.90, thickness=0.12) # Jamba derecha
+    add_wall_segment(bm_tower, 1.86, 1.94, 1.94, 1.86, 0.0, 2.15, thickness=0.12) # Parteluz central
     
-    # Puertas dobles de vidrio
-    add_wall_segment(bm_glass, 1.12, 2.68, 2.68, 1.12, 0.08, 2.82, thickness=0.02)
+    # Jaladeras tubulares de aluminio (push/pull handles)
+    add_wall_segment(bm_tower, 1.80, 1.92, 1.84, 1.88, 0.90, 1.25, thickness=0.04)
+    add_wall_segment(bm_tower, 1.96, 1.76, 2.00, 1.72, 0.90, 1.25, thickness=0.04)
+    
+    # Puertas dobles de vidrio templado y montante superior
+    add_wall_segment(bm_glass, 1.12, 2.68, 2.68, 1.12, 0.08, 2.12, thickness=0.02) # Hojas inferiores
+    add_wall_segment(bm_glass, 1.12, 2.68, 2.68, 1.12, 2.18, 2.82, thickness=0.02) # Montante superior
     
     # Asignar materiales
     bmesh.ops.recalc_face_normals(bm_tower, faces=bm_tower.faces)
@@ -389,7 +451,7 @@ def build_45deg_guajardo_corner(mats, col):
     col.objects.link(obj_tower)
     obj_tower.data.materials.append(mats["mosaico_guajardo"]) # 0
     obj_tower.data.materials.append(mats["coping_rocoso"])    # 1 (remate rocoso)
-    obj_tower.data.materials.append(mats["muro"])             # 2 (muro/dintel)
+    obj_tower.data.materials.append(mats["muro"])             # 2 (muro/dintel blanco)
     obj_tower.data.materials.append(mats["zocalo"])           # 3 (zócalo basal)
     obj_tower.data.materials.append(mats["aluminio"])         # 4 (cancelería)
     
@@ -402,13 +464,17 @@ def build_45deg_guajardo_corner(mats, col):
         elif c_z >= H_tower - 0.02:
             p.material_index = 1 # Remate rocoso desgastado
         elif c_z >= 2.88 and c_z <= 3.22:
-            p.material_index = 2 # Dintel
+            p.material_index = 2 # Dintel estucado blanco
         elif c_z < 2.90:
-            p.material_index = 4 # Cancelería
+            # Los muros laterales a los costados del vano son estucados blancos
+            if abs(c_x - c_y) > 0.90:
+                p.material_index = 2 # Muro lateral blanco
+            else:
+                p.material_index = 4 # Cancelería de aluminio
         elif c_x > 4.10 or c_y > 4.10:
             p.material_index = 2 # Retornos laterales estucados
         else:
-            p.material_index = 0 # Mosaico vítreo añil
+            p.material_index = 0 # Mosaico vítreo pizarra meteorizada
             
     bmesh.ops.recalc_face_normals(bm_glass, faces=bm_glass.faces)
     m_g = bpy.data.meshes.new("Mesh_Guajardo_Vidrio")
@@ -448,7 +514,7 @@ def build_45deg_guajardo_corner(mats, col):
     bm_white_panel = bmesh.new()
     
     # Columna estructural central gruesa
-    add_box(bm_steel, 1.75, 2.05, 1.75, 2.05, H_tower, 10.30)
+    add_box(bm_steel, 1.75, 2.05, 1.75, 2.05, H_tower, 9.95)
     bmesh.ops.recalc_face_normals(bm_steel, faces=bm_steel.faces)
     m_st = bpy.data.meshes.new("Mesh_Totem_Acero")
     bm_steel.to_mesh(m_st)
@@ -458,7 +524,7 @@ def build_45deg_guajardo_corner(mats, col):
     obj_steel.data.materials.append(mats["acero"])
     
     # Caja de luz: panel superior azul cobalto 2009 (BBVA Bancomer)
-    add_box(bm_blue, -1.80, 1.80, -0.16, 0.16, 11.00, 12.65)
+    add_box(bm_blue, -1.80, 1.80, -0.16, 0.16, 10.65, 12.30)
     bmesh.ops.recalc_face_normals(bm_blue, faces=bm_blue.faces)
     m_b = bpy.data.meshes.new("Mesh_Totem_Azul")
     bm_blue.to_mesh(m_b)
@@ -470,7 +536,7 @@ def build_45deg_guajardo_corner(mats, col):
     obj_blue.data.materials.append(mats["fascia"])
 
     # Recuadro blanco BBVA 2009 centrado en la parte superior
-    add_box(bm_white_sq, -0.70, 0.70, -0.17, 0.17, 11.85, 12.55)
+    add_box(bm_white_sq, -0.70, 0.70, -0.17, 0.17, 11.50, 12.20)
     bmesh.ops.recalc_face_normals(bm_white_sq, faces=bm_white_sq.faces)
     m_wsq = bpy.data.meshes.new("Mesh_Totem_Recuadro_Blanco")
     bm_white_sq.to_mesh(m_wsq)
@@ -482,7 +548,7 @@ def build_45deg_guajardo_corner(mats, col):
     obj_wsq.data.materials.append(mats["rotulo_blanco"])
 
     # Panel inferior blanco (Cajero Automático / RED)
-    add_box(bm_white_panel, -1.80, 1.80, -0.16, 0.16, 9.85, 11.00)
+    add_box(bm_white_panel, -1.80, 1.80, -0.16, 0.16, 9.50, 10.65)
     bmesh.ops.recalc_face_normals(bm_white_panel, faces=bm_white_panel.faces)
     m_w = bpy.data.meshes.new("Mesh_Totem_Blanco")
     bm_white_panel.to_mesh(m_w)
@@ -505,7 +571,7 @@ def build_45deg_guajardo_corner(mats, col):
     f_b1.align_x = 'CENTER'
     o_b1 = bpy.data.objects.new("Totem_Txt_BBVA_Azul", f_b1)
     col.objects.link(o_b1)
-    o_b1.location = (x_t - 0.015*0.7071, y_t - 0.015*0.7071, 12.00)
+    o_b1.location = (x_t - 0.015*0.7071, y_t - 0.015*0.7071, 11.65)
     o_b1.rotation_euler = (math.radians(90.0), 0.0, math.radians(-45.0))
     o_b1.data.materials.append(mats["bbva_azul"])
 
@@ -517,7 +583,7 @@ def build_45deg_guajardo_corner(mats, col):
     f_b2.align_x = 'CENTER'
     o_b2 = bpy.data.objects.new("Totem_Txt_Bancomer_Blanco", f_b2)
     col.objects.link(o_b2)
-    o_b2.location = (x_t, y_t, 11.25)
+    o_b2.location = (x_t, y_t, 10.90)
     o_b2.rotation_euler = (math.radians(90.0), 0.0, math.radians(-45.0))
     o_b2.data.materials.append(mats["rotulo_blanco"])
 
@@ -530,7 +596,7 @@ def build_45deg_guajardo_corner(mats, col):
     f_red.align_x = 'CENTER'
     o_red = bpy.data.objects.new("Totem_Txt_RED", f_red)
     col.objects.link(o_red)
-    o_red.location = (x_t - 0.85*0.7071, y_t + 0.85*0.7071, 10.35)
+    o_red.location = (x_t - 0.85*0.7071, y_t + 0.85*0.7071, 10.00)
     o_red.rotation_euler = (math.radians(90.0), 0.0, math.radians(-45.0))
     o_red.data.materials.append(mats["red_logo"])
 
@@ -542,7 +608,7 @@ def build_45deg_guajardo_corner(mats, col):
     f_b3.align_x = 'CENTER'
     o_b3 = bpy.data.objects.new("Totem_Txt_ATM_Verde", f_b3)
     col.objects.link(o_b3)
-    o_b3.location = (x_t + 0.50*0.7071, y_t - 0.50*0.7071, 10.55)
+    o_b3.location = (x_t + 0.50*0.7071, y_t - 0.50*0.7071, 10.20)
     o_b3.rotation_euler = (math.radians(90.0), 0.0, math.radians(-45.0))
     o_b3.data.materials.append(mats["cajero_verde"])
 
@@ -802,40 +868,50 @@ def build_south_facade_juarez(mats, col):
     return obj_struct, obj_alum, obj_glass, obj_blind, [obj_fascia, obj_stripe, obj_rec, o_bbva, o_bancomer], [o_d1, o_d2], obj_tejas
 
 def build_west_facade_cardenas(mats, col):
-    """Construye la Fachada Oeste continua hasta DENTISTA (longitud 27.20 m) según Ground Truth media_1789774670397."""
+    """Construye la Fachada Oeste continua de 6 crujías hasta DENTISTA (longitud 30.00 m) según Ground Truth media_1789778253725 y media_1789778345732."""
     bm_struct = bmesh.new()
     bm_alum = bmesh.new()
     bm_glass = bmesh.new()
     bm_blind = bmesh.new()
     bm_corbels = bmesh.new()
+    bm_dent_stair = bmesh.new()
+    bm_dent_canopy = bmesh.new()
+    bm_dent_mosaic = bmesh.new()
     
     Y_start = 4.20
-    Y_end = 27.20   # <-- EDIFICIO UNO CONTINUO HASTA DENTISTA
+    Y_end = 29.40   # 6 crujías de 4.20 m: 4.20 a 29.40 m
+    Y_max = 30.00   # Con machón norte
     H_wall = 7.10
     
     # 1. Plinto basal continuo (Z = 0.0 a 0.40)
-    add_box(bm_struct, -0.05, 0.40, Y_start, Y_end, 0.0, 0.40)
+    # Excluye el vano de la escalera de Dentista en [25.80, 28.20]
+    add_box(bm_struct, -0.05, 0.40, Y_start, 25.80, 0.0, 0.40)
+    add_box(bm_struct, -0.05, 0.40, 28.20, Y_max, 0.0, 0.40)
     
-    # 2. Machones / Pilastras verticales a lo largo de toda la fachada continua
-    # 6 machones principales que delimitan las 5 crujías
-    col_y = [4.20, 8.80, 13.40, 18.00, 22.60, 27.20]
+    # 2. Machones / Pilastras verticales a lo largo de las 6 crujías
+    # 7 machones: 6 delimitan las 5 crujías + machón 7 de remate norte
+    col_y = [4.20, 8.40, 12.60, 16.80, 21.00, 25.20]
     for cy in col_y:
         add_box(bm_struct, -0.04, 0.35, cy, cy + 0.60, 0.40, H_wall)
         
-    # Muros rehundidos
-    add_box(bm_struct, 0.02, 0.30, Y_start, Y_end, 3.20, 3.30)
-    add_box(bm_struct, 0.02, 0.30, Y_start, Y_end, 4.30, 5.10)
-    add_box(bm_struct, 0.02, 0.30, Y_start, Y_end, 6.75, H_wall)
+    # Machón norte de remate (Y = 29.40 a 30.00): Recubierto de mosaico vítreo oscuro (Ground Truth media_1789778345732)
+    add_box(bm_dent_mosaic, -0.05, 0.40, 29.40, Y_max, 0.0, H_wall)
     
-    # Muro medianero norte que cierra el inmueble (Y = 27.20)
-    add_box(bm_struct, -0.05, 16.0, Y_end, Y_end + 0.30, 0.0, H_wall)
+    # Muros rehundidos horizontales
+    add_box(bm_struct, 0.02, 0.30, Y_start, Y_max, 3.20, 3.30)
+    add_box(bm_struct, 0.02, 0.30, Y_start, Y_max, 4.30, 5.10)
+    add_box(bm_struct, 0.02, 0.30, Y_start, Y_max, 6.75, H_wall)
     
-    # Cornisa corrida blanca a lo largo de los 27.20 metros
-    add_box(bm_struct, -0.20, 0.40, Y_start, Y_end + 0.20, 7.10, 7.25)
-    add_box(bm_struct, -0.40, 0.85, Y_start, Y_end + 0.20, 7.25, 7.45)
+    # Muro medianero norte que cierra el inmueble (Y = 30.00)
+    add_box(bm_struct, -0.05, 16.0, Y_max, Y_max + 0.30, 0.0, H_wall)
     
-    # 3. Ménsulas / Canecillos de concreto en voladizo (Corbels) continuos
-    for cy in col_y:
+    # Cornisa corrida blanca a lo largo de los 30 metros
+    add_box(bm_struct, -0.20, 0.40, Y_start, Y_max + 0.20, 7.10, 7.25)
+    add_box(bm_struct, -0.40, 0.85, Y_start, Y_max + 0.20, 7.25, 7.45)
+    
+    # 3. Ménsulas / Canecillos de concreto en voladizo (Corbels) en los 7 machones
+    all_col_y = [4.20, 8.40, 12.60, 16.80, 21.00, 25.20, 29.40]
+    for cy in all_col_y:
         c_mid = cy + 0.30
         add_box(bm_corbels, -0.36, 0.02, c_mid - 0.12, c_mid + 0.12, 6.65, 7.25)
         add_box(bm_corbels, -0.26, 0.02, c_mid - 0.09, c_mid + 0.09, 6.45, 6.65)
@@ -848,43 +924,76 @@ def build_west_facade_cardenas(mats, col):
     col.objects.link(obj_corbels)
     obj_corbels.data.materials.append(mats["muro"])
 
-    # 4. Cancelería de las 5 crujías en Calle Cárdenas
+    # 4. Cancelería de las 6 crujías en Calle Cárdenas
     bays_y = [
-        (4.80, 8.80),    # Crujía 5 (Esquina Bancaria)
-        (9.40, 13.40),   # Crujía 4 (Banco con póster Bancomer)
-        (14.00, 18.00),  # Crujía 3 (Acceso a Cajero Automático Exterior)
-        (18.60, 22.60),  # Crujía 2 (Despachos transición)
-        (23.20, 27.20)   # Crujía 1 (Acceso y Despacho DENTISTA)
+        (4.80, 8.40),    # Crujía 1 (Banco Esquina)
+        (9.00, 12.60),   # Crujía 2 (Banco con póster Bancomer)
+        (13.20, 16.80),  # Crujía 3 (Banco Centro-Norte / Despacho Contable)
+        (17.40, 21.00),  # Crujía 4 (Banco Norte con Acceso a Cajero Automático)
+        (21.60, 25.20),  # Crujía 5 (Oficinas Dentista con fascia gris)
+        (25.80, 29.40)   # Crujía 6 (Acceso DENTISTA con zaguán, escalera y marquesina)
     ]
     
+    # Objetos y elementos de rotulación a compilar
+    text_objs = []
+    
     for idx, (y1, y2) in enumerate(bays_y):
-        # Planta Baja
         w_f = 0.05
-        if idx == 2:
-            # Crujía 3: Portal de Cajero Automático Exterior
-            # Puerta acristalada en y = [14.10, 15.60], ventana en [15.70, 17.90]
-            # Marco de puerta
-            add_box(bm_alum, 0.04, 0.14, 14.10, 15.60, 0.40, 0.46)
-            add_box(bm_alum, 0.04, 0.14, 14.10, 15.60, 2.70, 2.76)
-            add_box(bm_alum, 0.04, 0.14, 14.10, 14.16, 0.40, 2.76)
-            add_box(bm_alum, 0.04, 0.14, 15.54, 15.60, 0.40, 2.76)
-            add_box(bm_glass, 0.08, 0.09, 14.16, 15.54, 0.46, 2.70)
+        # Planta Baja
+        if idx == 3:
+            # Crujía 4: PORTAL DE ACCESO A CAJERO AUTOMÁTICO (Ground Truth media_1789778253725)
+            # Puerta acristalada en y = [17.60, 19.10]
+            add_box(bm_alum, 0.04, 0.14, 17.60, 19.10, 0.40, 0.46)
+            add_box(bm_alum, 0.04, 0.14, 17.60, 19.10, 2.70, 2.76)
+            add_box(bm_alum, 0.04, 0.14, 17.60, 17.66, 0.40, 2.76)
+            add_box(bm_alum, 0.04, 0.14, 19.04, 19.10, 0.40, 2.76)
+            add_box(bm_glass, 0.08, 0.09, 17.66, 19.04, 0.46, 2.70)
+            # Jaladera tubular de la puerta
+            add_box(bm_alum, -0.02, 0.06, 18.90, 18.94, 1.00, 1.40)
             
-            # Ventana lateral con persianas
-            add_box(bm_alum, 0.04, 0.12, 15.70, 18.00, 0.40, 0.45)
-            add_box(bm_alum, 0.04, 0.12, 15.70, 18.00, 3.15, 3.20)
-            add_box(bm_alum, 0.04, 0.12, 15.70, 15.75, 0.40, 3.20)
-            add_box(bm_alum, 0.04, 0.12, 17.95, 18.00, 0.40, 3.20)
-            add_box(bm_glass, 0.075, 0.085, 15.75, 17.95, 0.45, 3.15)
-            add_box(bm_blind, 0.135, 0.145, 15.75, 17.95, 0.45, 3.15)
-        elif idx == 4:
-            # Crujía 1: Entrada DENTISTA (escalón y puerta comercial)
-            add_box(bm_alum, 0.04, 0.14, 23.20, 24.60, 0.40, 2.80)
-            add_box(bm_glass, 0.08, 0.09, 23.25, 24.55, 0.45, 2.75)
-            add_box(bm_alum, 0.04, 0.12, 24.70, 27.20, 0.40, 3.20)
-            add_box(bm_glass, 0.075, 0.085, 24.75, 27.15, 0.45, 3.15)
-            add_box(bm_blind, 0.135, 0.145, 24.75, 27.15, 0.45, 3.15)
-        else:
+            # Ventana lateral izquierda con persianas en y = [19.20, 21.00]
+            add_box(bm_alum, 0.04, 0.12, 19.20, 21.00, 0.40, 0.45)
+            add_box(bm_alum, 0.04, 0.12, 19.20, 21.00, 3.15, 3.20)
+            add_box(bm_alum, 0.04, 0.12, 19.20, 19.25, 0.40, 3.20)
+            add_box(bm_alum, 0.04, 0.12, 20.95, 21.00, 0.40, 3.20)
+            step_4 = (21.00 - 19.20) / 2.0
+            add_box(bm_alum, 0.04, 0.12, 19.20 + step_4 - 0.02, 19.20 + step_4 + 0.02, 0.40, 3.20)
+            add_box(bm_glass, 0.075, 0.085, 19.25, 20.95, 0.45, 3.15)
+            add_box(bm_blind, 0.135, 0.145, 19.25, 20.95, 0.45, 3.15)
+            
+        elif idx == 5:
+            # Crujía 6: ACCESO DENTISTA (Ground Truth media_1789778345732)
+            # Zaguán rehundido hacia el interior (X = 0.0 a 3.20, Y = [25.80, 28.20])
+            # Escalera de 4 peldaños de concreto
+            stair_w = (25.85, 28.15)
+            # Escalón 1
+            add_box(bm_dent_stair, 0.20, 3.20, stair_w[0], stair_w[1], 0.0, 0.18)
+            # Escalón 2
+            add_box(bm_dent_stair, 0.60, 3.20, stair_w[0], stair_w[1], 0.18, 0.36)
+            # Escalón 3
+            add_box(bm_dent_stair, 1.00, 3.20, stair_w[0], stair_w[1], 0.36, 0.54)
+            # Escalón 4 / Rellano
+            add_box(bm_dent_stair, 1.40, 3.20, stair_w[0], stair_w[1], 0.54, 0.72)
+            
+            # Muros interiores del zaguán
+            add_box(bm_dent_stair, 0.0, 3.20, 25.75, 25.85, 0.0, 3.20) # Muro sur zaguán
+            add_box(bm_dent_stair, 0.0, 3.20, 28.15, 28.25, 0.0, 3.20) # Muro norte zaguán
+            add_box(bm_dent_stair, 0.0, 3.20, 25.75, 28.25, 3.20, 3.30) # Techo falso zaguán
+            
+            # Puerta acristalada interior al fondo del zaguán (X = 3.15, Y = [26.40, 27.80])
+            add_box(bm_alum, 3.12, 3.18, 26.40, 27.80, 0.72, 2.72)
+            add_box(bm_glass, 3.14, 3.16, 26.46, 27.74, 0.78, 2.66)
+            
+            # Ventanal lateral exterior a la derecha del acceso: Y in [28.25, 29.35]
+            add_box(bm_alum, 0.04, 0.12, 28.25, 29.35, 0.40, 0.45)
+            add_box(bm_alum, 0.04, 0.12, 28.25, 29.35, 3.15, 3.20)
+            add_box(bm_alum, 0.04, 0.12, 28.25, 28.30, 0.40, 3.20)
+            add_box(bm_alum, 0.04, 0.12, 29.30, 29.35, 0.40, 3.20)
+            add_box(bm_glass, 0.075, 0.085, 28.30, 29.30, 0.45, 3.15)
+            add_box(bm_blind, 0.135, 0.145, 28.30, 29.30, 0.45, 3.15)
+            
+        elif idx == 1:
+            # Crujía 2: Banco con póster institucional Bancomer
             add_box(bm_alum, 0.04, 0.12, y1, y1 + w_f, 0.40, 3.20)
             add_box(bm_alum, 0.04, 0.12, y2 - w_f, y2, 0.40, 3.20)
             add_box(bm_alum, 0.04, 0.12, y1, y2, 0.40, 0.40 + w_f)
@@ -894,16 +1003,33 @@ def build_west_facade_cardenas(mats, col):
             add_box(bm_alum, 0.04, 0.12, y1 + 2*step - 0.025, y1 + 2*step + 0.025, 0.40, 3.20)
             add_box(bm_glass, 0.075, 0.085, y1 + w_f, y2 - w_f, 0.40 + w_f, 3.20 - w_f)
             add_box(bm_blind, 0.135, 0.145, y1 + w_f, y2 - w_f, 0.42, 3.18)
+            # Marco de póster publicitario Bancomer en vidrio
+            add_box(bm_dent_canopy, -0.06, 0.02, 10.20, 11.40, 1.20, 2.20)
+        else:
+            # Crujías 1, 3 y 5: Cristaleras estándar
+            n_divs_pb = 2 if idx == 4 else 3
+            add_box(bm_alum, 0.04, 0.12, y1, y1 + w_f, 0.40, 3.20)
+            add_box(bm_alum, 0.04, 0.12, y2 - w_f, y2, 0.40, 3.20)
+            add_box(bm_alum, 0.04, 0.12, y1, y2, 0.40, 0.40 + w_f)
+            add_box(bm_alum, 0.04, 0.12, y1, y2, 3.20 - w_f, 3.20)
+            step = (y2 - y1) / float(n_divs_pb)
+            for d in range(1, n_divs_pb):
+                mx_pb = y1 + d * step
+                add_box(bm_alum, 0.04, 0.12, mx_pb - 0.025, mx_pb + 0.025, 0.40, 3.20)
+            add_box(bm_glass, 0.075, 0.085, y1 + w_f, y2 - w_f, 0.40 + w_f, 3.20 - w_f)
+            add_box(bm_blind, 0.135, 0.145, y1 + w_f, y2 - w_f, 0.42, 3.18)
         
-        # Planta Alta (2 hojas amplias con montante)
+        # Planta Alta (2 hojas amplias con montante horizontal en Z = 6.25)
         w_f2 = 0.04
         add_box(bm_alum, 0.04, 0.10, y1, y1 + w_f2, 5.10, 6.75)
         add_box(bm_alum, 0.04, 0.10, y2 - w_f2, y2, 5.10, 6.75)
         add_box(bm_alum, 0.04, 0.10, y1, y2, 5.10, 5.10 + w_f2)
         add_box(bm_alum, 0.04, 0.10, y1, y2, 6.75 - w_f2, 6.75)
+        add_box(bm_alum, 0.04, 0.10, y1, y2, 6.25, 6.28) # Montante horizontal
         my = (y1 + y2) * 0.5
         add_box(bm_alum, 0.04, 0.10, my - 0.025, my + 0.025, 5.10, 6.75)
         add_box(bm_glass, 0.065, 0.075, y1 + w_f2, y2 - w_f2, 5.10 + w_f2, 6.75 - w_f2)
+        add_box(bm_blind, 0.120, 0.130, y1 + w_f2, y2 - w_f2, 5.12, 6.73)
 
     # Convertir a objetos
     bmesh.ops.recalc_face_normals(bm_struct, faces=bm_struct.faces)
@@ -920,6 +1046,32 @@ def build_west_facade_cardenas(mats, col):
         else:
             p.material_index = 0
 
+    # Machón norte con mosaico
+    bmesh.ops.recalc_face_normals(bm_dent_mosaic, faces=bm_dent_mosaic.faces)
+    m_dm = bpy.data.meshes.new("Mesh_Dentista_Columna_Mosaico")
+    bm_dent_mosaic.to_mesh(m_dm)
+    bm_dent_mosaic.free()
+    obj_mosaic_col = bpy.data.objects.new("Dentista_Columna_Mosaico", m_dm)
+    col.objects.link(obj_mosaic_col)
+    obj_mosaic_col.data.materials.append(mats["mosaico_guajardo"])
+
+    # Escalera y zaguán de Dentista
+    bmesh.ops.recalc_face_normals(bm_dent_stair, faces=bm_dent_stair.faces)
+    m_ds = bpy.data.meshes.new("Mesh_Dentista_Escalera")
+    bm_dent_stair.to_mesh(m_ds)
+    bm_dent_stair.free()
+    obj_stair = bpy.data.objects.new("Dentista_Escalera_Zaguan", m_ds)
+    col.objects.link(obj_stair)
+    obj_stair.data.materials.append(mats["escalera_dentista"])
+    obj_stair.data.materials.append(mats["interior_hall"])
+    for p in m_ds.polygons:
+        c_z = sum(m_ds.vertices[v].co.z for v in p.vertices) / len(p.vertices)
+        if c_z < 0.75:
+            p.material_index = 0 # Escalones
+        else:
+            p.material_index = 1 # Muros y techo zaguán
+
+    # Cancelería
     bmesh.ops.recalc_face_normals(bm_alum, faces=bm_alum.faces)
     m_al_w = bpy.data.meshes.new("Mesh_Cardenas_Canceleria")
     bm_alum.to_mesh(m_al_w)
@@ -928,6 +1080,7 @@ def build_west_facade_cardenas(mats, col):
     col.objects.link(obj_alum)
     obj_alum.data.materials.append(mats["aluminio"])
 
+    # Vidrio
     bmesh.ops.recalc_face_normals(bm_glass, faces=bm_glass.faces)
     m_gl_w = bpy.data.meshes.new("Mesh_Cardenas_Vidrio")
     bm_glass.to_mesh(m_gl_w)
@@ -936,6 +1089,7 @@ def build_west_facade_cardenas(mats, col):
     col.objects.link(obj_glass)
     obj_glass.data.materials.append(mats["vidrio"])
 
+    # Persianas
     bmesh.ops.recalc_face_normals(bm_blind, faces=bm_blind.faces)
     m_bl_w = bpy.data.meshes.new("Mesh_Cardenas_Persianas")
     bm_blind.to_mesh(m_bl_w)
@@ -944,20 +1098,8 @@ def build_west_facade_cardenas(mats, col):
     col.objects.link(obj_blind)
     obj_blind.data.materials.append(mats["persianas"])
 
-    # 5. Rótulos en vidrios de despachos (Ground Truth media_1789774670397)
-    # Crujía 3: Despacho Jurídico Quezada
-    f_q1 = bpy.data.curves.new(type="FONT", name="Font_C_Quezada1")
-    f_q1.body = "DESPACHO JURIDICO\nQUEZADA Y ASOCIADOS\nTel. 52-22"
-    f_q1.size = 0.15
-    f_q1.extrude = 0.008
-    f_q1.align_x = 'CENTER'
-    o_q1 = bpy.data.objects.new("Cardenas_Txt_Despacho_Juridico", f_q1)
-    col.objects.link(o_q1)
-    o_q1.location = (0.055, 16.00, 6.35)
-    o_q1.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
-    o_q1.data.materials.append(mats["rotulo_blanco"])
-
-    # Crujía 4: Despacho Contable Fiscal Lic. Ramón Quezada
+    # 5. Rótulos en vidrios de despachos (Ground Truth media_1789778253725)
+    # Crujía 3: Despacho Contable Fiscal Lic. Ramón Quezada (Y in [13.20, 16.80])
     f_q2 = bpy.data.curves.new(type="FONT", name="Font_C_Quezada2")
     f_q2.body = "DESPACHO CONTABLE FISCAL\nLOCAL Nº 4\nLIC. RAMON QUEZADA LOPEZ\nABOGADO"
     f_q2.size = 0.13
@@ -965,14 +1107,41 @@ def build_west_facade_cardenas(mats, col):
     f_q2.align_x = 'CENTER'
     o_q2 = bpy.data.objects.new("Cardenas_Txt_Despacho_Contable", f_q2)
     col.objects.link(o_q2)
-    o_q2.location = (0.055, 11.40, 6.35)
+    o_q2.location = (0.055, 15.00, 6.35)
     o_q2.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
     o_q2.data.materials.append(mats["rotulo_blanco"])
+    text_objs.append(o_q2)
 
-    # 6. Fascia Continua: Azul Cobalto 2009 para Banco + Plateada para Dentista
-    # Fascia Banco BBVA (Y = 4.20 a 18.20)
+    # Crujía 4: Despacho Jurídico Quezada (Y in [17.40, 21.00])
+    f_q1 = bpy.data.curves.new(type="FONT", name="Font_C_Quezada1")
+    f_q1.body = "DESPACHO JURIDICO\nQUEZADA Y ASOCIADOS\nTel. 52-22"
+    f_q1.size = 0.15
+    f_q1.extrude = 0.008
+    f_q1.align_x = 'CENTER'
+    o_q1 = bpy.data.objects.new("Cardenas_Txt_Despacho_Juridico", f_q1)
+    col.objects.link(o_q1)
+    o_q1.location = (0.055, 19.20, 6.35)
+    o_q1.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
+    o_q1.data.materials.append(mats["rotulo_blanco"])
+    text_objs.append(o_q1)
+
+    # Crujía 6: Rótulo ABIERTO en ventana PA Dentista
+    f_ab = bpy.data.curves.new(type="FONT", name="Font_C_Abierto")
+    f_ab.body = "ABIERTO"
+    f_ab.size = 0.12
+    f_ab.extrude = 0.005
+    f_ab.align_x = 'CENTER'
+    o_ab = bpy.data.objects.new("Cardenas_Txt_Abierto", f_ab)
+    col.objects.link(o_ab)
+    o_ab.location = (0.055, 27.60, 6.20)
+    o_ab.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
+    o_ab.data.materials.append(mats["rojo_letras"])
+    text_objs.append(o_ab)
+
+    # 6. Fascias: Azul Cobalto para Banco BBVA (4 Crujías) + Plateada para Dentista/Despachos
+    # Fascia Banco BBVA (Y = 4.20 a 21.00)
     bm_fascia_b = bmesh.new()
-    add_box(bm_fascia_b, -0.14, 0.02, Y_start, 18.20, 3.20, 4.30)
+    add_box(bm_fascia_b, -0.14, 0.02, Y_start, 21.00, 3.20, 4.30)
     bmesh.ops.recalc_face_normals(bm_fascia_b, faces=bm_fascia_b.faces)
     m_fa_b = bpy.data.meshes.new("Mesh_Cardenas_Fascia_Banco")
     bm_fascia_b.to_mesh(m_fa_b)
@@ -981,10 +1150,10 @@ def build_west_facade_cardenas(mats, col):
     col.objects.link(obj_fascia_b)
     obj_fascia_b.data.materials.append(mats["fascia"])
 
-    # Filetes blancos en la fascia del banco (izq y der del rótulo central)
+    # Filetes blancos horizontales en fascia del banco
     bm_stripe_c = bmesh.new()
-    add_box(bm_stripe_c, -0.148, -0.138, 4.60, 8.40, 3.72, 3.76)
-    add_box(bm_stripe_c, -0.148, -0.138, 14.80, 18.00, 3.72, 3.76)
+    add_box(bm_stripe_c, -0.148, -0.138, 4.60, 10.00, 3.72, 3.76)
+    add_box(bm_stripe_c, -0.148, -0.138, 15.80, 20.80, 3.72, 3.76)
     bmesh.ops.recalc_face_normals(bm_stripe_c, faces=bm_stripe_c.faces)
     m_str_c = bpy.data.meshes.new("Mesh_Cardenas_Stripe")
     bm_stripe_c.to_mesh(m_str_c)
@@ -993,9 +1162,9 @@ def build_west_facade_cardenas(mats, col):
     col.objects.link(obj_stripe_c)
     obj_stripe_c.data.materials.append(mats["rotulo_blanco"])
 
-    # Recuadro blanco BBVA 2009 en Calle Cárdenas (sobre cajero y crujía 4)
+    # Recuadro blanco BBVA 2009 en Crujía 3 (Y = 14.40 a 15.70)
     bm_rec_c = bmesh.new()
-    add_box(bm_rec_c, -0.148, -0.138, 13.30, 14.60, 3.35, 4.15)
+    add_box(bm_rec_c, -0.148, -0.138, 14.40, 15.70, 3.35, 4.15)
     bmesh.ops.recalc_face_normals(bm_rec_c, faces=bm_rec_c.faces)
     m_rc_c = bpy.data.meshes.new("Mesh_Cardenas_Recuadro_BBVA")
     bm_rec_c.to_mesh(m_rc_c)
@@ -1004,7 +1173,7 @@ def build_west_facade_cardenas(mats, col):
     col.objects.link(obj_rec_c)
     obj_rec_c.data.materials.append(mats["rotulo_blanco"])
 
-    # Letras BBVA azules (centradas en el recuadro blanco Y = 13.95)
+    # Letras BBVA azules (centradas en el recuadro blanco Y = 15.05)
     f_bbva_c = bpy.data.curves.new(type="FONT", name="Font_C_BBVA")
     f_bbva_c.body = "BBVA"
     f_bbva_c.size = 0.44
@@ -1012,24 +1181,26 @@ def build_west_facade_cardenas(mats, col):
     f_bbva_c.align_x = 'CENTER'
     o_bbva_c = bpy.data.objects.new("Cardenas_Txt_BBVA", f_bbva_c)
     col.objects.link(o_bbva_c)
-    o_bbva_c.location = (-0.155, 13.95, 3.55)
+    o_bbva_c.location = (-0.155, 15.05, 3.55)
     o_bbva_c.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
     o_bbva_c.data.materials.append(mats["bbva_azul"])
+    text_objs.append(o_bbva_c)
 
-    # Texto blanco 'Bancomer' (a la derecha del recuadro, Y = 13.10 fluyendo hacia 8.60)
+    # Texto blanco 'Bancomer' en Crujía 2 (Y = 10.40 a 14.00)
     f_bancomer_c = bpy.data.curves.new(type="FONT", name="Font_C_Bancomer")
     f_bancomer_c.body = "Bancomer"
     f_bancomer_c.size = 0.48
     f_bancomer_c.extrude = 0.02
     o_bancomer_c = bpy.data.objects.new("Cardenas_Txt_Bancomer", f_bancomer_c)
     col.objects.link(o_bancomer_c)
-    o_bancomer_c.location = (-0.155, 13.10, 3.52)
+    o_bancomer_c.location = (-0.155, 14.20, 3.52)
     o_bancomer_c.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
     o_bancomer_c.data.materials.append(mats["rotulo_blanco"])
+    text_objs.append(o_bancomer_c)
 
-    # Fascia Plateada para Dentista/Despachos (Y = 18.20 a 27.20)
+    # Fascia Metálica Plateada para Crujía 5 de Despachos (Y = 21.00 a 25.80)
     bm_fascia_s = bmesh.new()
-    add_box(bm_fascia_s, -0.13, 0.02, 18.20, Y_end, 3.20, 4.30)
+    add_box(bm_fascia_s, -0.13, 0.02, 21.00, 25.80, 3.20, 4.30)
     bmesh.ops.recalc_face_normals(bm_fascia_s, faces=bm_fascia_s.faces)
     m_fa_s = bpy.data.meshes.new("Mesh_Cardenas_Fascia_Silver")
     bm_fascia_s.to_mesh(m_fa_s)
@@ -1038,32 +1209,12 @@ def build_west_facade_cardenas(mats, col):
     col.objects.link(obj_fascia_s)
     obj_fascia_s.data.materials.append(mats["fascia_silver"])
 
-    # Letrero DENTISTA sobre la fascia plateada (far left)
-    bm_dent = bmesh.new()
-    add_box(bm_dent, -0.145, -0.132, 24.20, 26.80, 3.40, 4.10)
-    bmesh.ops.recalc_face_normals(bm_dent, faces=bm_dent.faces)
-    m_dn = bpy.data.meshes.new("Mesh_Letrero_Dentista")
-    bm_dent.to_mesh(m_dn)
-    bm_dent.free()
-    obj_dent_box = bpy.data.objects.new("Cardenas_Letrero_Dentista", m_dn)
-    col.objects.link(obj_dent_box)
-    obj_dent_box.data.materials.append(mats["letrero_dentista"])
-
-    f_dent = bpy.data.curves.new(type="FONT", name="Font_C_Dentista")
-    f_dent.body = "DENTISTA"
-    f_dent.size = 0.32
-    f_dent.extrude = 0.015
-    f_dent.align_x = 'CENTER'
-    o_dent = bpy.data.objects.new("Cardenas_Txt_Dentista", f_dent)
-    col.objects.link(o_dent)
-    o_dent.location = (-0.155, 25.50, 3.58)
-    o_dent.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
-    o_dent.data.materials.append(mats["rotulo_blanco"])
-
-    # 7. Rótulo Luminoso de Acceso a Cajero Automático (Ground Truth media_1789774670397)
-    # Caja azul sobre la puerta de cajero en Y = [14.10, 15.60]
+    # 7. Rótulo Luminoso de Acceso a Cajero Automático en Crujía 4 (Ground Truth media_1789778253725)
+    # Caja azul sobre la puerta de cajero en Y = [17.65, 19.15]
     bm_atm = bmesh.new()
-    add_box(bm_atm, -0.18, -0.02, 14.20, 15.50, 2.76, 3.16)
+    add_box(bm_atm, -0.18, -0.02, 17.65, 19.15, 2.76, 3.16)
+    # Cuadro rojo RED a la izquierda
+    add_box(bm_atm, -0.19, -0.18, 17.70, 18.15, 2.80, 3.12)
     bmesh.ops.recalc_face_normals(bm_atm, faces=bm_atm.faces)
     m_ab = bpy.data.meshes.new("Mesh_ATM_Portal_Box")
     bm_atm.to_mesh(m_ab)
@@ -1071,6 +1222,13 @@ def build_west_facade_cardenas(mats, col):
     obj_atm_box = bpy.data.objects.new("Cardenas_ATM_Portal_Box", m_ab)
     col.objects.link(obj_atm_box)
     obj_atm_box.data.materials.append(mats["atm_caja"])
+    obj_atm_box.data.materials.append(mats["red_logo"])
+    for p in m_ab.polygons:
+        c_y = sum(m_ab.vertices[v].co.y for v in p.vertices) / len(p.vertices)
+        if c_y < 18.20:
+            p.material_index = 1
+        else:
+            p.material_index = 0
 
     f_atm_p = bpy.data.curves.new(type="FONT", name="Font_C_ATM_Portal")
     f_atm_p.body = "CAJERO\nAUTOMATICO"
@@ -1079,11 +1237,88 @@ def build_west_facade_cardenas(mats, col):
     f_atm_p.align_x = 'CENTER'
     o_atm_p = bpy.data.objects.new("Cardenas_ATM_Portal_Txt", f_atm_p)
     col.objects.link(o_atm_p)
-    o_atm_p.location = (-0.19, 14.85, 2.85)
+    o_atm_p.location = (-0.20, 18.65, 2.85)
     o_atm_p.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
     o_atm_p.data.materials.append(mats["rotulo_blanco"])
+    text_objs.append(o_atm_p)
 
-    # 8. Mansarda de Tejas a lo largo de toda la fachada continua (27.20 m)
+    f_red_p = bpy.data.curves.new(type="FONT", name="Font_C_RED")
+    f_red_p.body = "RED"
+    f_red_p.size = 0.12
+    f_red_p.extrude = 0.01
+    f_red_p.align_x = 'CENTER'
+    o_red_p = bpy.data.objects.new("Cardenas_RED_Txt", f_red_p)
+    col.objects.link(o_red_p)
+    o_red_p.location = (-0.20, 17.92, 2.92)
+    o_red_p.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
+    o_red_p.data.materials.append(mats["rotulo_blanco"])
+    text_objs.append(o_red_p)
+
+    # 8. MARQUESINA Y ELEMENTOS DENTISTA EN CRUJÍA 6 (Ground Truth media_1789778345732)
+    # Marquesina volada azul oscuro
+    # Sobresale 1.15 m hacia la banqueta (X de -1.15 a 0.05, Y de 25.75 a 28.25, Z de 3.05 a 3.45)
+    add_box(bm_dent_canopy, -1.15, 0.05, 25.75, 28.25, 3.05, 3.45)
+    
+    # Rótulo colgante bajo la marquesina (panel blanco en X = -0.55, Y in [25.85, 28.15], Z in [2.40, 2.95])
+    add_box(bm_dent_canopy, -0.57, -0.53, 25.85, 28.15, 2.40, 2.95)
+    
+    # Foco / Cámara de seguridad sobre esquina de marquesina
+    add_box(bm_dent_canopy, -0.15, 0.05, 28.15, 28.35, 3.45, 3.75) # Caja
+    add_box(bm_dent_canopy, -0.25, -0.10, 28.20, 28.30, 3.55, 3.65) # Lente
+
+    bmesh.ops.recalc_face_normals(bm_dent_canopy, faces=bm_dent_canopy.faces)
+    m_dcan = bpy.data.meshes.new("Mesh_Dentista_Canopy")
+    bm_dent_canopy.to_mesh(m_dcan)
+    bm_dent_canopy.free()
+    obj_canopy = bpy.data.objects.new("Dentista_Marquesina_Volada", m_dcan)
+    col.objects.link(obj_canopy)
+    obj_canopy.data.materials.append(mats["letrero_dentista"])
+    obj_canopy.data.materials.append(mats["rotulo_blanco"])
+    obj_canopy.data.materials.append(mats["aluminio"])
+    for p in m_dcan.polygons:
+        c_x = sum(m_dcan.vertices[v].co.x for v in p.vertices) / len(p.vertices)
+        c_z = sum(m_dcan.vertices[v].co.z for v in p.vertices) / len(p.vertices)
+        if c_z < 3.00:
+            p.material_index = 1 # Panel colgante blanco
+        elif c_x > -0.20 and c_z > 3.45:
+            p.material_index = 2 # Foco seguridad
+        else:
+            p.material_index = 0 # Marquesina azul marino
+
+    # Letras 3D DENTISTA en el frente de la marquesina (Ground Truth media_1789778345732)
+    f_d3d = bpy.data.curves.new(type="FONT", name="Font_C_Dentista_3D")
+    f_d3d.body = "DENTISTA"
+    f_d3d.size = 0.32
+    f_d3d.extrude = 0.03
+    f_d3d.align_x = 'CENTER'
+    o_d3d = bpy.data.objects.new("Dentista_Txt_3D_Oro", f_d3d)
+    col.objects.link(o_d3d)
+    o_d3d.location = (-1.16, 27.00, 3.12)
+    o_d3d.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
+    o_d3d.data.materials.append(mats["oro_letras"])
+    text_objs.append(o_d3d)
+
+    # Textos del rótulo colgante Dr. Álvarez
+    h_labels = [
+        ("Dr. Eduardo R. Álvarez Olague", 0.07, 2.82, mats["rojo_letras"]),
+        ("DENTISTA", 0.10, 2.70, mats["letrero_dentista"]),
+        ("LOCAL - 1    RX   Tel: 654-11-87", 0.06, 2.58, mats["zocalo"]),
+        ("SE ACEPTAN ASEGURANZAS U.S.A.", 0.055, 2.48, mats["zocalo"])
+    ]
+    for text_line, sz, z_pos, mat_t in h_labels:
+        f_lbl = bpy.data.curves.new(type="FONT", name=f"Font_C_H_{text_line[:6]}")
+        f_lbl.body = text_line
+        f_lbl.size = sz
+        f_lbl.extrude = 0.005
+        f_lbl.align_x = 'CENTER'
+        o_lbl = bpy.data.objects.new(f"Dentista_Txt_{text_line[:6]}", f_lbl)
+        col.objects.link(o_lbl)
+        o_lbl.location = (-0.58, 27.00, z_pos)
+        o_lbl.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
+        o_lbl.data.materials.append(mat_t)
+        text_objs.append(o_lbl)
+
+    # 9. Mansarda de Tejas a lo largo de toda la fachada continua (30.00 m)
     bm_tejas = bmesh.new()
     Z_start = 7.45
     Z_end = 8.15
@@ -1092,8 +1327,8 @@ def build_west_facade_cardenas(mats, col):
     L = math.hypot(dx, dz)
     nx = -dz / L
     nz = dx / L
-    n_tejas_y = 52
-    step_y = (Y_end - Y_start + 0.40) / float(n_tejas_y)
+    n_tejas_y = 58
+    step_y = (Y_max - Y_start + 0.40) / float(n_tejas_y)
     r_teja = 0.065
     n_segs = 6
     
@@ -1125,15 +1360,15 @@ def build_west_facade_cardenas(mats, col):
         dx_r = r_ridge * math.cos(ang)
         dz_r = r_ridge * math.sin(ang)
         va = bm_tejas.verts.new((0.85 + dx_r, Y_start, Z_end + dz_r))
-        vb = bm_tejas.verts.new((0.85 + dx_r, Y_end + 0.20, Z_end + dz_r))
+        vb = bm_tejas.verts.new((0.85 + dx_r, Y_max + 0.20, Z_end + dz_r))
         if s > 0:
             bm_tejas.faces.new((v_r_a, va, vb, v_r_b))
         v_r_a, v_r_b = va, vb
 
     # Base sólida
     v1 = bm_tejas.verts.new((-0.42, Y_start, Z_start))
-    v2 = bm_tejas.verts.new((-0.42, Y_end + 0.20, Z_start))
-    v3 = bm_tejas.verts.new((0.85, Y_end + 0.20, Z_end))
+    v2 = bm_tejas.verts.new((-0.42, Y_max + 0.20, Z_start))
+    v3 = bm_tejas.verts.new((0.85, Y_max + 0.20, Z_end))
     v4 = bm_tejas.verts.new((0.85, Y_start, Z_end))
     bm_tejas.faces.new((v1, v2, v3, v4))
 
@@ -1147,33 +1382,66 @@ def build_west_facade_cardenas(mats, col):
     col.objects.link(obj_tejas)
     obj_tejas.data.materials.append(mats["teja"])
 
-    return obj_struct, obj_corbels, obj_alum, obj_glass, obj_blind, [obj_fascia_b, obj_stripe_c, obj_rec_c, o_bbva_c, o_bancomer_c, obj_fascia_s, obj_dent_box, o_dent, obj_atm_box, o_atm_p], [o_q1, o_q2], obj_tejas
+    fascia_group = [obj_fascia_b, obj_stripe_c, obj_rec_c, obj_fascia_s, obj_atm_box, obj_canopy, obj_mosaic_col, obj_stair]
+    return obj_struct, obj_corbels, obj_alum, obj_glass, obj_blind, fascia_group, text_objs, obj_tejas
 
 def build_east_facade_and_parking(mats, col):
-    """Construye la Fachada Este detallada (ventanales, despachos, puerta), caseta reubicada y letrero ortogonal."""
+    """Construye la Fachada Este y patio trasero de estacionamiento (Ground Truth media_1789778429624):
+    Ventanales modulares PA, puertas de servicio PB, cuerpo semicilíndrico, casetas HVAC y muro perimetral con [E] BBVA."""
     bm_east = bmesh.new()
     bm_alum = bmesh.new()
     bm_glass = bmesh.new()
     bm_blind = bmesh.new()
+    bm_hvac = bmesh.new()
+    bm_curve = bmesh.new()
     
     X_east = 22.80
+    Y_max = 30.00
     H_wall = 7.10
     
-    # 1. Muro Este principal (Z = 0.0 a 7.10, Y = 0.0 a 16.0)
+    # 1. Muro Este principal del cuerpo bancario (Z = 0.0 a 7.10, Y = 0.0 a 16.0)
     add_box(bm_east, X_east - 0.40, X_east, 0.0, 16.0, 0.0, 0.40) # Zócalo
     add_box(bm_east, X_east - 0.40, X_east, 0.0, 16.0, 3.20, 5.10) # Faja intermedia
     add_box(bm_east, X_east - 0.40, X_east, 0.0, 16.0, 6.75, H_wall) # Remate
     
-    # Losa interior de azotea
+    # Losa interior de azotea hermética
     add_box(bm_east, 4.20, X_east, 0.40, 16.0, 7.00, 7.25)
     add_box(bm_east, 0.40, 4.20, 4.20, 16.0, 7.00, 7.25)
-    add_box(bm_east, 0.40, 16.0, 16.0, 27.20, 7.00, 7.25) # Azotea Ala Norte (Dentista/Despachos)
-    # Muro posterior interior y muro este del ala norte
-    add_box(bm_east, 0.40, X_east, 15.60, 16.0, 0.40, 7.10)
-    add_box(bm_east, 15.60, 16.0, 16.0, 27.20, 0.0, 7.10) # Muro Este posterior del Ala Norte
+    add_box(bm_east, 0.40, 16.0, 16.0, Y_max, 7.00, 7.25) # Azotea Ala Norte extendida a 30.00 m
+    
+    # Muro posterior este del Ala Norte (X = 15.60 a 16.0, Y = 16.0 a 30.00) (Ground Truth media_1789778429624)
+    add_box(bm_east, 15.60, 16.0, 16.0, Y_max, 0.0, 0.40) # Zócalo
+    add_box(bm_east, 15.60, 16.0, 16.0, Y_max, 3.20, 5.10) # Faja intermedia
+    add_box(bm_east, 15.60, 16.0, 16.0, Y_max, 6.75, H_wall) # Remate
+    
+    # Ventanales de Planta Alta en la fachada trasera del Ala Norte (5 módulos horizontales)
+    rear_bays = [
+        (16.60, 18.60),
+        (19.20, 21.20),
+        (21.80, 23.80),
+        (24.40, 26.40),
+        (27.00, 29.00)
+    ]
+    for ry1, ry2 in rear_bays:
+        add_box(bm_alum, 15.65, 15.95, ry1, ry2, 5.10, 5.15)
+        add_box(bm_alum, 15.65, 15.95, ry1, ry2, 6.70, 6.75)
+        add_box(bm_alum, 15.65, 15.95, ry1, ry1 + 0.04, 5.10, 6.75)
+        add_box(bm_alum, 15.65, 15.95, ry2 - 0.04, ry2, 5.10, 6.75)
+        m_ry = (ry1 + ry2) * 0.5
+        add_box(bm_alum, 15.65, 15.95, m_ry - 0.02, m_ry + 0.02, 5.10, 6.75)
+        add_box(bm_glass, 15.75, 15.85, ry1 + 0.04, ry2 - 0.04, 5.15, 6.70)
+        
+    # Planta Baja trasera: Puertas metálicas de servicio y ventanales tintados (Ground Truth media_1789778429624)
+    # Ventanal 1
+    add_box(bm_alum, 15.65, 15.95, 17.20, 19.40, 0.40, 3.20)
+    add_box(bm_glass, 15.75, 15.85, 17.25, 19.35, 0.45, 3.15)
+    # Puerta de servicio metálica grafito 1
+    add_box(bm_alum, 15.65, 15.95, 20.20, 21.60, 0.0, 2.80)
+    # Ventanal 2
+    add_box(bm_alum, 15.65, 15.95, 22.40, 24.60, 0.40, 3.20)
+    add_box(bm_glass, 15.75, 15.85, 22.45, 24.55, 0.45, 3.15)
     
     # 2. Ventanales de Planta Alta en Fachada Este (5 vanos según media_1789774721368)
-    # Y de 0.80 a 15.20 divididos en 5 módulos
     e_bays = [
         (0.80, 3.40),
         (3.80, 6.40),
@@ -1188,7 +1456,7 @@ def build_east_facade_and_parking(mats, col):
         add_box(bm_east, X_east - 0.40, X_east, e_bays[i][1], e_bays[i+1][0], 5.10, 6.75)
     add_box(bm_east, X_east - 0.40, X_east, 15.20, 16.0, 5.10, 6.75)
     
-    # Cancelería y vidrios en PA
+    # Cancelería y vidrios en PA Este
     for y1, y2 in e_bays:
         add_box(bm_alum, X_east - 0.10, X_east - 0.02, y1, y2, 5.10, 5.15)
         add_box(bm_alum, X_east - 0.10, X_east - 0.02, y1, y2, 6.70, 6.75)
@@ -1199,7 +1467,6 @@ def build_east_facade_and_parking(mats, col):
         add_box(bm_glass, X_east - 0.07, X_east - 0.05, y1 + 0.04, y2 - 0.04, 5.15, 6.70)
         
     # 3. Planta Baja Este: Grandes ventanales comerciales y puerta peatonal con luminaria
-    # Puerta en y = [7.20, 8.60], ventanales en [0.80, 6.80] y [9.00, 15.20]
     add_box(bm_east, X_east - 0.40, X_east, 0.0, 0.80, 0.40, 3.20)
     add_box(bm_east, X_east - 0.40, X_east, 6.80, 7.20, 0.40, 3.20)
     add_box(bm_east, X_east - 0.40, X_east, 8.60, 9.00, 0.40, 3.20)
@@ -1222,6 +1489,60 @@ def build_east_facade_and_parking(mats, col):
         add_box(bm_glass, X_east - 0.07, X_east - 0.05, y1 + 0.05, y2 - 0.05, 0.45, 3.15)
         add_box(bm_blind, X_east - 0.15, X_east - 0.14, y1 + 0.05, y2 - 0.05, 0.45, 3.15)
 
+    # 4. Cuerpo arquitectónico semicilíndrico trasero (núcleo de escalera) (Ground Truth media_1789778429624)
+    # Ubicado en la esquina noreste interior: centro (16.0, 27.50), radio 2.20 m
+    cx_cyl, cy_cyl = 16.0, 27.50
+    r_cyl = 2.20
+    n_cyl_segs = 12
+    v_prev_bot, v_prev_top = None, None
+    for s in range(n_cyl_segs + 1):
+        ang = -0.5 * math.pi + math.pi * (s / float(n_cyl_segs)) # Semicírculo hacia +X
+        px = cx_cyl + r_cyl * math.cos(ang)
+        py = cy_cyl + r_cyl * math.sin(ang)
+        v_b = bm_curve.verts.new((px, py, 0.0))
+        v_t = bm_curve.verts.new((px, py, H_wall))
+        if s > 0:
+            bm_curve.faces.new((v_prev_bot, v_b, v_t, v_prev_top))
+        v_prev_bot, v_prev_top = v_b, v_t
+
+    # Losa superior del semicilindro
+    v_center_top = bm_curve.verts.new((cx_cyl, cy_cyl, H_wall))
+    # Cerrar techo
+    v_prev = None
+    for s in range(n_cyl_segs + 1):
+        ang = -0.5 * math.pi + math.pi * (s / float(n_cyl_segs))
+        px = cx_cyl + r_cyl * math.cos(ang)
+        py = cy_cyl + r_cyl * math.sin(ang)
+        vt = bm_curve.verts.new((px, py, H_wall))
+        if s > 0:
+            bm_curve.faces.new((v_center_top, v_prev, vt))
+        v_prev = vt
+
+    bmesh.ops.recalc_face_normals(bm_curve, faces=bm_curve.faces)
+    for f in bm_curve.faces:
+        f.smooth = True
+    m_crv = bpy.data.meshes.new("Mesh_Rear_Cylinder")
+    bm_curve.to_mesh(m_crv)
+    bm_curve.free()
+    obj_curve = bpy.data.objects.new("Rear_Staircase_Cylinder", m_crv)
+    col.objects.link(obj_curve)
+    obj_curve.data.materials.append(mats["muro"])
+
+    # 5. Casetas HVAC y Equipos Técnicos en Azotea (Ground Truth media_1789778429624)
+    # Caseta de elevador / extracción
+    add_box(bm_hvac, 7.00, 11.50, 18.00, 22.50, 7.15, 8.65)
+    # Equipos de aire acondicionado exteriores
+    add_box(bm_hvac, 8.50, 10.50, 12.00, 14.50, 7.15, 8.10)
+    add_box(bm_hvac, 11.00, 13.00, 12.00, 14.50, 7.15, 8.10)
+
+    bmesh.ops.recalc_face_normals(bm_hvac, faces=bm_hvac.faces)
+    m_hv = bpy.data.meshes.new("Mesh_Roof_HVAC")
+    bm_hvac.to_mesh(m_hv)
+    bm_hvac.free()
+    obj_hvac = bpy.data.objects.new("Roof_HVAC_Units", m_hv)
+    col.objects.link(obj_hvac)
+    obj_hvac.data.materials.append(mats["acero"])
+
     # Convertir muro este a objeto
     bmesh.ops.recalc_face_normals(bm_east, faces=bm_east.faces)
     m_east = bpy.data.meshes.new("Mesh_East_Wall")
@@ -1234,7 +1555,7 @@ def build_east_facade_and_parking(mats, col):
     obj_east.data.materials.append(mats["azotea"])
     for p in m_east.polygons:
         c_z = sum(m_east.vertices[v].co.z for v in p.vertices) / len(p.vertices)
-        if c_z > 7.15:
+        if c_z > 7.05:
             p.material_index = 2
         elif c_z < 0.42:
             p.material_index = 1
@@ -1278,13 +1599,12 @@ def build_east_facade_and_parking(mats, col):
     o_ed.rotation_euler = (math.radians(90.0), 0.0, math.radians(90.0))
     o_ed.data.materials.append(mats["rotulo_blanco"])
 
-    # 4. Elementos del Estacionamiento: Caseta, Rampa y Letrero ORTOGONAL (alejaditos del edificio)
-    # Suelo inclinado de rampa descendente
+    # 6. Elementos del Estacionamiento: Suelo, Cajones, Bolardos, Rampa, Caseta y Muro Perimetral
+    # Rampa descendente
     bm_ramp = bmesh.new()
     add_box(bm_ramp, X_east + 0.60, X_east + 4.50, 0.0, 14.0, -0.45, 0.05)
-    # Murete de confinamiento de rampa
     rx = X_east + 4.55
-    add_box(bm_ramp, rx - 0.15, rx, 0.0, 14.0, 0.0, 0.90)
+    add_box(bm_ramp, rx - 0.15, rx, 0.0, 14.0, 0.0, 0.90) # Murete
     bmesh.ops.recalc_face_normals(bm_ramp, faces=bm_ramp.faces)
     m_rp = bpy.data.meshes.new("Mesh_Rampa_Suelo")
     bm_ramp.to_mesh(m_rp)
@@ -1293,7 +1613,7 @@ def build_east_facade_and_parking(mats, col):
     col.objects.link(obj_ramp)
     obj_ramp.data.materials.append(mats["zocalo"])
 
-    # Barandilla de acero blanco sobre el murete de rampa
+    # Barandilla de acero blanco
     bm_rail = bmesh.new()
     add_box(bm_rail, rx - 0.09, rx - 0.06, 0.0, 14.0, 1.65, 1.70)
     add_box(bm_rail, rx - 0.08, rx - 0.07, 0.0, 14.0, 1.25, 1.28)
@@ -1307,7 +1627,7 @@ def build_east_facade_and_parking(mats, col):
     col.objects.link(obj_rail)
     obj_rail.data.materials.append(mats["barandal"])
 
-    # Caseta de vigilancia blanca (reubicada más hacia el fondo/este según media_1789774721368)
+    # Caseta de vigilancia blanca
     bm_caseta = bmesh.new()
     add_box(bm_caseta, X_east + 4.80, X_east + 7.00, 6.0, 8.8, 0.0, 2.70)
     add_box(bm_caseta, X_east + 4.65, X_east + 7.15, 5.85, 8.95, 2.70, 2.85) # Tejadillo
@@ -1319,14 +1639,42 @@ def build_east_facade_and_parking(mats, col):
     col.objects.link(obj_caseta)
     obj_caseta.data.materials.append(mats["muro"])
 
-    # Letrero oficial 'ENTRADA BBVA ->' ORIENTADO ORTOGONAL a la cara del edificio
-    # Normal apuntando hacia el Sur (-Y, hacia Av. Juárez para tráfico entrante)
+    # Muro perimetral del estacionamiento con portón de servicio (Ground Truth media_1789778429624)
+    bm_pwall = bmesh.new()
+    # Muro blanco este con reja
+    add_box(bm_pwall, X_east + 7.20, X_east + 12.50, 5.80, 6.05, 0.0, 2.40)
+    # Placa azul en el muro: [E] BBVA ESTACIONAMIENTO EXCLUSIVO
+    add_box(bm_pwall, X_east + 8.20, X_east + 9.80, 5.75, 5.82, 1.40, 1.95)
+    
+    # Bolardos y topes amarillos en el pavimento del estacionamiento
+    for by in [17.50, 20.00, 22.50, 25.00]:
+        add_box(bm_pwall, 17.50, 17.65, by, by + 1.80, 0.0, 0.12) # Tope de llantas
+        add_box(bm_pwall, 17.10, 17.20, by + 0.90, by + 1.00, 0.0, 0.85) # Bolardo vertical
+        
+    bmesh.ops.recalc_face_normals(bm_pwall, faces=bm_pwall.faces)
+    m_pw = bpy.data.meshes.new("Mesh_Parking_Wall")
+    bm_pwall.to_mesh(m_pw)
+    bm_pwall.free()
+    obj_pwall = bpy.data.objects.new("Parking_Perimeter_Wall", m_pw)
+    col.objects.link(obj_pwall)
+    obj_pwall.data.materials.append(mats["muro"])
+    obj_pwall.data.materials.append(mats["senal_azul"])
+    obj_pwall.data.materials.append(mats["bolardo_amarillo"])
+    for p in m_pw.polygons:
+        c_x = sum(m_pw.vertices[v].co.x for v in p.vertices) / len(p.vertices)
+        c_y = sum(m_pw.vertices[v].co.y for v in p.vertices) / len(p.vertices)
+        if c_x < 18.0:
+            p.material_index = 2 # Bolardos amarillos
+        elif c_y < 5.85 and c_x > X_east + 8.0:
+            p.material_index = 1 # Placa azul BBVA
+        else:
+            p.material_index = 0
+
+    # Letrero oficial 'ENTRADA BBVA ->' ortogonal hacia Av. Juárez
     bm_sign = bmesh.new()
     sx = X_east + 5.90
     sy = 3.50
-    # Poste de acero
     add_box(bm_sign, sx - 0.04, sx + 0.04, sy - 0.04, sy + 0.04, 0.0, 2.20)
-    # Tablero azul ortogonal a la pared este (plano en XZ, normal hacia -Y)
     add_box(bm_sign, sx - 0.60, sx + 0.60, sy - 0.03, sy + 0.03, 1.70, 2.30)
     bmesh.ops.recalc_face_normals(bm_sign, faces=bm_sign.faces)
     m_sn = bpy.data.meshes.new("Mesh_Senal_Entrada_Ortogonal")
@@ -1347,13 +1695,13 @@ def build_east_facade_and_parking(mats, col):
     o_sign.rotation_euler = (math.radians(90.0), 0.0, 0.0)
     o_sign.data.materials.append(mats["rotulo_blanco"])
 
-    return obj_east, [obj_al_e, obj_gl_e, obj_bl_e, o_ed], obj_ramp, obj_rail, obj_caseta, obj_sign, o_sign
+    return obj_east, [obj_al_e, obj_gl_e, obj_bl_e, o_ed, obj_curve, obj_hvac, obj_pwall], obj_ramp, obj_rail, obj_caseta, obj_sign, o_sign
 
 def build_optional_sidewalk(mats, col):
     """Crea la banqueta urbana como un asset modular independiente (NO incluido en el glb del edificio)."""
     bm_sw = bmesh.new()
     X_east = 22.80
-    Y_cardenas = 27.20
+    Y_cardenas = 30.00
     
     # Banqueta perimetral
     add_box(bm_sw, -3.80, X_east + 8.00, -3.80, 0.0, 0.0, 0.18)
@@ -1380,7 +1728,7 @@ def build_optional_sidewalk(mats, col):
     return obj_sw
 
 def setup_lighting_and_render(col):
-    """Configura iluminación diurna y 5 cámaras calibradas para cubrir todas las caras del edificio."""
+    """Configura iluminación diurna y 6 cámaras calibradas para cubrir todas las caras del edificio."""
     world = bpy.context.scene.world
     if not world:
         world = bpy.data.worlds.new("World_Tecate")
@@ -1438,12 +1786,12 @@ def setup_lighting_and_render(col):
     c2.rotation_euler = (math.radians(90.0), 0.0, 0.0)
     cams["juarez_frontal"] = c2
 
-    # 3. Cámara 'Cardenas_West': Elevación de la Fachada Oeste por Calle Lázaro Cárdenas
+    # 3. Cámara 'Cardenas_West': Elevación de la Fachada Oeste por Calle Lázaro Cárdenas (6 crujías, 30 m)
     c3_data = bpy.data.cameras.new("Cam_Cardenas_West")
-    c3_data.lens = 28
+    c3_data.lens = 26
     c3 = bpy.data.objects.new("Cam_Cardenas_West", c3_data)
     col.objects.link(c3)
-    c3.location = (-24.00, 15.50, 4.80)
+    c3.location = (-27.00, 17.00, 4.80)
     c3.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
     cams["cardenas_west"] = c3
 
@@ -1459,28 +1807,43 @@ def setup_lighting_and_render(col):
     c4.rotation_euler = dir4.to_track_quat('-Z', 'Y').to_euler()
     cams["east_parking"] = c4
 
-    # 5. Cámara 'Aerial_Top': Vista aérea cenital que reproduce la imagen satelital
+    # 5. Cámara 'Aerial_Top': Vista aérea cenital
     c5_data = bpy.data.cameras.new("Cam_Aerial_Top")
     c5_data.lens = 42
     c5 = bpy.data.objects.new("Cam_Aerial_Top", c5_data)
     col.objects.link(c5)
-    c5.location = (12.00, 12.00, 46.00)
+    c5.location = (13.00, 15.00, 48.00)
     c5.rotation_euler = (0.0, 0.0, math.radians(-90.0))
     cams["aerial_top"] = c5
+
+    # 6. Cámara 'Dentista_Closeup': Acercamiento a nivel de calle al acceso de DENTISTA
+    c6_data = bpy.data.cameras.new("Cam_Dentista_Closeup")
+    c6_data.lens = 32
+    c6 = bpy.data.objects.new("Cam_Dentista_Closeup", c6_data)
+    col.objects.link(c6)
+    loc6 = Vector((-6.80, 27.20, 2.20))
+    tgt6 = Vector((-0.20, 27.20, 3.10))
+    dir6 = tgt6 - loc6
+    c6.location = loc6
+    c6.rotation_euler = dir6.to_track_quat('-Z', 'Y').to_euler()
+    cams["dentista_closeup"] = c6
 
     return cams
 
 def generate_godot_tscn(tscn_path, glb_rel_path):
-    """Genera la escena .tscn de Godot 4 con StaticBody3D y colisiones analíticas precisas."""
-    tscn_content = f"""[gd_scene load_steps=5 format=3 uid="uid://bbva_tecate_centro_005"]
+    """Genera la escena .tscn de Godot 4 con StaticBody3D y colisiones analíticas precisas sin barreras invisibles."""
+    tscn_content = f"""[gd_scene load_steps=6 format=3 uid="uid://bbva_tecate_centro_007"]
 
 [ext_resource type="PackedScene" path="{glb_rel_path}" id="1_mesh"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_cuerpo"]
-size = Vector3(22.8, 7.3, 27.2)
+[sub_resource type="BoxShape3D" id="BoxShape3D_juarez"]
+size = Vector3(18.6, 7.3, 16.0)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_torreon"]
-size = Vector3(6.0, 9.2, 6.0)
+[sub_resource type="BoxShape3D" id="BoxShape3D_cardenas"]
+size = Vector3(16.0, 7.3, 25.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_puertas"]
+size = Vector3(5.8, 9.1, 0.35)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_rampa"]
 size = Vector3(4.5, 1.2, 14.0)
@@ -1489,13 +1852,17 @@ size = Vector3(4.5, 1.2, 14.0)
 
 [node name="ModelInstance" parent="." instance=ExtResource("1_mesh")]
 
-[node name="Col_Cuerpo" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.4, 3.65, -13.6)
-shape = SubResource("BoxShape3D_cuerpo")
+[node name="Col_Juarez" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 3.65, -8.0)
+shape = SubResource("BoxShape3D_juarez")
 
-[node name="Col_Torreon" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 1.9, 4.5, -1.9)
-shape = SubResource("BoxShape3D_torreon")
+[node name="Col_Cardenas" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.0, 3.65, -17.1)
+shape = SubResource("BoxShape3D_cardenas")
+
+[node name="Col_Puertas_Chamfer" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 2.12, 4.55, -2.12)
+shape = SubResource("BoxShape3D_puertas")
 
 [node name="Col_Rampa" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.0, 0.6, -7.0)
@@ -1584,6 +1951,7 @@ def main():
         ("guajardo_45", "docs/images/bbva/bbva_guajardo_45.png", 1280, 720),
         ("juarez_frontal", "docs/images/bbva/bbva_juarez_frontal.png", 1280, 720),
         ("cardenas_west", "docs/images/bbva/bbva_cardenas_west.png", 1280, 720),
+        ("dentista_closeup", "docs/images/bbva/bbva_dentista_closeup.png", 1280, 720),
         ("east_parking", "docs/images/bbva/bbva_east_parking.png", 1280, 720),
         ("aerial_top", "docs/images/bbva/bbva_aerial_top.png", 1024, 1024)
     ]
