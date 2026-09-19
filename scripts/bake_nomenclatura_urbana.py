@@ -12,10 +12,15 @@ de postes de nomenclatura urbana para todo el simulador (Godot Engine 4):
 5. Estandariza los nombres de calles en mayúsculas rigurosas con prefijos en la
    esquina superior izquierda del recuadro verde.
 6. Reserva el recuadro blanco para iconos PNG deterministas (ciclados desde assets/nomenclatura_icons/).
-7. Genera y consolida en Blender la malla de textos 3D extruidos en blanco (Bfont)
-   e iconos en nomenclatura_textos_baked.glb mediante acumulación BMesh ultra-rápida.
-8. Escribe los datos de posicionamiento en nomenclatura_data.json y genera la escena
-   nomenclatura_urbana.tscn con MultiMeshInstance3D referenciando el asset canónico
+7. Genera de forma desacoplada:
+   - nomenclatura_textos_baked.glb (Malla consolidada de textos 3D en blanco, Bfont).
+   - nomenclatura_iconos_baked.glb (Quads de calcomanías UV mapeadas para iconos PNG).
+8. Soporta banderas de compilación incremental:
+   --icons-only (-i): Regenera únicamente las imágenes/iconos en < 1.5s conservando los textos ya procesados.
+   --text-only (-t): Regenera únicamente los textos 3D conservando los iconos.
+   --full (-f): Ejecuta el flujo completo (análisis topográfico, textos, iconos y escenas).
+9. Escribe los datos de posicionamiento en nomenclatura_data.json y nomenclatura_corners.json,
+   generando la escena nomenclatura_urbana.tscn con MultiMeshInstance3D referenciando
    poste_nomenclatura_tecate.glb (CERO copiado, actualización 100% idempotente).
 =============================================================================
 """
@@ -30,11 +35,19 @@ import re
 import time
 from collections import defaultdict
 
-import bpy
-import bmesh
-import mathutils
-from mathutils import Vector, Matrix
-from mathutils.bvhtree import BVHTree
+try:
+    import bpy
+    import bmesh
+    import mathutils
+    from mathutils import Vector, Matrix
+    from mathutils.bvhtree import BVHTree
+except ImportError:
+    bpy = None
+    bmesh = None
+    mathutils = None
+    Vector = None
+    Matrix = None
+    BVHTree = None
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. Constantes Geodésicas y Rutas
@@ -51,7 +64,9 @@ TERRAIN_GLB_PATH = "godot_project/assets/tecate2.glb"
 ICONS_DIR = "godot_project/assets/nomenclatura_icons"
 POSTE_BASE_GLB = "godot_project/assets/poste_nomenclatura_tecate.glb"
 OUT_TEXTOS_GLB = "godot_project/assets/nomenclatura_textos_baked.glb"
+OUT_ICONOS_GLB = "godot_project/assets/nomenclatura_iconos_baked.glb"
 OUT_DATA_JSON = "godot_project/assets/nomenclatura_data.json"
+OUT_CORNERS_JSON = "godot_project/assets/nomenclatura_corners.json"
 OUT_SCENE_TSCN = "godot_project/assets/nomenclatura_urbana.tscn"
 OUT_SCRIPT_GD = "godot_project/assets/nomenclatura_urbana.gd"
 
@@ -86,13 +101,13 @@ def build_terrain_bvh(glb_path: str):
         if node.get("name") == "tinMesh":
             tin_mesh_idx = node.get("mesh", 0)
             break
-            
+
     tin_prim = gltf["meshes"][tin_mesh_idx]["primitives"][0]
     pos_acc = gltf["accessors"][tin_prim["attributes"]["POSITION"]]
     pos_bv = gltf["bufferViews"][pos_acc["bufferView"]]
     pos_offset = pos_bv.get("byteOffset", 0) + pos_acc.get("byteOffset", 0)
     pos_count = pos_acc["count"]
-    
+
     import numpy as np
     raw_verts = np.frombuffer(
         binary_data[pos_offset : pos_offset + pos_count * 12],
@@ -314,156 +329,8 @@ def calculate_optimal_post_orientation(v1: tuple[float, float], v2: tuple[float,
     return best_yaw
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 6. Generador de Textos 3D e Iconos en Blender (BMesh Ultra-Rápido)
+# 6. Generador de Textos 3D en Blender (BMesh Ultra-Rápido, Desacoplado)
 # ─────────────────────────────────────────────────────────────────────────────
-def build_baked_signage(corners: list, bvh_terrain, icons_paths: list):
-    """
-    Construye la malla combinada de textos 3D en mayúsculas (blancos, Bfont extruido)
-    y los quads de calcomanía en el recuadro blanco para toda la ciudad.
-    """
-    print(f"\n[Pre-Bake] Compilando textos 3D y calcomanías para {len(corners)} esquinas en toda la ciudad...")
-    t_start = time.time()
-    
-    bpy.ops.wm.read_factory_settings(use_empty=True)
-    scene = bpy.context.scene
-    depsgraph = bpy.context.evaluated_depsgraph_get()
-
-    # Material para textos: Blanco puro reflectante
-    mat_white = bpy.data.materials.new(name="M_Texto_Rotulo_Blanco")
-    mat_white.use_nodes = True
-    bsdf_t = mat_white.node_tree.nodes.get("Principled BSDF")
-    if bsdf_t:
-        bsdf_t.inputs["Base Color"].default_value = (0.95, 0.95, 0.95, 1.0)
-        bsdf_t.inputs["Roughness"].default_value = 0.35
-        bsdf_t.inputs["Metallic"].default_value = 0.0
-
-    # Materiales para iconos PNG
-    icon_materials = []
-    for i, p_icon in enumerate(icons_paths):
-        m_ico = bpy.data.materials.new(name=f"M_Icon_{i}")
-        m_ico.use_nodes = True
-        nodes = m_ico.node_tree.nodes
-        links = m_ico.node_tree.links
-        bsdf_i = nodes.get("Principled BSDF")
-        
-        tex_node = nodes.new("ShaderNodeTexImage")
-        img = bpy.data.images.load(p_icon)
-        tex_node.image = img
-        
-        links.new(tex_node.outputs["Color"], bsdf_i.inputs["Base Color"])
-        if "Alpha" in tex_node.outputs and "Alpha" in bsdf_i.inputs:
-            links.new(tex_node.outputs["Alpha"], bsdf_i.inputs["Alpha"])
-        bsdf_i.inputs["Roughness"].default_value = 0.4
-        m_ico.blend_method = 'BLEND'
-        icon_materials.append(m_ico)
-
-    bm_consolidated = bmesh.new()
-    uv_layer = bm_consolidated.loops.layers.uv.new("UVMap")
-    instance_transforms = []
-
-    # Cache de curvas y mallas generadas para nombres repetidos (ultra-optimización de throughput)
-    mesh_cache = {}
-
-    for corner_idx, c_info in enumerate(corners):
-        if (corner_idx + 1) % 500 == 0 or corner_idx == 0:
-            elapsed = time.time() - t_start
-            print(f"  --> Procesando esquina {corner_idx + 1}/{len(corners)} ({elapsed:.1f}s transcurridos)...")
-
-        lx, ly = c_info["pos"]
-        st1, st2 = c_info["streets"]
-        v1, v2 = c_info["v1"], c_info["v2"]
-
-        # Cota de suelo en Blender
-        lz = get_terrain_height(bvh_terrain, lx, ly, default_h=400.0)
-
-        # Orientación óptima de yaw en Blender
-        yaw_rad = calculate_optimal_post_orientation(v1, v2)
-
-        # En Godot: X_g = lx, Y_g = lz, Z_g = -ly; Rotación en Y_g = -yaw_rad
-        gx, gy, gz = lx, lz, -ly
-        g_rot_y = -yaw_rad
-        instance_transforms.append((gx, gy, gz, g_rot_y))
-
-        # Matriz de transformación de este poste en coordenadas Godot
-        cos_g = math.cos(g_rot_y)
-        sin_g = math.sin(g_rot_y)
-        mat_post_godot = Matrix((
-            (cos_g,  0.0, sin_g, gx),
-            (0.0,    1.0, 0.0,   gy),
-            (-sin_g, 0.0, cos_g, gz),
-            (0.0,    0.0, 0.0,   1.0)
-        ))
-
-        # Selección determinista de icono
-        ico_idx = (hash((round(lx, 1), round(ly, 1))) & 0x7FFFFFFF) % len(icon_materials)
-
-        # ── Rotulación de Placa Inferior (Eje X local, Z = 2.52m) ──
-        p1, m1 = standardize_street_name(st1)
-        _accumulate_plate(
-            bm_dest=bm_consolidated,
-            uv_layer=uv_layer,
-            scene=scene,
-            depsgraph=depsgraph,
-            mesh_cache=mesh_cache,
-            mat_world=mat_post_godot,
-            prefix=p1,
-            main_name=m1,
-            plate_type="LOWER",
-            plate_z=2.52,
-            icon_slot=1 + ico_idx
-        )
-
-        # ── Rotulación de Placa Superior (Eje Y local a 90°, Z = 2.74m) ──
-        p2, m2 = standardize_street_name(st2)
-        _accumulate_plate(
-            bm_dest=bm_consolidated,
-            uv_layer=uv_layer,
-            scene=scene,
-            depsgraph=depsgraph,
-            mesh_cache=mesh_cache,
-            mat_world=mat_post_godot,
-            prefix=p2,
-            main_name=m2,
-            plate_type="UPPER",
-            plate_z=2.74,
-            icon_slot=1 + ico_idx
-        )
-
-    # Convertir BMesh consolidado a Malla final
-    print("\n[Pre-Bake] Convirtiendo BMesh consolidado a objeto de Blender...")
-    final_mesh = bpy.data.meshes.new("Nomenclatura_Textos_Malla")
-    bm_consolidated.to_mesh(final_mesh)
-    bm_consolidated.free()
-
-    obj_consolidated = bpy.data.objects.new("Nomenclatura_Textos_Consolidados", final_mesh)
-    scene.collection.objects.link(obj_consolidated)
-
-    # Asignar los slots de material (Slot 0: Texto Blanco, Slots 1-5: Iconos PNG)
-    obj_consolidated.data.materials.append(mat_white)
-    for m_ico in icon_materials:
-        obj_consolidated.data.materials.append(m_ico)
-
-    # Exportar GLB
-    print(f"[Pre-Bake] Exportando archivo consolidado: {OUT_TEXTOS_GLB}...")
-    os.makedirs(os.path.dirname(OUT_TEXTOS_GLB), exist_ok=True)
-    
-    bpy.ops.object.select_all(action='DESELECT')
-    obj_consolidated.select_set(True)
-    bpy.context.view_layer.objects.active = obj_consolidated
-
-    bpy.ops.export_scene.gltf(
-        filepath=OUT_TEXTOS_GLB,
-        export_format='GLB',
-        use_selection=True,
-        export_apply=True,
-        export_materials='EXPORT',
-        export_yup=True
-    )
-    t_end = time.time()
-    print(f"--> Exportación de textos finalizada con éxito en {t_end - t_start:.2f} segundos.")
-
-    return instance_transforms
-
 def _get_or_create_text_mesh(scene, depsgraph, mesh_cache, text_body, font_size, align_x, align_y):
     """Obtiene de caché o crea una malla a partir de una curva tipográfica."""
     key = (text_body, round(font_size, 4), align_x, align_y)
@@ -477,14 +344,14 @@ def _get_or_create_text_mesh(scene, depsgraph, mesh_cache, text_body, font_size,
     c.extrude = 0.0
     c.align_x = align_x
     c.align_y = align_y
-    
+
     o = bpy.data.objects.new("O_Temp", c)
     scene.collection.objects.link(o)
     bpy.context.view_layer.update()
-    
+
     eval_o = o.evaluated_get(depsgraph)
     me = bpy.data.meshes.new_from_object(eval_o)
-    
+
     scene.collection.objects.unlink(o)
     bpy.data.objects.remove(o)
     bpy.data.curves.remove(c)
@@ -492,9 +359,10 @@ def _get_or_create_text_mesh(scene, depsgraph, mesh_cache, text_body, font_size,
     mesh_cache[key] = me
     return me
 
-def _accumulate_plate(bm_dest, uv_layer, scene, depsgraph, mesh_cache, mat_world, prefix, main_name, plate_type, plate_z, icon_slot):
+def _accumulate_plate_text(bm_dest, scene, depsgraph, mesh_cache, mat_world, prefix, main_name, plate_type, plate_z):
     """
-    Acumula las letras 3D y el quad de icono para frente y dorso de una placa directamente en bm_dest.
+    Acumula exclusivamente las letras 3D de una placa (frente y dorso) en bm_dest.
+    Material slot: 0 (M_Texto_Rotulo_Blanco).
     """
     is_lower = (plate_type == "LOWER")
 
@@ -517,22 +385,19 @@ def _accumulate_plate(bm_dest, uv_layer, scene, depsgraph, mesh_cache, mat_world
             rot_local = Matrix.Rotation(0.0 if side > 0 else math.pi, 4, 'Y')
             t_loc = Vector((-0.13 * side, plate_z - (0.015 if prefix else 0.0), y_offset))
             p_loc = Vector((-0.41 * side, plate_z + 0.06, y_offset)) if prefix else None
-            icon_loc = Vector((0.31 * side, plate_z, y_offset))
         else:
             x_offset = 0.0105 * side
-            rot_local = Matrix.Rotation(math.pi/2.0 if side > 0 else -math.pi/2.0, 4, 'Y')
+            rot_local = Matrix.Rotation(math.pi / 2.0 if side > 0 else -math.pi / 2.0, 4, 'Y')
             t_loc = Vector((x_offset, plate_z - (0.015 if prefix else 0.0), -0.13 * (-side)))
             p_loc = Vector((x_offset, plate_z + 0.06, -0.41 * (-side))) if prefix else None
-            icon_loc = Vector((x_offset, plate_z, 0.31 * (-side)))
 
-        # 1. Texto principal (Slot 0)
+        # 1. Texto principal
         me_main = _get_or_create_text_mesh(scene, depsgraph, mesh_cache, main_name, f_size_main, 'CENTER', 'CENTER')
         mat_text_local = Matrix.Translation(t_loc) @ rot_local @ mat_upright
         mat_text_final = mat_world @ mat_text_local
-        
+
         v_start = len(bm_dest.verts)
         bm_dest.from_mesh(me_main)
-        # Aplicar transformación a los vértices agregados y fijar material slot 0
         for v in bm_dest.verts[v_start:]:
             v.co = mat_text_final @ v.co
 
@@ -542,40 +407,231 @@ def _accumulate_plate(bm_dest, uv_layer, scene, depsgraph, mesh_cache, mat_world
             me_pref = _get_or_create_text_mesh(scene, depsgraph, mesh_cache, prefix, f_size_pref, align_pref, 'TOP')
             mat_pref_local = Matrix.Translation(p_loc) @ rot_local @ mat_upright
             mat_pref_final = mat_world @ mat_pref_local
-            
+
             v_start_p = len(bm_dest.verts)
             bm_dest.from_mesh(me_pref)
             for v in bm_dest.verts[v_start_p:]:
                 v.co = mat_pref_final @ v.co
 
-        # 3. Quad para Icono en Recuadro Blanco (Slot icon_slot)
-        mat_ico_local = Matrix.Translation(icon_loc) @ rot_local @ mat_upright
-        mat_ico_final = mat_world @ mat_ico_local
-        
-        w_half = 0.11
-        h_half = 0.08
-        pts = [
-            Vector((-w_half, -h_half, 0.0)),
-            Vector((w_half, -h_half, 0.0)),
-            Vector((w_half, h_half, 0.0)),
-            Vector((-w_half, h_half, 0.0))
-        ]
-        world_pts = [mat_ico_final @ p for p in pts]
-        
-        v1 = bm_dest.verts.new(world_pts[0])
-        v2 = bm_dest.verts.new(world_pts[1])
-        v3 = bm_dest.verts.new(world_pts[2])
-        v4 = bm_dest.verts.new(world_pts[3])
-        
-        face = bm_dest.faces.new((v1, v2, v3, v4))
-        face.material_index = icon_slot
-        face.loops[0][uv_layer].uv = (0.0, 0.0)
-        face.loops[1][uv_layer].uv = (1.0, 0.0)
-        face.loops[2][uv_layer].uv = (1.0, 1.0)
-        face.loops[3][uv_layer].uv = (0.0, 1.0)
+def build_baked_texts(corners: list, bvh_terrain=None, out_path: str = OUT_TEXTOS_GLB):
+    """
+    Construye la malla combinada de textos 3D en mayúsculas (blancos, Bfont extruido)
+    para toda la ciudad. Exclusivamente textos, sin caras de iconos.
+    """
+    print(f"\n[Textos] Compilando textos 3D para {len(corners)} esquinas en toda la ciudad...")
+    t_start = time.time()
+
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    scene = bpy.context.scene
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+
+    mat_white = bpy.data.materials.new(name="M_Texto_Rotulo_Blanco")
+    mat_white.use_nodes = True
+    bsdf_t = mat_white.node_tree.nodes.get("Principled BSDF")
+    if bsdf_t:
+        bsdf_t.inputs["Base Color"].default_value = (0.95, 0.95, 0.95, 1.0)
+        bsdf_t.inputs["Roughness"].default_value = 0.35
+        bsdf_t.inputs["Metallic"].default_value = 0.0
+
+    bm_consolidated = bmesh.new()
+    mesh_cache = {}
+
+    for corner_idx, c_info in enumerate(corners):
+        if (corner_idx + 1) % 500 == 0 or corner_idx == 0:
+            elapsed = time.time() - t_start
+            print(f"  --> Procesando textos esquina {corner_idx + 1}/{len(corners)} ({elapsed:.1f}s transcurridos)...")
+
+        lx, ly = c_info["pos"]
+        st1, st2 = c_info["streets"]
+        v1, v2 = c_info["v1"], c_info["v2"]
+
+        if "lz" in c_info:
+            lz = c_info["lz"]
+        elif bvh_terrain is not None:
+            lz = get_terrain_height(bvh_terrain, lx, ly, default_h=400.0)
+        else:
+            lz = 400.0
+
+        if "yaw_rad" in c_info:
+            yaw_rad = c_info["yaw_rad"]
+        else:
+            yaw_rad = calculate_optimal_post_orientation(v1, v2)
+
+        gx, gy, gz = lx, lz, -ly
+        g_rot_y = -yaw_rad
+
+        cos_g = math.cos(g_rot_y)
+        sin_g = math.sin(g_rot_y)
+        mat_post_godot = Matrix((
+            (cos_g,  0.0, sin_g, gx),
+            (0.0,    1.0, 0.0,   gy),
+            (-sin_g, 0.0, cos_g, gz),
+            (0.0,    0.0, 0.0,   1.0)
+        ))
+
+        # Placa Inferior
+        p1, m1 = standardize_street_name(st1)
+        _accumulate_plate_text(
+            bm_dest=bm_consolidated,
+            scene=scene,
+            depsgraph=depsgraph,
+            mesh_cache=mesh_cache,
+            mat_world=mat_post_godot,
+            prefix=p1,
+            main_name=m1,
+            plate_type="LOWER",
+            plate_z=2.52
+        )
+
+        # Placa Superior
+        p2, m2 = standardize_street_name(st2)
+        _accumulate_plate_text(
+            bm_dest=bm_consolidated,
+            scene=scene,
+            depsgraph=depsgraph,
+            mesh_cache=mesh_cache,
+            mat_world=mat_post_godot,
+            prefix=p2,
+            main_name=m2,
+            plate_type="UPPER",
+            plate_z=2.74
+        )
+
+    print("\n[Textos] Convirtiendo BMesh consolidado a objeto de Blender...")
+    final_mesh = bpy.data.meshes.new("Nomenclatura_Textos_Malla")
+    bm_consolidated.to_mesh(final_mesh)
+    bm_consolidated.free()
+
+    obj_consolidated = bpy.data.objects.new("Nomenclatura_Textos_Consolidados", final_mesh)
+    scene.collection.objects.link(obj_consolidated)
+    obj_consolidated.data.materials.append(mat_white)
+
+    print(f"[Textos] Exportando archivo consolidado: {out_path}...")
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    bpy.ops.object.select_all(action='DESELECT')
+    obj_consolidated.select_set(True)
+    bpy.context.view_layer.objects.active = obj_consolidated
+
+    bpy.ops.export_scene.gltf(
+        filepath=out_path,
+        export_format='GLB',
+        use_selection=True,
+        export_apply=True,
+        export_materials='EXPORT',
+        export_yup=True
+    )
+    t_end = time.time()
+    print(f"[Textos] Exportación de textos finalizada con éxito en {t_end - t_start:.2f} segundos.")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 7. Generador de la Escena e Integración en Godot 4
+# 7. Generador de Iconos/Calcomanías en Blender (Ultra-Rápido, Desacoplado)
+# ─────────────────────────────────────────────────────────────────────────────
+def build_baked_icons(items: list, icons_paths: list, out_path: str = OUT_ICONOS_GLB):
+    """
+    Construye la malla combinada de calcomanías/cuadros de iconos para todas las esquinas.
+    Ultra-rápido: genera 16,528 quads y exporta a GLB en < 1 segundo.
+    """
+    print(f"\n[Iconos] Compilando quads de calcomanías para {len(items)} esquinas...")
+    t_start = time.time()
+
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    scene = bpy.context.scene
+
+    icon_materials = []
+    for i, p_icon in enumerate(icons_paths):
+        icon_name = os.path.splitext(os.path.basename(p_icon))[0]
+        m_ico = bpy.data.materials.new(name=f"M_Icon_{icon_name}")
+        m_ico.use_nodes = True
+        nodes = m_ico.node_tree.nodes
+        links = m_ico.node_tree.links
+        bsdf_i = nodes.get("Principled BSDF")
+
+        tex_node = nodes.new("ShaderNodeTexImage")
+        img = bpy.data.images.load(os.path.abspath(p_icon))
+        tex_node.image = img
+
+        links.new(tex_node.outputs["Color"], bsdf_i.inputs["Base Color"])
+        if "Alpha" in tex_node.outputs and "Alpha" in bsdf_i.inputs:
+            links.new(tex_node.outputs["Alpha"], bsdf_i.inputs["Alpha"])
+        bsdf_i.inputs["Roughness"].default_value = 0.4
+        m_ico.blend_method = 'BLEND'
+        icon_materials.append(m_ico)
+
+    bm = bmesh.new()
+    uv_layer = bm.loops.layers.uv.new("UVMap")
+    mat_upright = Matrix.Rotation(math.radians(90.0), 4, 'X')
+    w_half, h_half = 0.11, 0.08
+    base_pts = [
+        Vector((-w_half, -h_half, 0.0)),
+        Vector((w_half, -h_half, 0.0)),
+        Vector((w_half, h_half, 0.0)),
+        Vector((-w_half, h_half, 0.0))
+    ]
+
+    # Configuraciones de las 4 caras de placas:
+    # (loc_relativa, rot_relativa)
+    plates_config = [
+        (Vector((0.31, 2.52, 0.0105)), Matrix.Identity(4)),
+        (Vector((-0.31, 2.52, -0.0105)), Matrix.Rotation(math.pi, 4, 'Y')),
+        (Vector((0.0105, 2.74, -0.31)), Matrix.Rotation(math.pi / 2.0, 4, 'Y')),
+        (Vector((-0.0105, 2.74, 0.31)), Matrix.Rotation(-math.pi / 2.0, 4, 'Y')),
+    ]
+
+    for item in items:
+        if isinstance(item, dict):
+            gx = item.get("gx", item["pos"][0])
+            gy = item.get("gy", item.get("lz", 400.0))
+            gz = item.get("gz", -item["pos"][1])
+            rot_y = item.get("g_rot_y", -item.get("yaw_rad", 0.0))
+        else:
+            gx, gy, gz, rot_y = item
+
+        cos_g = math.cos(rot_y)
+        sin_g = math.sin(rot_y)
+        mat_world = Matrix((
+            (cos_g,  0.0, sin_g, gx),
+            (0.0,    1.0, 0.0,   gy),
+            (-sin_g, 0.0, cos_g, gz),
+            (0.0,    0.0, 0.0,   1.0)
+        ))
+
+        ico_idx = (hash((round(gx, 1), round(-gz, 1))) & 0x7FFFFFFF) % len(icon_materials)
+
+        for loc, rot in plates_config:
+            m_final = mat_world @ Matrix.Translation(loc) @ rot @ mat_upright
+            v = [bm.verts.new(m_final @ p) for p in base_pts]
+            f = bm.faces.new(v)
+            f.material_index = ico_idx
+            f.loops[0][uv_layer].uv = (0.0, 0.0)
+            f.loops[1][uv_layer].uv = (1.0, 0.0)
+            f.loops[2][uv_layer].uv = (1.0, 1.0)
+            f.loops[3][uv_layer].uv = (0.0, 1.0)
+
+    mesh = bpy.data.meshes.new("Nomenclatura_Iconos_Malla")
+    bm.to_mesh(mesh)
+    bm.free()
+
+    obj = bpy.data.objects.new("Nomenclatura_Iconos_Consolidados", mesh)
+    scene.collection.objects.link(obj)
+    for m in icon_materials:
+        obj.data.materials.append(m)
+
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    bpy.ops.object.select_all(action='DESELECT')
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.export_scene.gltf(
+        filepath=out_path,
+        export_format='GLB',
+        use_selection=True,
+        export_apply=True,
+        export_materials='EXPORT',
+        export_yup=True
+    )
+    print(f"[Iconos] Malla exportada en {out_path} ({os.path.getsize(out_path):,} bytes) en {time.time() - t_start:.2f}s.")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 8. Generador de la Escena e Integración en Godot 4
 # ─────────────────────────────────────────────────────────────────────────────
 def generate_godot_integration(transforms: list):
     """
@@ -591,7 +647,6 @@ def generate_godot_integration(transforms: list):
         json.dump(data_payload, f)
     print("--> JSON de transformaciones guardado.")
 
-    # Escribir script de Godot para inicializar MultiMesh dinámicamente
     gd_script_content = """@tool
 extends Node3D
 
@@ -650,11 +705,11 @@ func _find_mesh(node: Node) -> MeshInstance3D:
         f.write(gd_script_content)
     print(f"--> Script GDScript de runtime creado: {OUT_SCRIPT_GD}")
 
-    # Escribir escena nomenclatura_urbana.tscn
-    tscn_content = """[gd_scene load_steps=5 format=3 uid="uid://nomenclatura_urbana_tecate_001"]
+    tscn_content = """[gd_scene load_steps=6 format=3 uid="uid://nomenclatura_urbana_tecate_001"]
 
 [ext_resource type="Script" path="res://assets/nomenclatura_urbana.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://assets/nomenclatura_textos_baked.glb" id="2_text_glb"]
+[ext_resource type="PackedScene" path="res://assets/nomenclatura_iconos_baked.glb" id="3_icon_glb"]
 
 [sub_resource type="MultiMesh" id="MultiMesh_postes"]
 transform_format = 1
@@ -667,35 +722,156 @@ multimesh = SubResource("MultiMesh_postes")
 
 [node name="TextosBaked" parent="." instance=ExtResource("2_text_glb")]
 
+[node name="IconosBaked" parent="." instance=ExtResource("3_icon_glb")]
+
 """
     with open(OUT_SCENE_TSCN, "w", encoding="utf-8") as f:
         f.write(tscn_content)
     print(f"--> Escena de Godot creada: {OUT_SCENE_TSCN}")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 8. Función Principal
+# 9. Procesamiento de Argumentos CLI y Despacho
+# ─────────────────────────────────────────────────────────────────────────────
+def parse_cli_args():
+    """Extrae las banderas pasadas al script tras el delimitador '--' de Blender."""
+    raw_args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
+    mode = "full"
+    for arg in raw_args:
+        if arg in ("--icons-only", "-i"):
+            mode = "icons"
+        elif arg in ("--text-only", "-t"):
+            mode = "text"
+        elif arg in ("--full", "-f"):
+            mode = "full"
+        elif arg in ("--help", "-h"):
+            print("\nUso del Compilador de Nomenclatura Urbana:")
+            print("  blender --background --python scripts/bake_nomenclatura_urbana.py -- [opción]")
+            print("\nOpciones disponibles:")
+            print("  --icons-only, -i   Regenera ÚNICAMENTE los quads e imágenes/iconos en < 1.5s.")
+            print("                     Conserva intactos los textos ya procesados.")
+            print("  --text-only, -t    Regenera ÚNICAMENTE la malla 3D de textos de calles.")
+            print("                     Conserva intactos los iconos.")
+            print("  --full, -f         (Por defecto) Flujo completo: análisis OSM, cota de terreno,")
+            print("                     malla de textos, quads de iconos y escenas.")
+            print("  --help, -h         Muestra este mensaje de ayuda.\n")
+            sys.exit(0)
+    return mode
+
+def ensure_corners_metadata():
+    """Garantiza la existencia de esquinas y cotas en caché, o las calcula si faltan."""
+    if os.path.exists(OUT_CORNERS_JSON):
+        print(f"[Caché] Cargando datos de esquinas desde: {OUT_CORNERS_JSON}")
+        with open(OUT_CORNERS_JSON, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    print("[Caché] Generando caché de esquinas y cotas topográficas...")
+    bvh = build_terrain_bvh(TERRAIN_GLB_PATH)
+    raw_corners = extract_corners_with_debounce(ROAD_OSM_PATH, min_debounce_m=5.0)
+
+    corners_data = []
+    for c in raw_corners:
+        lx, ly = c["pos"]
+        st1, st2 = c["streets"]
+        v1, v2 = c["v1"], c["v2"]
+        lz = get_terrain_height(bvh, lx, ly, default_h=400.0)
+        yaw_rad = calculate_optimal_post_orientation(v1, v2)
+        gx, gy, gz = lx, lz, -ly
+        g_rot_y = -yaw_rad
+        corners_data.append({
+            "pos": [round(lx, 3), round(ly, 3)],
+            "streets": [st1, st2],
+            "v1": [round(v1[0], 4), round(v1[1], 4)],
+            "v2": [round(v2[0], 4), round(v2[1], 4)],
+            "lz": round(lz, 3),
+            "yaw_rad": round(yaw_rad, 4),
+            "gx": round(gx, 3),
+            "gy": round(gy, 3),
+            "gz": round(gz, 3),
+            "g_rot_y": round(g_rot_y, 4)
+        })
+
+    with open(OUT_CORNERS_JSON, "w", encoding="utf-8") as f:
+        json.dump(corners_data, f, indent=2)
+    print(f"[Caché] Guardadas {len(corners_data)} esquinas en: {OUT_CORNERS_JSON}")
+    return corners_data
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 10. Función Principal
 # ─────────────────────────────────────────────────────────────────────────────
 def main():
+    mode = parse_cli_args()
+
     print("=" * 75)
-    print(" COMPILADOR PROCEDURAL PRE-BAKE DE NOMENCLATURA URBANA TECATE")
+    print(" COMPILADOR PRE-BAKE DE NOMENCLATURA URBANA - TECATE SIMULATOR")
+    print(f" Modo seleccionado: [{mode.upper()}]")
     print("=" * 75)
 
     icons_list = sorted(glob.glob(os.path.join(ICONS_DIR, "*.png")))
-    if not icons_list:
+    if not icons_list and mode in ("icons", "full"):
         print(f"[Error] No se encontraron iconos PNG en {ICONS_DIR}.")
         return 1
-    print(f"[Iconos] Catálogo disponible: {len(icons_list)} archivos PNG en {ICONS_DIR}.")
 
+    # ── MODO 1: SOLO ICONOS (--icons-only / -i) ──
+    if mode == "icons":
+        print("[Modo Incremental] Reprocesando únicamente imágenes e iconos...")
+        if os.path.exists(OUT_DATA_JSON):
+            with open(OUT_DATA_JSON, "r", encoding="utf-8") as f:
+                items = json.load(f)
+        else:
+            corners = ensure_corners_metadata()
+            items = [[c["gx"], c["gy"], c["gz"], c["g_rot_y"]] for c in corners]
+
+        build_baked_icons(items, icons_list, OUT_ICONOS_GLB)
+        print("\n--> Procesamiento de imágenes completado conservando intactos los textos.")
+        return 0
+
+    # ── MODO 2: SOLO TEXTOS (--text-only / -t) ──
+    if mode == "text":
+        print("[Modo Incremental] Reprocesando únicamente la malla 3D de textos...")
+        corners = ensure_corners_metadata()
+        build_baked_texts(corners, None, OUT_TEXTOS_GLB)
+        transforms = [[c["gx"], c["gy"], c["gz"], c["g_rot_y"]] for c in corners]
+        generate_godot_integration(transforms)
+        print("\n--> Procesamiento de textos completado conservando intactos los iconos.")
+        return 0
+
+    # ── MODO 3: FLUJO COMPLETO (--full / -f) ──
+    print("[Modo Completo] Ejecutando análisis geométrico, topográfico y pre-bake...")
     bvh_terrain = build_terrain_bvh(TERRAIN_GLB_PATH)
-
-    # Procesar TODA la extensión del mapa (requerimiento explícito del usuario)
-    corners = extract_corners_with_debounce(ROAD_OSM_PATH, min_debounce_m=5.0)
-    if not corners:
+    raw_corners = extract_corners_with_debounce(ROAD_OSM_PATH, min_debounce_m=5.0)
+    if not raw_corners:
         print("[Error] No se detectaron esquinas válidas.")
         return 1
 
-    transforms = build_baked_signage(corners, bvh_terrain, icons_list)
+    corners_data = []
+    transforms = []
+    for c in raw_corners:
+        lx, ly = c["pos"]
+        st1, st2 = c["streets"]
+        v1, v2 = c["v1"], c["v2"]
+        lz = get_terrain_height(bvh_terrain, lx, ly, default_h=400.0)
+        yaw_rad = calculate_optimal_post_orientation(v1, v2)
+        gx, gy, gz = lx, lz, -ly
+        g_rot_y = -yaw_rad
+        corners_data.append({
+            "pos": [round(lx, 3), round(ly, 3)],
+            "streets": [st1, st2],
+            "v1": [round(v1[0], 4), round(v1[1], 4)],
+            "v2": [round(v2[0], 4), round(v2[1], 4)],
+            "lz": round(lz, 3),
+            "yaw_rad": round(yaw_rad, 4),
+            "gx": round(gx, 3),
+            "gy": round(gy, 3),
+            "gz": round(gz, 3),
+            "g_rot_y": round(g_rot_y, 4)
+        })
+        transforms.append([round(gx, 3), round(gy, 3), round(gz, 3), round(g_rot_y, 4)])
 
+    with open(OUT_CORNERS_JSON, "w", encoding="utf-8") as f:
+        json.dump(corners_data, f, indent=2)
+
+    build_baked_texts(corners_data, bvh_terrain, OUT_TEXTOS_GLB)
+    build_baked_icons(transforms, icons_list, OUT_ICONOS_GLB)
     generate_godot_integration(transforms)
 
     print("\n" + "=" * 75)

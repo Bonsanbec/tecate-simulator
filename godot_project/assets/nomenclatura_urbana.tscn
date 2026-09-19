@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://nomenclatura_urbana_tecate_001"]
+[gd_scene load_steps=6 format=3 uid="uid://nomenclatura_urbana_tecate_001"]
 
 [ext_resource type="Script" path="res://assets/nomenclatura_urbana.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://assets/nomenclatura_textos_baked.glb" id="2_text_glb"]
+[ext_resource type="PackedScene" path="res://assets/nomenclatura_iconos_baked.glb" id="3_icon_glb"]
 
 [sub_resource type="MultiMesh" id="MultiMesh_postes"]
 transform_format = 1
@@ -13,4 +14,6 @@ script = ExtResource("1_script")
 multimesh = SubResource("MultiMesh_postes")
 
 [node name="TextosBaked" parent="." instance=ExtResource("2_text_glb")]
+
+[node name="IconosBaked" parent="." instance=ExtResource("3_icon_glb")]
 

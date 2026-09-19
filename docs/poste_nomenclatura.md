@@ -157,3 +157,33 @@ func _agregar_label(texto: String, pos: Vector3, rot_deg: Vector3, font_size_m: 
    - `poste_nomenclatura_creston.png`: Acercamiento detallado al crestón semicircular con "AYUNTAMIENTO" y "17".
    - `poste_nomenclatura_base.png`: Detalle del pedestal acampanado con 16 estrías suaves.
 
+---
+
+## 7. Pipeline Pre-Bake de Nomenclatura Urbana y Compilación Incremental
+
+Para la integración masiva en todo el municipio de Tecate (4,132 esquinas debounced $\ge 5.0\text{ m}$), el script `scripts/bake_nomenclatura_urbana.py` implementa una arquitectura desacoplada ultraeficiente:
+
+### Arquitectura de Mallas Desacopladas
+1. **`poste_nomenclatura_tecate.glb`**: Malla canónica instanciada vía `MultiMeshInstance3D` en 1 solo draw call (CERO duplicación de geometría de postes).
+2. **`nomenclatura_textos_baked.glb`**: Malla consolidada única con los textos 3D extruidos en blanco (`Bfont`). Generada una sola vez (~100s).
+3. **`nomenclatura_iconos_baked.glb`**: Malla consolidada única de calcomanías/quads UV-mapeados para los iconos del recuadro blanco.
+4. **`nomenclatura_corners.json`** y **`nomenclatura_data.json`**: Metadatos geométricos cacheados (posiciones, rotaciones, rasante vertical de terreno).
+
+### Modos de Ejecución Incremental
+El script se ejecuta mediante Blender headless y acepta banderas tras `--`:
+
+```bash
+# Modo 1: Regenerar ÚNICAMENTE imágenes e iconos en ~1 segundo (conserva textos 3D)
+/Applications/Blender.app/Contents/MacOS/Blender --background --python scripts/bake_nomenclatura_urbana.py -- --icons-only
+
+# Modo 2: Regenerar ÚNICAMENTE textos 3D (conserva iconos)
+/Applications/Blender.app/Contents/MacOS/Blender --background --python scripts/bake_nomenclatura_urbana.py -- --text-only
+
+# Modo 3: Flujo completo (análisis OSM, cota BVH de tecate2.glb, textos, iconos y escenas)
+/Applications/Blender.app/Contents/MacOS/Blender --background --python scripts/bake_nomenclatura_urbana.py -- --full
+```
+
+> [!TIP]
+> **Edición de texturas existentes**: Si se modifica el contenido gráfico de un PNG existente dentro de `godot_project/assets/nomenclatura_icons/`, Godot Engine 4 lo recarga en vivo de forma automática sin requerir re-ejecutar el script. La bandera `--icons-only` es necesaria cuando se agregan, eliminan o reorganizan archivos de imagen en dicho directorio.
+
+
