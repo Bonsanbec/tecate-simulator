@@ -1,90 +1,116 @@
-# Ficha Técnica Arquitectónica: Hotel Tecate (Ground-Truth Histórico 2009)
+# Ficha Técnica Arquitectónica: Hotel Tecate (Ground-Truth Histórico 2009 — Versión V4.0 Refinada)
 
-Documento técnico de especificación morfológica, paramétrica, PBR y consenso multi-perspectiva para la reconstrucción fidedigna del complejo hotelero y comercial **Hotel Tecate** (esquina Calle Presidente Lázaro Cárdenas y Callejón Libertad, Tecate, B.C.) en Blender 5.1 y Godot Engine 4.
+Documento técnico de especificación morfológica, paramétrica, fenestración, toldería, PBR y consenso multi-perspectiva para la reconstrucción fidedigna del complejo hotelero y comercial **Hotel Tecate** (esquina Calle Presidente Lázaro Cárdenas y Callejón Libertad, Tecate, B.C.) en Blender 5.1 y Godot Engine 4.
 
 ---
 
 ## 1. Contexto Urbano y Emplazamiento Cartesiano
 
 - **Nombre Oficial**: Hotel Tecate (Época histórica 2009).
-- **Emplazamiento Histórico**: Esquina de manzana en la intersección vial de Calle Presidente Lázaro Cárdenas (eje norte-sur) y Callejón Libertad (eje poniente-oriente), frente al Parque Miguel Hidalgo.
-- **Vértice de Esquina (Ochava Colonial)**: Emplazado en la intersección proyectada de ambas calles apuntando en chaflán a $45^\circ$ hacia el Parque Miguel Hidalgo (Monumento a Lázaro Cárdenas).
+- **Emplazamiento Histórico**: Esquina de manzana en la intersección vial de Calle Presidente Lázaro Cárdenas (eje norte-sur) y Callejón Libertad (eje poniente-oriente), frente al Parque Miguel Hidalgo y el monumento a Lázaro Cárdenas.
+- **Vértice de Esquina (Ochava Colonial)**: Emplazado en la intersección proyectada de ambas calles apuntando en chaflán a $45^\circ$ hacia el Parque Miguel Hidalgo.
 - **Contrato Cartesiano Canónico (Primer Cuadrante Ortogonal)**:
   - $\text{Origen }(0,0,0)$: Intersección de las alineaciones de fachada de Cárdenas y Libertad a nivel de rasante.
-  - $\text{Eje }+X$: Vector paralelo a Calle Presidente Lázaro Cárdenas en dirección sur ($X \in [0.00, 28.60\text{ m}]$).
-  - $\text{Eje }+Y$: Vector paralelo a Callejón Libertad en dirección oriente ($Y \in [0.00, 20.40\text{ m}]$).
+  - $\text{Eje }+X$: Vector paralelo a Calle Presidente Lázaro Cárdenas en dirección sur ($X \in [0.00, 26.20\text{ m}]$).
+  - $\text{Eje }+Y$: Vector paralelo a Callejón Libertad en dirección oriente ($Y \in [0.00, 18.00\text{ m}]$).
   - $\text{Eje }+Z$: Cota de elevación vertical.
 - **Calibración de Rasante y Zócalo Subterráneo**:
-  - Todo el perímetro cuenta con zócalo basal continuo en concreto grafito oscuro (`M_Zocalo_Basal`) que desciende en profundidad hasta $Z = -1.20\text{ m}$ bajo rasante, absorbiendo los desniveles y pendientes de la vialidad sin producir flotación del edificio.
-  - Prohibición estricta cumplida: el asset 3D (`hotel_tecate.glb`) no embebe banquetas, cordones ni asfalto.
+  - Todo el perímetro cuenta con zócalo basal continuo en concreto grafito oscuro (`M_Zocalo_Basal`) que desciende en profundidad hasta $Z = -1.25\text{ m}$ bajo rasante, absorbiendo los desniveles y pendientes de la vialidad sin producir flotación del edificio.
+  - **Prohibición estricta cumplida**: El asset 3D (`hotel_tecate.glb`) no embebe banquetas, cordones ni asfalto.
 - **Integración en Escena Principal Godot (`godot_project/main.tscn`)**:
   - Instancia: `[node name="Hotel_Tecate" parent="." instance=ExtResource("13_hotel_tecate")]`
   - `transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -46.5, 398.88, 41.5)`
   - **Rotación Cardinal Pura**: Rotación ortogonal estricta de $-90^\circ$ ($270^\circ$) alrededor del eje vertical $Y$, alineando el eje local $+X$ con el sur ($+Z_{\text{mundo}}$) a lo largo de Calle Pdte. Lázaro Cárdenas, y el eje local $-Z$ con el oriente ($+X_{\text{mundo}}$) a lo largo de Callejón Libertad.
-  - **Cota Rasante**: $Y = 398.88\text{ m}$, posando la planta baja a ras de la plataforma de la manzana (`manzanas_baked.glb`) y dejando el zócalo basal enterrado herméticamente hasta $Y = 397.68\text{ m}$.
-  - **Colisiones Analíticas**: Escena `hotel_tecate.tscn` con 9 cuerpos `BoxShape3D` coordinados con los ejes locales de glTF, preservando el zaguán de acceso de $4.80\text{ m} \times 3.20\text{ m}$ totalmente transitable.
+  - **Cota Rasante**: $Y = 398.88\text{ m}$, posando la planta baja a ras de la plataforma de la manzana (`manzanas_baked.glb`) y dejando el zócalo basal enterrado herméticamente hasta $Y = 397.63\text{ m}$.
+  - **Colisiones Analíticas**: Escena `hotel_tecate.tscn` con 9 cuerpos `BoxShape3D` coordinados con los ejes locales de glTF, preservando el zaguán de acceso de $4.80\text{ m} \times 3.20\text{ m}$ totalmente transitable sin paredes invisibles.
 
 ---
 
-## 2. Anatomía y Nomenclatura Vial Rectificada
+## 2. Anatomía, Fenestración y Nomenclatura Vial Refinada (V4.0)
 
 El inmueble se compone de los siguientes cuerpos arquitectónicos fidedignamente reconstruidos según la evidencia fotográfica histórica:
 
-1. **Ochava a 45º (Chaflán Parque Miguel Hidalgo)**:
-   - Longitud de cuerda: $3.96\text{ m}$ ($X \in [0.00, 2.80\text{ m}], Y \in [0.00, 2.80\text{ m}]$).
-   - **Planta Baja**: cancel comercial retranqueado con puertas dobles acristaladas de marco oscuro y marquesina volada metálica ("MOCHO RESTAURANT").
-   - **Planta Alta**: balcón exterior en voladizo ($1.15\text{ m}$ de saliente) con peana de moldura beige y barandal ornamental de hierro forjado negro ($H = 1.05\text{ m}$), con puerta francesa acristalada de acceso.
-   - **Pretil y Corona**: remate colonial curvo acampanado continuo que se eleva hasta $Z = 8.70\text{ m}$, con alvéolo/rejilla cuadrada central de ventilación.
-   - **Rótulo Publicitario en Voladizo**: letrero ortogonal de doble cara sobre mástil en $X = 2.60\text{ m}$:
-     - Anverso y Reverso: **"HOTEL TECATE"** en letras rojas 3D y **"Tel. 654-11-16"** en azul.
+### 1. Ochava en Chaflán a 45º (Frente Parque Miguel Hidalgo)
+- **Cuerda de Esquina**: $X \in [0.00, 2.80\text{ m}], Y \in [0.00, 2.80\text{ m}]$ en ángulo de $45^\circ$.
+- **Planta Baja**: Cancel comercial retranqueado con puertas dobles acristaladas de marco oscuro, marquesina volada metálica de acero espejo y escalón de acceso.
+- **Planta Alta**: Balcón exterior voladizo soportado por 3 ménsulas escalonadas de concreto blanco, barandal ornamental de hierro forjado negro ($H = 1.05\text{ m}$), puerta de balcón coronada por arco decorativo de bloques de vidrio translúcido (*pavés*).
+- **Torreón Semicircular Peraltado (Corona)**:
+  - Estructura cilíndrica sobresaliente de radio $1.60\text{ m}$ que se eleva hasta $Z = 9.15\text{ m}$ ($+1.70\text{ m}$ sobre el pretil general).
+  - Flanqueado por golas/aletas decorativas curvadas de transición hacia los pretiles adyacentes.
+  - Alvéolo / ventila cuadrada central con rejilla metálica oscura en $Z = 8.35\text{ m}$.
+- **Cartel Publicitario en Mástil Volado**:
+  - Emplazado en $X = 2.60\text{ m}$ con mástil de soporte en celosía metálica.
+  - Letrero rectangular ortogonal de doble cara:
+    - **"HOTEL TECATE"** en relieve tridimensional bermellón.
+    - **"Tel. 654-11-16"** en azul rey institucional.
 
-2. **Fachada Oeste sobre Calle Presidente Lázaro Cárdenas (6 Crujías, 25.80 m)**:
-   - **Crujía 1 ($X \in [2.80, 7.10\text{ m}]$)**: Escaparate con cortina metálica de persiana, condensador de minisplit A/C en fachada y ventanería blanca corredera en planta alta.
-   - **Crujía 2 ($X \in [7.10, 11.40\text{ m}]$)**: Gran escaparate con cortina metálica enrollable, aplique decorativo circular en muro y ventana modular en planta alta.
-   - **Crujía 3 ($X \in [11.40, 15.70\text{ m}]$)**: Puerta de acceso peatonal y ventanas modulares altas.
-   - **Crujía 4 ($X \in [15.70, 20.00\text{ m}]$)**: Local comercial con toldo de lona festoneada color beige arena y ventanas gemelas en planta alta.
-   - **Crujía 5 — Zaguán Túnel Central Transitable ($X \in [20.00, 24.80\text{ m}]$)**:
-     - Vano pasante abierto de $4.80\text{ m}$ de ancho y $3.20\text{ m}$ de gálibo libre hacia el patio interior.
-     - Franja superior continua de bloques de vidrio translúcido (*pavés*) en $Z \in [3.20, 3.80\text{ m}]$.
-     - Puesto de comida "Taquería Los Gallos" con mostrador interior y espacio caminable sin colisiones bloqueantes.
-     - Planta alta con dos ventanas simétricas y frontón escalonado central en el pretil.
-   - **Crujía 6 — "Internet World" ($X \in [24.80, 28.60\text{ m}]$)**:
-     - Cancel comercial con toldo vinílico azul y rótulos tridimensionales legibles de izquierda a derecha:
-       `INTERNET WORLD`
-       `VENTA Y REPARACION DE COMPUTADORAS`
-     - Ventana corrida triple en planta alta.
-     - Medianera sur ciega enrasada en $X = 28.60\text{ m}$ que colinda con "Dulcería El Molino".
+### 2. Fachada Oeste sobre Calle Presidente Lázaro Cárdenas (5 Módulos, 26.20 m)
+- **Módulo 1 ($X \in [2.80, 7.50\text{ m}]$)**:
+  - Planta Baja: Escaparate acristalado y persiana metálica enrollable. Condensador de minisplit A/C en fachada con aspas y rejillas.
+  - Planta Alta: 2 ventanas gemelas pareadas `[][]` de dos hojas con perfilería blanca, antepecho y moldura de dintel.
+- **Módulo 2 ($X \in [7.50, 12.00\text{ m}]$)**:
+  - Planta Baja: Gran escaparate con cortina metálica y aplique decorativo en muro.
+  - Planta Alta: 2 ventanas gemelas pareadas con molduras.
+- **Módulo 3 ($X \in [12.00, 16.50\text{ m}]$)**:
+  - Planta Baja: Local comercial con toldo de lona festoneada color beige arena, cancelería comercial y puerta peatonal.
+  - Planta Alta: 2 ventanas gemelas pareadas.
+- **Módulo 4 — Taquería Los Gallos y Zaguán Túnel ($X \in [16.50, 21.80\text{ m}]$)**:
+  - Planta Baja: Zaguán túnel central pasante ($4.80\text{ m} \times 3.20\text{ m}$) hacia el patio interior, totalmente transitable sin colisiones.
+  - Puesto de comida "Taquería Los Gallos" con mostrador interior, toldo rojo festoneado con rótulo tipográfico **"TAQUERIA LOS GALLOS"**.
+  - Franja corrida de bloques de vidrio translúcido (*pavés*) sobre el vano del zaguán ($Z \in [3.20, 3.80\text{ m}]$).
+  - Planta Alta: 2 ventanas simétricas y frontón central escalonado en el pretil.
+- **Módulo 5 — "Internet World" ($X \in [21.80, 26.20\text{ m}]$)**:
+  - Planta Baja: Local comercial con toldo semicilíndrico verde bosque con rótulo tipográfico blanco tridimensional:
+    `INTERNET WORLD`
+    `VENTA Y REPARACION DE COMPUTADORAS`
+  - Planta Alta: Ventana corrida triple de 3 hojas.
+  - Medianera sur ciega enrasada en $X = 26.20\text{ m}$ colindando con "Dulcería El Molino".
 
-3. **Fachada Norte sobre Callejón Libertad (4 Crujías, 17.60 m)**:
-   - **Crujía N1 ($Y \in [2.80, 7.00\text{ m}]$)**: Ventanal con cortina enrollable, minisplit A/C, placa oval Corona y ventana superior corredera.
-   - **Crujía N2 — Franquicia SUBWAY ($Y \in [7.00, 12.00\text{ m}]$)**:
-     - Logotipo tridimensional institucional **SUBWAY** en relieve amarillo sobre fascia verde esmeralda.
-     - Escaparate comercial y cancelería.
-     - Planta alta con ventana modular grande y ventana cuadrada auxiliar.
-   - **Crujía N3 ($Y \in [12.00, 15.20\text{ m}]$)**: Portón de rejas metálicas verticales de servicio hacia el hotel.
-   - **Crujía N4 ($Y \in [15.20, 20.40\text{ m}]$)**: Local comercial con toldo verde semicilíndrico ("Linda..."), ventana superior y medianera oriente en $Y = 20.40\text{ m}$.
+### 3. Fachada Norte sobre Callejón Libertad (5 Crujías, 18.00 m)
+- **Crujía N1 ($Y \in [2.80, 6.20\text{ m}]$)**:
+  - Planta Baja: Ventanal comercial con persiana enrollable, minisplit A/C en fachada, placa publicitaria decorativa.
+  - Planta Alta: Ventana modular con carpintería blanca.
+- **Crujía N2 — Franquicia SUBWAY ($Y \in [6.20, 11.20\text{ m}]$)**:
+  - Planta Baja: Rótulo tipográfico volumétrico **SUBWAY** en amarillo institucional sobre relieve directo en fachada de estuco, marquesina volada y cancelería de vidrio de piso a techo.
+  - Planta Alta: Ventana modular grande y ventana auxiliar de ventilación.
+- **Crujía N3 — Portón y Terraza ($Y \in [11.20, 13.80\text{ m}]$)**:
+  - Portón de servicio de rejas metálicas verticales hacia el hotel.
+- **Crujía N4 — Local "Casa Paris" y Sombrillas ($Y \in [13.80, 18.00\text{ m}]$)**:
+  - Planta Baja: Local comercial con toldo negro de borde blanco festoneado con letrero **"CASA PARIS"**.
+  - Sombrillas de terraza rojas exteriores frente a la fachada.
+  - Planta Alta: Ventana de habitación y medianera oriente en $Y = 18.00\text{ m}$.
 
-4. **Patio Interior y Azotea Hermética**:
-   - Patio central abierto de $12.00\text{ m} \times 8.00\text{ m}$ accesible a través del zaguán túnel de la Crujía 5.
-   - Pasillo perimetral techado en planta alta con barandal de forja negra para distribución de habitaciones.
-   - Azotea continua sellada con losa asfáltica hermética (`M_Azotea_Asfalto`), caseta de escaleras/elevador y antenas parabólicas satelitales (*Dish*).
+### 4. Patio Interior y Azotea Hermética
+- Patio central de $10.50\text{ m} \times 7.20\text{ m}$ comunicado por el zaguán túnel de la fachada oeste.
+- Corredor perimetral techado en planta alta con barandal de forja negra para acceso a habitaciones.
+- Azotea sellada hermética con losa asfáltica multicapa (`M_Azotea_Asfalto`), caseta de servicio y antenas satelitales tipo *Dish*.
 
 ---
 
-## 3. Salidas Generadas y Assets del Proyecto
+## 3. Shaders y Materiales PBR Fotorrealistas
 
-1. **Script Generador Procedural**:
-   - [`scripts/generate_hotel_tecate.py`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/scripts/generate_hotel_tecate.py)
-2. **Archivo Maestro Blender**:
-   - `blender_assets/buildings/hotel_tecate.blend`
-3. **Asset 3D Optimizado Godot 4**:
-   - `godot_project/assets/buildings/hotel_tecate.glb` (desacoplado de banquetas)
-4. **Escena Instanciable Godot 4**:
-   - `godot_project/assets/buildings/hotel_tecate.tscn` (con jerarquía de colisiones analíticas `BoxShape3D` y zaguán transitable)
-5. **Batería de Validación (6 Renders Técnicos Cycles)**:
-   - `docs/images/hotel_tecate/hotel_tecate_ochava_45.png`
-   - `docs/images/hotel_tecate/hotel_tecate_subway_north.png`
-   - `docs/images/hotel_tecate/hotel_tecate_cardenas_west.png`
-   - `docs/images/hotel_tecate/hotel_tecate_zaguan_closeup.png`
-   - `docs/images/hotel_tecate/hotel_tecate_dulceria_border.png`
-   - `docs/images/hotel_tecate/hotel_tecate_aerial_top.png`
+| Material | Base Color / Textura | Roughness | Metallic | Características PBR |
+| :--- | :--- | :--- | :--- | :--- |
+| `M_Estuco_Terracota` | `#BE6045` `(0.71, 0.35, 0.23)` | 0.88 | 0.00 | Micro-relieve dual: grano fino de arena (escala 280) + textura de llana (escala 22) con bump normal de 0.14 |
+| `M_Moldura_Crema` | `#F0E6D2` `(0.92, 0.88, 0.80)` | 0.75 | 0.00 | Molduras perimetrales, cornisas, ménsulas y antepechos |
+| `M_Zocalo_Basal` | `#2D2B2A` `(0.18, 0.17, 0.16)` | 0.90 | 0.00 | Concreto rugoso zócalo subterráneo hasta $Z = -1.25\text{ m}$ |
+| `M_Paves_Vidrio` | `#D8ECE8` `(0.85, 0.92, 0.91)` | 0.15 | 0.00 | Bloques de vidrio con cuadrícula y rugosidad refractante |
+| `M_Vidrio_Ventana` | `#0E171E` `(0.06, 0.09, 0.12)` | 0.08 | 0.10 | Vidrio semirreflectante tintado exterior |
+| `M_Cortina_Metalica`| `#8E9599` `(0.55, 0.58, 0.60)` | 0.40 | 0.80 | Lámina acanalada horizontal con relieve bump de estrías |
+| `M_Toldo_Arena` | `#C8B282` `(0.78, 0.70, 0.51)` | 0.85 | 0.00 | Lona gruesa texturizada con festón |
+| `M_Toldo_Rojo` | `#B82822` `(0.72, 0.16, 0.13)` | 0.82 | 0.00 | Toldo Taquería Los Gallos y sombrillas de terraza |
+| `M_Toldo_Verde` | `#1D5A38` `(0.11, 0.35, 0.22)` | 0.82 | 0.00 | Toldo semicilíndrico Internet World |
+| `M_Toldo_Negro` | `#1A1A1A` `(0.10, 0.10, 0.10)` | 0.80 | 0.00 | Toldo Casa Paris con borde festoneado blanco |
+| `M_Rotulo_Subway` | `#FFCE00` `(1.00, 0.81, 0.00)` | 0.30 | 0.00 | Amarillo institucional en relieve directo |
+| `M_Hierro_Forjado` | `#1C1C1C` `(0.11, 0.11, 0.11)` | 0.35 | 0.85 | Barandales de balcón y pasillos del patio |
+
+---
+
+## 4. Batería de Renders de Validación Cycles CPU
+
+1. **`hotel_tecate_ochava_45.png`**: Vista en ángulo de $45^\circ$ hacia la ochava, mostrando el torreón semicircular peraltado, la ventila de alvéolo, ménsulas, barandal de forja, balcón con arco de pavés, marquesina de cancel y letrero volado en mástil.
+2. **`hotel_tecate_subway_north.png`**: Fachada norte completa sobre Callejón Libertad con rótulo 3D SUBWAY, cancelería comercial, Casa Paris con toldo negro y sombrillas rojas.
+3. **`hotel_tecate_cardenas_west.png`**: Fachada oeste completa sobre Calle Pdte. Lázaro Cárdenas con las 5 crujías, ventanas gemelas pareadas `[][]`, minisplit, toldos arena, zaguán túnel de Los Gallos e Internet World.
+4. **`hotel_tecate_zaguan_closeup.png`**: Acercamiento en perspectiva peatonal al zaguán túnel, mostrador de taquería, franja de pavés y toldo rojo.
+5. **`hotel_tecate_dulceria_border.png`**: Vista de la esquina suroeste en colindancia con Dulcería El Molino.
+6. **`hotel_tecate_aerial_top.png`**: Vista cenital de azotea sellada y patio interior central.
