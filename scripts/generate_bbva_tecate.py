@@ -1697,8 +1697,8 @@ def build_east_facade_and_parking(mats, col):
     f_ed.align_x = 'CENTER'
     o_ed = bpy.data.objects.new("East_Txt_Despacho", f_ed)
     col.objects.link(o_ed)
-    o_ed.location = (X_east - 0.05, 2.20, 5.85)
-    o_ed.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
+    o_ed.location = (X_east - 0.045, 2.20, 5.85)
+    o_ed.rotation_euler = (math.radians(90.0), 0.0, math.radians(90.0))
     o_ed.data.materials.append(mats["rotulo_blanco"])
 
     # Rampa de servicio, caseta de vigilancia y letrero ENTRADA BBVA
