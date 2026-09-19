@@ -1,0 +1,70 @@
+[gd_scene load_steps=12 format=3 uid="uid://hotel_tecate_2009_001"]
+
+[ext_resource type="PackedScene" path="res://assets/buildings/hotel_tecate.glb" id="1_mesh"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_oeste_norte"]
+size = Vector3(17.20, 7.30, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_oeste_sur"]
+size = Vector3(3.80, 7.30, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dintel_zaguan"]
+size = Vector3(4.80, 4.10, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_norte_cardenas"]
+size = Vector3(0.40, 7.30, 17.60)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ochava"]
+size = Vector3(0.40, 7.30, 3.96)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_medianera_sur"]
+size = Vector3(0.40, 7.30, 20.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_medianera_oriente"]
+size = Vector3(28.60, 7.30, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tunel_muro_norte"]
+size = Vector3(0.30, 3.20, 9.65)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tunel_muro_sur"]
+size = Vector3(0.30, 3.20, 9.65)
+
+[node name="Hotel_Tecate" type="StaticBody3D"]
+
+[node name="ModelInstance" parent="." instance=ExtResource("1_mesh")]
+
+[node name="Col_Oeste_Norte" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.40, 3.65, -0.18)
+shape = SubResource("BoxShape3D_oeste_norte")
+
+[node name="Col_Oeste_Sur" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.70, 3.65, -0.18)
+shape = SubResource("BoxShape3D_oeste_sur")
+
+[node name="Col_Dintel_Zaguan" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.40, 5.25, -0.18)
+shape = SubResource("BoxShape3D_dintel_zaguan")
+
+[node name="Col_Norte_Libertad" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 3.65, -11.60)
+shape = SubResource("BoxShape3D_norte_cardenas")
+
+[node name="Col_Ochava" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 1.40, 3.65, -1.40)
+shape = SubResource("BoxShape3D_ochava")
+
+[node name="Col_Medianera_Sur" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.40, 3.65, -10.20)
+shape = SubResource("BoxShape3D_medianera_sur")
+
+[node name="Col_Medianera_Oriente" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.30, 3.65, -20.20)
+shape = SubResource("BoxShape3D_medianera_oriente")
+
+[node name="Col_Tunel_Muro_Norte" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.85, 1.60, -5.18)
+shape = SubResource("BoxShape3D_tunel_muro_norte")
+
+[node name="Col_Tunel_Muro_Sur" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.95, 1.60, -5.18)
+shape = SubResource("BoxShape3D_tunel_muro_sur")
