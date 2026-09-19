@@ -1,4 +1,4 @@
-# Ficha Técnica Arquitectónica: Banco BBVA Tecate Centro (V7.0 Ground-Truth Histórico 2009)
+# Ficha Técnica Arquitectónica: Banco BBVA Tecate Centro (V8.0 Ground-Truth Histórico 2009)
 
 Documento técnico de especificación morfológica, paramétrica, PBR y consensus multi-perspectiva para la reconstrucción fidedigna del edificio comercial/financiero del **Banco BBVA** (esquina Av. Benito Juárez y Calle Presidente Lázaro Cárdenas, Tecate, B.C.) en Blender 5.1 y Godot Engine 4.
 
@@ -24,7 +24,6 @@ El edificio se compone de los siguientes cuerpos arquitectónicos fidedignamente
 1. **Ochava a 45º (Torreón Lic. José F. Guajardo 1956)**:
    - Apunta en diagonal hacia el cruce de Av. Juárez y Calle Cárdenas.
    - **Morfología**: **Trapecio invertido de mosaico veneciano pizarra meteorizada** (`#252B3E`), con base inferior estrecha ($4.60\text{ m}$ a $Z = 3.20\text{ m}$) y base superior ensanchada ($5.80\text{ m}$ a $Z = 9.05\text{ m}$), coronado por albardilla/coping de piedra natural continua a $Z = 9.05\text{ m} - 9.17\text{ m}$.
-   - Sin cuñas ni franjas blancas laterales extrañas; integración directa con el cuerpo del edificio.
    - Inscripción en letras 3D de bronce fundido en 3 líneas:
      ```
      EDIFICIO
@@ -36,95 +35,65 @@ El edificio se compone de los siguientes cuerpos arquitectónicos fidedignamente
      - Mástil tubular de acero central.
      - Panel superior azul cobalto (`#00288E`) con recuadro blanco `BBVA` en relieve y rótulo blanco `Bancomer`.
      - Panel inferior blanco con logotipo rojo `RED` y texto verde `CAJERO AUTOMATICO`.
-     - Ambas caras reproducen fielmente la rotulación corporativa completa.
 
 2. **Fachada Sur sobre Avenida Benito Juárez (Eje Poniente-Oriente, sin Cajero)**:
    - Longitud total de $22.80\text{ m}$, 4 crujías modulares.
+   - **Ventanales Superiores en Planta Alta**: Formados estrictamente por sus **tres rectángulos inferiores** ($Z \in [5.10, 6.25\text{ m}]$). Se suprimieron las impostas superiores; el paño comprendido entre $Z = 6.25\text{ m}$ y el pretil ($Z = 7.10\text{ m}$) es pared maciza continua de estuco blanco.
+   - **Rótulos en Vidrios**: Rótulos comerciales en pintura blanca `CASAS TERRENOS RANCHOS` (Crujía 3) y `JUAN VARGAS R` (Crujía 4) centrados verticalmente a $Z = 5.85\text{ m}$.
    - **Fascia 2009 de Alucobond azul cobalto**: cubre las Crujías 1 a 3 (hasta el machón $X = 17.40\text{ m}$).
-   - **Crujía 4 (`JUAN VARGAS R`)**: dintel superior en estuco blanco continuo, tal como documenta la fotografía histórica `media_1789774756138.png`.
-   - **Filetes blancos horizontales**: espaciado calibrado con holgura limpia ($0.27\text{ m}$) respecto al texto `Bancomer`, extendiéndose hasta $X = 17.20\text{ m}$ sin solapamiento ni recorte.
-   - Vidrios de planta alta con despachos: `CASAS TERRENOS RANCHOS` (Crujía 3) y `JUAN VARGAS R` (Crujía 4).
+   - **Crujía 4 (`JUAN VARGAS R`)**: dintel superior en estuco blanco continuo.
+   - **Filetes blancos horizontales**: espaciado calibrado con holgura limpia ($0.27\text{ m}$) respecto al texto `Bancomer`, extendiéndose hasta $X = 17.20\text{ m}$.
    - Mansarda superior continua de tejas coloniales terracota sobre cornisa corrida.
 
 3. **Fachada Oeste sobre Calle Presidente Lázaro Cárdenas (Eje Norte-Sur, con Cajero)**:
    - Longitud continua de $30.00\text{ m}$ con 6 crujías modulares y zaguán de acceso a consultorios ($25.20\text{ m}$ de sección bancaria + $4.80\text{ m}$ de consultorio DENTISTA).
    - Mansarda de tejas continuas con ménsulas/canecillos de concreto en voladizo (corbels).
-   - **Crujías 1 a 3**: Sección bancaria con fascia azul cobalto 2009, logotipo `BBVA Bancomer` con separación no-invasiva de filetes horizontales blancos.
+   - **Crujías 1 a 3**: Sección bancaria con fascia azul cobalto 2009, logotipo `BBVA Bancomer`.
    - **Crujía 3**: Portal de **Cajero Automático** en el lado izquierdo del vano, con caja de luz azul y rojo `RED` + `CAJERO AUTOMATICO`, cancel de vidrio sellado y muro posterior hermético.
    - **Crujías 4 y 5**: Despachos con fascia plateada de Alucobond metálico.
    - **Crujía 6 (DENTISTA - Ground Truth `media_1789778345732`)**:
      - Paño de fachada azul marino sobre el muro con letras 3D de latón dorado `DENTISTA`.
      - Alero/marquesina horizontal en voladizo ($1.15\text{ m}$ de saliente sobre banqueta).
-     - Rótulo colgante blanco perpendicular a 90º centrado bajo el alero, con textos legibles en ambas caras:
-       - `Dr. Eduardo R. Álvarez Ocampo` (rojo)
-       - `DENTISTA` (azul marino)
-       - `LOCAL - 1    RX   Tel: 654-11-57`
-       - `SE ACEPTAN ASEGURANZAS U.S.A.`
-       - `ATENCION ESPECIAL A NIÑOS - ORTODONCIA`
+     - Rótulo colgante blanco perpendicular a 90º centrado bajo el alero, con textos legibles en ambas caras.
      - Recibidor/zaguán transitable con escalera interior de 4 peldaños y colisionadores escalonados en Godot.
-     - Machón esquinero norte revestido en mosaico vítreo a juego con Guajardo.
 
-4. **Fachada Este hacia Estacionamiento (Ground Truth `media_1789781403754` y `media_1789783721505`)**:
-   - **Longitud ampliada proporcionalmente**: $25.20\text{ m}$ continuos (equivalente a la longitud de Cárdenas menos el área de Dentista, $30.00 - 4.80 = 25.20\text{ m}$).
-   - **7 crujías modulares**: 7 ventanas en planta alta de 3 hojas verticales con travesaño horizontal en el tercio superior, y 7 módulos en planta baja (6 escaparates comerciales y puerta peatonal de servicio en Crujía 3).
-   - Rótulo en pintura blanca sobre cristal `LICENCIADO EN DERECHO` en Crujía 1.
-   - 6 apliques lumínicos exteriores montados en las pilastras de planta baja.
-   - Rampa vehicular descendente con barandal tubular blanco, murete exterior en $X = 27.35\text{ m}$ (sin colisiones que bloqueen el paso) y letrero ortogonal `ENTRADA BBVA ➔`.
-   - **Cero estructuras parásitas**: cilindro posterior falso y vanos abiertos de iteraciones anteriores totalmente erradicados.
+4. **Fachada Este hacia Estacionamiento (Ground Truth `media_1789781403754`)**:
+   - **Longitud modulada en 6 subdivisiones**: $20.80\text{ m}$ continuos (concluye al término de la crujía 6, suprimida la crujía 7).
+   - **Crujías 1 a 5**:
+     - Planta alta: ventanales de cancelería conformados exclusivamente por los **tres rectángulos inferiores** ($Z \in [5.10, 6.25\text{ m}]$) con dintel continuo de mampostería superior. Rótulo `LICENCIADO EN DERECHO` en Crujía 1.
+     - Planta baja: canceles comerciales vidriados con persianas y puerta de servicio peatonal en Crujía 3.
+   - **Crujía 6**:
+     - Planta alta y planta baja resueltas como **pared lisa** de mampostería blanca continua (sin ventanales).
+     - En planta baja cuenta con una **puerta simple de hierro blanco** ($0.95\text{ m} \times 2.10\text{ m}$) con marco metálico, refuerzos tubulares y manija de acero.
+   - 5 apliques lumínicos exteriores montados en las pilastras de planta baja.
+   - Rampa vehicular descendente con barandal tubular blanco, murete exterior en $X = 27.35\text{ m}$ y letrero ortogonal `ENTRADA BBVA ➔`.
 
-5. **Fachada Sur Posterior y Pared en Arco Cóncavo Inward (Ground Truth `media_1789784140324`)**:
-   - **Pared Sur Lisa**: Paño continuo en $Y = 25.20\text{ m}$ desde Cárdenas ($X = 0.0\text{ m}$) hasta $X = 17.40\text{ m}$ (longitud equivalente a donde termina el azul de BBVA en Juárez), con moldura horizontal a media altura ($Z = 3.20\text{ m}$).
-   - **Pared en Arco Cóncavo hacia Adentro**: Sella la distancia entre el final de la cara Sur ($X = 17.40\text{ m}$) y la cara Estacionamiento ($X = 22.80\text{ m}$), curvándose suavemente hacia el interior del edificio ($Y = 25.20 - 1.35 \cdot \sin(\pi \cdot u)$).
-   - **Pilar Central Delgado**: Machón/contrafuerte rectangular vertical de $0.40\text{ m}$ de frente que sobresale marcadamente del arco y remata por encima del pretil ($Z = 7.45\text{ m}$).
-   - **Dos Ventanas Rectangulares Pequeñas en Planta Alta**: Ubicadas a ambos lados del pilar central ($Z \in [5.42, 6.35\text{ m}]$), provistas de repisas exteriores de piedra natural (sills) a $Z = 5.30\text{ m}$.
-   - **Sellado Hermético de Azotea**: Losa continua con material de impermeabilización asfáltica cerrando toda la unión entre el arco y el bloque principal.
-
----
-
-## 3. Despiece y Dimensiones Técnicas por Niveles
-
-```
-+12.65 m  ▲  Cúspide de Caja de Luz Espectacular en Azotea (Rotulada ambas caras)
-          │  [Panel Azul BBVA Bancomer: 3.60 x 1.65 m]
-+11.00 m  ┼  División de Panel
-          │  [Panel Blanco RED / CAJERO AUTOMATICO: 3.60 x 1.15 m]
-+9.85 m   ┼  Base de Caja de Luz
-          │  [Poste central tubular de acero: H = 0.85 m]
-+9.05 m   ┼  Pretil Superior del Torreón Guajardo (Base mayor del trapecio: 5.80 m)
-          │  [Albardilla/coping pétreo natural: 0.12 m espesor]
-+8.15 m   ┼  Cumbrera de Mansarda de Tejas (Alas Juárez y Cárdenas)
-          │  [Teja curva colonial de barro: pendiente 25°, H = 0.70 m]
-+7.45 m   ┼  Remate del Pilar Central del Arco Posterior / Cornisa Corrida
-+7.10 m   ┼  Dintel de Ventanales Planta Alta y Pretil de Fachadas Este/Sur
-+4.30 m   ┼  Remate de Fascia Alucobond Azul Corporativo 2009 (H = 1.10 m)
-+3.20 m   ┼  Moldura Horizontal Intermedia / Viga Dintel Guajardo (4.60 m)
-+2.85 m   ┼  Dintel de cancelería PB (Vanos de H = 2.45 m a 2.80 m)
-+0.40 m   ┼  Cota Superior de Banqueta / Plinto Basal Visible
- 0.00 m   ┼  Nivel Cero de Referencia Estructural
--1.20 m   ▼  Profundidad de Zócalo Enterrado (Absorbe desniveles viales hasta -0.67 m)
-```
+5. **Contraesquina Posterior y Cierre Angulado a 45º (Ground Truth `media_1789784140324`)**:
+   - **Cierre Angulado en Chaflán a 45º**: Al término de la fachada Este ($X = 22.80\text{ m}, Y = 20.80\text{ m}$), la edificación gira hacia la contraesquina en un chaflán a $45^\circ$ ($\Delta X = 1.80\text{ m}, \Delta Y = -1.80\text{ m}$), conectando en $(X = 21.00\text{ m}, Y = 22.60\text{ m}$).
+   - **Pared en Arco Cóncavo hacia Adentro**: Enlaza desde el chaflán ($X = 21.00\text{ m}, Y = 22.60\text{ m}$) hasta la cara Sur lisa ($X = 17.40\text{ m}, Y = 25.20\text{ m}$), curvándose con sagita de concavidad hacia el interior.
+   - **Pilar Central Saliente**: Machón vertical de $0.40\text{ m}$ de frente orientado hacia el exterior y rematando sobre el pretil ($Z = 7.45\text{ m}$).
+   - **Dos Ventanas Rectangulares Pequeñas en Planta Alta**: A ambos lados del pilar, equipadas con repisas exteriores de piedra natural (sills).
+   - **Pared Sur Lisa**: Paño continuo en $Y = 25.20\text{ m}$ desde Cárdenas ($X = 0.0\text{ m}$) hasta $X = 17.40\text{ m}$, provisto de moldura horizontal intermedia a $Z = 3.20\text{ m}$.
+   - **Sellado Hermético Total de Azotea**: Losas continuas sin aberturas ni picos triangulares agudos en vista aérea.
 
 ---
 
-## 4. Salidas Generadas y Assets del Proyecto
+## 3. Salidas Generadas y Assets del Proyecto
 
 1. **Archivo Maestro Blender**:
    - `blender_assets/buildings/bbva_tecate_centro.blend`
-2. **Asset 3D Optimizado Godot 4 (Edificio hermético sin banqueta)**:
+2. **Asset 3D Optimizado Godot 4**:
    - `godot_project/assets/buildings/bbva_tecate_centro.glb`
-3. **Asset 3D Modular de Banqueta Urbana**:
-   - `godot_project/assets/buildings/banqueta_bbva_tecate.glb`
-4. **Escenas Instanciables Godot 4**:
-   - `godot_project/assets/buildings/bbva_tecate_centro.tscn`: escena unificada con colisionadores analíticos de alta precisión (peldaños de escalera en DENTISTA, colisionadores curvos del arco posterior, murete exterior de rampa sin barreras en pasillo peatonal).
-   - `godot_project/assets/buildings/banqueta_bbva_tecate.tscn`: escena modular independiente de la banqueta.
-5. **Integración en Escena Principal (`main.tscn`)**:
-   - Emplazado en `Position = Vector3(-66.8, 400.38, -24.81)`, `Basis = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1)`.
-6. **Renders Técnicos de Validación (`docs/images/bbva/`)**:
-   - `bbva_guajardo_45.png`: Chaflán Guajardo a 45º y letrero 2009 en azotea.
-   - `bbva_juarez_frontal.png`: Fachada Sur (Av. Juárez) con 4 crujías, fascia azul y filetes calibrados.
-   - `bbva_cardenas_west.png`: Fachada Oeste (Calle Cárdenas) con 6 crujías, portal ATM y consultorio DENTISTA.
-   - `bbva_dentista_closeup.png`: Detalle fotorrealista de DENTISTA, marquesina, rótulo colgante a 90º y escalera.
-   - `bbva_east_parking.png`: Fachada Este ampliada a 25.20 m con 7 crujías, rampa y caseta.
-   - `bbva_east_ground_truth.png`: Perspectiva matching ángulo exacto de `media_1789781403754`.
-   - `bbva_south_inward_arc.png`: Arco cóncavo posterior, pilar central y ventanas con repisa matching `media_1789784140324`.
-   - `bbva_aerial_top.png`: Vista cenital mostrando huella volumétrica cerrada y distribución hermética.
+3. **Escena Instanciable Godot 4**:
+   - `godot_project/assets/buildings/bbva_tecate_centro.tscn` (colisionadores analíticos rectificados para 6 crujías, chaflán a $45^\circ$ y rampa libre).
+4. **Integración en Escena Principal (`main.tscn`)**:
+   - `Position = Vector3(-66.8, 400.38, -24.81)`, `Basis = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1)`.
+5. **Renders Técnicos de Validación (`docs/images/bbva/`)**:
+   - `bbva_guajardo_45.png`
+   - `bbva_juarez_frontal.png`
+   - `bbva_cardenas_west.png`
+   - `bbva_dentista_closeup.png`
+   - `bbva_east_parking.png`
+   - `bbva_east_ground_truth.png`
+   - `bbva_south_inward_arc.png`
+   - `bbva_aerial_top.png`

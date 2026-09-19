@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://bbva_tecate_centro_009"]
+[gd_scene load_steps=23 format=3 uid="uid://bbva_tecate_centro_010"]
 
 [ext_resource type="PackedScene" path="res://assets/buildings/bbva_tecate_centro.glb" id="1_mesh"]
 [ext_resource type="PackedScene" path="res://assets/buildings/banqueta_bbva_tecate.glb" id="2_banqueta"]
@@ -36,14 +36,14 @@ size = Vector3(5.8, 9.1, 0.35)
 [sub_resource type="BoxShape3D" id="BoxShape3D_south_wall"]
 size = Vector3(17.4, 8.5, 0.4)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_inward_arc_1"]
-size = Vector3(3.0, 8.5, 0.4)
+[sub_resource type="BoxShape3D" id="BoxShape3D_inward_arc"]
+size = Vector3(3.8, 8.5, 0.4)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_inward_arc_2"]
-size = Vector3(3.0, 8.5, 0.4)
+[sub_resource type="BoxShape3D" id="BoxShape3D_contraesquina_chamfer"]
+size = Vector3(0.4, 8.5, 2.6)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_east_wall"]
-size = Vector3(0.4, 8.5, 25.2)
+size = Vector3(0.4, 8.5, 20.4)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_rampa_murete"]
 size = Vector3(0.3, 1.7, 14.0)
@@ -107,16 +107,16 @@ shape = SubResource("BoxShape3D_puertas")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.7, 3.05, -25.0)
 shape = SubResource("BoxShape3D_south_wall")
 
-[node name="Col_Inward_Arc_1" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.9063, 0, -0.4226, 0, 1, 0, 0.4226, 0, 0.9063, 18.75, 3.05, -24.5)
-shape = SubResource("BoxShape3D_inward_arc_1")
+[node name="Col_Inward_Arc" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.81, 0, 0.585, 0, 1, 0, -0.585, 0, 0.81, 19.2, 3.05, -23.9)
+shape = SubResource("BoxShape3D_inward_arc")
 
-[node name="Col_Inward_Arc_2" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.9063, 0, 0.4226, 0, 1, 0, -0.4226, 0, 0.9063, 21.45, 3.05, -24.5)
-shape = SubResource("BoxShape3D_inward_arc_2")
+[node name="Col_Contraesquina_Chamfer" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 21.90, 3.05, -21.70)
+shape = SubResource("BoxShape3D_contraesquina_chamfer")
 
 [node name="Col_East_Wall" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.6, 3.05, -12.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.6, 3.05, -10.60)
 shape = SubResource("BoxShape3D_east_wall")
 
 [node name="Col_Rampa_Murete" type="CollisionShape3D" parent="."]
