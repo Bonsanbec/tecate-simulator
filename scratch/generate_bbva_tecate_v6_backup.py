@@ -395,9 +395,9 @@ def build_45deg_guajardo_corner(mats, col):
     H_tower = 9.05
     
     # Retorno Norte (Y = 4.20, X de -0.40 a 0.40)
-    add_box(bm_tower, -0.40, 0.40, 4.15, 4.25, -1.20, H_tower)
+    add_box(bm_tower, -0.40, 0.40, 4.15, 4.25, 0.0, H_tower)
     # Retorno Este (X = 4.20, Y de -0.40 a 0.40)
-    add_box(bm_tower, 4.15, 4.25, -0.40, 0.40, -1.20, H_tower)
+    add_box(bm_tower, 4.15, 4.25, -0.40, 0.40, 0.0, H_tower)
     
     # Muros interiores para sellar el prisma hacia adentro
     add_box(bm_tower, 0.40, 4.20, 4.15, 4.25, 0.0, H_tower)
@@ -461,7 +461,7 @@ def build_45deg_guajardo_corner(mats, col):
     
     # 3. Planta baja del chaflán: Puertas dobles en el centro Y VENTANALES a ambos lados (Comentario 9)
     # Plinto basal (zócalo oscuro Z = 0.0 a 0.40)
-    add_wall_segment(bm_tower, -0.40, 4.20, 4.20, -0.40, -1.20, 0.40, thickness=0.45)
+    add_wall_segment(bm_tower, -0.40, 4.20, 4.20, -0.40, 0.0, 0.40, thickness=0.45)
     
     # --- Vano Izquierdo: Ventanal vidriado (desde (-0.20, 4.00) hasta (1.10, 2.70)) ---
     # Cancelería de aluminio
@@ -731,7 +731,7 @@ def build_south_facade_juarez(mats, col):
     H_wall = 7.10
     
     # 1. Plinto basal (Z = 0.0 a 0.40)
-    add_box(bm_struct, X_start, X_end, -0.05, 0.40, -1.20, 0.40)
+    add_box(bm_struct, X_start, X_end, -0.05, 0.40, 0.0, 0.40)
     
     # 2. Machones / Pilastras verticales
     col_x = [4.20, 8.60, 13.00, 17.40]
@@ -746,7 +746,7 @@ def build_south_facade_juarez(mats, col):
     add_box(bm_struct, X_start, 21.80, 0.02, 0.30, 6.75, H_wall)
     
     # Machón sólido oriental de remate (X = 21.80 a 22.80)
-    add_box(bm_struct, 21.80, 22.80, -0.04, 0.40, -1.20, H_wall)
+    add_box(bm_struct, 21.80, 22.80, -0.04, 0.40, 0.40, H_wall)
     
     # Cornisa corrida blanca
     add_box(bm_struct, X_start, X_end + 0.20, -0.20, 0.40, 7.10, 7.25)
@@ -992,10 +992,10 @@ def build_west_facade_cardenas(mats, col):
     Y_max = 30.00   # Con machón norte
     H_wall = 7.10
     
-    # 1. Plinto basal continuo enterrado (Z = -1.20 a 0.40 para absorber pendiente de Cárdenas)
+    # 1. Plinto basal continuo (Z = 0.0 a 0.40)
     # Excluye el vano de la escalera de Dentista en [25.80, 28.20]
-    add_box(bm_struct, -0.05, 0.40, Y_start, 25.80, -1.20, 0.40)
-    add_box(bm_struct, -0.05, 0.40, 28.20, Y_max, -1.20, 0.40)
+    add_box(bm_struct, -0.05, 0.40, Y_start, 25.80, 0.0, 0.40)
+    add_box(bm_struct, -0.05, 0.40, 28.20, Y_max, 0.0, 0.40)
     
     # 2. Machones / Pilastras verticales a lo largo de las 6 crujías
     # 7 machones: 6 delimitan las 5 crujías + machón 7 de remate norte
@@ -1004,7 +1004,7 @@ def build_west_facade_cardenas(mats, col):
         add_box(bm_struct, -0.04, 0.35, cy, cy + 0.60, 0.40, H_wall)
         
     # Machón norte de remate (Y = 29.40 a 30.00): Recubierto de mosaico vítreo oscuro (Ground Truth media_1789778345732)
-    add_box(bm_dent_mosaic, -0.05, 0.40, 29.40, Y_max, -1.20, H_wall)
+    add_box(bm_dent_mosaic, -0.05, 0.40, 29.40, Y_max, 0.0, H_wall)
     
     # Muros rehundidos horizontales
     add_box(bm_struct, 0.02, 0.30, Y_start, Y_max, 3.20, 3.30)
@@ -1012,7 +1012,7 @@ def build_west_facade_cardenas(mats, col):
     add_box(bm_struct, 0.02, 0.30, Y_start, Y_max, 6.75, H_wall)
     
     # Muro medianero norte que cierra el inmueble (Y = 30.00)
-    add_box(bm_struct, -0.05, 4.20, Y_max, Y_max + 0.30, -1.20, H_wall)
+    add_box(bm_struct, -0.05, 16.0, Y_max, Y_max + 0.30, 0.0, H_wall)
     
     # Cornisa corrida blanca a lo largo de los 30 metros
     add_box(bm_struct, -0.20, 0.40, Y_start, Y_max + 0.20, 7.10, 7.25)
@@ -1050,60 +1050,43 @@ def build_west_facade_cardenas(mats, col):
         w_f = 0.05
         # Planta Baja
         if idx == 2:
-            # Crujía 3: PORTAL DE ACCESO A CAJERO AUTOMÁTICO (Sellado hermético sin aberturas)
-            # Ventana lateral con persianas en lado sur: y in [13.20, 15.20]
-            add_box(bm_alum, 0.04, 0.12, 13.20, 15.20, 0.40, 0.45)
-            add_box(bm_alum, 0.04, 0.12, 13.20, 15.20, 3.15, 3.20)
-            add_box(bm_alum, 0.04, 0.12, 13.20, 13.25, 0.40, 3.20)
-            add_box(bm_alum, 0.04, 0.12, 15.15, 15.20, 0.40, 3.20)
-            my_atm_w = (13.20 + 15.20) * 0.5
-            add_box(bm_alum, 0.04, 0.12, my_atm_w - 0.02, my_atm_w + 0.02, 0.40, 3.20)
-            add_box(bm_glass, 0.075, 0.085, 13.25, 15.15, 0.45, 3.15)
-            add_box(bm_blind, 0.135, 0.145, 13.25, 15.15, 0.45, 3.15)
-
-            # Puerta acristalada de acceso a cajeros: y in [15.20, 16.60], Z in [0.40, 2.65]
+            # Crujía 3: PORTAL DE ACCESO A CAJERO AUTOMÁTICO (Ground Truth media_1789778253725)
+            # "Estos elementos van 1 ventanal a la derecha. Entre el cajero y el dentista hay 2 ventanales. El cajero va en el lado izquierdo de su ventanal."
+            # Puerta acristalada en el lado izquierdo (norte) del vano: y in [15.20, 16.60]
             add_box(bm_alum, 0.04, 0.14, 15.20, 16.60, 0.40, 0.46)
-            add_box(bm_alum, 0.04, 0.14, 15.20, 16.60, 2.65, 2.71)
-            add_box(bm_alum, 0.04, 0.14, 15.20, 15.26, 0.40, 2.65)
-            add_box(bm_alum, 0.04, 0.14, 16.54, 16.60, 0.40, 2.65)
-            add_box(bm_glass, 0.08, 0.09, 15.26, 16.54, 0.46, 2.65)
+            add_box(bm_alum, 0.04, 0.14, 15.20, 16.60, 2.70, 2.76)
+            add_box(bm_alum, 0.04, 0.14, 15.20, 15.26, 0.40, 2.76)
+            add_box(bm_alum, 0.04, 0.14, 16.54, 16.60, 0.40, 2.76)
+            add_box(bm_glass, 0.08, 0.09, 15.26, 16.54, 0.46, 2.70)
             # Jaladera tubular de la puerta
             add_box(bm_alum, -0.02, 0.06, 15.32, 15.36, 1.00, 1.40)
             
-            # Montante superior de vidrio sobre la puerta: Z in [2.71, 3.20] (cierra el hueco superior)
-            add_box(bm_alum, 0.04, 0.14, 15.20, 16.60, 3.15, 3.20)
-            add_box(bm_alum, 0.04, 0.14, 15.20, 15.26, 2.71, 3.20)
-            add_box(bm_alum, 0.04, 0.14, 16.54, 16.60, 2.71, 3.20)
-            add_box(bm_glass, 0.08, 0.09, 15.26, 16.54, 2.71, 3.15)
-            
-            # Machón derecho de crujía: y in [16.60, 16.80]
-            add_box(bm_struct, 0.0, 0.35, 16.60, 16.80, 0.40, 3.20)
-            # Muro ciego interior detrás de portal cajero: Z in [2.65, 4.30] (evita ver el interior abierto)
-            add_box(bm_struct, 0.05, 0.30, 15.15, 16.65, 2.65, 4.30)
+            # Ventana lateral con persianas en el resto del vano: y in [13.20, 15.10]
+            add_box(bm_alum, 0.04, 0.12, 13.20, 15.10, 0.40, 0.45)
+            add_box(bm_alum, 0.04, 0.12, 13.20, 15.10, 3.15, 3.20)
+            add_box(bm_alum, 0.04, 0.12, 13.20, 13.25, 0.40, 3.20)
+            add_box(bm_alum, 0.04, 0.12, 15.05, 15.10, 0.40, 3.20)
+            add_box(bm_glass, 0.075, 0.085, 13.25, 15.05, 0.45, 3.15)
+            add_box(bm_blind, 0.135, 0.145, 13.25, 15.05, 0.45, 3.15)
             
         elif idx == 5:
-            # Crujía 6: ACCESO DENTISTA (Sellado hermético continuo y recibidor con peldaños)
-            # Muro ciego en estuco blanco continuo de PB a PA en X in [0.0, 0.35], Y in [25.80, 29.40] detrás de fascia
-            add_box(bm_struct, 0.0, 0.35, 25.80, 29.40, 3.20, 5.10)
-            
-            # Recibidor / zaguán rehundido hacia el interior (X in [0.0, 3.15], Y in [25.80, 28.20])
+            # Crujía 6: ACCESO DENTISTA (Ground Truth media_1789778345732)
+            # Zaguán rehundido hacia el interior (X = 0.0 a 3.20, Y = [25.80, 28.20])
+            # Escalera de 4 peldaños de concreto
             stair_w = (25.85, 28.15)
-            add_box(bm_dent_stair, 0.20, 3.15, stair_w[0], stair_w[1], 0.0, 0.18)
-            add_box(bm_dent_stair, 0.60, 3.15, stair_w[0], stair_w[1], 0.18, 0.36)
-            add_box(bm_dent_stair, 1.00, 3.15, stair_w[0], stair_w[1], 0.36, 0.54)
-            add_box(bm_dent_stair, 1.40, 3.15, stair_w[0], stair_w[1], 0.54, 0.72)
+            add_box(bm_dent_stair, 0.20, 3.20, stair_w[0], stair_w[1], 0.0, 0.18)
+            add_box(bm_dent_stair, 0.60, 3.20, stair_w[0], stair_w[1], 0.18, 0.36)
+            add_box(bm_dent_stair, 1.00, 3.20, stair_w[0], stair_w[1], 0.36, 0.54)
+            add_box(bm_dent_stair, 1.40, 3.20, stair_w[0], stair_w[1], 0.54, 0.72)
             
-            # Muros interiores y techo del zaguán
+            # Muros interiores del zaguán
             add_box(bm_dent_stair, 0.0, 3.20, 25.75, 25.85, 0.0, 3.20) # Muro sur zaguán
             add_box(bm_dent_stair, 0.0, 3.20, 28.15, 28.25, 0.0, 3.20) # Muro norte zaguán
             add_box(bm_dent_stair, 0.0, 3.20, 25.75, 28.25, 3.20, 3.30) # Techo falso zaguán
             
-            # Fondo del zaguán (X = 3.15): Muro con puerta acristalada interior (X = 3.15, Y in [26.40, 27.80])
-            add_box(bm_dent_stair, 3.15, 3.30, 25.80, 26.40, 0.72, 3.20) # Muro izq fondo
-            add_box(bm_dent_stair, 3.15, 3.30, 27.80, 28.20, 0.72, 3.20) # Muro der fondo
-            add_box(bm_dent_stair, 3.15, 3.30, 26.40, 27.80, 2.70, 3.20) # Dintel sobre puerta interior
-            add_box(bm_alum, 3.12, 3.18, 26.40, 27.80, 0.72, 2.70)
-            add_box(bm_glass, 3.14, 3.16, 26.46, 27.74, 0.78, 2.65)
+            # Puerta acristalada interior al fondo del zaguán (X = 3.15, Y = [26.40, 27.80])
+            add_box(bm_alum, 3.12, 3.18, 26.40, 27.80, 0.72, 2.72)
+            add_box(bm_glass, 3.14, 3.16, 26.46, 27.74, 0.78, 2.66)
             
             # Ventanal lateral exterior a la derecha del acceso: Y in [28.25, 29.35]
             add_box(bm_alum, 0.04, 0.12, 28.25, 29.35, 0.40, 0.45)
@@ -1250,8 +1233,8 @@ def build_west_facade_cardenas(mats, col):
     # Fascia Banco BBVA (Y = 4.20 a 17.40)
     bm_fascia_b = bmesh.new()
     add_box(bm_fascia_b, -0.14, 0.02, Y_start, 17.40, 3.20, 4.30)
-    # Área azul continua en Crujía 6 cubriendo toda la pared detrás y al lado de DENTISTA (Y in [25.75, 29.40])
-    add_box(bm_fascia_b, -0.14, 0.02, 25.75, 29.40, 3.20, 4.30)
+    # Área azul sobre la fachada misma en Crujía 6 arriba del alero (Comentario 5: "DENTISTA va sobre la fachada del edificio mismo, arriba de donde empieza este ala. Esa área va del mismo azul.")
+    add_box(bm_fascia_b, -0.14, 0.02, 25.75, 28.25, 3.25, 4.30)
     bmesh.ops.recalc_face_normals(bm_fascia_b, faces=bm_fascia_b.faces)
     m_fa_b = bpy.data.meshes.new("Mesh_Cardenas_Fascia_Banco")
     bm_fascia_b.to_mesh(m_fa_b)
@@ -1519,52 +1502,85 @@ def build_west_facade_cardenas(mats, col):
     return obj_struct, obj_corbels, obj_alum, obj_glass, obj_blind, fascia_group, text_objs, obj_tejas
 
 def build_east_facade_and_parking(mats, col):
-    """Construye la Fachada Este ampliada proporcionalmente a 25.20 m (Cárdenas menos Dentista)
-    con 7 crujías modulares en PA y PB, sin aberturas traseras ni estructuras parásitas (Ground Truth media_1789783721505)."""
+    """Construye la Fachada Este y patio trasero de estacionamiento (Ground Truth media_1789778429624):
+    Ventanales modulares PA, puertas de servicio PB, cuerpo semicilíndrico, casetas HVAC y muro perimetral con [E] BBVA."""
     bm_east = bmesh.new()
     bm_alum = bmesh.new()
     bm_glass = bmesh.new()
     bm_blind = bmesh.new()
     bm_hvac = bmesh.new()
+    bm_curve = bmesh.new()
     
     X_east = 22.80
-    Y_east_max = 25.20  # Ampliada exactamente a 25.20 m (Cárdenas 30.00 m - Dentista 4.80 m)
+    Y_max = 30.00
     H_wall = 7.10
     
-    # 1. Muro Este principal (Z = -1.20 a 7.10, Y = 0.40 a 25.20)
-    add_box(bm_east, X_east - 0.40, X_east, 0.40, Y_east_max, -1.20, 0.40) # Zócalo enterrado continuo
-    add_box(bm_east, X_east - 0.40, X_east, 0.40, Y_east_max, 3.20, 5.10)  # Faja intermedia
-    add_box(bm_east, X_east - 0.40, X_east, 0.40, Y_east_max, 6.75, H_wall) # Remate
-    add_box(bm_east, X_east - 0.45, X_east + 0.05, 0.40, Y_east_max, 7.10, 7.25) # Albardilla coping
+    # 1. Muro Este principal del cuerpo bancario (Z = 0.0 a 7.10, Y = 0.40 a 16.0 para no solapar con el machón sur)
+    add_box(bm_east, X_east - 0.40, X_east, 0.40, 16.0, 0.0, 0.40) # Zócalo
+    add_box(bm_east, X_east - 0.40, X_east, 0.40, 16.0, 3.20, 5.10) # Faja intermedia
+    add_box(bm_east, X_east - 0.40, X_east, 0.40, 16.0, 6.75, H_wall) # Remate
     
-    # Losa interior de azotea hermética para el bloque principal
-    add_box(bm_east, 4.20, X_east, 0.40, Y_east_max, 7.00, 7.25)
-    add_box(bm_east, 0.40, 4.20, 4.20, 30.00, 7.00, 7.25) # Losa ala Cárdenas
+    # Losa interior de azotea hermética
+    add_box(bm_east, 4.20, X_east, 0.40, 16.0, 7.00, 7.25)
+    add_box(bm_east, 0.40, 4.20, 4.20, 16.0, 7.00, 7.25)
+    add_box(bm_east, 0.40, 16.0, 16.0, Y_max, 7.00, 7.25) # Azotea Ala Norte extendida a 30.00 m
     
-    # 2. 7 Crujías modulares a lo largo de los 25.20 m
+    # Muro posterior este del Ala Norte (X = 15.60 a 16.0, Y = 16.0 a 30.00) (Ground Truth media_1789778429624)
+    add_box(bm_east, 15.60, 16.0, 16.0, Y_max, 0.0, 0.40) # Zócalo
+    add_box(bm_east, 15.60, 16.0, 16.0, Y_max, 3.20, 5.10) # Faja intermedia
+    add_box(bm_east, 15.60, 16.0, 16.0, Y_max, 6.75, H_wall) # Remate
+    
+    # Ventanales de Planta Alta en la fachada trasera del Ala Norte (5 módulos horizontales)
+    rear_bays = [
+        (16.60, 18.60),
+        (19.20, 21.20),
+        (21.80, 23.80),
+        (24.40, 26.40),
+        (27.00, 29.00)
+    ]
+    for ry1, ry2 in rear_bays:
+        add_box(bm_alum, 15.65, 15.95, ry1, ry2, 5.10, 5.15)
+        add_box(bm_alum, 15.65, 15.95, ry1, ry2, 6.70, 6.75)
+        add_box(bm_alum, 15.65, 15.95, ry1, ry1 + 0.04, 5.10, 6.75)
+        add_box(bm_alum, 15.65, 15.95, ry2 - 0.04, ry2, 5.10, 6.75)
+        m_ry = (ry1 + ry2) * 0.5
+        add_box(bm_alum, 15.65, 15.95, m_ry - 0.02, m_ry + 0.02, 5.10, 6.75)
+        add_box(bm_glass, 15.75, 15.85, ry1 + 0.04, ry2 - 0.04, 5.15, 6.70)
+        
+    # Planta Baja trasera: Puertas metálicas de servicio y ventanales tintados (Ground Truth media_1789778429624)
+    # Ventanal 1
+    add_box(bm_alum, 15.65, 15.95, 17.20, 19.40, 0.40, 3.20)
+    add_box(bm_glass, 15.75, 15.85, 17.25, 19.35, 0.45, 3.15)
+    # Puerta de servicio metálica grafito 1
+    add_box(bm_alum, 15.65, 15.95, 20.20, 21.60, 0.0, 2.80)
+    # Ventanal 2
+    add_box(bm_alum, 15.65, 15.95, 22.40, 24.60, 0.40, 3.20)
+    add_box(bm_glass, 15.75, 15.85, 22.45, 24.55, 0.45, 3.15)
+    
+    # 2. Ventanales de Planta Alta en Fachada Este (5 vanos según media_1789774721368 y media_1789781403754)
     e_bays = [
-        (0.80, 3.60),
-        (4.20, 7.00),
-        (7.60, 10.40),
-        (11.00, 13.80),
-        (14.40, 17.20),
-        (17.80, 20.60),
-        (21.20, 24.60)
+        (0.80, 3.40),
+        (3.80, 6.40),
+        (6.80, 9.40),
+        (9.80, 12.40),
+        (12.80, 15.20)
     ]
     
-    # Machones en planta alta y planta baja
-    add_box(bm_east, X_east - 0.40, X_east, 0.40, 0.80, 0.40, H_wall)
+    # Machones entre ventanas en planta alta
+    add_box(bm_east, X_east - 0.40, X_east, 0.40, 0.80, 5.10, 6.75)
     for i in range(len(e_bays) - 1):
-        add_box(bm_east, X_east - 0.40, X_east, e_bays[i][1], e_bays[i+1][0], 0.40, H_wall)
-    add_box(bm_east, X_east - 0.40, X_east, 24.60, Y_east_max, 0.40, H_wall)
+        add_box(bm_east, X_east - 0.40, X_east, e_bays[i][1], e_bays[i+1][0], 5.10, 6.75)
+    add_box(bm_east, X_east - 0.40, X_east, 15.20, 16.0, 5.10, 6.75)
     
-    # Cancelería y vidrios en PA Este (3 hojas verticales y travesaño horizontal en Z = 6.25)
+    # Cancelería y vidrios en PA Este (3 hojas verticales y travesaño horizontal en Z = 6.25 según media_1789781403754)
     for y1, y2 in e_bays:
         add_box(bm_alum, X_east - 0.10, X_east - 0.02, y1, y2, 5.10, 5.15)
         add_box(bm_alum, X_east - 0.10, X_east - 0.02, y1, y2, 6.70, 6.75)
         add_box(bm_alum, X_east - 0.10, X_east - 0.02, y1, y1 + 0.04, 5.10, 6.75)
         add_box(bm_alum, X_east - 0.10, X_east - 0.02, y2 - 0.04, y2, 5.10, 6.75)
-        add_box(bm_alum, X_east - 0.10, X_east - 0.02, y1, y2, 6.25, 6.28) # Travesaño horizontal
+        # Travesaño horizontal en tercio superior
+        add_box(bm_alum, X_east - 0.10, X_east - 0.02, y1, y2, 6.25, 6.28)
+        # 2 montantes verticales dividiendo en 3 hojas
         step_e = (y2 - y1) / 3.0
         m1 = y1 + step_e
         m2 = y1 + 2.0 * step_e
@@ -1572,13 +1588,20 @@ def build_east_facade_and_parking(mats, col):
         add_box(bm_alum, X_east - 0.10, X_east - 0.02, m2 - 0.02, m2 + 0.02, 5.10, 6.75)
         add_box(bm_glass, X_east - 0.07, X_east - 0.05, y1 + 0.04, y2 - 0.04, 5.15, 6.70)
         
-    # Planta Baja Este: Escaparates comerciales y puerta peatonal de servicio en Crujía 3
+    # 3. Planta Baja Este: Pilastras continuas alineadas con PA, ventanales con persianas, puerta y luminarias (media_1789781403754)
+    # Pilastras de PB (alineadas exactamente con las de PA)
+    add_box(bm_east, X_east - 0.40, X_east, 0.40, 0.80, 0.40, 3.20)
+    for i in range(len(e_bays) - 1):
+        add_box(bm_east, X_east - 0.40, X_east, e_bays[i][1], e_bays[i+1][0], 0.40, 3.20)
+    add_box(bm_east, X_east - 0.40, X_east, 15.20, 16.0, 0.40, 3.20)
+    
+    # Ventanales y puerta en PB
     for idx_pb, (y1, y2) in enumerate(e_bays):
         if idx_pb == 2:
-            # Crujía 3: Puerta peatonal de servicio con montante de vidrio
+            # Crujía 3: Puerta peatonal con marco y montante de vidrio (media_1789781403754)
             add_box(bm_east, X_east - 0.40, X_east, y1, y2, 3.15, 3.20)
-            door_y1 = y1 + 0.35
-            door_y2 = y2 - 0.35
+            door_y1 = y1 + 0.25
+            door_y2 = y2 - 0.25
             add_box(bm_east, X_east - 0.40, X_east, y1, door_y1, 0.40, 3.20)
             add_box(bm_east, X_east - 0.40, X_east, door_y2, y2, 0.40, 3.20)
             add_box(bm_alum, X_east - 0.10, X_east - 0.02, door_y1, door_y2, 0.40, 0.45)
@@ -1589,6 +1612,7 @@ def build_east_facade_and_parking(mats, col):
             add_box(bm_glass, X_east - 0.07, X_east - 0.05, door_y1 + 0.04, door_y2 - 0.04, 0.45, 2.55)
             add_box(bm_glass, X_east - 0.07, X_east - 0.05, door_y1 + 0.04, door_y2 - 0.04, 2.60, 3.10)
         else:
+            # Ventanales comerciales con montante central y persianas verticales
             add_box(bm_alum, X_east - 0.10, X_east - 0.02, y1, y2, 0.40, 0.45)
             add_box(bm_alum, X_east - 0.10, X_east - 0.02, y1, y2, 3.15, 3.20)
             add_box(bm_alum, X_east - 0.10, X_east - 0.02, y1, y1 + 0.04, 0.40, 3.20)
@@ -1598,15 +1622,56 @@ def build_east_facade_and_parking(mats, col):
             add_box(bm_glass, X_east - 0.07, X_east - 0.05, y1 + 0.04, y2 - 0.04, 0.45, 3.15)
             add_box(bm_blind, X_east - 0.14, X_east - 0.13, y1 + 0.04, y2 - 0.04, 0.45, 3.15)
 
-    # Luminarias tipo aplique / sconce exterior sobre los machones de PB
-    for y_lamp in [3.90, 7.30, 10.70, 14.10, 17.50, 20.90]:
+    # Luminarias tipo aplique / sconce exterior sobre los machones de PB (Ground Truth media_1789781403754)
+    for y_lamp in [3.60, 6.60, 9.60, 12.60]:
         add_box(bm_alum, X_east - 0.02, X_east + 0.10, y_lamp - 0.03, y_lamp + 0.03, 2.68, 2.72)
         add_box(bm_alum, X_east + 0.08, X_east + 0.22, y_lamp - 0.06, y_lamp + 0.06, 2.58, 2.78)
 
-    # Casetas HVAC en azotea
-    add_box(bm_hvac, 7.00, 11.50, 15.00, 19.50, 7.15, 8.65)
-    add_box(bm_hvac, 8.50, 10.50, 9.00, 11.50, 7.15, 8.10)
-    add_box(bm_hvac, 11.00, 13.00, 9.00, 11.50, 7.15, 8.10)
+    # 4. Cuerpo arquitectónico semicilíndrico trasero (núcleo de escalera) (Ground Truth media_1789778429624)
+    # Ubicado en la esquina noreste interior: centro (16.0, 27.50), radio 2.20 m
+    cx_cyl, cy_cyl = 16.0, 27.50
+    r_cyl = 2.20
+    n_cyl_segs = 12
+    v_prev_bot, v_prev_top = None, None
+    for s in range(n_cyl_segs + 1):
+        ang = -0.5 * math.pi + math.pi * (s / float(n_cyl_segs)) # Semicírculo hacia +X
+        px = cx_cyl + r_cyl * math.cos(ang)
+        py = cy_cyl + r_cyl * math.sin(ang)
+        v_b = bm_curve.verts.new((px, py, 0.0))
+        v_t = bm_curve.verts.new((px, py, H_wall))
+        if s > 0:
+            bm_curve.faces.new((v_prev_bot, v_b, v_t, v_prev_top))
+        v_prev_bot, v_prev_top = v_b, v_t
+
+    # Losa superior del semicilindro
+    v_center_top = bm_curve.verts.new((cx_cyl, cy_cyl, H_wall))
+    # Cerrar techo
+    v_prev = None
+    for s in range(n_cyl_segs + 1):
+        ang = -0.5 * math.pi + math.pi * (s / float(n_cyl_segs))
+        px = cx_cyl + r_cyl * math.cos(ang)
+        py = cy_cyl + r_cyl * math.sin(ang)
+        vt = bm_curve.verts.new((px, py, H_wall))
+        if s > 0:
+            bm_curve.faces.new((v_center_top, v_prev, vt))
+        v_prev = vt
+
+    bmesh.ops.recalc_face_normals(bm_curve, faces=bm_curve.faces)
+    for f in bm_curve.faces:
+        f.smooth = True
+    m_crv = bpy.data.meshes.new("Mesh_Rear_Cylinder")
+    bm_curve.to_mesh(m_crv)
+    bm_curve.free()
+    obj_curve = bpy.data.objects.new("Rear_Staircase_Cylinder", m_crv)
+    col.objects.link(obj_curve)
+    obj_curve.data.materials.append(mats["muro"])
+
+    # 5. Casetas HVAC y Equipos Técnicos en Azotea (Ground Truth media_1789778429624)
+    # Caseta de elevador / extracción
+    add_box(bm_hvac, 7.00, 11.50, 18.00, 22.50, 7.15, 8.65)
+    # Equipos de aire acondicionado exteriores
+    add_box(bm_hvac, 8.50, 10.50, 12.00, 14.50, 7.15, 8.10)
+    add_box(bm_hvac, 11.00, 13.00, 12.00, 14.50, 7.15, 8.10)
 
     bmesh.ops.recalc_face_normals(bm_hvac, faces=bm_hvac.faces)
     m_hv = bpy.data.meshes.new("Mesh_Roof_HVAC")
@@ -1660,7 +1725,8 @@ def build_east_facade_and_parking(mats, col):
     col.objects.link(obj_bl_e)
     obj_bl_e.data.materials.append(mats["persianas"])
 
-    # Rótulo de despacho en PA ventana 1 ('LICENCIADO EN DERECHO')
+    # Rótulo de despacho en PA ventana 1 ('LICENCIADO EN DERECHO', Ground Truth media_1789781403754)
+    # Ubicado en la Crujía 1 (Y in [0.80, 3.40]), hoja izquierda superior
     f_ed = bpy.data.curves.new(type="FONT", name="Font_E_Despacho")
     f_ed.body = "LICENCIADO EN DERECHO"
     f_ed.size = 0.10
@@ -1668,15 +1734,16 @@ def build_east_facade_and_parking(mats, col):
     f_ed.align_x = 'CENTER'
     o_ed = bpy.data.objects.new("East_Txt_Despacho", f_ed)
     col.objects.link(o_ed)
-    o_ed.location = (X_east + 0.02, 1.75, 6.42)
+    o_ed.location = (X_east + 0.02, 1.65, 6.42)
     o_ed.rotation_euler = (math.radians(90.0), 0.0, math.radians(90.0))
     o_ed.data.materials.append(mats["rotulo_blanco"])
 
-    # 3. Elementos del Estacionamiento: Rampa peatonal/vehicular, barandal, caseta y muro perimetral
+    # 6. Elementos del Estacionamiento: Suelo, Cajones, Bolardos, Rampa, Caseta y Muro Perimetral
+    # Rampa descendente
     bm_ramp = bmesh.new()
     add_box(bm_ramp, X_east + 0.60, X_east + 4.50, 0.0, 14.0, -0.45, 0.05)
     rx = X_east + 4.55
-    add_box(bm_ramp, rx - 0.15, rx, 0.0, 14.0, 0.0, 0.90) # Murete lateral
+    add_box(bm_ramp, rx - 0.15, rx, 0.0, 14.0, 0.0, 0.90) # Murete
     bmesh.ops.recalc_face_normals(bm_ramp, faces=bm_ramp.faces)
     m_rp = bpy.data.meshes.new("Mesh_Rampa_Suelo")
     bm_ramp.to_mesh(m_rp)
@@ -1711,10 +1778,18 @@ def build_east_facade_and_parking(mats, col):
     col.objects.link(obj_caseta)
     obj_caseta.data.materials.append(mats["muro"])
 
-    # Muro perimetral del estacionamiento
+    # Muro perimetral del estacionamiento con portón de servicio (Ground Truth media_1789778429624)
     bm_pwall = bmesh.new()
+    # Muro blanco este con reja
     add_box(bm_pwall, X_east + 7.20, X_east + 12.50, 5.80, 6.05, 0.0, 2.40)
+    # Placa azul en el muro: [E] BBVA ESTACIONAMIENTO EXCLUSIVO
     add_box(bm_pwall, X_east + 8.20, X_east + 9.80, 5.75, 5.82, 1.40, 1.95)
+    
+    # Bolardos y topes amarillos en el pavimento del estacionamiento
+    for by in [17.50, 20.00, 22.50, 25.00]:
+        add_box(bm_pwall, 17.50, 17.65, by, by + 1.80, 0.0, 0.12) # Tope de llantas
+        add_box(bm_pwall, 17.10, 17.20, by + 0.90, by + 1.00, 0.0, 0.85) # Bolardo vertical
+        
     bmesh.ops.recalc_face_normals(bm_pwall, faces=bm_pwall.faces)
     m_pw = bpy.data.meshes.new("Mesh_Parking_Wall")
     bm_pwall.to_mesh(m_pw)
@@ -1723,10 +1798,14 @@ def build_east_facade_and_parking(mats, col):
     col.objects.link(obj_pwall)
     obj_pwall.data.materials.append(mats["muro"])
     obj_pwall.data.materials.append(mats["senal_azul"])
+    obj_pwall.data.materials.append(mats["bolardo_amarillo"])
     for p in m_pw.polygons:
         c_x = sum(m_pw.vertices[v].co.x for v in p.vertices) / len(p.vertices)
-        if c_x > X_east + 8.0:
-            p.material_index = 1
+        c_y = sum(m_pw.vertices[v].co.y for v in p.vertices) / len(p.vertices)
+        if c_x < 18.0:
+            p.material_index = 2 # Bolardos amarillos
+        elif c_y < 5.85 and c_x > X_east + 8.0:
+            p.material_index = 1 # Placa azul BBVA
         else:
             p.material_index = 0
 
@@ -1755,165 +1834,7 @@ def build_east_facade_and_parking(mats, col):
     o_sign.rotation_euler = (math.radians(90.0), 0.0, 0.0)
     o_sign.data.materials.append(mats["rotulo_blanco"])
 
-    return obj_east, [obj_al_e, obj_gl_e, obj_bl_e, o_ed, obj_hvac, obj_pwall], obj_ramp, obj_rail, obj_caseta, obj_sign, o_sign
-
-def build_south_and_inward_arc_facade(mats, col):
-    """Construye la Fachada Sur lisa (X in [0.0, 17.40], Y = 25.20) y la pared en arco cóncava
-    hacia adentro que sella con la fachada del estacionamiento (X in [17.40, 22.80]),
-    con pilar central delgado y 2 ventanas rectangulares superiores (Ground Truth media_1789784140324)."""
-    bm_south = bmesh.new()
-    bm_alum = bmesh.new()
-    bm_glass = bmesh.new()
-    bm_roof_arc = bmesh.new()
-    
-    Y_south = 25.20
-    X_east = 22.80
-    X_arc_start = 17.40
-    H_wall = 7.10
-    
-    # 1. FACHADA SUR LISA (X = 0.0 a 17.40, Y = 25.20)
-    # Longitud exacta 17.40 m (idéntica a la distancia donde termina el azul BBVA en Juárez)
-    # Plinto basal enterrado (Z = -1.20 a 0.40)
-    add_box(bm_south, 0.0, X_arc_start, Y_south - 0.35, Y_south + 0.05, -1.20, 0.40)
-    # Muro liso de estuco blanco continuo (Z = 0.40 a H_wall = 7.10)
-    add_box(bm_south, 0.0, X_arc_start, Y_south - 0.35, Y_south, 0.40, H_wall)
-    # Moldura intermedia horizontal a Z = 3.20 (visible en Ground Truth media_1789784140324)
-    add_box(bm_south, -0.05, X_arc_start + 0.05, Y_south - 0.02, Y_south + 0.10, 3.20, 3.32)
-    # Albardilla / Coping superior del pretil (Z = 7.10 a 7.25)
-    add_box(bm_south, -0.05, X_arc_start + 0.05, Y_south - 0.40, Y_south + 0.05, 7.10, 7.25)
-    
-    # 2. PARED EN ARCO HACIA ADENTRO (CÓNCAVA) (X = 17.40 a 22.80, ancho = 5.40 m)
-    # Sagitta / flecha hacia adentro en -Y: profundidad de 1.35 m
-    n_segs = 16
-    arc_pts = []
-    for s in range(n_segs + 1):
-        u = s / float(n_segs)
-        px = X_arc_start + (X_east - X_arc_start) * u
-        py = Y_south - 1.35 * math.sin(math.pi * u)
-        arc_pts.append((px, py))
-        
-    thick = 0.35
-    for s in range(n_segs):
-        x1, y1 = arc_pts[s]
-        x2, y2 = arc_pts[s + 1]
-        
-        dx = x2 - x1
-        dy = y2 - y1
-        L = math.hypot(dx, dy)
-        if L > 0:
-            nx = -dy / L * thick
-            ny = dx / L * thick
-        else:
-            nx, ny = 0.0, -thick
-            
-        # Plinto basal (Z = -1.20 a 0.40)
-        v_b1 = bm_south.verts.new((x1, y1, -1.20))
-        v_b2 = bm_south.verts.new((x2, y2, -1.20))
-        v_b3 = bm_south.verts.new((x2 + nx, y2 + ny, -1.20))
-        v_b4 = bm_south.verts.new((x1 + nx, y1 + ny, -1.20))
-        
-        v_t1 = bm_south.verts.new((x1, y1, 0.40))
-        v_t2 = bm_south.verts.new((x2, y2, 0.40))
-        v_t3 = bm_south.verts.new((x2 + nx, y2 + ny, 0.40))
-        v_t4 = bm_south.verts.new((x1 + nx, y1 + ny, 0.40))
-        
-        bm_south.faces.new((v_b1, v_b2, v_t2, v_t1))
-        bm_south.faces.new((v_b2, v_b3, v_t3, v_t2))
-        bm_south.faces.new((v_b3, v_b4, v_t4, v_t3))
-        bm_south.faces.new((v_b4, v_b1, v_t1, v_t4))
-        
-        # Muro principal (Z = 0.40 a 7.10)
-        v_w1 = bm_south.verts.new((x1, y1, H_wall))
-        v_w2 = bm_south.verts.new((x2, y2, H_wall))
-        v_w3 = bm_south.verts.new((x2 + nx, y2 + ny, H_wall))
-        v_w4 = bm_south.verts.new((x1 + nx, y1 + ny, H_wall))
-        
-        bm_south.faces.new((v_t1, v_t2, v_w2, v_w1))
-        bm_south.faces.new((v_t2, v_t3, v_w3, v_w2))
-        bm_south.faces.new((v_t3, v_t4, v_w4, v_w3))
-        bm_south.faces.new((v_t4, v_t1, v_w1, v_w4))
-        bm_south.faces.new((v_w1, v_w2, v_w3, v_w4)) # Tapa pretil
-        
-        # Losa de techo detrás del arco (sellado hermético de azotea Z = 7.00 - 7.25)
-        vr1 = bm_roof_arc.verts.new((x1 + nx, y1 + ny, 7.00))
-        vr2 = bm_roof_arc.verts.new((x2 + nx, y2 + ny, 7.00))
-        vr3 = bm_roof_arc.verts.new((x2 + nx, Y_south, 7.00))
-        vr4 = bm_roof_arc.verts.new((x1 + nx, Y_south, 7.00))
-        bm_roof_arc.faces.new((vr1, vr2, vr3, vr4))
-        vr1t = bm_roof_arc.verts.new((x1 + nx, y1 + ny, 7.25))
-        vr2t = bm_roof_arc.verts.new((x2 + nx, y2 + ny, 7.25))
-        vr3t = bm_roof_arc.verts.new((x2 + nx, Y_south, 7.25))
-        vr4t = bm_roof_arc.verts.new((x1 + nx, Y_south, 7.25))
-        bm_roof_arc.faces.new((vr4t, vr3t, vr2t, vr1t))
-
-    # 3. PILAR DELGADO EN MEDIO (Ground Truth media_1789784140324)
-    px_mid = 20.10
-    # El pilar sobresale claramente hacia el exterior del muro curvo y remata sobre el pretil
-    add_box(bm_south, px_mid - 0.20, px_mid + 0.20, 23.75, 24.75, -1.20, 7.45)
-
-    # 4. DOS VENTANAS RECTANGULARES PEQUEÑAS EN PLANTA ALTA (Ground Truth media_1789784140324)
-    # Ventana 1 (Oeste del pilar)
-    w1_x1, w1_x2 = 18.35, 19.55
-    w1_y = 24.46
-    # Repisa de piedra exterior (sill)
-    add_box(bm_south, w1_x1 - 0.08, w1_x2 + 0.08, w1_y - 0.12, w1_y + 0.18, 5.28, 5.42)
-    add_box(bm_alum, w1_x1, w1_x2, w1_y - 0.05, w1_y + 0.08, 5.42, 5.46)
-    add_box(bm_alum, w1_x1, w1_x2, w1_y - 0.05, w1_y + 0.08, 6.30, 6.35)
-    add_box(bm_alum, w1_x1, w1_x1 + 0.04, w1_y - 0.05, w1_y + 0.08, 5.42, 6.35)
-    add_box(bm_alum, w1_x2 - 0.04, w1_x2, w1_y - 0.05, w1_y + 0.08, 5.42, 6.35)
-    add_box(bm_glass, w1_x1 + 0.04, w1_x2 - 0.04, w1_y + 0.01, w1_y + 0.06, 5.48, 6.28)
-
-    # Ventana 2 (Este del pilar)
-    w2_x1, w2_x2 = 20.65, 21.85
-    w2_y = 24.46
-    # Repisa de piedra exterior (sill)
-    add_box(bm_south, w2_x1 - 0.08, w2_x2 + 0.08, w2_y - 0.12, w2_y + 0.18, 5.28, 5.42)
-    add_box(bm_alum, w2_x1, w2_x2, w2_y - 0.05, w2_y + 0.08, 5.42, 5.46)
-    add_box(bm_alum, w2_x1, w2_x2, w2_y - 0.05, w2_y + 0.08, 6.30, 6.35)
-    add_box(bm_alum, w2_x1, w2_x1 + 0.04, w2_y - 0.05, w2_y + 0.08, 5.42, 6.35)
-    add_box(bm_alum, w2_x2 - 0.04, w2_x2, w2_y - 0.05, w2_y + 0.08, 5.42, 6.35)
-    add_box(bm_glass, w2_x1 + 0.04, w2_x2 - 0.04, w2_y + 0.01, w2_y + 0.06, 5.48, 6.28)
-
-    bmesh.ops.recalc_face_normals(bm_south, faces=bm_south.faces)
-    m_sth = bpy.data.meshes.new("Mesh_South_Inward_Arc")
-    bm_south.to_mesh(m_sth)
-    bm_south.free()
-    obj_south = bpy.data.objects.new("South_Inward_Arc_Wall", m_sth)
-    col.objects.link(obj_south)
-    obj_south.data.materials.append(mats["muro"])
-    obj_south.data.materials.append(mats["zocalo"])
-    for p in m_sth.polygons:
-        c_z = sum(m_sth.vertices[v].co.z for v in p.vertices) / len(p.vertices)
-        if c_z < 0.42:
-            p.material_index = 1
-        else:
-            p.material_index = 0
-            
-    bmesh.ops.recalc_face_normals(bm_roof_arc, faces=bm_roof_arc.faces)
-    m_rf = bpy.data.meshes.new("Mesh_Roof_Arc_Closure")
-    bm_roof_arc.to_mesh(m_rf)
-    bm_roof_arc.free()
-    obj_rf = bpy.data.objects.new("Roof_Arc_Closure", m_rf)
-    col.objects.link(obj_rf)
-    obj_rf.data.materials.append(mats["azotea"])
-    
-    bmesh.ops.recalc_face_normals(bm_alum, faces=bm_alum.faces)
-    m_al = bpy.data.meshes.new("Mesh_South_Arc_Canceleria")
-    bm_alum.to_mesh(m_al)
-    bm_alum.free()
-    obj_al = bpy.data.objects.new("South_Arc_Canceleria", m_al)
-    col.objects.link(obj_al)
-    obj_al.data.materials.append(mats["aluminio"])
-    
-    bmesh.ops.recalc_face_normals(bm_glass, faces=bm_glass.faces)
-    m_gl = bpy.data.meshes.new("Mesh_South_Arc_Vidrio")
-    bm_glass.to_mesh(m_gl)
-    bm_glass.free()
-    obj_gl = bpy.data.objects.new("South_Arc_Vidrio", m_gl)
-    col.objects.link(obj_gl)
-    obj_gl.data.materials.append(mats["vidrio"])
-    
-    return obj_south, [obj_rf, obj_al, obj_gl]
+    return obj_east, [obj_al_e, obj_gl_e, obj_bl_e, o_ed, obj_curve, obj_hvac, obj_pwall], obj_ramp, obj_rail, obj_caseta, obj_sign, o_sign
 
 def build_optional_sidewalk(mats, col):
     """Crea la banqueta urbana como un asset modular independiente (NO incluido en el glb del edificio)."""
@@ -1922,11 +1843,11 @@ def build_optional_sidewalk(mats, col):
     Y_cardenas = 30.00
     
     # Banqueta perimetral
-    add_box(bm_sw, -3.80, X_east + 8.00, -3.80, 0.0, -1.20, 0.18)
-    add_box(bm_sw, -3.80, 0.0, 0.0, Y_cardenas + 2.00, -1.20, 0.18)
+    add_box(bm_sw, -3.80, X_east + 8.00, -3.80, 0.0, 0.0, 0.18)
+    add_box(bm_sw, -3.80, 0.0, 0.0, Y_cardenas + 2.00, 0.0, 0.18)
     # Cordón rojo
-    add_box(bm_sw, -3.88, X_east + 8.00, -3.88, -3.76, -1.20, 0.20)
-    add_box(bm_sw, -3.88, -3.76, -3.88, Y_cardenas + 2.00, -1.20, 0.20)
+    add_box(bm_sw, -3.88, X_east + 8.00, -3.88, -3.76, 0.0, 0.20)
+    add_box(bm_sw, -3.88, -3.76, -3.88, Y_cardenas + 2.00, 0.0, 0.20)
     
     bmesh.ops.recalc_face_normals(bm_sw, faces=bm_sw.faces)
     m_sw = bpy.data.meshes.new("Mesh_Banqueta_Modular")
@@ -2058,74 +1979,26 @@ def setup_lighting_and_render(col):
     c7.rotation_euler = dir7.to_track_quat('-Z', 'Y').to_euler()
     cams["east_ground_truth"] = c7
 
-    # 8. Cámara 'South_Inward_Arc': Perspectiva hacia el arco cóncavo posterior matching media_1789784140324
-    c8_data = bpy.data.cameras.new("Cam_South_Inward_Arc")
-    c8_data.lens = 32
-    c8 = bpy.data.objects.new("Cam_South_Inward_Arc", c8_data)
-    col.objects.link(c8)
-    loc8 = Vector((14.80, 34.50, 2.40))
-    tgt8 = Vector((19.50, 24.50, 4.00))
-    dir8 = tgt8 - loc8
-    c8.location = loc8
-    c8.rotation_euler = dir8.to_track_quat('-Z', 'Y').to_euler()
-    cams["south_inward_arc"] = c8
-
     return cams
 
 def generate_godot_tscn(tscn_path, glb_rel_path):
     """Genera la escena .tscn de Godot 4 con StaticBody3D y colisiones analíticas precisas sin barreras invisibles."""
-    tscn_content = f"""[gd_scene load_steps=22 format=3 uid="uid://bbva_tecate_centro_009"]
+    tscn_content = f"""[gd_scene load_steps=9 format=3 uid="uid://bbva_tecate_centro_008"]
 
 [ext_resource type="PackedScene" path="{glb_rel_path}" id="1_mesh"]
 [ext_resource type="PackedScene" path="res://assets/buildings/banqueta_bbva_tecate.glb" id="2_banqueta"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_juarez"]
-size = Vector3(18.6, 8.5, 16.0)
+size = Vector3(18.6, 7.3, 16.0)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_cardenas_bank"]
-size = Vector3(16.0, 8.5, 21.0)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_dentista_south"]
-size = Vector3(3.2, 8.5, 0.6)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_dentista_north"]
-size = Vector3(3.2, 8.5, 1.8)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_dentista_back"]
-size = Vector3(12.8, 8.5, 4.8)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_dentista_step_1"]
-size = Vector3(0.40, 0.18, 2.30)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_dentista_step_2"]
-size = Vector3(0.40, 0.36, 2.30)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_dentista_step_3"]
-size = Vector3(0.40, 0.54, 2.30)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_dentista_step_4"]
-size = Vector3(1.75, 0.72, 2.30)
+[sub_resource type="BoxShape3D" id="BoxShape3D_cardenas"]
+size = Vector3(16.0, 7.3, 25.8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_puertas"]
 size = Vector3(5.8, 9.1, 0.35)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_south_wall"]
-size = Vector3(17.4, 8.5, 0.4)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_inward_arc_1"]
-size = Vector3(3.0, 8.5, 0.4)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_inward_arc_2"]
-size = Vector3(3.0, 8.5, 0.4)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_east_wall"]
-size = Vector3(0.4, 8.5, 25.2)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_rampa_murete"]
-size = Vector3(0.3, 1.7, 14.0)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_rampa_floor"]
-size = Vector3(4.4, 0.2, 14.0)
+[sub_resource type="BoxShape3D" id="BoxShape3D_rampa"]
+size = Vector3(4.5, 1.2, 14.0)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_banqueta_juarez"]
 size = Vector3(34.6, 0.18, 3.8)
@@ -2140,68 +2013,20 @@ size = Vector3(3.8, 0.18, 32.0)
 [node name="BanquetaInstance" parent="." instance=ExtResource("2_banqueta")]
 
 [node name="Col_Juarez" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 3.05, -8.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 3.65, -8.0)
 shape = SubResource("BoxShape3D_juarez")
 
-[node name="Col_Cardenas_Bank" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.0, 3.05, -14.7)
-shape = SubResource("BoxShape3D_cardenas_bank")
-
-[node name="Col_Dentista_South" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 3.05, -25.5)
-shape = SubResource("BoxShape3D_dentista_south")
-
-[node name="Col_Dentista_North" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 3.05, -29.1)
-shape = SubResource("BoxShape3D_dentista_north")
-
-[node name="Col_Dentista_Interior" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.6, 3.05, -27.6)
-shape = SubResource("BoxShape3D_dentista_back")
-
-[node name="Col_Dentista_Step_1" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.40, 0.09, -27.0)
-shape = SubResource("BoxShape3D_dentista_step_1")
-
-[node name="Col_Dentista_Step_2" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.80, 0.18, -27.0)
-shape = SubResource("BoxShape3D_dentista_step_2")
-
-[node name="Col_Dentista_Step_3" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.20, 0.27, -27.0)
-shape = SubResource("BoxShape3D_dentista_step_3")
-
-[node name="Col_Dentista_Step_4" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.275, 0.36, -27.0)
-shape = SubResource("BoxShape3D_dentista_step_4")
+[node name="Col_Cardenas" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.0, 3.65, -17.1)
+shape = SubResource("BoxShape3D_cardenas")
 
 [node name="Col_Puertas_Chamfer" type="CollisionShape3D" parent="."]
 transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 2.12, 4.55, -2.12)
 shape = SubResource("BoxShape3D_puertas")
 
-[node name="Col_South_Wall" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.7, 3.05, -25.0)
-shape = SubResource("BoxShape3D_south_wall")
-
-[node name="Col_Inward_Arc_1" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.9063, 0, -0.4226, 0, 1, 0, 0.4226, 0, 0.9063, 18.75, 3.05, -24.5)
-shape = SubResource("BoxShape3D_inward_arc_1")
-
-[node name="Col_Inward_Arc_2" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.9063, 0, 0.4226, 0, 1, 0, -0.4226, 0, 0.9063, 21.45, 3.05, -24.5)
-shape = SubResource("BoxShape3D_inward_arc_2")
-
-[node name="Col_East_Wall" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.6, 3.05, -12.6)
-shape = SubResource("BoxShape3D_east_wall")
-
-[node name="Col_Rampa_Murete" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.35, 0.85, -7.0)
-shape = SubResource("BoxShape3D_rampa_murete")
-
-[node name="Col_Rampa_Floor" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.0, -0.1, -7.0)
-shape = SubResource("BoxShape3D_rampa_floor")
+[node name="Col_Rampa" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.0, 0.6, -7.0)
+shape = SubResource("BoxShape3D_rampa")
 
 [node name="Col_Banqueta_Juarez" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 0.09, 1.9)
@@ -2236,10 +2061,7 @@ def main():
     # 4. Fachada Este (Estacionamiento), rampa, caseta y letrero ortogonal
     obj_east, objs_east_win, obj_ramp, obj_rail, obj_caseta, obj_sign, o_sign_r = build_east_facade_and_parking(mats, root_col)
     
-    # 5. Fachada Sur lisa y pared en arco hacia adentro (Ground Truth media_1789784140324)
-    obj_south, objs_south_arc = build_south_and_inward_arc_facade(mats, root_col)
-    
-    # 6. Banqueta modular independiente (opcional)
+    # 5. Banqueta modular independiente (opcional)
     obj_banqueta = build_optional_sidewalk(mats, root_col)
     
     # 6. Iluminación y 5 cámaras técnicas calibradas
@@ -2300,7 +2122,6 @@ def main():
         ("dentista_closeup", "docs/images/bbva/bbva_dentista_closeup.png", 1280, 720),
         ("east_parking", "docs/images/bbva/bbva_east_parking.png", 1280, 720),
         ("east_ground_truth", "docs/images/bbva/bbva_east_ground_truth.png", 1280, 720),
-        ("south_inward_arc", "docs/images/bbva/bbva_south_inward_arc.png", 1280, 720),
         ("aerial_top", "docs/images/bbva/bbva_aerial_top.png", 1024, 1024)
     ]
     

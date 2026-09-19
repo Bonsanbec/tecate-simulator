@@ -44,7 +44,7 @@ transform = Transform3D(0.84277856, 0, 0, 0, 0.84277856, 0, 0, 0, 0.84277856, 28
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6844, 400.0132, 2.6878)
 
 [node name="BBVA" parent="." instance=ExtResource("11_bbva")]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -66.8, 400.18, -24.81)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -66.8, 400.38, -24.81)
 
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
