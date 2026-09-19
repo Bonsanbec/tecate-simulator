@@ -203,7 +203,6 @@ def create_materials(tex_dir):
     m_chorro = bpy.data.materials.new("M_Chorro_Agua")
     setup_pbr_material(
         m_chorro,
-        base_color=(0.88, 0.96, 0.98, 0.50),
         base_color=(0.20, 0.55, 0.68, 0.62),
         roughness=0.15,
         is_transparent=True,
