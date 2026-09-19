@@ -50,8 +50,17 @@ func _ready():
 		
 	# 6. Create colliders for baked building meshes only (skipping sky powerlines, etc.)
 	if geometry_node:
+		_hide_replaced_buildings(geometry_node)
 		print("[ApplyShader] Creating collision shapes for building meshes...")
 		_create_building_colliders_recursive(geometry_node)
+
+func _hide_replaced_buildings(node: Node):
+	if node is MeshInstance3D:
+		var n = node.name
+		if n.begins_with("Building_BBVA_"):
+			node.visible = false
+	for child in node.get_children():
+		_hide_replaced_buildings(child)
 
 func _hide_legacy_terrain_overlays(node: Node):
 	if node is MeshInstance3D:

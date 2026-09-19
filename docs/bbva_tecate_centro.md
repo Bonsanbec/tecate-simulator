@@ -7,58 +7,53 @@ Documento técnico de especificación morfológica, paramétrica, PBR y consensu
 ## 1. Contexto Urbano y Emplazamiento Cartesiano
 
 - **Nombre Oficial**: Edificio Lic. José F. Guajardo / Sucursal BBVA Bancomer Tecate Centro (2009).
-- **Emplazamiento Histórico**: Esquina noreste de la intersección entre Avenida Benito Juárez (arteria principal este-oeste) y Calle Presidente Lázaro Cárdenas (eje norte-sur hacia el monumento y parque).
-- **Dirección Catastral**: Calle Presidente Lázaro Cárdenas esq. Av. Benito Juárez, Col. Centro / Primera, C.P. 21400, Tecate, B.C.
-- **Coordenadas GPS**: `32.5734618°N, -116.6274318°W`.
-- **Coordenadas Locales (Tecate Simulator)**: `X = -84.03 m, Y = 25.92 m` (a **87.94 m** radiales del origen en el Kiosko del Parque Miguel Hidalgo).
-- **Transformada en Escena Godot (`main.tscn`)**:
-  - `Position = Vector3(-84.03, 400.0, -25.92)`
+- **Emplazamiento Histórico**: Esquina suroeste de la manzana frente a la intersección vial de Avenida Benito Juárez (eje poniente-oriente) y Calle Presidente Lázaro Cárdenas (eje norte-sur).
+- **Vértice de Esquina (Ochava Guajardo)**: Emplazado exactamente en la intersección de las dos vialidades:
+  - En la proyección urbana de Godot, la esquina apunta en diagonal hacia el **Noreste** (vector $(+X, -Z)$).
+- **Coordenadas en Escena Godot (`main.tscn`)**:
+  - `Position = Vector3(-66.79, 400.25, -24.81)`
+  - `Basis = Transform3D(-0.996195, 0, 0.087156, 0, 1, 0, -0.087156, 0, -0.996195)` (rotación calibrada de $175^\circ$ coincidente con la traza de Juárez a $174.7^\circ$).
   - Nodo raíz: `BBVA_Tecate (StaticBody3D)` con colisionadores analíticos `BoxShape3D`.
 
 ---
 
-## 2. Anatomía de Consenso Multi-Perspectiva y Ground Truth Histórico 2009
+## 2. Anatomía y Nomenclatura Vial Rectificada
 
-El modelo 3D fue reconstruido integrando el consenso fotográfico de todas las caras de la manzana y fotografías históricas aportadas por el usuario:
+El edificio se emplaza en la manzana con la siguiente correspondencia geográfica y funcional:
 
-1. **Torreón Guajardo en Ochava a 45º (Ground Truth: `media_1789774890984.png`)**:
-   - Geometría: **Trapecio de piedra volcánica / mosaico veneciano desgastado** (`#252B3E`), sin molduras de plástico blanco perimetrales, coronado por un remate/coping de piedra natural.
-   - Inscripción en bronce en 3 líneas exactas:
+1. **Ochava Noreste a 45º (Torreón Lic. José F. Guajardo 1956)**:
+   - Apunta en dirección **Noreste** hacia el cruce de Av. Juárez y Calle Cárdenas.
+   - Geometría: **Trapecio de piedra volcánica / mosaico veneciano oscuro desgastado** (`#252B3E`), sin molduras plásticas blancas, rematado con albardilla/coping de piedra natural en el pretil superior ($Z = 9.05\text{ m}$).
+   - Inscripción en letras de bronce fundido en 3 líneas:
      ```
      EDIFICIO
      LIC. JOSE F. GUAJARDO
      1956
      ```
-     *(Año confirmado como **1956**, no 1954)*.
-   - En la base del chaflán se ubica el acceso principal al banco con cancelería de aluminio y puertas dobles de cristal templado.
-   - Espectacular de Azotea 2009:
-     - Poste tubular estructural central de acero.
-     - Panel superior (60%): Azul cobalto (`#00288E`) con recuadro blanco corporativo conteniendo `BBVA` en azul, y `Bancomer` en blanco debajo.
-     - Panel inferior (40%): Fondo blanco con logotipo rojo `RED` (con estrella de red interbancaria) a la izquierda y texto verde en 2 líneas `CAJERO AUTOMATICO` a la derecha.
+   - Acceso bancario principal en planta baja con cancelería de aluminio y puertas dobles acristaladas.
+   - Espectacular de Azotea 2009: Mástil tubular de acero central; panel superior azul cobalto (`#00288E`) con recuadro `BBVA` + `Bancomer`; panel inferior blanco con logotipo rojo `RED` a la izquierda y `CAJERO AUTOMATICO` en verde a la derecha.
 
-2. **Fachada Oeste (Calle Presidente Lázaro Cárdenas - Ground Truth: `media_1789774670397.png`)**:
-   - **Edificio continuo de 2 niveles** hasta el consultorio dental (`DENTISTA`) con una longitud total de **$27.20\text{ m}$**.
-   - Mansarda corrida de tejas con canecillos/ménsulas de concreto en voladizo (corbels) a lo largo de toda la fachada.
-   - Fascia 2009: Azul cobalto Alucobond para el banco que transiciona limpiamente a panel plateado con rótulo `DENTISTA` en la crujía norte.
-   - Crujía 3: Portal exterior de **Cajero Automático** con cajetín luminoso azul `CAJERO AUTOMATICO` y puerta de cristal.
-   - Vidrios de planta alta con rotulación comercial histórica en vinil blanco:
-     - `DESPACHO JURIDICO QUEZADA Y ASOCIADOS Tel. 52-22`
-     - `DESPACHO CONTABLE FISCAL LOCAL Nº 4 LIC. RAMON QUEZADA LOPEZ ABOGADO`
+2. **Fachada Norte sobre Avenida Benito Juárez (Eje Poniente-Oriente, sin Cajero)**:
+   - Corre en sentido **poniente-oriente** (longitud $22.80\text{ m}$).
+   - 4 crujías modulares con pilastras y machón esquinero.
+   - Fascia 2009 de Alucobond azul cobalto con filetes blancos y logotipo corporativo `BBVA Bancomer`.
+   - Rotulaciones de despachos en vidrios de planta alta (`CASAS TERRENOS RANCHOS`, `JUAN VARGAS R`).
+   - Al extremo poniente se ubica el acceso vehicular hacia el estacionamiento, delimitado por la rampa descendente, barandal blanco, caseta de vigilancia y letrero vial ortogonal `ENTRADA BBVA ➔`.
 
-3. **Fachada Sur (Avenida Benito Juárez - Ground Truth: `media_1789774756138.png`)**:
-   - Longitud: $18.60\text{ m}$ (de $X = 4.20$ a $22.80\text{ m}$).
-   - 4 crujías modulares + machón macizo en la esquina este.
-   - Vidrios en planta alta con rotulaciones: `CASAS TERRENOS RANCHOS` y `JUAN VARGAS R`.
-   - Fascia 2009: Azul cobalto con filetes blancos y logotipo corporativo `BBVA Bancomer`, rematando antes del machón este.
+3. **Fachada Este sobre Calle Presidente Lázaro Cárdenas (Eje Norte-Sur, con Cajero)**:
+   - Corre en sentido **norte-sur** (longitud continua $27.20\text{ m}$ hasta el consultorio dental `DENTISTA`).
+   - Mansarda continua de tejas de barro con **canecillos/ménsulas de concreto en voladizo (corbels)** bajo el alero a lo largo de toda la fachada.
+   - **Crujía 3**: Portal exterior de **Cajero Automático** con cajetín azul iluminado `CAJERO AUTOMATICO` y puerta de cristal.
+   - Transición de fascia: azul cobalto para el banco y fascia plateada con rótulo `DENTISTA` en la crujía norte.
+   - Vidrios de planta alta con rotulación de despachos: `DESPACHO JURIDICO QUEZADA Y ASOCIADOS` y `LIC. RAMON QUEZADA LOPEZ ABOGADO`.
 
-4. **Fachada Este y Rampa de Estacionamiento (Ground Truth: `media_1789774721368.jpg`)**:
-   - 5 vanos de cancelería de aluminio con cristales en planta alta (`LICENCIADO EN DERECHO`).
-   - Planta baja con ventanales comerciales y puerta peatonal con luminaria exterior.
-   - Caseta de vigilancia blanca desplazada a $X = 27.60\text{ m}$.
-   - Letrero azul `ENTRADA BBVA ➔` orientado ortogonalmente (mirando hacia el sur) para guiar el flujo vehicular de Av. Juárez.
+4. **Fachada Poniente (Rampa y Estacionamiento)**:
+   - 5 vanos de cancelería con cristales en planta alta (`LICENCIADO EN DERECHO`).
+   - Planta baja con ventanales comerciales y puerta de servicio peatonal metálica con luminaria exterior.
 
-5. **Desacoplamiento de Banqueta Urbana**:
-   - La banqueta perimetral con cordón rojo se exporta como asset modular independiente (`banqueta_bbva_tecate.glb`), garantizando que el edificio (`bbva_tecate_centro.glb`) descanse a cota limpia $Z = 0.0\text{ m}$.
+5. **Desacoplamiento Estructural de Banqueta**:
+   - El edificio reposa limpio a cota $Z = 0.0\text{ m}$ (`bbva_tecate_centro.glb`).
+   - La banqueta modular perimetral con cordón rojo se encuentra en `banqueta_bbva_tecate.glb`.
 
 ---
 
@@ -95,10 +90,6 @@ El modelo 3D fue reconstruido integrando el consenso fotográfico de todas las c
 3. **Asset 3D Modular de Banqueta Urbana**:
    - `godot_project/assets/buildings/banqueta_bbva_tecate.glb`
 4. **Escena Instanciable Godot 4**:
-   - `godot_project/assets/buildings/bbva_tecate_centro.tscn` (con colisionadores analíticos `StaticBody3D`).
-5. **Vistas de Validación en Bucle Cerrado**:
-   - `docs/images/bbva/bbva_guajardo_45.png`: Chaflán a 45º, año 1956, trapecio rocoso y espectacular 2009.
-   - `docs/images/bbva/bbva_cardenas_west.png`: Fachada continua a Dentista (27.20m), canecillos, cajero y despachos.
-   - `docs/images/bbva/bbva_juarez_frontal.png`: 4 crujías de Av. Juárez, despachos y fascia 2009.
-   - `docs/images/bbva/bbva_east_parking.png`: Ventanales este, puerta peatonal, rampa, caseta y letrero ortogonal.
-   - `docs/images/bbva/bbva_aerial_top.png`: Planta de azotea sellada y delimitación del bloque.
+   - `godot_project/assets/buildings/bbva_tecate_centro.tscn` (con colisionadores analíticos `StaticBody3D` orientados a $-Z$).
+5. **Integración en Escena Principal (`main.tscn`)**:
+   - Emplazado en la intersección Juárez $\cap$ Cárdenas (`Position = Vector3(-66.79, 400.25, -24.81)`).
