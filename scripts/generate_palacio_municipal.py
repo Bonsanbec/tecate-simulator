@@ -443,20 +443,20 @@ def build_palacio_geometry(col, mats):
     # Portal monumental de acceso en Planta Baja (bajo el balcón)
     # Jambas de ladrillo rojo a los lados del acceso
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -1.45, -1.15, 0.06, 0.08, 0.0, 2.70, m_idxs["ladrillo"])
+                     -1.45, -1.15, 0.08, 0.10, 0.0, 2.70, m_idxs["ladrillo"])
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     1.15, 1.45, 0.06, 0.08, 0.0, 2.70, m_idxs["ladrillo"])
+                     1.15, 1.45, 0.08, 0.10, 0.0, 2.70, m_idxs["ladrillo"])
     # Dintel de ladrillo sobre la puerta
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -1.45, 1.45, 0.06, 0.08, 2.65, 3.05, m_idxs["ladrillo"])
+                     -1.45, 1.45, 0.08, 0.10, 2.65, 3.05, m_idxs["ladrillo"])
 
     # Puerta doble de madera oscura y vidrio
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -1.15, 1.15, 0.02, -0.02, 0.0, 2.65, m_idxs["madera"])
+                     -1.15, 1.15, 0.04, -0.02, 0.0, 2.65, m_idxs["madera"])
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -0.90, -0.10, 0, -0.04, 1.20, 2.45, m_idxs["vidrio"])
+                     -0.90, -0.10, 0.02, -0.04, 1.20, 2.45, m_idxs["vidrio"])
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     0.10, 0.90, 0, -0.04, 1.20, 2.45, m_idxs["vidrio"])
+                     0.10, 0.90, 0.02, -0.04, 1.20, 2.45, m_idxs["vidrio"])
 
     # Ventanal de Planta Alta en el chaflán
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
@@ -464,10 +464,10 @@ def build_palacio_geometry(col, mats):
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
                      -2.10, 2.10, 0.06, 0.04, 6.52, 6.60, m_idxs["aluminio"])
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -2.00, 2.00, 0, -0.02, 4.68, 6.52, m_idxs["vidrio"])
+                     -2.00, 2.00, 0.02, -0.02, 4.68, 6.52, m_idxs["vidrio"])
     for ps in [-0.70, 0.70]:
         add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                         ps - 0.03, ps + 0.03, 0, 0.02, 4.68, 6.52, m_idxs["aluminio"])
+                         ps - 0.03, ps + 0.03, 0.02, 0.04, 4.68, 6.52, m_idxs["aluminio"])
 
     # =========================================================================
     # 5. PÓRTICO MONUMENTAL Y BALCÓN VOLADO (Ground Truth 2009)
