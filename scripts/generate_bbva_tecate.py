@@ -1083,6 +1083,8 @@ def build_west_facade_cardenas(mats, col):
             
             # Recibidor / zaguán rehundido hacia el interior (X in [0.0, 3.15], Y in [25.80, 28.20])
             stair_w = (25.85, 28.15)
+            # Relleno de base sólida que cierra el hueco bajo el primer escalón
+            add_box(bm_dent_stair, 0.0, 0.20, stair_w[0], stair_w[1], 0.0, 0.18)
             add_box(bm_dent_stair, 0.20, 3.15, stair_w[0], stair_w[1], 0.0, 0.18)
             add_box(bm_dent_stair, 0.60, 3.15, stair_w[0], stair_w[1], 0.18, 0.36)
             add_box(bm_dent_stair, 1.00, 3.15, stair_w[0], stair_w[1], 0.36, 0.54)

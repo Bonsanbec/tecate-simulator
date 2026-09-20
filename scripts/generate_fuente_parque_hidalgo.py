@@ -165,16 +165,19 @@ def create_materials(tex_dir):
     )
     mats["cantera"] = m_cantera
 
-    # 7. Copa Superior / Tazón Labrado
-    m_copa = bpy.data.materials.new("M_Copa_Superior")
-    setup_pbr_material(
-        m_copa,
-        alb_path=os.path.join(tex_dir, "fuente_cantera_albedo.png"),
-        nrm_path=os.path.join(tex_dir, "fuente_cantera_normal.png"),
-        base_color = (0.42, 0.30, 0.20, 1.0),
-        roughness=0.72
-    )
-    mats["copa"] = m_copa
+    # # 7. Copa Superior / Tazón Labrado (marrón grisáceo oscuro - cantera local)
+    # m_copa = bpy.data.materials.new("M_Copa_Superior")
+    # setup_pbr_material(
+    #     m_copa,
+    #     alb_path=None,
+    #     nrm_path=os.path.join(tex_dir, "fuente_cantera_normal.png"),
+    #     base_color=(0.42, 0.30, 0.20, 1.0),
+    #     roughness=0.72,
+    #     normal_strength=1.0
+    # )
+    # mats["copa"] = m_copa
+    
+    mats["copa"] = m_cantera
 
     # 8. Fondo de Estanque Sumergido (Mosaico veneciano turquesa)
     m_fondo = bpy.data.materials.new("M_Fondo_Mosaico")

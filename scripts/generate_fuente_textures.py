@@ -120,7 +120,7 @@ def generate_cantera_textures(w=1024, h=1024):
     print(">> Generando texturas de Cantera pétrea para cascada...")
     np.random.seed(202)
     # Base pétrea beige perla / gris cantera colonial
-    c_cantera = np.array([0.76, 0.73, 0.67])
+    c_cantera = np.array([0.24, 0.12, 0.045, 1.0])
     
     # Ruido multifractal simulado
     x = np.linspace(0, 8, w)

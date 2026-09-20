@@ -54,7 +54,7 @@ def create_materials():
     bsdf_o.inputs["Roughness"].default_value = 0.78
     mats["ocre"] = m_ocre
 
-    # 3. Ladrillo Rojo Cocido (Arcos y pilastras continuas)
+    # 3. Ladrillo Normativo (Arcos y pilastras del Palacio Municipal)
     m_brick = bpy.data.materials.new("M_Ladrillo_Arco")
     m_brick.use_nodes = True
     bsdf_br = m_brick.node_tree.nodes.get("Principled BSDF")
@@ -312,7 +312,7 @@ def build_fenestrated_bay(bm, center_xy, tangent_xy, normal_xy, m_idxs):
 
     # Ventana superior rectangular (bajo el arranque del arco)
     add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
-                     -r_win + 0.02, r_win - 0.02, -0.22, -0.20, z_bot_up, z_spring, m_idxs["vidrio"])
+                     -r_win + 0.02, r_win - 0.02, -0.25, -0.22, z_bot_up, z_spring, m_idxs["vidrio"])
     add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
                      -0.03, 0.03, -0.22, -0.18, z_bot_up, z_spring, m_idxs["aluminio"])
     add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
@@ -333,7 +333,7 @@ def build_fenestrated_bay(bm, center_xy, tangent_xy, normal_xy, m_idxs):
     add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
                      -0.82, 0.82, -0.05, 0.02, 1.18, 2.82, m_idxs["aluminio"])
     add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
-                     -0.80, 0.80, -0.22, -0.20, 1.20, 2.80, m_idxs["vidrio"])
+                     -0.80, 0.80, -0.25, -0.22, 1.20, 2.80, m_idxs["vidrio"])
     add_oriented_box(bm, center_xy, tangent_xy, normal_xy,
                      -0.03, 0.03, -0.22, -0.18, 1.20, 2.80, m_idxs["aluminio"])
 
@@ -443,31 +443,31 @@ def build_palacio_geometry(col, mats):
     # Portal monumental de acceso en Planta Baja (bajo el balcón)
     # Jambas de ladrillo rojo a los lados del acceso
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -1.45, -1.15, 0.0, 0.08, 0.0, 2.70, m_idxs["ladrillo"])
+                     -1.45, -1.15, 0.06, 0.08, 0.0, 2.70, m_idxs["ladrillo"])
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     1.15, 1.45, 0.0, 0.08, 0.0, 2.70, m_idxs["ladrillo"])
+                     1.15, 1.45, 0.06, 0.08, 0.0, 2.70, m_idxs["ladrillo"])
     # Dintel de ladrillo sobre la puerta
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -1.45, 1.45, 0.0, 0.08, 2.65, 3.05, m_idxs["ladrillo"])
+                     -1.45, 1.45, 0.06, 0.08, 2.65, 3.05, m_idxs["ladrillo"])
 
     # Puerta doble de madera oscura y vidrio
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -1.15, 1.15, -0.06, -0.02, 0.0, 2.65, m_idxs["madera"])
+                     -1.15, 1.15, 0.02, -0.02, 0.0, 2.65, m_idxs["madera"])
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -0.90, -0.10, -0.08, -0.04, 1.20, 2.45, m_idxs["vidrio"])
+                     -0.90, -0.10, 0, -0.04, 1.20, 2.45, m_idxs["vidrio"])
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     0.10, 0.90, -0.08, -0.04, 1.20, 2.45, m_idxs["vidrio"])
+                     0.10, 0.90, 0, -0.04, 1.20, 2.45, m_idxs["vidrio"])
 
     # Ventanal de Planta Alta en el chaflán
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -2.10, 2.10, 0.0, 0.04, 4.60, 4.68, m_idxs["aluminio"])
+                     -2.10, 2.10, 0.06, 0.04, 4.60, 4.68, m_idxs["aluminio"])
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -2.10, 2.10, 0.0, 0.04, 6.52, 6.60, m_idxs["aluminio"])
+                     -2.10, 2.10, 0.06, 0.04, 6.52, 6.60, m_idxs["aluminio"])
     add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                     -2.00, 2.00, -0.06, -0.02, 4.68, 6.52, m_idxs["vidrio"])
+                     -2.00, 2.00, 0, -0.02, 4.68, 6.52, m_idxs["vidrio"])
     for ps in [-0.70, 0.70]:
         add_oriented_box(bm, center_chamfer, tang_chamfer, norm_chamfer,
-                         ps - 0.03, ps + 0.03, -0.06, 0.02, 4.68, 6.52, m_idxs["aluminio"])
+                         ps - 0.03, ps + 0.03, 0, 0.02, 4.68, 6.52, m_idxs["aluminio"])
 
     # =========================================================================
     # 5. PÓRTICO MONUMENTAL Y BALCÓN VOLADO (Ground Truth 2009)
@@ -585,52 +585,128 @@ def build_signage(col, mats):
     col.objects.link(txt_obj)
     txt_obj.data.materials.append(mats["letras"])
 
-    txt_obj.location = (c_front[0], c_front[1], 3.95)
+    txt_obj.location = (c_front[0], c_front[1], 3.72)
     txt_obj.rotation_euler = (math.radians(90.0), 0.0, math.radians(-45.0))
 
-    # Escudo Nacional en altorrelieve de bronce envejecido
-    me_escudo = bpy.data.meshes.new("Mesh_Escudo_Nacional")
-    bm_e = bmesh.new()
-    radius_x, radius_z = 0.28, 0.35
-    depth = 0.035
-    v_ring = []
-    seg = 16
-    for i in range(seg):
-        ang = 2.0 * math.pi * i / seg
-        vx = radius_x * math.cos(ang)
-        vz = radius_z * math.sin(ang)
-        v_ring.append(bm_e.verts.new((vx, 0.0, vz)))
-        v_ring.append(bm_e.verts.new((vx, depth, vz)))
+    # Escudo Nacional: importar SVG extrudido (mexico_escudo.svg)
+    svg_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "blender_assets", "mexico_escudo.svg"
+    )
 
-    for i in range(seg):
-        nxt = (i + 1) % seg
-        bm_e.faces.new([v_ring[2*i], v_ring[2*nxt], v_ring[2*nxt + 1], v_ring[2*i + 1]])
+    if os.path.exists(svg_path):
+        # Importar SVG como curvas Bezier
+        bpy.ops.import_curve.svg(filepath=svg_path)
+        svg_objs = [o for o in bpy.context.selected_objects if o.type == 'CURVE']
 
-    f_front = bm_e.faces.new([v_ring[2*i + 1] for i in range(seg)])
-    f_back = bm_e.faces.new([v_ring[2*i] for i in reversed(range(seg))])
+        if svg_objs:
+            # Unir todas las curvas del SVG en un único objeto
+            bpy.ops.object.select_all(action='DESELECT')
+            for so in svg_objs:
+                so.select_set(True)
+            bpy.context.view_layer.objects.active = svg_objs[0]
+            if len(svg_objs) > 1:
+                bpy.ops.object.join()
+            escudo_obj = bpy.context.active_object
+            escudo_obj.name = "Escudo_Nacional"
 
-    # Anillo exterior moldurado
-    r_out_x, r_out_z = 0.32, 0.39
-    v_out = []
-    for i in range(seg):
-        ang = 2.0 * math.pi * i / seg
-        vx = r_out_x * math.cos(ang)
-        vz = r_out_z * math.sin(ang)
-        v_out.append(bm_e.verts.new((vx, depth + 0.015, vz)))
+            # Simplificar curvas ligeramente para reducir polígonos
+            for spline in escudo_obj.data.splines:
+                spline.resolution_u = 4
 
-    for i in range(seg):
-        nxt = (i + 1) % seg
-        bm_e.faces.new([v_ring[2*i + 1], v_ring[2*nxt + 1], v_out[nxt], v_out[i]])
+            # Configurar extrusión del SVG
+            escudo_obj.data.extrude = 0.025
+            escudo_obj.data.dimensions = '2D'
+            escudo_obj.data.fill_mode = 'BOTH'
 
-    bm_e.to_mesh(me_escudo)
-    bm_e.free()
+            # Normalizar escala: el SVG suele importarse en unidades de píxel (px → m)
+            # Escalar para que el escudo mida ~0.55 m de alto
+            bpy.ops.object.transform_apply(location=True, scale=True, rotation=True)
+            bbox = [escudo_obj.bound_box[i] for i in range(8)]
+            max_dim = max(
+                max(v[0] for v in bbox) - min(v[0] for v in bbox),
+                max(v[1] for v in bbox) - min(v[1] for v in bbox)
+            )
+            if max_dim > 1e-6:
+                target_size = 0.55
+                scale_factor = target_size / max_dim
+                escudo_obj.scale = (scale_factor, scale_factor, scale_factor)
+                bpy.ops.object.transform_apply(scale=True)
 
-    escudo_obj = bpy.data.objects.new("Escudo_Nacional", me_escudo)
-    col.objects.link(escudo_obj)
-    escudo_obj.data.materials.append(mats["escudo"])
-    escudo_obj.location = (c_front[0] + 0.01 * norm_chamfer[0],
-                           c_front[1] + 0.01 * norm_chamfer[1], 4.30)
-    escudo_obj.rotation_euler = (0.0, 0.0, math.radians(-45.0))
+            # Mover a la colección principal y asignar material
+            for c_old in escudo_obj.users_collection:
+                c_old.objects.unlink(escudo_obj)
+            col.objects.link(escudo_obj)
+            escudo_obj.data.materials.clear()
+            escudo_obj.data.materials.append(mats["escudo"])
+
+            # Posicionar y orientar sobre el chaflán
+            escudo_obj.location = (
+                c_front[0] + 0.01 * norm_chamfer[0],
+                c_front[1] + 0.01 * norm_chamfer[1],
+                4.30
+            )
+            escudo_obj.rotation_euler = (math.radians(90.0), 0.0, math.radians(-45.0))
+        else:
+            # Fallback: óvalo si el SVG no produce curvas
+            me_escudo = bpy.data.meshes.new("Mesh_Escudo_Nacional")
+            bm_e = bmesh.new()
+            radius_x, radius_z = 0.28, 0.35
+            depth = 0.035
+            v_ring = []
+            seg = 24
+            for i in range(seg):
+                ang = 2.0 * math.pi * i / seg
+                vx = radius_x * math.cos(ang)
+                vz = radius_z * math.sin(ang)
+                v_ring.append(bm_e.verts.new((vx, 0.0, vz)))
+                v_ring.append(bm_e.verts.new((vx, depth, vz)))
+            for i in range(seg):
+                nxt = (i + 1) % seg
+                bm_e.faces.new([v_ring[2*i], v_ring[2*nxt], v_ring[2*nxt + 1], v_ring[2*i + 1]])
+            f_front = bm_e.faces.new([v_ring[2*i + 1] for i in range(seg)])
+            f_back = bm_e.faces.new([v_ring[2*i] for i in reversed(range(seg))])
+            bm_e.to_mesh(me_escudo)
+            bm_e.free()
+            escudo_obj = bpy.data.objects.new("Escudo_Nacional", me_escudo)
+            col.objects.link(escudo_obj)
+            escudo_obj.data.materials.append(mats["escudo"])
+            escudo_obj.location = (
+                c_front[0] + 0.01 * norm_chamfer[0],
+                c_front[1] + 0.01 * norm_chamfer[1],
+                4.30
+            )
+            escudo_obj.rotation_euler = (0.0, 0.0, math.radians(-45.0))
+    else:
+        # Fallback completo si no existe el archivo SVG
+        me_escudo = bpy.data.meshes.new("Mesh_Escudo_Nacional")
+        bm_e = bmesh.new()
+        radius_x, radius_z = 0.28, 0.35
+        depth = 0.035
+        v_ring = []
+        seg = 24
+        for i in range(seg):
+            ang = 2.0 * math.pi * i / seg
+            vx = radius_x * math.cos(ang)
+            vz = radius_z * math.sin(ang)
+            v_ring.append(bm_e.verts.new((vx, 0.0, vz)))
+            v_ring.append(bm_e.verts.new((vx, depth, vz)))
+        for i in range(seg):
+            nxt = (i + 1) % seg
+            bm_e.faces.new([v_ring[2*i], v_ring[2*nxt], v_ring[2*nxt + 1], v_ring[2*i + 1]])
+        f_front = bm_e.faces.new([v_ring[2*i + 1] for i in range(seg)])
+        f_back = bm_e.faces.new([v_ring[2*i] for i in reversed(range(seg))])
+        bm_e.to_mesh(me_escudo)
+        bm_e.free()
+        escudo_obj = bpy.data.objects.new("Escudo_Nacional", me_escudo)
+        col.objects.link(escudo_obj)
+        escudo_obj.data.materials.append(mats["escudo"])
+        escudo_obj.location = (
+            c_front[0] + 0.01 * norm_chamfer[0],
+            c_front[1] + 0.01 * norm_chamfer[1],
+            4.30
+        )
+        escudo_obj.rotation_euler = (0.0, 0.0, math.radians(-45.0))
 
     return txt_obj, escudo_obj
 

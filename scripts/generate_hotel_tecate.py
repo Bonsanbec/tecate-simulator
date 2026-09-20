@@ -423,8 +423,8 @@ def build_ochava_corner(mats, col):
     add_box(bm_white, 0.15, 0.33, 2.40, 2.58, 4.60, 5.80)
 
     # 8. Rótulo Volado "HOTEL TECATE Tel. 654-11-16"
-    add_box(bm_sign, 2.55, 2.65, -1.80, 0.10, 4.85, 4.95)
-    add_box(bm_sign, 2.58, 2.62, -1.80, -0.20, 4.00, 5.20)
+    add_box(bm_sign, 3.00, 3.10, -1.80, 0.10, 4.85, 4.95)
+    add_box(bm_sign, 3.03, 3.07, -1.80, -0.20, 4.00, 5.20)
 
     obj_wall_o = create_mesh_object("Ochava_Muro_Remate", bm_wall, mats["estuco"], col)
     obj_paves = create_mesh_object("Ochava_Paves_Arco", bm_paves, mats["paves"], col)
@@ -439,19 +439,19 @@ def build_ochava_corner(mats, col):
 
     # Rótulos en texto 3D sobre cartel volado
     t_h_norte = create_3d_text("Texto_Hotel_Norte", "HOTEL\nTECATE", 0.36, 0.015, mats["texto_rojo"], col)
-    t_h_norte.location = Vector((2.55, -1.00, 4.80))
+    t_h_norte.location = Vector((3.00, -1.00, 4.80))
     t_h_norte.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
 
     t_tel_norte = create_3d_text("Texto_Tel_Norte", "Tel. 654-11-16", 0.13, 0.012, mats["texto_azul"], col)
-    t_tel_norte.location = Vector((2.55, -1.00, 4.20))
+    t_tel_norte.location = Vector((3.00, -1.00, 4.20))
     t_tel_norte.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
 
     t_h_sur = create_3d_text("Texto_Hotel_Sur", "HOTEL\nTECATE", 0.36, 0.015, mats["texto_rojo"], col)
-    t_h_sur.location = Vector((2.65, -1.00, 4.80))
+    t_h_sur.location = Vector((3.10, -1.00, 4.80))
     t_h_sur.rotation_euler = (math.radians(90.0), 0.0, math.radians(90.0))
 
     t_tel_sur = create_3d_text("Texto_Tel_Sur", "Tel. 654-11-16", 0.13, 0.012, mats["texto_azul"], col)
-    t_tel_sur.location = Vector((2.65, -1.00, 4.20))
+    t_tel_sur.location = Vector((3.10, -1.00, 4.20))
     t_tel_sur.rotation_euler = (math.radians(90.0), 0.0, math.radians(90.0))
 
     return [obj_wall_o, obj_paves, obj_balcony, obj_mensula, obj_iron, obj_dark_o, obj_white_o, obj_glass_o, obj_mirror, obj_sign_panel, t_h_norte, t_tel_norte, t_h_sur, t_tel_sur]
@@ -665,10 +665,10 @@ def build_north_facade_libertad(mats, col):
         bm.faces.new((v2, v5, v6, v3))
         bm.faces.new((v3, v6, v4, v1))
 
-    # Flecha izquierda blanca en 'S' (Y: 10.15 a 10.35, Z = 3.86, apunta hacia +Y/izquierda)
-    add_arrow_left(bm_arrow_w, -0.12, -0.06, 10.35, 10.15, 3.86, 0.10)
-    # Flecha derecha amarilla en 'Y' (Y: 7.65 a 7.85, Z = 3.86, apunta hacia -Y/derecha)
-    add_arrow_right(bm_arrow_y, -0.12, -0.06, 7.65, 7.85, 3.86, 0.10)
+    # Flecha izquierda blanca junto al extremo izquierdo del texto centrado (Y ≈ 10.60)
+    add_arrow_left(bm_arrow_w, -0.12, -0.06, 10.50, 10.30, 3.64, 0.10)
+    # Flecha derecha amarilla junto al extremo derecho del texto centrado (Y ≈ 7.50)
+    add_arrow_right(bm_arrow_y, -0.12, -0.06, 7.55, 7.75, 3.64, 0.10)
 
     # Objetos de malla
     obj_wall_n = create_mesh_object("Fachada_Norte_Muro", bm_wall, mats["estuco"], col)
@@ -684,11 +684,11 @@ def build_north_facade_libertad(mats, col):
 
     # Textos 3D Subway (SUB a la izquierda en blanco, WAY a la derecha en amarillo)
     t_sub = create_3d_text("Texto_SUB", "SUB", 0.52, 0.05, mats["subway_blanco"], col)
-    t_sub.location = Vector((-0.07, 10.18, 3.42))
+    t_sub.location = Vector((-0.07, 9.65, 3.64))
     t_sub.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
 
     t_way = create_3d_text("Texto_WAY", "WAY", 0.52, 0.05, mats["subway_amarillo"], col)
-    t_way.location = Vector((-0.07, 9.08, 3.42))
+    t_way.location = Vector((-0.07, 8.595, 3.64))
     t_way.rotation_euler = (math.radians(90.0), 0.0, math.radians(-90.0))
 
     # Rótulo Casa Paris en toldo negro
