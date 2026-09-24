@@ -59,7 +59,7 @@ transform = Transform3D(0.085219, 0.02393, -0.996075, -0.00278, 0.999713, 0.0237
 transform = Transform3D(-0.996344, -0.005629, -0.085242, -0.00781, 0.99965, 0.02528, 0.08507, 0.025853, -0.99604, 47.75, 398.79, 42.4)
 
 [node name="Continuo_La_Panza" parent="." instance=ExtResource("16_continuo_la_panza")]
-transform = Transform3D(-0.1077, -0.0058, 1.2462, -0.0111, 1.2508, 0.0037, -1.2461, -0.0107, -0.1077, 178.63, 400.87, 40.44)
+transform = Transform3D(-0.1077, -0.0058, 1.2462, -0.0111, 1.2508, 0.0037, -1.2461, -0.0107, -0.1077, 181.63, 400.87, 56.44)
 
 [node name="Nomenclatura" parent="." instance=ExtResource("12_nomenclatura")]
 
