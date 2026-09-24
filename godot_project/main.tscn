@@ -16,13 +16,8 @@
 [ext_resource type="PackedScene" path="res://assets/fuente_parque_hidalgo.tscn" id="15_fuente_hidalgo"]
 [ext_resource type="PackedScene" path="res://assets/buildings/edificio_continuo_la_panza.tscn" id="16_continuo_la_panza"]
 [ext_resource type="PackedScene" path="res://assets/buildings/edificio_cardenas_33.tscn" id="17_cardenas_33"]
+[ext_resource type="PackedScene" path="res://systems/environment/sky_system.tscn" id="18_sky_system"]
 
-
-[sub_resource type="Environment" id="Environment_tct"]
-background_mode = 1
-background_color = Color(0.415686, 0.619608, 0.835294, 1)
-ambient_light_source = 2
-ambient_light_color = Color(0.65098, 0.65098, 0.65098, 1)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.4
@@ -54,7 +49,7 @@ transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 
 transform = Transform3D(-0.99636, -0.000716, -0.085243, -0.00275, 0.999714, 0.02375, 0.085202, 0.023898, -0.996077, -66.8, 400, -24.81)
 
 [node name="Edificio_Cardenas_33" parent="." instance=ExtResource("17_cardenas_33")]
-transform = Transform3D(-0.99636, -0.000716, -0.085243, -0.00275, 0.999714, 0.02375, 0.085202, 0.023898, -0.996077, -69.356, 399.283, 5.072)
+transform = Transform3D(-0.99636, -0.000716, -0.085243, -0.00275, 0.999714, 0.02375, 0.085202, 0.023898, -0.996077, -64.217, 399.280, 5.371)
 
 
 [node name="Hotel_Tecate" parent="." instance=ExtResource("13_hotel_tecate")]
@@ -69,12 +64,7 @@ transform = Transform3D(-0.1077, -0.0058, 1.2462, -0.0111, 1.2508, 0.0037, -1.24
 [node name="Nomenclatura" parent="." instance=ExtResource("12_nomenclatura")]
 
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 20, 0)
-shadow_enabled = true
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_tct")
+[node name="SkySystem" parent="." instance=ExtResource("18_sky_system")]
 
 [node name="Player" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6844, 400.0, 11)

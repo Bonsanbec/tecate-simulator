@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://cardenas_33_locales_001"]
+[gd_scene load_steps=9 format=3 uid="uid://cardenas_33_locales_001"]
 
 [ext_resource type="PackedScene" path="res://assets/buildings/edificio_cardenas_33.glb" id="1_mesh"]
 
@@ -6,22 +6,19 @@
 size = Vector3(16.5, 4.5, 4.8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_diana"]
-size = Vector3(16.5, 4.5, 4.3)
+size = Vector3(16.5, 4.5, 4.5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_anita"]
-size = Vector3(16.5, 4.5, 5.1)
+size = Vector3(16.5, 4.5, 5.2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_party"]
-size = Vector3(16.5, 4.5, 5.1)
+size = Vector3(16.5, 4.5, 5.5)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_orquidea"]
-size = Vector3(9.2, 6.5, 5.2)
+[sub_resource type="BoxShape3D" id="BoxShape3D_orquidea_ochava"]
+size = Vector3(5.7, 6.8, 1.2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_curiel"]
-size = Vector3(7.3, 4.5, 6.5)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_terraza"]
-size = Vector3(4.3, 2.0, 7.0)
+size = Vector3(12.5, 4.5, 4.5)
 
 [node name="Edificio_Cardenas_33" type="StaticBody3D"]
 
@@ -32,25 +29,21 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 2.25, -2.40)
 shape = SubResource("BoxShape3D_libreria")
 
 [node name="Col_Diana" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 2.25, -6.95)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 2.25, -7.05)
 shape = SubResource("BoxShape3D_diana")
 
 [node name="Col_Anita" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 2.25, -11.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 2.25, -11.90)
 shape = SubResource("BoxShape3D_anita")
 
 [node name="Col_Party" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 2.25, -16.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 2.25, -17.25)
 shape = SubResource("BoxShape3D_party")
 
-[node name="Col_Orquidea" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.60, 3.25, -21.90)
-shape = SubResource("BoxShape3D_orquidea")
+[node name="Col_Orquidea_Ochava" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 2.00, 3.40, -22.50)
+shape = SubResource("BoxShape3D_orquidea_ochava")
 
 [node name="Col_Curiel" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.85, 2.25, -21.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.25, 2.25, -22.25)
 shape = SubResource("BoxShape3D_curiel")
-
-[node name="Col_Terraza_Reja" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.65, 1.00, -10.50)
-shape = SubResource("BoxShape3D_terraza")
