@@ -1,0 +1,119 @@
+[gd_scene format=3 uid="uid://c6playerhud7781"]
+
+[ext_resource type="Script" path="res://ui/player_hud.gd" id="1_hud_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
+bg_color = Color(0.06, 0.08, 0.1, 0.65)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_compass"]
+font_size = 14
+font_color = Color(0.92, 0.95, 0.98, 1)
+outline_size = 2
+outline_color = Color(0, 0, 0, 0.8)
+
+[sub_resource type="LabelSettings" id="LabelSettings_telemetry"]
+font_size = 13
+line_spacing = 4.0
+font_color = Color(0.85, 0.9, 0.95, 0.9)
+outline_size = 2
+outline_color = Color(0, 0, 0, 0.8)
+
+[sub_resource type="LabelSettings" id="LabelSettings_badge"]
+font_size = 13
+font_color = Color(0.98, 0.88, 0.45, 1)
+outline_size = 2
+outline_color = Color(0, 0, 0, 0.8)
+
+[node name="PlayerHUD" type="CanvasLayer"]
+script = ExtResource("1_hud_script")
+
+[node name="TopCompass" type="PanelContainer" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -175.0
+offset_top = 18.0
+offset_right = 175.0
+offset_bottom = 54.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
+
+[node name="CompassLabel" type="Label" parent="TopCompass"]
+layout_mode = 2
+text = "000° N  |  Rumbo Urbano Tecate"
+label_settings = SubResource("LabelSettings_compass")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BottomLeft" type="PanelContainer" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 22.0
+offset_top = -110.0
+offset_right = 230.0
+offset_bottom = -22.0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
+
+[node name="TelemetryLabel" type="Label" parent="BottomLeft"]
+layout_mode = 2
+text = "VELOCIDAD:  0.0 km/h
+ALTITUD:   540.0 m snm
+PENDIENTE:  0.0°"
+label_settings = SubResource("LabelSettings_telemetry")
+vertical_alignment = 1
+
+[node name="BottomRight" type="PanelContainer" parent="."]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -240.0
+offset_top = -60.0
+offset_right = -22.0
+offset_bottom = -22.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
+
+[node name="ModeBadge" type="Label" parent="BottomRight"]
+layout_mode = 2
+text = "[F5] 1P - Vista Subjetiva"
+label_settings = SubResource("LabelSettings_badge")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CenterReticle" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dot" type="ColorRect" parent="CenterReticle"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 2.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 1, 1, 0.45)

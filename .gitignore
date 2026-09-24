@@ -54,3 +54,4 @@ blender_assets/*_adjusted.blend
 !godot_project/assets/nomenclatura_corners.json
 
 !blender_assets/spatial_model.json
+!godot_project/assets/characters/humanoid_player.glb

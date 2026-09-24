@@ -170,7 +170,7 @@ func close_menu() -> void:
 	if player:
 		if player.has_method("set_input_enabled"):
 			player.set_input_enabled(true)
-		var player_cam = player.get_node_or_null("Camera3D")
+		var player_cam = player.camera if ("camera" in player and player.camera) else player.get_node_or_null("Camera3D")
 		if player_cam and player_cam is Camera3D:
 			player_cam.make_current()
 
