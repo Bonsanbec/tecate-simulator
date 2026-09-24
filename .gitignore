@@ -52,3 +52,5 @@ blender_assets/*_adjusted.blend
 !blender_assets/.bake_manifest.json
 !godot_project/assets/nomenclatura_data.json
 !godot_project/assets/nomenclatura_corners.json
+
+!blender_assets/spatial_model.json

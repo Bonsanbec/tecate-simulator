@@ -1,0 +1,287 @@
+{
+  "_schema_version": "1.0.0",
+  "_descripcion": "Modelo espacial canónico del Parque Hidalgo y su entorno inmediato. Fuente de verdad para agentes de IA que necesiten geoposicionar edificios en Tecate Simulator sin ambigüedad.",
+  "_generado": "2026-09-23",
+  "_uso": "Consultar ANTES de instanciar cualquier edificio en main.tscn o de escribir un script Blender. Ver spatial_disambiguation_strategy.md para el protocolo de desambiguación.",
+
+  "sistema_de_coordenadas": {
+    "motor": "Godot 4 (Y-up, mano-derecha)",
+    "ejes_cardinales": {
+      "Norte": { "eje": "-Z", "godot_delta": "Z disminuye", "blender_delta": "Y aumenta", "descripcion": "Hacia la Av. Benito Juárez y más allá hacia Av. México (la más al norte de Tecate)" },
+      "Sur":   { "eje": "+Z", "godot_delta": "Z aumenta",   "blender_delta": "Y disminuye", "descripcion": "Hacia el Callejón Libertad, luego Av. Miguel Hidalgo Costilla, luego Blvd. Defensores" },
+      "Este":  { "eje": "+X", "godot_delta": "X aumenta",   "blender_delta": "X aumenta",   "descripcion": "Hacia la Calle Presidente Pascual Ortiz Rubio desde el Kiosko." },
+      "Oeste": { "eje": "-X", "godot_delta": "X disminuye", "blender_delta": "X disminuye", "descripcion": "Hacia la Calle Presidente Lázaro Cárdenas desde el Kiosko." }
+    },
+    "elevacion": {
+      "eje": "Y",
+      "descripcion": "Y aumenta hacia arriba. Y≈398–402 es el nivel de banqueta en el centro de Tecate."
+    },
+    "transformacion_blender_a_godot": {
+      "formula": "Godot(X,Y,Z) = Blender(X, Z, -Y)",
+      "nota": "La exportación glTF rota el eje Y de Blender a Y de Godot y convierte el eje Z de Blender en -Z de Godot."
+    },
+    "transformacion_godot_a_blender": {
+      "formula": "Blender(X,Y,Z) = Godot(X, -Z, Y)"
+    },
+    "transformacion_godot_a_latlon": {
+      "ref_godot": { "X": -6.68, "Y": 400.0, "Z": 2.69 },
+      "ref_latlon": { "lat": 32.57293, "lon": -116.62685, "nombre": "Centro Kiosko Parque Hidalgo" },
+      "escala": {
+        "metros_por_unidad_godot": 1.0,
+        "lat_por_unidad_X": -1.068e-5,
+        "lat_por_unidad_Z": -8.98e-6,
+        "nota": "ΔX Godot → ΔLon (X+ = Este = lon+). ΔZ Godot → ΔLat (Z+ = Sur = lat-)"
+      },
+      "formula_lat": "lat = 32.57293 + (Z_godot - 2.69) * (-8.98e-6)",
+      "formula_lon": "lon = -116.62685 + (X_godot - (-6.68)) * (1.068e-5)"
+    }
+  },
+
+  "punto_de_referencia_cero": {
+    "nombre": "Kiosko del Parque Miguel Hidalgo",
+    "godot": { "X": -6.68, "Y": 400.01, "Z": 2.69 },
+    "blender": { "X": -6.68, "Y": -2.69, "Z": 400.01 },
+    "latlon": { "lat": 32.57293, "lon": -116.62685 },
+    "descripcion": "Centro geométrico del parque y punto de anclaje de todos los cálculos de desplazamiento relativo."
+  },
+
+  "calles_del_entorno_del_parque": {
+    "Norte_del_parque": {
+      "nombre": "Avenida Benito Juárez",
+      "orientacion": "Eje Este-Oeste (corre paralela al eje X de Godot)",
+      "godot_Z_aprox": -32,
+      "descripcion": "Borde norte del Parque Hidalgo. Los edificios con fachada a Juárez tienen Z≈-30 a -50.",
+      "cruces_godot": [
+        { "interseccion": "Juárez + Cárdenas (NO del parque)", "X": -46.1, "Z": -29.6 },
+        { "interseccion": "Juárez + Cárdenas (NO, segundo nodo)", "X": -67.9, "Z": -27.6 },
+        { "interseccion": "Juárez + Ortiz Rubio (NE del parque)", "X": 43.7,  "Z": -40.3 }
+      ]
+    },
+    "Sur_del_parque": {
+      "nombre": "Callejón Libertad",
+      "orientacion": "Eje Este-Oeste (corre paralela al eje X de Godot)",
+      "godot_Z_aprox": 40,
+      "descripcion": "Borde sur del Parque Hidalgo. Es un callejón peatonal. Los edificios con fachada al Callejón Libertad tienen Z≈35 a 50.",
+      "cruces_godot": [
+        { "interseccion": "Libertad + Cárdenas (SO del parque)", "X": -55.6, "Z": 46.6 },
+        { "interseccion": "Libertad + Ortiz Rubio (SE del parque)", "X": 50.6, "Z": 33.4 }
+      ]
+    },
+    "Oeste_del_parque": {
+      "nombre": "Calle Presidente Lázaro Cárdenas",
+      "orientacion": "Eje Norte-Sur (corre paralela al eje Z de Godot)",
+      "godot_X_aprox": -50,
+      "descripcion": "Borde oeste del Parque Hidalgo. Los edificios con fachada a Cárdenas tienen X≈-50 a -70."
+    },
+    "Este_del_parque": {
+      "nombre": "Calle Presidente Pascual Ortiz Rubio",
+      "orientacion": "Eje Norte-Sur (corre paralela al eje Z de Godot)",
+      "godot_X_aprox": 55,
+      "descripcion": "Borde este del Parque Hidalgo. Los edificios con fachada a Ortiz Rubio tienen X≈50 a 70."
+    },
+    "Sur_lejano": {
+      "nombre": "Avenida Miguel Hidalgo Costilla",
+      "orientacion": "Eje Este-Oeste",
+      "godot_Z_aprox": 110,
+      "descripcion": "Segunda calle al sur del parque, a ~110m en Godot."
+    },
+    "Norte_global": {
+      "nombre": "Avenida México",
+      "descripcion": "Calle más al norte de Tecate. Tiene Z muy negativa (mayor magnitud negativa que Juárez)."
+    }
+  },
+
+  "manzanas_del_entorno": {
+    "manzana_NW": {
+      "nombre": "Manzana BBVA / Norte-Poniente",
+      "descripcion": "Al noroeste del parque. Bordeada por Av. Juárez al norte, Cárdenas al oeste, Callejón Libertad al sur, Ortiz Rubio al este. Contiene el edificio BBVA.",
+      "bounds_godot_aproximados": { "X_min": -80, "X_max": -10, "Z_min": -55, "Z_max": -10 },
+      "edificios_colocados": ["BBVA"],
+      "block_id_cache": "block_lat_32.57293_lon_-116.62685",
+      "_nota": "El parque y esta manzana comparten el mismo block_id en el caché, lo que puede ser confuso. El parque en sí es espacio público sin edificio."
+    },
+    "manzana_NE": {
+      "nombre": "Manzana Norte-Oriente del parque",
+      "descripcion": "Al noreste del parque. Bordeada por Av. Juárez al norte, Ortiz Rubio al oeste.",
+      "bounds_godot_aproximados": { "X_min": 10, "X_max": 80, "Z_min": -70, "Z_max": -10 },
+      "edificios_colocados": []
+    },
+    "manzana_SW": {
+      "nombre": "Manzana Ayuntamiento / Sur-Poniente",
+      "descripcion": "Al suroeste y sureste del parque (manzana única que bordea el sur del parque). Contiene Hotel Tecate (SW) y Palacio Municipal/Ayuntamiento (SE). Bordeada por Callejón Libertad al norte, Cárdenas al oeste, Av. Miguel Hidalgo al sur, Ortiz Rubio al este.",
+      "bounds_godot_aproximados": { "X_min": -80, "X_max": 80, "Z_min": 20, "Z_max": 130 },
+      "edificios_colocados": ["Hotel_Tecate", "Palacio_Municipal"],
+      "sub_cuadrantes": {
+        "SW": "Hotel Tecate — fachada principal al Callejón Libertad y Cárdenas (esquina SO)",
+        "SE": "Palacio Municipal (Ayuntamiento) — fachada al Callejón Libertad y Ortiz Rubio (esquina SE)"
+      }
+    }
+  },
+
+  "edificios_de_referencia_colocados": {
+    "Kiosko_Parque_Hidalgo": {
+      "godot_transform": "Transform3D(1,0,0,0,1,0,0,0,1, -6.6844, 400.0132, 2.6878)",
+      "godot_pos": { "X": -6.68, "Y": 400.01, "Z": 2.69 },
+      "latlon": { "lat": 32.57293, "lon": -116.62685 },
+      "posicion_relativa": "Centro exacto del Parque Hidalgo",
+      "fachada_principal": null,
+      "manzana": "Parque Miguel Hidalgo (espacio público)"
+    },
+    "Fuente_Parque_Hidalgo": {
+      "godot_transform": "Transform3D(0.707107,0,0.707107,0,1,0,-0.707107,0,0.707107, -39.0, 401, -12.5)",
+      "godot_pos": { "X": -39.0, "Y": 401.0, "Z": -12.5 },
+      "rotacion_godot_Y_deg": 45,
+      "latlon_estimado": { "lat": 32.57306, "lon": -116.62727 },
+      "posicion_relativa": "Noroeste del centro del parque, cerca de la esquina Juárez+Cárdenas",
+      "manzana": "Parque Miguel Hidalgo (espacio público)"
+    },
+    "BBVA": {
+      "asset": "res://assets/buildings/bbva_tecate_centro.tscn",
+      "godot_transform": "Transform3D(-1,0,0,0,1,0,0,0,-1, -66.8, 400.0, -24.81)",
+      "godot_pos": { "X": -66.8, "Y": 400.0, "Z": -24.81 },
+      "rotacion_basis": "Basis(-1,0,0, 0,1,0, 0,0,-1) = rotación 180° en Y",
+      "rotacion_cardinal": "Edificio rotado 180° = fachada principal orientada al Sur (hacia el parque / Av. Juárez)",
+      "latlon": { "lat": 32.57315, "lon": -116.62752 },
+      "posicion_relativa_al_kiosko": { "cardinal": "Noroeste", "delta_X": -60.1, "delta_Z": -27.5 },
+      "manzana": "manzana_NW",
+      "fachada_principal": "Sur (hacia Av. Benito Juárez)",
+      "calle_fachada_confirmada": "Avenida Benito Juárez",
+      "block_id_cache": "block_lat_32.57293_lon_-116.62685"
+    },
+    "Hotel_Tecate": {
+      "asset": "res://assets/buildings/hotel_tecate.tscn",
+      "godot_transform": "Transform3D(0,0,-1,0,1,0,1,0,0, -41.06, 398.79, 45.40)",
+      "godot_pos": { "X": -41.06, "Y": 398.79, "Z": 45.40 },
+      "rotacion_basis": "Basis(0,0,-1, 0,1,0, 1,0,0) = rotación -90° en Y (90° antihorario)",
+      "rotacion_cardinal": "Fachada principal orientada al Oeste (hacia Calle Cárdenas)",
+      "latlon_estimado": { "lat": 32.57251, "lon": -116.62730 },
+      "posicion_relativa_al_kiosko": { "cardinal": "Suroeste", "delta_X": -34.4, "delta_Z": 42.7 },
+      "manzana": "manzana_SW",
+      "sub_cuadrante": "SW",
+      "fachada_principal": "Norte (hacia Callejón Libertad) y Oeste (hacia Cárdenas)",
+      "cruce_de_referencia": "Callejón Libertad + Calle Presidente Lázaro Cárdenas",
+      "cruce_godot": { "X": -55.6, "Z": 46.6 },
+      "_error_clasico": "Un agente colocó este edificio en el cruce Libertad+Cárdenas pero del lado NORTE de Libertad (en manzana_NW), cuando debe estar en el lado SUR de Libertad (en manzana_SW). La clave es: Hotel Tecate está en Z > 40 (sur del callejón), no en Z < 0 (norte del parque).",
+      "block_id_cache": "block_lat_32.57539_lon_-116.62666"
+    },
+    "Palacio_Municipal": {
+      "asset": "res://assets/palacio_municipal_2009.tscn",
+      "godot_transform": "Transform3D(-1,0,0,0,1,0,0,0,-1, 47.75, 398.79, 42.40)",
+      "godot_pos": { "X": 47.75, "Y": 398.79, "Z": 42.40 },
+      "rotacion_basis": "Basis(-1,0,0, 0,1,0, 0,0,-1) = rotación 180° en Y",
+      "rotacion_cardinal": "Edificio rotado 180° = fachada principal orientada al Norte (hacia Callejón Libertad / parque)",
+      "latlon_estimado": { "lat": 32.57254, "lon": -116.62633 },
+      "posicion_relativa_al_kiosko": { "cardinal": "Sureste", "delta_X": 54.4, "delta_Z": 39.7 },
+      "manzana": "manzana_SW",
+      "sub_cuadrante": "SE",
+      "fachada_principal": "Norte (hacia Callejón Libertad) y Oeste (chaflán hacia el parque)",
+      "calle_fachada_confirmada": "Callejón Libertad / Calle Presidente Pascual Ortiz Rubio",
+      "block_id_cache": "block_lat_32.57293_lon_-116.62685",
+      "_nota_colisionadores": "El .tscn usa nombre 'Col_Muro_Ala_Oriente', 'Col_Muro_Ala_Norte', etc. — estos nombres son relativos al origen local del edificio en Blender, NO a los puntos cardinales del mundo. 'Oriente' en el .tscn = +X local = Este en el mundo Godot tras aplicar rotación 180°."
+    }
+  },
+
+  "cruces_canonicos_del_parque": {
+    "NW": {
+      "calles": ["Avenida Benito Juárez", "Calle Presidente Lázaro Cárdenas"],
+      "godot_centroide": { "X": -56.0, "Z": -28.6 },
+      "descripcion": "Esquina noroeste del parque. Al oeste de este cruce empieza la manzana del BBVA."
+    },
+    "NE": {
+      "calles": ["Avenida Benito Juárez", "Calle Presidente Pascual Ortiz Rubio"],
+      "godot_centroide": { "X": 49.9, "Z": -47.9 },
+      "descripcion": "Esquina noreste del parque."
+    },
+    "SW": {
+      "calles": ["Callejón Libertad", "Calle Presidente Lázaro Cárdenas"],
+      "godot_centroide": { "X": -55.6, "Z": 46.6 },
+      "descripcion": "Esquina suroeste del parque. El Hotel Tecate está al SUR de este cruce (Z > 46.6), no al norte."
+    },
+    "SE": {
+      "calles": ["Callejón Libertad", "Calle Presidente Pascual Ortiz Rubio"],
+      "godot_centroide": { "X": 60.9, "Z": 28.1 },
+      "descripcion": "Esquina sureste del parque. El Ayuntamiento (Palacio Municipal) está al SUR de este cruce."
+    }
+  },
+
+  "reglas_de_orientacion_de_fachadas": {
+    "descripcion": "Tabla de rotaciones canónicas para orientar la fachada principal de un edificio hacia cada punto cardinal en Godot. Se asume que el modelo Blender tiene su fachada principal mirando hacia +Y local (frente del objeto).",
+    "convenciones": {
+      "Basis_identidad": "Transform3D(1,0,0,0,1,0,0,0,1,...) — fachada mira al Sur (+Z Godot)",
+      "Basis_180Y": "Transform3D(-1,0,0,0,1,0,0,0,-1,...) — fachada mira al Norte (-Z Godot)",
+      "Basis_90Y_CW": "Transform3D(0,0,1,0,1,0,-1,0,0,...) — fachada mira al Este (+X Godot)",
+      "Basis_90Y_CCW": "Transform3D(0,0,-1,0,1,0,1,0,0,...) — fachada mira al Oeste (-X Godot)"
+    },
+    "tabla": [
+      { "fachada_hacia": "Norte (-Z)", "basis": "Transform3D(-1,0,0, 0,1,0, 0,0,-1, X,Y,Z)", "ejemplo": "BBVA, Palacio Municipal" },
+      { "fachada_hacia": "Sur (+Z)",   "basis": "Transform3D(1,0,0, 0,1,0, 0,0,1, X,Y,Z)",  "ejemplo": "Edificio con fachada a Av. Hidalgo" },
+      { "fachada_hacia": "Este (+X)",  "basis": "Transform3D(0,0,1, 0,1,0, -1,0,0, X,Y,Z)", "ejemplo": "Edificio con fachada a Ortiz Rubio" },
+      { "fachada_hacia": "Oeste (-X)", "basis": "Transform3D(0,0,-1, 0,1,0, 1,0,0, X,Y,Z)", "ejemplo": "Hotel Tecate (fachada Cárdenas)" }
+    ]
+  },
+
+  "protocolo_de_desambiguacion": {
+    "descripcion": "Pasos que un agente DEBE ejecutar antes de instanciar cualquier edificio nuevo.",
+    "pasos": [
+      {
+        "paso": 1,
+        "nombre": "Identificar el block_id en el manifiesto",
+        "accion": "Consultar manifest_edificios.json → campo block_id del edificio objetivo.",
+        "output_esperado": "String tipo 'block_lat_32.57293_lon_-116.62685'"
+      },
+      {
+        "paso": 2,
+        "nombre": "Resolver el centroide Godot del bloque",
+        "accion": "Comparar el block_id con los edificios_de_referencia_colocados de este archivo. Si el bloque coincide con uno conocido, usar el Z del bloque para determinar si está al norte o sur del Callejón Libertad.",
+        "regla_critica": "block_id='block_lat_32.57539_lon_-116.62666' = manzana al NORTE del parque (Z negativa) aunque el lat del ID parezca al norte — VERIFICAR SIEMPRE contra los cruces canonicos."
+      },
+      {
+        "paso": 3,
+        "nombre": "Verificar la manzana por cruces cardinales",
+        "accion": "Para el edificio objetivo, identificar en qué cuadrante respecto al Kiosko cae su block_lat/lon. Norte de 32.5729°= Z negativa en Godot. Sur de 32.5729° = Z positiva.",
+        "formula": "Z_godot = (32.57293 - block_lat) / 8.98e-6 + 2.69"
+      },
+      {
+        "paso": 4,
+        "nombre": "Confirmar lado de la calle",
+        "accion": "Para cruces ambiguos (p. ej. Libertad+Cárdenas): el edificio en el lado SUR del Callejón Libertad tiene Z > 40; el del lado NORTE (en el parque) tiene Z < 20. Nunca colocar un edificio 'al otro lado de la calle' sin verificar el signo del delta-Z.",
+        "ejemplo_error": "Hotel Tecate: cruce Libertad+Cárdenas en Z=46.6. Hotel va al SUR → Z_hotel ≈ 45–80. Si el agente usa Z=10 lo coloca al norte (en el parque). ERROR."
+      },
+      {
+        "paso": 5,
+        "nombre": "Seleccionar rotación de fachada",
+        "accion": "Consultar reglas_de_orientacion_de_fachadas. La fachada debe dar hacia la calle más prominente según facade_road_names del manifiesto.",
+        "regla": "Si la calle principal corre Este-Oeste (Juárez, Libertad), la fachada mira al Norte o Sur. Si corre Norte-Sur (Cárdenas, Ortiz), la fachada mira al Este u Oeste."
+      },
+      {
+        "paso": 6,
+        "nombre": "Validación por vecindad",
+        "accion": "Tras calcular la posición (X,Y,Z) tentativa, verificar que los edificios vecinos ya colocados estén en la dirección cardinal correcta. Ejemplo: si el edificio nuevo está en la misma manzana que el Hotel Tecate (manzana_SW), debe tener Z > 20 y X entre -80 y 80."
+      }
+    ]
+  },
+
+  "errores_documentados": [
+    {
+      "id": "E001",
+      "titulo": "Hotel Tecate colocado en manzana equivocada",
+      "descripcion": "El agente identificó correctamente el cruce Callejón Libertad + Calle Cárdenas como referencia del Hotel Tecate, pero lo instanció al norte de ese cruce (Z≈-30, manzana del BBVA) en lugar de al sur (Z≈45, manzana del Ayuntamiento).",
+      "causa_raiz": "El agente confundió 'en el cruce de X e Y' con 'en la manzana norte del cruce'. Todo cruce tiene dos manzanas: la del lado norte-oeste y la del lado sur-este.",
+      "correccion": "Hotel Tecate: X≈-41, Z≈45. Siempre Z > 40 para edificios al sur del Callejón Libertad."
+    },
+    {
+      "id": "E002",
+      "titulo": "Uso de block_id como posición directa",
+      "descripcion": "El block_id 'block_lat_32.57293_lon_-116.62685' se asigna tanto al Parque Hidalgo como al BBVA y al Palacio Municipal porque el polígono catastral del parque los agrupa. Usar block_lat/lon como posición del edificio coloca el edificio en el centroide del parque.",
+      "causa_raiz": "El bloque OSM cubre toda la manzana incluyendo el parque público.",
+      "correccion": "Usar el centroide Godot específico del edificio (bbox_blender → godot_centroid del manifiesto), no el centroide del bloque."
+    },
+    {
+      "id": "E003",
+      "titulo": "Confusión de nombres de colisionadores con puntos cardinales",
+      "descripcion": "El Palacio Municipal tiene colisionadores llamados 'Col_Muro_Ala_Oriente', 'Col_Muro_Ala_Norte', etc. Un agente puede interpretar que 'Oriente' significa que ese muro da hacia el Este real del mundo. Pero estos nombres son relativos al espacio LOCAL del edificio en Blender ANTES de aplicar la rotación 180° del Transform3D.",
+      "causa_raiz": "Nomenclatura interna del .tscn en espacio local Blender vs espacio mundo Godot.",
+      "correccion": "Aplicar siempre la rotación del Transform3D del main.tscn para convertir 'local' a 'mundo'. Con rotación 180°Y: lo que en Blender es 'Oriente' (+X local) queda mirando hacia el Oeste real en Godot."
+    }
+  ]
+}
