@@ -1,4 +1,4 @@
-# Ficha Técnica Arquitectónica: Complejo Comercial Pdte. Lázaro Cárdenas 33 (Histórico 2009)
+# Ficha Técnica Arquitectónica: Complejo Comercial Pdte. Lázaro Cárdenas 33 (Ground-Truth 2009 V4.1)
 
 Documento técnico de especificación morfológica, paramétrica, PBR y consenso multi-perspectiva para la reconstrucción procedural fidedigna del conjunto comercial ubicado en **Calle Presidente Lázaro Cárdenas 33**, esquina con Callejón Libertad, Tecate, B.C., colindante con el edificio BBVA Bancomer Centro (época: **2009**), en Blender 5.1 y Godot Engine 4.
 
@@ -23,126 +23,115 @@ Documento técnico de especificación morfológica, paramétrica, PBR y consenso
 
 ## 2. Anatomía de Fachadas y Locales Comerciales (Época 2009)
 
-El complejo comercial agrupa cinco comercios principales sobre Calle Presidente Lázaro Cárdenas, una ochava comercial Art Déco en esquina, la fachada septentrional sobre Callejón Libertad y la fachada posterior hacia el estacionamiento interior del BBVA:
+El complejo comercial agrupa cinco comercios principales sobre Calle Presidente Lázaro Cárdenas, una ochava comercial con frontón monumental Art Déco en esquina, la fachada septentrional sobre Callejón Libertad y la fachada posterior hacia el estacionamiento interior del BBVA:
 
 ### Fachada Este (Calle Presidente Lázaro Cárdenas)
 
 1. **Crujía 1: Librería España (colindancia BBVA en $Y \in [0.00, 4.80\text{ m}]$)**:
-   - Muro medianero sur hermético y ciego con BBVA.
-   - Paramento exterior en estuco azul cobalto con zócalo de protección.
-   - Puerta comercial acristalada y vitrina de exhibición con marco de aluminio.
-   - Rótulo comercial superior en relieve 3D sobre marquesina: `LIBRERIA ESPAÑA`.
-   - Cartel publicitario de azotea: soporte estructural metálico con cartelera blanca y letrero en dos líneas: `BAR TURISTICO / Diana`.
+   - Frente comercial prácticamente **100% acristalado**: escaparate continuo repleto de estanterías interiores con libros, revistas, periódicos y póster de la Virgen de Guadalupe.
+   - Murete bajo de apoyo ($Z \in [0.15, 0.60\text{ m}]$) en amarillo mostaza brillante (`#E5B239`) con zócalo inferior marrón chocolate (`#502A1F`).
+   - Puerta peatonal vidriada con cancelería de aluminio blanco al centro/derecha ($Y \in [0.20, 1.10\text{ m}]$).
+   - Fascia horizontal marrón oscura ($Z \in [3.10, 3.45\text{ m}]$) con tipografía dorada: `PRESIDENTE CARDENAS 95-B Z.C. - TECATE, B.C.`.
+   - Gran letrero superior blanco enmarcado ($Z \in [3.45, 4.25\text{ m}]$): tipografía con serifa `Librería España` en relieve negro y `• LIBROS • REVISTAS Y PERIODICOS •` en rojo.
+   - En la azotea (sobre la medianera con Bar Diana): estructura metálica con el espectacular publicitario triangular de Cerveza `TECATE / Bar Diana 1957 / Cocktails`.
 
 2. **Crujía 2: Bar Turístico Diana ($Y \in [4.80, 9.10\text{ m}]$)**:
-   - Marquesina prominente en voladizo con barandal perimetral de acero dorado.
-   - Rótulo tridimensional principal en color blanco y rojo: `BAR TURISTICO Diana`.
-   - Silueta ornamental recortada de la **Diana Cazadora** en latón dorado sobre el paramento.
-   - Puerta principal acolchada en piel sintética dorada capitonada con herrajes clásicos de bar tradicional.
-   - Zócalo de loseta cerámica marrón y vitrina lateral de vidrio biselado.
+   - Zócalo de **fachaleta de piedra laja blanca apilada horizontal** de $Z = 0.00$ a $0.85\text{ m}$.
+   - Paramento superior en estuco liso color **verde menta pastel suave (`#D2DDD5`)**.
+   - Clereestorio horizontal alargado con vidrios oscuros ahumados ($Z \in [2.35, 2.70\text{ m}]$).
+   - Puerta doble de acceso al extremo derecho ($Y \in [4.90, 5.90\text{ m}]$) en reja de herrería vertical verde olivo/mostaza.
+   - Marquesina corrida continua de concreto en voladizo ($0.70\text{ m}$ sobre la calle) a $Z = 2.80\text{ m}$.
+   - Panel rectangular blanco superior adosado sobre marquesina: silueta dorada de la Diana Cazadora a la izquierda, tipografía caligráfica central `Bar TURISTICO Diana / DESDE / SINCE 1957` e ilustración de cóctel/copa y botellas a la derecha.
 
 3. **Crujía 3: Annita's Boutique ($Y \in [9.10, 14.20\text{ m}]$)**:
-   - Paramento comercial en panel compuesto negro pulido de alto impacto.
-   - Óvalo superior turquesa con tipografía caligráfica en relieve blanco: `Annita's / BOUTIQUE`.
-   - Gran aparador central de cristal de doble hoja con manijas tubulares de aluminio.
-   - Cartelera rectangular superior en azotea: rótulo amarillo con texto negro en dos líneas: `RENTA DE MESAS / Y SILLAS`.
+   - Muro en estuco **ocre claro / mostaza suave continuo (`#D5BA86`)** con zócalo marrón chocolate.
+   - Puerta de acceso comercial a la derecha ($Y \in [9.30, 10.35\text{ m}]$) con cancelería y herrería de protección.
+   - Gran vitrina de escaparate a la izquierda ($Y \in [10.55, 14.10\text{ m}]$) con **persianas venecianas horizontales de lamas de madera cerradas**.
+   - Letrero adosado sobre la marquesina: **caja rectangular grafito oscuro mate (`#22252A`)** con marco plateado y óvalo central con `Annita's Boutique` en cursiva blanca.
+   - En azotea: gran espectacular vertical monumental `RENTA` en rojo sobre blanco, `MESAS SILLAS` en blanco sobre azul marino y teléfonos.
 
 4. **Crujía 4: Party Rentals - Kuroky ($Y \in [14.20, 19.30\text{ m}]$)**:
-   - Fachada con bandas horizontales en color morado y verde manzana.
-   - Rótulo principal en letras tridimensionales: `PARTY RENTALS / KUROKY`.
-   - Cartelera publicitaria de azotea con texto en tres líneas: `RENTA DE ROCKOLAS / LONAS Y CARPAS / INFLABLES`.
-   - Puerta acristalada y cancelería comercial con motivos festivos (notas musicales impresas en cristal).
-   - Batería de buzones metálicos postales en murete exterior.
+   - Muro en estuco ocre mostaza continuo con zócalo marrón chocolate.
+   - Puerta de acceso comercial a la derecha ($Y \in [14.40, 15.45\text{ m}]$).
+   - Gran vitrina con **3 franjas de notas musicales blancas (`♫ ♬ ♪`)** impresas en el cristal ($Y \in [15.60, 18.80\text{ m}]$).
+   - Buzones metálicos postales amarillos sobre la acera.
+   - Panel rectangular blanco adosado sobre la marquesina: `PARTY RENTALS` en verde bold, logotipo `kuroky` con óvalo magenta, columnas de servicios en azul y lona colorida con fotos de fiestas e inflables a la izquierda.
+   - Remate de esquina izquierda: **pilastra / aleta vertical saliente blanca** de concreto con remate oblicuo ascendente hacia Florería Orquídea.
 
 5. **Crujía 5: Florería Orquídea ($Y \in [19.30, 24.50\text{ m}]$)**:
-   - Frontón Art Déco escalonado revestido en mosaico veneciano verde esmeralda reflectivo.
-   - Rótulo tridimensional en magenta/fucsia: `FLORERIA ORQUIDEA`.
-   - Amplios ventanales en ochava a 45º hacia el crucero peatonal.
-   - Murete bajo de laja rústica de piedra tecatense en el ala hacia Callejón Libertad.
+   - Zócalo de basamento continuo en **piedra laja café rojiza (`#8C5542`) con juntas pronunciadas**.
+   - Escaparates de cristal en esquina con arreglos florales, coronas y follaje visible en el interior.
+   - Puerta de aluminio blanco.
 
 ---
 
 ### Fachada Norte (Callejón Libertad)
 
-1. **Florería Orquídea (Ala Norte)**:
-   - Murete de piedra rústica y ventanales alargados sobre la acera peatonal.
+1. **Frontón Monumental de Florería Orquídea**:
+   - Orientado hacia Callejón Libertad / Parque Hidalgo ($H = 6.20\text{ m}$).
+   - Marco perimetral grueso de concreto blanco con bisel ensanchado hacia afuera.
+   - Paño central empotrado revestido de **mosaico veneciano / terrazo de piedritas verde salvia y blanco moteado (`#8EA78C`)**.
+   - Gran letrero rectangular blanco con **greca perimetral de cuadritos rojos**: `FLORERIA ORQUIDEA` en púrpura oscuro y leyenda `Teléfono 654-10-51`.
+   - Puerta doble acristalada de cancelería de aluminio blanco y zócalo de laja café rojiza.
 2. **Foto Estudio Curiel**:
-   - Marquesina aerodinámica estilo *Streamline Moderne* con tres estrías horizontales metálicas continuas.
-   - Letrero tridimensional sobre marquesina: `FOTO ESTUDIO CURIEL`.
-   - Letrero pintado sobre paramento superior: `ESTUDIO CURIEL`.
-   - Tótem publicitario vertical en aluminio rojo brillante con letras blancas `FOTO` visibles desde la calle.
-   - Puerta y cancelería de madera lacada con vitrina de retratos fotográficos.
+   - Estilo *Streamline Moderne* en estuco blanco puro con zócalo marrón.
+   - Marquesina horizontal en voladizo con **3 estrías / molduras metálicas continuas**.
+   - Rótulo superior en relieve 3D sobre pretil: `FOTO STUDIO` en azul cobalto y `CURIEL` en dorado/marrón.
+   - Rótulo pintado en muro inferior: `FOTO STUDIO CURIEL` en rojo.
+   - Puerta oscura con reja de protección a la izquierda y vitrina de exhibición fotográfica.
+   - **Tótem publicitario vertical en esquina**: caja prismática roja bermellón con letras blancas `FOTO` visibles desde la calle.
 
 ---
 
 ### Fachada Poniente (Reverso hacia Estacionamiento BBVA)
 
-1. **Posterior de Foto Estudio Curiel**:
-   - Muro funcional en estuco gris claro con bajantes pluviales y acometidas de servicio.
-2. **Posterior y Marquesina de Bar Diana**:
-   - Marquesina angulada de protección pluvial sobre acceso posterior.
-   - Rótulo de servicio en azotea: `BAR TURISTICO Diana`.
-   - Puerta metálica de emergencia con letrero de señalética `Salida`.
-   - Terraza técnica cercada con reja metálica negra de perfilería tubular analíticamente colisionable.
+1. Posterior de Foto Estudio Curiel en estuco blanco de servicio.
+2. Marquesina angulada de Bar Diana, puerta metálica con señalética `Salida` y rótulo de azotea `BAR TURISTICO Diana`.
+3. Terraza técnica de servicio cercada con reja metálica negra de barrotes tubulares analíticos.
 
 ---
 
 ## 3. Especificación de Materiales PBR
 
-Todos los materiales fueron configurados con sombreadores Principled BSDF compatibles con glTF 2.0 y Godot StandardMaterial3D:
-
 | Nombre del Material | Color Base / Hex | Roughness | Metallic | Uso en Modelo |
 |---|---|---|---|---|
-| `M_Estuco_Libreria` | Azul cobalto `#1B3B6F` | 0.85 | 0.00 | Muros Librería España |
-| `M_Panel_Diana` | Ocre colonial `#B87333` | 0.40 | 0.10 | Marquesina Bar Diana |
-| `M_Dorado_Diana` | Latón brillante `#D4AF37` | 0.25 | 0.90 | Diana Cazadora y herrajes |
-| `M_Puerta_Diana` | Dorado envejecido `#997A15` | 0.50 | 0.40 | Puerta capitonada Bar Diana |
-| `M_Panel_Negro_Anita` | Negro asfalto `#1C1C1C` | 0.20 | 0.05 | Panel comercial Annita's |
-| `M_Turquesa_Anita` | Turquesa cálido `#17B890` | 0.40 | 0.00 | Óvalo de rótulo Annita's |
-| `M_Verde_Party` | Verde manzana `#60A917` | 0.45 | 0.00 | Franjas Party Rentals |
-| `M_Morado_Party` | Morado festivo `#7B1FA2` | 0.45 | 0.00 | Franjas Party Rentals |
-| `M_Mosaico_Orquidea` | Verde esmeralda `#008B74` | 0.15 | 0.10 | Frontón Art Déco |
-| `M_Letras_Orquidea` | Magenta fucsia `#D81B60` | 0.30 | 0.00 | Rótulo Florería Orquídea |
-| `M_Laja_Rustica` | Piedra tecatense `#8D7B68` | 0.90 | 0.00 | Murete Callejón Libertad |
-| `M_Marquesina_Curiel` | Gris plata `#D0D0D0` | 0.30 | 0.70 | Marquesina Streamline Curiel |
-| `M_Totem_Curiel` | Rojo bermellón `#C62828` | 0.35 | 0.10 | Tótem vertical Foto Curiel |
-| `M_Zocalo_Basal` | Concreto grafito `#2A2A2A` | 0.95 | 0.00 | Zócalo basal enterrado |
-| `M_Vidrio_Comercial` | Azul humo `#A0C4D8` (Alfa 0.35) | 0.10 | 0.00 | Vitrinas y canceles |
-| `M_Aluminio_Negro` | Grafito mate `#262626` | 0.40 | 0.85 | Cancelería y reja de terraza |
+| `M_Estuco_Ocre_Continuo` | Ocre mostaza `#D5BA86` | 0.85 | 0.00 | Muros continuos centrales |
+| `M_Zocalo_Marron_Chocolate` | Marrón vino `#502A1F` | 0.90 | 0.00 | Zócalo inferior continuo |
+| `M_Concreto_Marquesina` | Beige claro `#E0DCD4` | 0.70 | 0.00 | Marquesina corrida horizontal |
+| `M_Fachaleta_Laja_Blanca` | Piedra blanca `#EBE4D5` | 0.65 | 0.00 | Zócalo Bar Diana |
+| `M_Verde_Menta_Diana` | Verde menta `#D2DDD5` | 0.85 | 0.00 | Muro superior Bar Diana |
+| `M_Herreria_Verde_Diana` | Verde olivo `#68724D` | 0.45 | 0.60 | Puerta de reja Bar Diana |
+| `M_Caja_Grafito_Anita` | Grafito mate `#22252A` | 0.30 | 0.20 | Caja de letrero Annita's |
+| `M_Persianas_Madera_Anita` | Madera `#805433` | 0.55 | 0.00 | Lamas de vitrina Annita's |
+| `M_Espectacular_Azul_Renta` | Azul marino `#0D2C54` | 0.35 | 0.00 | Espectacular azotea Renta |
+| `M_Mosaico_Terrazo_Verde` | Verde salvia `#8EA78C` | 0.30 | 0.00 | Frontón Florería Orquídea |
+| `M_Laja_Rustica_Cafe` | Café rojizo `#8C5542` | 0.95 | 0.00 | Zócalo Florería Orquídea |
+| `M_Estuco_Blanco_Curiel` | Blanco puro `#F5F5F5` | 0.75 | 0.00 | Fachada Foto Curiel |
+| `M_Totem_Rojo_Curiel` | Rojo bermellón `#BA181B` | 0.35 | 0.20 | Tótem vertical Curiel |
+| `M_Murete_Mostaza_Libreria` | Mostaza brillante `#E5B239` | 0.75 | 0.00 | Murete Librería España |
+| `M_Vidrio_Comercial_Limpio` | Azul humo translúcido | 0.08 | 0.00 | Canceles y vitrinas |
 
 ---
 
 ## 4. Colisiones Analíticas Transitables (Godot 4)
 
-Se descartó de manera estricta el uso de mallas de colisión globales (*Convex Hull* o mallas cóncavas pesadas) en favor de cuerpos `BoxShape3D` independientes calibrados por crujía comercial en `godot_project/assets/buildings/edificio_cardenas_33.tscn`:
-
+7 volúmenes `BoxShape3D` independientes calibrados por local comercial en `godot_project/assets/buildings/edificio_cardenas_33.tscn`:
 - `Col_Libreria`: $16.50\times 4.50\times 4.80\text{ m}$ en $(8.25, 2.25, -2.40\text{ m})$.
 - `Col_Diana`: $16.50\times 4.50\times 4.30\text{ m}$ en $(8.25, 2.25, -6.95\text{ m})$.
 - `Col_Anita`: $16.50\times 4.50\times 5.10\text{ m}$ en $(8.25, 2.25, -11.65\text{ m})$.
 - `Col_Party`: $16.50\times 4.50\times 5.10\text{ m}$ en $(8.25, 2.25, -16.75\text{ m})$.
-- `Col_Orquidea`: $9.20\times 4.50\times 5.20\text{ m}$ en $(4.60, 2.25, -21.90\text{ m})$.
+- `Col_Orquidea`: $9.20\times 6.50\times 5.20\text{ m}$ en $(4.60, 3.25, -21.90\text{ m})$.
 - `Col_Curiel`: $7.30\times 4.50\times 6.50\text{ m}$ en $(12.85, 2.25, -21.25\text{ m})$.
 - `Col_Terraza_Reja`: $4.30\times 2.00\times 7.00\text{ m}$ en $(18.65, 1.00, -10.50\text{ m})$.
 
 ---
 
-## 5. Renders de Validación Closed-Loop
+## 5. Renders de Validación Canónicos V4
 
-La batería de 6 vistas canónicas se encuentra disponible en `docs/images/cardenas_33/`:
-
-1. `Cam_Cardenas_Frontal.png`: Perspectiva completa de la fachada sobre Calle Cárdenas, validando contraste de paneles comerciales y rotulación tridimensional.
-2. `Cam_Esquina_Ochava.png`: Ochava a 45º y frontón Art Déco de Florería Orquídea con mosaico verde y rótulo sin espejo.
-3. `Cam_Libertad_Curiel.png`: Marquesina con estrías y tótem de Foto Estudio Curiel sobre Callejón Libertad.
-4. `Cam_Reverso_Estacionamiento.png`: Fachada de servicio, marquesina posterior de Bar Diana, letrero de azotea y reja perimetral.
-5. `Cam_Closeup_Rotulos.png`: Acercamiento de detalle en rótulos de Annita's Boutique, silueta de Diana Cazadora y Bar Diana.
-6. `Cam_Cenital_Azotea.png`: Inspección hermética de la cubierta y cartelera publicitaria.
-
----
-
-## 6. Archivos del Pipeline
-
-- **Script Procedural Maestro**: [`scripts/generate_cardenas_33.py`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/scripts/generate_cardenas_33.py)
-- **Archivo Fuente Blender**: [`blender_assets/buildings/edificio_cardenas_33.blend`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/blender_assets/buildings/edificio_cardenas_33.blend)
-- **Malla glTF/GLB Optimizada**: [`godot_project/assets/buildings/edificio_cardenas_33.glb`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/godot_project/assets/buildings/edificio_cardenas_33.glb)
-- **Escena Godot 4**: [`godot_project/assets/buildings/edificio_cardenas_33.tscn`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/godot_project/assets/buildings/edificio_cardenas_33.tscn)
-- **Integración Mundial**: [`godot_project/main.tscn`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/godot_project/main.tscn)
+Galería disponible en `docs/images/cardenas_33/`:
+1. `Cam_Cardenas_Frontal_V4.png`: Perspectiva frontal completa idéntica a `media_1790243320877.png`.
+2. `Cam_Orquidea_Libertad_V4.png`: Encuadre del frontón monumental idéntico a `media_1790243423150.jpg`.
+3. `Cam_Curiel_Libertad_V4.png`: Perspectiva de Foto Estudio Curiel idéntica a `DcOz2fF61YH1bc6cN7zlrA_yaw_354.12.png`.
+4. `Cam_Diana_Closeup_V4.png`: Detalle de fachaleta de laja blanca, puerta verde de reja y rótulo de Diana Cazadora.
+5. `Cam_Libreria_Espana_V4.png`: Detalle del frente acristalado de revistas/libros y espectacular Tecate de azotea.
+6. `Cam_Reverso_Estacionamiento_V4.png`: Vista posterior desde el estacionamiento interior del BBVA.
