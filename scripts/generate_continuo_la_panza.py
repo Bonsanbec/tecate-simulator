@@ -147,9 +147,13 @@ def create_materials():
     mats["amarillo_cubeta"] = _make_mat("M_Amarillo_Cubeta", (0.92, 0.75, 0.08, 1.0), rough=0.60)
     mats["panel_blanco_cartel"] = _make_mat("M_Panel_Blanco_Cartel", (0.96, 0.96, 0.94, 1.0), rough=0.30)
 
-    # Azotea y Cubierta
+    # Azotea, Interiores y Mobiliario
     mats["azotea_asfalto"] = _make_mat("M_Azotea_Asfalto", (0.12, 0.12, 0.13, 1.0), rough=0.95)
-    mats["piso_comercial"] = _make_mat("M_Piso_Interior", (0.75, 0.72, 0.68, 1.0), rough=0.55)
+    mats["piso_comercial"] = _make_mat("M_Piso_Interior", (0.78, 0.76, 0.72, 1.0), rough=0.45)
+    mats["mueble_azul"] = _make_mat("M_Mueble_Azul", (0.06, 0.22, 0.65, 1.0), rough=0.55)
+    mats["mueble_morado"] = _make_mat("M_Mueble_Morado", (0.38, 0.14, 0.52, 1.0), rough=0.55)
+    mats["mueble_cubierta"] = _make_mat("M_Mueble_Cubierta", (0.90, 0.88, 0.85, 1.0), rough=0.35)
+    mats["producto_caja"] = _make_mat("M_Producto_Caja", (0.82, 0.72, 0.25, 1.0), rough=0.60)
 
     return mats
 
@@ -184,6 +188,15 @@ def build_envolvente_y_azotea(mats, col):
     # Muro posterior oeste (Y = 14.50)
     add_box(bm_walls, 0.00, 26.00, 14.25, 14.50, 0.00, 4.35)
 
+    # Muros divisorios interiores entre módulos (crujía sólida sin huecos al vacío)
+    add_box(bm_walls, 4.65, 4.85, 0.25, 14.25, 0.00, 4.35)
+    add_box(bm_walls, 9.25, 9.45, 0.25, 14.25, 0.00, 4.35)
+    add_box(bm_walls, 16.80, 17.00, 0.25, 14.25, 0.00, 4.35)
+    add_box(bm_walls, 21.10, 21.30, 0.25, 14.25, 0.00, 4.35)
+
+    # Piso continuo hermético a ras de suelo
+    add_box(bm_roof, 0.00, 26.00, 0.00, 14.50, -0.05, 0.00)
+
     # Losa de azotea continua con pendiente suave hacia el fondo
     # Z = 4.40 m al frente (Y=0.25) descendiendo a Z = 4.10 m atrás (Y=14.25)
     n_divs = 12
@@ -206,6 +219,13 @@ def build_envolvente_y_azotea(mats, col):
     obj_c = create_mesh_object("Albardilla_Pretil_Galvanizada", bm_crown, mats["chapa_galvanizada"], col)
     return obj_w, obj_r, obj_c
 
+def add_metal_slats(bm, x_min, x_max, y_pos, z_min, z_max, n_slats=16, slat_depth=0.03):
+    """Genera una persiana metálica acanalada con lamas horizontales regulares fotorrealistas."""
+    dz = (z_max - z_min) / n_slats
+    for i in range(n_slats):
+        z_curr = z_min + i * dz
+        add_box(bm, x_min, x_max, y_pos - slat_depth, y_pos, z_curr + dz * 0.08, z_curr + dz * 0.92)
+
 def build_modulo_1_saldos_telas(mats, col):
     """Módulo 1: Saldos de Telas y Retazos (X = 0.00 a 4.75 m)."""
     bm_wall = bmesh.new()
@@ -219,12 +239,7 @@ def build_modulo_1_saldos_telas(mats, col):
     add_box(bm_wall, 0.45, 4.35, -0.02, 0.25, 2.40, 2.65) # Dintel caja
 
     # Gran cortina metálica cerrada acanalada
-    n_slats = 24
-    dz = 2.40 / n_slats
-    for i in range(n_slats):
-        z_min = i * dz
-        z_max = z_min + dz * 0.90
-        add_box(bm_shutter, 0.45, 4.35, 0.04, 0.08, z_min, z_max)
+    add_metal_slats(bm_shutter, 0.45, 4.35, 0.08, 0.00, 2.40, n_slats=24, slat_depth=0.03)
 
     create_mesh_object("Mod1_Muros_SaldosTelas", bm_wall, mats["estuco_blanco"], col)
     create_mesh_object("Mod1_Cortina_SaldosTelas", bm_shutter, mats["cortina_metalica"], col)
@@ -246,6 +261,8 @@ def build_modulo_2_electronica_hidalgo(mats, col):
 
     # Pretil estuco ocre anaranjado desgastado
     add_box(bm_wall, 4.75, 9.35, -0.02, 0.25, 2.70, 4.65)
+    # Dintel cerrado hermético (elimina hueco sobre cancelería)
+    add_box(bm_wall, 4.75, 9.35, -0.02, 0.25, 2.45, 2.70)
     # Zócalo bajo de antepecho y jambas
     add_box(bm_wall, 4.75, 9.35, -0.02, 0.25, 0.00, 0.45)
     add_box(bm_wall, 4.75, 4.95, -0.02, 0.25, 0.45, 2.70)
@@ -291,138 +308,197 @@ def build_modulo_2_electronica_hidalgo(mats, col):
                    (7.05, -0.89, 2.15), (math.radians(90), 0, 0), mats["texto_blanco"], col)
 
 def build_modulo_3_la_panza(mats, col):
-    """Módulo 3: LA PANZA (Caseta Telefónica y Centro de Nutrición) (X = 9.35 a 16.90 m)."""
+    """Módulo 3: LA PANZA (Caseta Telefónica y Centro de Nutrición) (X = 9.35 a 16.90 m).
+    Versión fotorrealista milimétrica idéntica a la fotografía original de 2009.
+    """
     bm_white = bmesh.new()
     bm_purple = bmesh.new()
     bm_glass = bmesh.new()
     bm_frame = bmesh.new()
     bm_shutter = bmesh.new()
-    bm_interior = bmesh.new()
     bm_panels = bmesh.new()
-    bm_cables = bmesh.new()
+    bm_mop_cart = bmesh.new()
+    bm_interior = bmesh.new()
+    bm_furn_blue = bmesh.new()
+    bm_furn_purple = bmesh.new()
+    bm_furn_top = bmesh.new()
+    bm_products = bmesh.new()
+    bm_volante = bmesh.new()
+    bm_brazos = bmesh.new()
 
+    # -----------------------------------------------------------------------
+    # 1. Fachada Principal y Muros de Cerramiento Hermético
+    # -----------------------------------------------------------------------
     # Pretil blanco principal
     add_box(bm_white, 9.55, 16.70, -0.02, 0.25, 2.70, 4.55)
-    # Marco morado perimetral superior
-    add_box(bm_purple, 9.35, 16.90, -0.03, 0.26, 4.55, 4.68)
-    add_box(bm_purple, 9.35, 16.90, -0.03, 0.26, 2.65, 2.75) # Franja divisoria
+    # Molduras moradas perimetrales
+    add_box(bm_purple, 9.35, 16.90, -0.03, 0.26, 4.55, 4.68) # Remate superior
+    add_box(bm_purple, 9.35, 16.90, -0.03, 0.26, 2.65, 2.75) # Franja divisoria superior
+    # Dintel macizo morado continuo de fachada (elimina cualquier hueco sobre carpinterías)
+    add_box(bm_purple, 9.35, 16.90, -0.02, 0.25, 2.38, 2.68)
 
     # Jambas y Machón Central Morados
     add_box(bm_purple, 9.35, 9.55, -0.03, 0.26, 0.00, 4.68)   # Jamba Izquierda
     add_box(bm_purple, 12.85, 13.20, -0.03, 0.26, 0.00, 4.68) # Machón Central (Nº 330)
     add_box(bm_purple, 16.70, 16.90, -0.03, 0.26, 0.00, 4.68) # Jamba Derecha
 
-    # Zócalo bajo morado en antepechos
+    # Zócalos morados bajos en antepechos
     add_box(bm_purple, 9.55, 10.95, -0.02, 0.25, 0.00, 0.75)  # Bajo ventana izq
-    add_box(bm_purple, 15.05, 16.70, -0.02, 0.25, 0.00, 0.45) # Bajo vitrina der
+    add_box(bm_purple, 13.20, 13.85, -0.02, 0.25, 0.00, 0.45) # Bajo vitrina izq de artículos
+    add_box(bm_purple, 13.85, 15.05, -0.02, 0.25, 0.00, 0.05) # Umbral de puerta de acceso
+    add_box(bm_purple, 15.05, 16.70, -0.02, 0.25, 0.00, 0.45) # Bajo vitrinas derechas
 
-    # Bahía Izquierda: Ventana con cortina metálica acanalada y pasadores
-    n_sl = 18
-    dz = (2.35 - 0.75) / n_sl
-    for i in range(n_sl):
-        z_m = 0.75 + i * dz
-        add_box(bm_shutter, 9.60, 10.90, 0.04, 0.08, z_m, z_m + dz * 0.85)
+    # -----------------------------------------------------------------------
+    # 2. Bahía Izquierda: Ventana con cortina metálica cerrada (SIN rodillos)
+    # -----------------------------------------------------------------------
+    # Persiana de lamas acanaladas horizontales continuas regulares (X: 9.58 a 10.92 m, Z: 0.75 a 2.35 m)
+    add_metal_slats(bm_shutter, 9.58, 10.92, 0.05, 0.75, 2.35, n_slats=20, slat_depth=0.025)
+    # Caja de rollo de cortina enrollable superior (X: 9.55 a 10.95 m, Z: 2.35 a 2.68 m)
+    add_metal_slats(bm_shutter, 9.55, 10.95, -0.06, 2.35, 2.68, n_slats=6, slat_depth=0.035)
     # Visera superior blanca sobre la ventana
-    add_box(bm_white, 9.55, 10.95, -0.06, 0.06, 2.35, 2.42)
-    # Dos pasadores/cerraduras horizontales oscuras en la cortina metálica
-    add_box(bm_frame, 9.75, 10.75, -0.03, 0.05, 1.25, 1.29)
-    add_box(bm_frame, 9.75, 10.75, -0.03, 0.05, 1.75, 1.79)
+    add_box(bm_white, 9.55, 10.95, -0.08, 0.06, 2.35, 2.40)
 
-    # Puerta vidriada izquierda de ARTÍCULOS (X: 10.95 a 12.85 m)
-    add_box(bm_glass, 11.00, 12.80, 0.06, 0.08, 0.00, 2.35)
+    # -----------------------------------------------------------------------
+    # 3. Bahía Izquierda: Puerta-vitrina de ARTÍCULOS ($4.00 y $6.00)
+    # -----------------------------------------------------------------------
+    # Vidrio continuo (tragaluz superior y puertas batientes)
+    add_box(bm_glass, 11.00, 12.80, 0.06, 0.08, 0.05, 2.38)
     # Cancelería de aluminio blanco / anodizado claro
-    add_box(bm_frame, 10.96, 12.84, 0.04, 0.10, 0.00, 0.05) # Zócalo puerta
-    add_box(bm_frame, 10.96, 12.84, 0.04, 0.10, 2.32, 2.37) # Dintel puerta
-    add_box(bm_frame, 10.96, 11.02, 0.04, 0.10, 0.00, 2.35) # Jamba izq cancel
-    add_box(bm_frame, 12.78, 12.84, 0.04, 0.10, 0.00, 2.35) # Jamba der cancel
-    add_box(bm_frame, 11.87, 11.93, 0.04, 0.10, 0.00, 2.35) # Montante central
-    # Dos manijas tubulares de aluminio
+    add_box(bm_frame, 10.96, 12.84, 0.04, 0.10, 0.00, 0.05)   # Umbral inferior
+    add_box(bm_frame, 10.96, 12.84, 0.04, 0.10, 2.34, 2.38)   # Remate superior cancel
+    add_box(bm_frame, 10.96, 12.84, 0.04, 0.10, 2.05, 2.10)   # Travesaño horizontal divisorio
+    add_box(bm_frame, 10.96, 11.02, 0.04, 0.10, 0.00, 2.38)   # Jamba izquierda cancel
+    add_box(bm_frame, 12.78, 12.84, 0.04, 0.10, 0.00, 2.38)   # Jamba derecha cancel
+    add_box(bm_frame, 11.87, 11.93, 0.04, 0.10, 0.00, 2.05)   # Montante central de puertas
+    # Manijas tubulares de aluminio
     add_box(bm_frame, 11.84, 11.87, -0.02, 0.04, 0.95, 1.25)
     add_box(bm_frame, 11.93, 11.96, -0.02, 0.04, 0.95, 1.25)
-    # Dintel morado sobre puerta izquierda
-    add_box(bm_purple, 10.95, 12.85, -0.02, 0.25, 2.35, 2.65)
-    # Caja de cortina superior sobre puerta
-    add_box(bm_shutter, 10.95, 12.85, -0.06, 0.12, 2.65, 2.75)
+    # Caja de rollo de cortina metálica superior (X: 10.95 a 12.85 m, Z: 2.38 a 2.68 m)
+    add_metal_slats(bm_shutter, 10.95, 12.85, -0.06, 2.38, 2.68, n_slats=6, slat_depth=0.035)
 
-    # Bahía Derecha: Acceso Peatonal Principal Transitable (X: 13.20 a 15.05 m)
-    # ¡VANO LIBRE A NIVEL DE SUELO!
-    # Caja de cortina enrollada arriba en el dintel
-    add_box(bm_shutter, 13.20, 15.05, -0.08, 0.15, 2.35, 2.65)
+    # -----------------------------------------------------------------------
+    # 4. Bahía Derecha: Cortina Metálica Corrida Superior
+    # Con el MISMO FORMATO de lamas acanaladas corridas por toda la longitud (X: 13.20 a 16.70 m)
+    # -----------------------------------------------------------------------
+    add_metal_slats(bm_shutter, 13.20, 16.70, -0.06, 2.38, 2.68, n_slats=6, slat_depth=0.035)
 
-    # Cartel vertical en la jamba interior izquierda de la entrada (junto al machón)
-    add_box(bm_panels, 13.24, 13.26, 0.05, 0.35, 1.05, 2.30)
+    # -----------------------------------------------------------------------
+    # 5. Bahía Derecha: Vitrina Izquierda de ARTÍCULOS HOGAR BISUTERÍA PAPELERÍA JUGUETES
+    # (Vidrio transparente con rótulo de vinilos, idéntica hacia abajo que las vitrinas derechas)
+    # -----------------------------------------------------------------------
+    # Vidrio de vitrina transparente (sin fondo ciego, para ver el interior y el carrito amarillo)
+    add_box(bm_glass, 13.22, 13.83, 0.06, 0.08, 0.47, 2.36)
+    # Cancelería de aluminio blanco / anodizado claro
+    add_box(bm_frame, 13.20, 13.85, 0.04, 0.10, 0.43, 0.47)   # Marco inferior
+    add_box(bm_frame, 13.20, 13.85, 0.04, 0.10, 2.34, 2.38)   # Marco superior
+    add_box(bm_frame, 13.20, 13.25, 0.04, 0.10, 0.45, 2.36)   # Jamba izquierda
+    add_box(bm_frame, 13.80, 13.85, 0.04, 0.10, 0.45, 2.36)   # Jamba derecha
 
-    # Escaparate vidriado derecho (X: 15.05 a 16.70 m)
-    add_box(bm_glass, 15.10, 16.65, 0.06, 0.08, 0.45, 2.35)
-    # Marco de cancelería de aluminio anodizado claro
-    add_box(bm_frame, 15.05, 16.70, 0.04, 0.10, 0.43, 0.47)
-    add_box(bm_frame, 15.05, 16.70, 0.04, 0.10, 2.33, 2.38)
-    add_box(bm_frame, 15.05, 15.10, 0.04, 0.10, 0.45, 2.35)
-    add_box(bm_frame, 16.65, 16.70, 0.04, 0.10, 0.45, 2.35)
-    add_box(bm_frame, 15.82, 15.88, 0.04, 0.10, 0.45, 2.35) # Parteluz divisorio de vitrina
-    add_box(bm_purple, 15.05, 16.70, -0.02, 0.25, 2.35, 2.65)
+    # Carrito de trapear amarillo (ubicado adentro inmediatamente detrás de esta vitrina transparente)
+    add_box(bm_mop_cart, 13.35, 13.68, 0.22, 0.52, 0.08, 0.42)
+    # Ruedas pivotantes oscuras
+    for wx, wy in [(13.38, 0.26), (13.65, 0.26), (13.38, 0.48), (13.65, 0.48)]:
+        add_box(bm_frame, wx - 0.02, wx + 0.02, wy - 0.02, wy + 0.02, 0.00, 0.08)
+    # Exprimidor y palanca
+    add_box(bm_frame, 13.37, 13.65, 0.38, 0.52, 0.42, 0.58)
+    add_box(bm_frame, 13.50, 13.54, 0.42, 0.48, 0.58, 0.85) # Palanca vertical del trapeador
 
-    # Paneles de fondo blanco esmaltado para los carteles de la vitrina derecha
-    add_box(bm_panels, 15.12, 15.80, 0.055, 0.06, 0.50, 2.30) # Panel mayoreo
-    add_box(bm_panels, 15.90, 16.63, 0.055, 0.06, 0.50, 2.30) # Panel tarifario
+    # -----------------------------------------------------------------------
+    # 6. Bahía Derecha: Puerta Peatonal de Acceso (X: 13.85 a 15.05 m)
+    # Cancelería perimetral exterior y hoja abierta en ángulo hacia adentro adosada al mostrador
+    # -----------------------------------------------------------------------
+    # Marco perimetral del vano de acceso en fachada
+    add_box(bm_frame, 13.85, 15.05, 0.04, 0.10, 2.34, 2.38) # Dintel superior cancel
+    add_box(bm_frame, 13.85, 13.90, 0.04, 0.10, 0.00, 2.38) # Jamba izquierda
+    add_box(bm_frame, 15.00, 15.05, 0.04, 0.10, 0.00, 2.38) # Jamba derecha
+    add_box(bm_frame, 13.85, 15.05, 0.04, 0.10, 0.00, 0.05) # Umbral
 
-    # Interior comercial visible (Suelo, mostrador, cubeta y anaqueles)
-    add_box(bm_interior, 13.00, 16.80, 0.25, 4.50, 0.00, 0.02) # Piso cerámico
-    # Mostrador en escuadra con faldón morado
-    add_box(bm_purple, 13.80, 16.20, 1.80, 2.40, 0.02, 1.05)
-    add_box(bm_interior, 13.78, 16.22, 1.78, 2.42, 1.04, 1.08) # Cubierta mostrador
-    add_box(bm_purple, 16.00, 16.50, 2.40, 4.00, 0.02, 1.05)
-    # Cubeta / bote amarillo de servicio en el rincón del suelo
-    for i in range(12):
-        ang1 = (i / 12) * 2 * math.pi
-        ang2 = ((i + 1) / 12) * 2 * math.pi
-        b_x = 13.45 + 0.12 * math.cos(ang1)
-        b_y = 0.55 + 0.12 * math.sin(ang1)
-        b_x2 = 13.45 + 0.12 * math.cos(ang2)
-        b_y2 = 0.55 + 0.12 * math.sin(ang2)
-        add_box(bm_interior, min(b_x, b_x2, 13.45), max(b_x, b_x2, 13.45), min(b_y, b_y2, 0.55), max(b_y, b_y2, 0.55), 0.00, 0.38)
-    # Anaqueles de productos nutricionales en pared posterior
-    for z_st in (0.80, 1.30, 1.80):
-        add_box(bm_interior, 13.20, 16.60, 4.20, 4.45, z_st, z_st + 0.04)
+    # Hoja de puerta de cristal abierta ~70° hacia el interior (pivote en X=14.98, Y=0.08)
+    p1x, p1y = 14.98, 0.08
+    p2x, p2y = 14.78, 0.98  # Abatida hacia adentro contra el mostrador
+    add_box(bm_glass, min(p1x, p2x), max(p1x, p2x), min(p1y, p2y), max(p1y, p2y), 0.06, 2.32)
+    # Bastidor perimetral de la hoja
+    add_box(bm_frame, min(p1x, p2x) - 0.02, max(p1x, p2x) + 0.02, min(p1y, p2y), max(p1y, p2y) + 0.02, 0.00, 0.06)
+    add_box(bm_frame, min(p1x, p2x) - 0.02, max(p1x, p2x) + 0.02, min(p1y, p2y), max(p1y, p2y) + 0.02, 2.30, 2.35)
+    add_box(bm_frame, p2x - 0.04, p2x + 0.04, p2y - 0.04, p2y + 0.04, 0.00, 2.35) # Borde libre de la puerta
 
-    # ACOMETIDA ELÉCTRICA Y MAZO DE CABLES EN FACHADA (Sobre la 'A' de 'LA' izquierda)
-    # Mufa / tubo conduit vertical
-    add_box(bm_cables, 10.45, 10.49, -0.06, -0.02, 4.20, 4.68)
-    # Aisladores cerámicos y caja de acometida
-    add_box(bm_cables, 10.40, 10.54, -0.08, -0.02, 4.40, 4.55)
-    # Mazo de cables negros trenzados en abanico
-    for c_dx in (-0.18, -0.08, 0.05, 0.15):
-        add_box(bm_cables, 10.45 + c_dx - 0.015, 10.45 + c_dx + 0.015, -0.07, -0.03, 4.05, 4.45)
+    # -----------------------------------------------------------------------
+    # 7. Bahía Derecha: Vitrinas Derechas (Mayoreo y Tarifario) (X: 15.05 a 16.70 m)
+    # -----------------------------------------------------------------------
+    # Vidrio continuo
+    add_box(bm_glass, 15.10, 16.65, 0.06, 0.08, 0.47, 2.36)
+    # Cancelería de aluminio blanco / anodizado claro
+    add_box(bm_frame, 15.05, 16.70, 0.04, 0.10, 0.43, 0.47)   # Marco inferior
+    add_box(bm_frame, 15.05, 16.70, 0.04, 0.10, 2.34, 2.38)   # Marco superior
+    add_box(bm_frame, 15.05, 15.10, 0.04, 0.10, 0.45, 2.36)   # Jamba izquierda
+    add_box(bm_frame, 16.65, 16.70, 0.04, 0.10, 0.45, 2.36)   # Jamba derecha
+    add_box(bm_frame, 15.82, 15.88, 0.04, 0.10, 0.45, 2.36)   # Parteluz divisorio
+    # Paneles de fondo blanco difusores para rótulos de mayoreo y tarifario
+    add_box(bm_panels, 15.12, 15.80, 0.055, 0.06, 0.48, 2.34) # Panel mayoreo
+    add_box(bm_panels, 15.90, 16.63, 0.055, 0.06, 0.48, 2.34) # Panel tarifario
 
-    # LETRERO VOLANTE BANDEROLA PERPENDICULAR (X = 13.025 m)
-    bm_volante = bmesh.new()
-    bm_brazos = bmesh.new()
-    # Caja central blanca esmaltada
+    # -----------------------------------------------------------------------
+    # 8. Espacio Interior Hermético y Mostrador Modular Fotorrealista
+    # (Coincide fielmente con la imagen original: faldón azul/morado, cubierta clara y estantes)
+    # -----------------------------------------------------------------------
+    # Piso cerámico interior con losetas
+    add_box(bm_interior, 9.35, 16.90, 0.05, 4.50, -0.02, 0.00)
+    # Plafón de techo interior hermético
+    add_box(bm_white, 9.35, 16.90, 0.05, 4.50, 2.68, 2.72)
+    # Pared divisoria posterior interior del local
+    add_box(bm_white, 9.35, 16.90, 4.45, 4.55, 0.00, 2.70)
+
+    # MOSTRADOR MODULAR DE RECEPCIÓN (Ubicado a la derecha del acceso, hacia el interior)
+    # Altura Z: 0.00 a 1.05 m, adentrándose de Y: 0.60 a Y: 3.20 m en X: 14.80 a 16.10 m
+    # Zócalo inferior oscuro de base
+    add_box(bm_frame, 14.78, 16.05, 0.60, 3.20, 0.00, 0.10)
+    # Frontal hacia el pasillo (X = 14.80 m): Paneles modulares alternados azul y morado
+    add_box(bm_furn_blue, 14.79, 14.84, 0.65, 1.45, 0.10, 0.95)   # Módulo 1 Azul
+    add_box(bm_furn_purple, 14.79, 14.84, 1.50, 2.30, 0.10, 0.95) # Módulo 2 Morado
+    add_box(bm_furn_blue, 14.79, 14.84, 2.35, 3.15, 0.10, 0.95)   # Módulo 3 Azul
+    # Vitrina / repisa de exhibición frontal con suplementos en cajitas
+    add_box(bm_glass, 14.80, 14.83, 0.68, 3.12, 0.55, 0.90)
+    for y_box in (0.80, 1.10, 1.70, 2.00, 2.50, 2.85):
+        add_box(bm_products, 14.84, 15.00, y_box, y_box + 0.18, 0.58, 0.82)
+    # Encimera / cubierta superior de mostrador en color hueso claro con moldura
+    add_box(bm_furn_top, 14.74, 16.10, 0.55, 3.25, 0.98, 1.05)
+
+    # Anaquel metálico con productos en pared posterior izquierda (fondo del pasillo)
+    add_box(bm_frame, 13.40, 14.60, 4.30, 4.45, 0.00, 2.40) # Mueble estante
+    for z_shelf in (0.50, 0.95, 1.40, 1.85):
+        add_box(bm_furn_top, 13.42, 14.58, 4.25, 4.45, z_shelf, z_shelf + 0.03)
+        for x_pr in (13.50, 13.75, 14.00, 14.25):
+            add_box(bm_products, x_pr, x_pr + 0.18, 4.28, 4.42, z_shelf + 0.03, z_shelf + 0.28)
+
+    # -----------------------------------------------------------------------
+    # 9. Letrero Volante Banderola Perpendicular (X = 13.025 m)
+    # Canvas 100% blanco puro (caja y cantos totalmente blancos)
+    # -----------------------------------------------------------------------
     add_box(bm_volante, 12.98, 13.07, -0.95, -0.05, 3.15, 4.45)
-    # Marco morado exterior de la caja
-    add_box(bm_purple, 12.96, 13.09, -0.96, -0.04, 4.43, 4.47)
-    add_box(bm_purple, 12.96, 13.09, -0.96, -0.04, 3.13, 3.17)
-    add_box(bm_purple, 12.96, 13.09, -0.97, -0.94, 3.15, 4.45)
-    # Brazos de anclaje de herrería negra hacia el machón
-    add_box(bm_brazos, 12.97, 13.08, -0.90, -0.02, 4.30, 4.35)
-    add_box(bm_brazos, 12.97, 13.08, -0.90, -0.02, 3.25, 3.30)
-    add_box(bm_brazos, 12.97, 13.08, -0.55, -0.02, 3.30, 4.30)
+    # Fijaciones discretas de anclaje a la pared sin invadir las caras
+    add_box(bm_brazos, 13.01, 13.04, -0.06, -0.02, 4.25, 4.30)
+    add_box(bm_brazos, 13.01, 13.04, -0.06, -0.02, 3.30, 3.35)
 
+    # Crear objetos en la escena
     create_mesh_object("Mod3_Muros_Blancos_LaPanza", bm_white, mats["estuco_blanco"], col)
     create_mesh_object("Mod3_Marcos_Morados_LaPanza", bm_purple, mats["estuco_morado"], col)
     create_mesh_object("Mod3_Vidrio_LaPanza", bm_glass, mats["vidrio_comercial"], col)
     create_mesh_object("Mod3_Canceleria_LaPanza", bm_frame, mats["aluminio_blanco"], col)
     create_mesh_object("Mod3_Cortinas_LaPanza", bm_shutter, mats["cortina_metalica"], col)
     create_mesh_object("Mod3_Paneles_Carteles", bm_panels, mats["panel_blanco_cartel"], col)
-    create_mesh_object("Mod3_Interior_LaPanza", bm_interior, mats["piso_comercial"], col)
-    create_mesh_object("Mod3_Cables_Acometida", bm_cables, mats["herreria_negra"], col)
-    create_mesh_object("Mod3_Letrero_Volante_Caja", bm_volante, mats["estuco_blanco"], col)
+    create_mesh_object("Mod3_Carrito_Trapear", bm_mop_cart, mats["amarillo_cubeta"], col)
+    create_mesh_object("Mod3_Interior_Piso", bm_interior, mats["piso_comercial"], col)
+    create_mesh_object("Mod3_Mueble_Azul", bm_furn_blue, mats["mueble_azul"], col)
+    create_mesh_object("Mod3_Mueble_Morado", bm_furn_purple, mats["mueble_morado"], col)
+    create_mesh_object("Mod3_Mueble_Cubierta", bm_furn_top, mats["mueble_cubierta"], col)
+    create_mesh_object("Mod3_Productos_Nutricion", bm_products, mats["producto_caja"], col)
+    create_mesh_object("Mod3_Letrero_Volante_Canvas_Blanco", bm_volante, mats["estuco_blanco"], col)
     create_mesh_object("Mod3_Brazos_Herreria", bm_brazos, mats["herreria_negra"], col)
 
     # -----------------------------------------------------------------------
-    # Rótulos Tipográficos 3D Fotorrealistas
+    # 10. Rótulos Tipográficos 3D Fotorrealistas
     # -----------------------------------------------------------------------
-    # 1. Fachada Frontal - Bahía Izquierda
+    # 1. Pretil Frontal - Bahía Izquierda
     create_3d_text("Texto_LP_Izq_L1", "CASETA TELEFONICA", 0.18, 0.015,
                    (11.20, -0.04, 4.25), (math.radians(90), 0, 0), mats["texto_rojo"], col)
     create_3d_text("Texto_LP_Izq_L2", "LA PANZA", 0.34, 0.025,
@@ -430,7 +506,7 @@ def build_modulo_3_la_panza(mats, col):
     create_3d_text("Texto_LP_Izq_L3", "CENTRO de NUTRICION", 0.18, 0.015,
                    (11.20, -0.04, 3.30), (math.radians(90), 0, 0), mats["texto_verde"], col)
 
-    # 2. Fachada Frontal - Bahía Derecha
+    # 2. Pretil Frontal - Bahía Derecha
     create_3d_text("Texto_LP_Der_L1", "CASETA TELEFONICA", 0.18, 0.015,
                    (14.95, -0.04, 4.25), (math.radians(90), 0, 0), mats["texto_rojo"], col)
     create_3d_text("Texto_LP_Der_L2", "LA PANZA", 0.34, 0.025,
@@ -442,43 +518,41 @@ def build_modulo_3_la_panza(mats, col):
     create_3d_text("Texto_LP_Numero330", "Nº 330", 0.12, 0.01,
                    (13.025, -0.04, 2.45), (math.radians(90), 0, 0), mats["texto_blanco"], col)
 
-    # 4. Puerta Izquierda: Dintel "ARTICULOS"
+    # 4. Puerta Izquierda: Dintel sobre VIDRIO SUPERIOR en morado con "ARTICULOS"
     create_3d_text("Texto_LP_Articulos", "ARTICULOS", 0.16, 0.012,
-                   (11.90, -0.04, 2.50), (math.radians(90), 0, 0), mats["texto_azul"], col)
+                   (11.90, -0.04, 2.22), (math.radians(90), 0, 0), mats["texto_morado"], col)
 
     # 5. Puerta Izquierda: Vinilos pintados en cristales ($4.00 y $6.00 / PRECIO ESPECIAL POR MAYOREO)
     create_3d_text("Texto_LP_Precio4", "$4", 0.44, 0.01,
-                   (11.45, -0.02, 1.65), (math.radians(90), 0, 0), mats["texto_rojo"], col)
+                   (11.45, -0.02, 1.55), (math.radians(90), 0, 0), mats["texto_rojo"], col)
     create_3d_text("Texto_LP_Sup4", ".00", 0.18, 0.008,
-                   (11.75, -0.02, 1.82), (math.radians(90), 0, 0), mats["texto_rojo"], col)
+                   (11.75, -0.02, 1.72), (math.radians(90), 0, 0), mats["texto_rojo"], col)
     create_3d_text("Texto_LP_Y_Central", "y", 0.18, 0.008,
-                   (11.90, -0.02, 1.55), (math.radians(90), 0, 0), mats["texto_morado"], col)
+                   (11.90, -0.02, 1.45), (math.radians(90), 0, 0), mats["texto_morado"], col)
     create_3d_text("Texto_LP_Precio6", "$6", 0.44, 0.01,
-                   (12.35, -0.02, 1.65), (math.radians(90), 0, 0), mats["texto_rojo"], col)
+                   (12.35, -0.02, 1.55), (math.radians(90), 0, 0), mats["texto_rojo"], col)
     create_3d_text("Texto_LP_Sup6", ".00", 0.18, 0.008,
-                   (12.65, -0.02, 1.82), (math.radians(90), 0, 0), mats["texto_rojo"], col)
-    # Textos inferiores en verde limón
+                   (12.65, -0.02, 1.72), (math.radians(90), 0, 0), mats["texto_rojo"], col)
     create_3d_text("Texto_LP_Precio", "PRECIO", 0.13, 0.008,
-                   (11.45, -0.02, 1.15), (math.radians(90), 0, 0), mats["texto_verde_limon"], col)
+                   (11.45, -0.02, 1.05), (math.radians(90), 0, 0), mats["texto_verde_limon"], col)
     create_3d_text("Texto_LP_Por", "POR", 0.13, 0.008,
-                   (11.45, -0.02, 0.95), (math.radians(90), 0, 0), mats["texto_verde_limon"], col)
+                   (11.45, -0.02, 0.85), (math.radians(90), 0, 0), mats["texto_verde_limon"], col)
     create_3d_text("Texto_LP_Especial", "ESPECIAL", 0.13, 0.008,
-                   (12.35, -0.02, 1.15), (math.radians(90), 0, 0), mats["texto_verde_limon"], col)
+                   (12.35, -0.02, 1.05), (math.radians(90), 0, 0), mats["texto_verde_limon"], col)
     create_3d_text("Texto_LP_Mayoreo", "MAYOREO", 0.13, 0.008,
-                   (12.35, -0.02, 0.95), (math.radians(90), 0, 0), mats["texto_verde_limon"], col)
+                   (12.35, -0.02, 0.85), (math.radians(90), 0, 0), mats["texto_verde_limon"], col)
 
-    # 6. Cartel en la Jamba Interior Izquierda de la Entrada (Rotación hacia +X para ver desde la entrada)
-    rot_jamba = (math.radians(90), 0, math.radians(90))
-    create_3d_text("Texto_Jamba_Articulos", "ARTICULOS", 0.075, 0.006,
-                   (13.27, 0.20, 2.15), rot_jamba, mats["texto_rojo"], col)
-    create_3d_text("Texto_Jamba_Hogar", "HOGAR", 0.075, 0.006,
-                   (13.27, 0.20, 1.95), rot_jamba, mats["texto_azul"], col)
-    create_3d_text("Texto_Jamba_Bisuteria", "BISUTERIA", 0.075, 0.006,
-                   (13.27, 0.20, 1.75), rot_jamba, mats["texto_verde"], col)
-    create_3d_text("Texto_Jamba_Papeleria", "PAPELERIA", 0.075, 0.006,
-                   (13.27, 0.20, 1.55), rot_jamba, mats["texto_rojo"], col)
-    create_3d_text("Texto_Jamba_Juguetes", "JUGUETES", 0.075, 0.006,
-                   (13.27, 0.20, 1.35), rot_jamba, mats["texto_azul"], col)
+    # 6. Vitrina Izquierda de la Bahía Derecha (Rótulo vertical completo en X = 13.525 m)
+    create_3d_text("Texto_Vit_Izq_Articulos", "ARTICULOS", 0.070, 0.006,
+                   (13.525, -0.03, 2.15), (math.radians(90), 0, 0), mats["texto_rojo"], col)
+    create_3d_text("Texto_Vit_Izq_Hogar", "HOGAR", 0.070, 0.006,
+                   (13.525, -0.03, 1.92), (math.radians(90), 0, 0), mats["texto_azul"], col)
+    create_3d_text("Texto_Vit_Izq_Bisuteria", "BISUTERIA", 0.070, 0.006,
+                   (13.525, -0.03, 1.69), (math.radians(90), 0, 0), mats["texto_verde"], col)
+    create_3d_text("Texto_Vit_Izq_Papeleria", "PAPELERIA", 0.070, 0.006,
+                   (13.525, -0.03, 1.46), (math.radians(90), 0, 0), mats["texto_rojo"], col)
+    create_3d_text("Texto_Vit_Izq_Juguetes", "JUGUETES", 0.070, 0.006,
+                   (13.525, -0.03, 1.23), (math.radians(90), 0, 0), mats["texto_azul"], col)
 
     # 7. Escaparate Derecho - Panel Izquierdo: PRECIO ESPECIAL POR MAYOREO 4.00 y 6.00
     create_3d_text("Texto_Vit_Der_Precio", "PRECIO", 0.065, 0.006,
@@ -515,7 +589,7 @@ def build_modulo_3_la_panza(mats, col):
         create_3d_text("Tarifa_Precio_" + dest[:4], precio, 0.052, 0.004,
                        (16.42, -0.03, z_pos), (math.radians(90), 0, 0), mats["texto_rojo"], col, align_x='LEFT')
 
-    # 9. LETRERO VOLANTE - Cara Sur (Normal hacia -X)
+    # 9. LETRERO VOLANTE (Canvas 100% blanco) - Cara Sur (Normal hacia -X)
     rot_sur = (math.radians(90), 0, math.radians(-90))
     create_3d_text("Texto_Volante_Sur_L1", "CASETA TELEFONICA", 0.09, 0.008,
                    (12.95, -0.50, 4.20), rot_sur, mats["texto_rojo"], col)
@@ -524,7 +598,7 @@ def build_modulo_3_la_panza(mats, col):
     create_3d_text("Texto_Volante_Sur_L3", "CENTRO de NUTRICION", 0.08, 0.008,
                    (12.95, -0.50, 3.40), rot_sur, mats["texto_verde"], col)
 
-    # 10. LETRERO VOLANTE - Cara Norte (Normal hacia +X)
+    # 10. LETRERO VOLANTE (Canvas 100% blanco) - Cara Norte (Normal hacia +X)
     rot_norte = (math.radians(90), 0, math.radians(90))
     create_3d_text("Texto_Volante_Norte_L1", "CASETA TELEFONICA", 0.09, 0.008,
                    (13.10, -0.50, 4.20), rot_norte, mats["texto_rojo"], col)
@@ -544,6 +618,8 @@ def build_modulo_4_loncheria_conchita(mats, col):
 
     # Pretil general
     add_box(bm_wall, 16.90, 21.20, -0.02, 0.25, 2.70, 4.65)
+    # Dintel hermético sobre cancelería
+    add_box(bm_wall, 16.90, 21.20, -0.02, 0.25, 2.45, 2.70)
     # Jambas y antepecho
     add_box(bm_wall, 16.90, 17.15, -0.02, 0.25, 0.00, 2.70)
     add_box(bm_wall, 20.95, 21.20, -0.02, 0.25, 0.00, 2.70)
@@ -589,6 +665,8 @@ def build_modulo_5_esquina_bienes_raices(mats, col):
 
     # Pretil y fachada este en estuco crema
     add_box(bm_wall, 21.20, 26.00, -0.02, 0.25, 2.70, 4.65)
+    # Dintel hermético sobre vitrina
+    add_box(bm_wall, 21.20, 26.00, -0.02, 0.25, 2.35, 2.70)
     # Jambas este
     add_box(bm_wall, 21.20, 21.90, -0.02, 0.25, 0.00, 2.70)
     add_box(bm_wall, 25.30, 26.00, -0.02, 0.25, 0.00, 2.70)
@@ -752,13 +830,22 @@ def setup_lighting_and_render(col):
     fill_obj.rotation_euler = (math.radians(55.0), math.radians(-25.0), math.radians(115.0))
     col.objects.link(fill_obj)
 
+    # Luz interior fluorescente de tienda en La Panza (ilumina mostrador, productos y carrito)
+    store_data = bpy.data.lights.new(name="Luz_Interior_LaPanza", type='POINT')
+    store_data.energy = 160.0
+    store_data.color = (1.0, 0.98, 0.93)
+    store_data.shadow_soft_size = 0.5
+    store_obj = bpy.data.objects.new("Luz_Interior_LaPanza", store_data)
+    store_obj.location = Vector((14.60, 1.80, 2.45))
+    col.objects.link(store_obj)
+
     # Batería de 9 cámaras de validación técnica
     cameras_config = [
         # (Nombre, Posición XYZ, Target XYZ, Focal mm)
         ("cam_general_este", (13.0, -18.0, 4.5), (13.0, 2.0, 2.6), 28.0),
         ("cam_la_panza_closeup", (13.1, -7.5, 2.4), (13.1, 0.0, 2.5), 35.0),
         ("cam_puerta_articulos", (11.85, -3.6, 1.60), (11.85, 0.0, 1.60), 38.0),
-        ("cam_vitrina_tarifario", (15.20, -3.6, 1.60), (15.20, 0.0, 1.60), 38.0),
+        ("cam_vitrina_tarifario", (14.95, -4.5, 1.45), (14.95, 0.0, 1.45), 30.0),
         ("cam_letrero_volante", (15.5, -4.8, 2.6), (13.0, -0.5, 3.8), 35.0),
         ("cam_esquina_bienes_raices", (29.5, -9.5, 3.8), (23.6, 1.5, 3.2), 32.0),
         ("cam_libertad_norte", (33.0, 4.2, 3.0), (26.0, 4.2, 2.6), 32.0),
@@ -801,11 +888,8 @@ size = Vector3(3.50, 4.70, 0.50)
 [sub_resource type="BoxShape3D" id="BoxShape3D_lp_machon"]
 size = Vector3(0.35, 4.70, 0.50)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_lp_dintel_acceso"]
-size = Vector3(1.85, 2.35, 0.50)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_lp_der"]
-size = Vector3(1.85, 4.70, 0.50)
+size = Vector3(3.50, 4.70, 0.50)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_conchita"]
 size = Vector3(4.30, 4.70, 0.50)
@@ -842,13 +926,8 @@ shape = SubResource("BoxShape3D_lp_izq")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.025, 2.35, 0.10)
 shape = SubResource("BoxShape3D_lp_machon")
 
-# Acceso peatonal de La Panza (X: 13.20 a 15.05): ¡LIBRE DE COLISIONADOR A RAS DE SUELO!
-[node name="Col_LP_DintelAcceso" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.125, 3.525, 0.10)
-shape = SubResource("BoxShape3D_lp_dintel_acceso")
-
 [node name="Col_LP_BahiaDer" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.975, 2.35, 0.10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.95, 2.35, 0.10)
 shape = SubResource("BoxShape3D_lp_der")
 
 [node name="Col_LoncheriaConchita" type="CollisionShape3D" parent="."]
