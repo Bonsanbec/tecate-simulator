@@ -20,6 +20,7 @@ func _ready():
 		
 	# 1. Hide legacy embedded low-poly road/water meshes inside terrain node
 	_hide_legacy_terrain_overlays(terrain_node)
+	_ensure_terrain_shaded_pbr(terrain_node)
 
 	# 2. Create trimesh colliders ONLY for the actual walkable terrain surface (tinMesh)
 	print("[ApplyShader] Creating collision shapes for terrain surface...")
@@ -222,3 +223,18 @@ func _apply_shader_recursive(node: Node, shader: Shader):
 				
 	for child in node.get_children():
 		_apply_shader_recursive(child, shader)
+
+func _ensure_terrain_shaded_pbr(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mesh = node.mesh
+		if mesh:
+			for i in range(mesh.get_surface_count()):
+				var mat = node.get_active_material(i)
+				if mat is BaseMaterial3D:
+					mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+					mat.roughness = 0.95
+					mat.metallic_specular = 0.05
+					mat.diffuse_mode = BaseMaterial3D.DIFFUSE_BURLEY
+	for child in node.get_children():
+		_ensure_terrain_shaded_pbr(child)
+
