@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" path="res://assets/buildings/edificio_continuo_la_panza.tscn" id="16_continuo_la_panza"]
 [ext_resource type="PackedScene" path="res://assets/buildings/edificio_cardenas_33.tscn" id="17_cardenas_33"]
 [ext_resource type="PackedScene" path="res://systems/environment/sky_system.tscn" id="18_sky_system"]
+[ext_resource type="PackedScene" path="res://ui/start_screen.tscn" id="19_start_screen"]
 
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
@@ -65,6 +66,8 @@ transform = Transform3D(-0.1077, -0.0058, 1.2462, -0.0111, 1.2508, 0.0037, -1.24
 
 
 [node name="SkySystem" parent="." instance=ExtResource("18_sky_system")]
+
+[node name="StartScreen" parent="." instance=ExtResource("19_start_screen")]
 
 [node name="Player" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6844, 400.0, 11)

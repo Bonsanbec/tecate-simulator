@@ -45,6 +45,8 @@ func _ready():
 	if player_node:
 		print("[ApplyShader] Snapping Player to terrain...")
 		_snap_player(player_node)
+		if "spawn_position" in player_node:
+			player_node.spawn_position = player_node.global_position
 	elif camera_node:
 		print("[ApplyShader] Snapping Camera3D to terrain...")
 		_snap_camera(camera_node)

@@ -1,0 +1,91 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8y3m6xq4p9a1"]
+
+[ext_resource type="Script" path="res://ui/start_screen.gd" id="1_start_script"]
+
+[node name="StartScreen" type="Node3D"]
+script = ExtResource("1_start_script")
+
+[node name="MenuCamera" type="Camera3D" parent="."]
+transform = Transform3D(0.120787, 0, -0.992678, 0.086435, 0.996202, 0.010517, 0.988908, -0.087073, 0.120328, -6.6844, 405.5, 11)
+current = true
+fov = 58.0
+far = 16000.0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+layer = 50
+
+[node name="RootControl" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/RootControl"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 75.0
+offset_top = 65.0
+offset_right = 550.0
+offset_bottom = 450.0
+mouse_filter = 2
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/RootControl/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TitleContainer" type="VBoxContainer" parent="CanvasLayer/RootControl/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TitleLabel" type="Label" parent="CanvasLayer/RootControl/MarginContainer/VBox/TitleContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.98, 0.98, 1)
+theme_override_colors/font_shadow_color = Color(0.04, 0.04, 0.06, 0.85)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 3
+theme_override_constants/shadow_outline_size = 6
+theme_override_font_sizes/font_size = 96
+text = "TECATE"
+
+[node name="SubtitleLabel" type="Label" parent="CanvasLayer/RootControl/MarginContainer/VBox/TitleContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.82, 0.38, 0.95)
+theme_override_colors/font_shadow_color = Color(0.04, 0.04, 0.06, 0.75)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 18
+text = "SIMULADOR URBANO"
+
+[node name="AccentLine" type="ColorRect" parent="CanvasLayer/RootControl/MarginContainer/VBox"]
+custom_minimum_size = Vector2(100, 2)
+layout_mode = 2
+size_flags_horizontal = 0
+color = Color(0.95, 0.82, 0.38, 0.75)
+
+[node name="ButtonsContainer" type="VBoxContainer" parent="CanvasLayer/RootControl/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BtnContinue" type="Button" parent="CanvasLayer/RootControl/MarginContainer/VBox/ButtonsContainer"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../BtnQuit")
+focus_neighbor_bottom = NodePath("../BtnRespawn")
+text = "Continuar"
+alignment = 0
+
+[node name="BtnRespawn" type="Button" parent="CanvasLayer/RootControl/MarginContainer/VBox/ButtonsContainer"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../BtnContinue")
+focus_neighbor_bottom = NodePath("../BtnQuit")
+text = "Reaparecer"
+alignment = 0
+
+[node name="BtnQuit" type="Button" parent="CanvasLayer/RootControl/MarginContainer/VBox/ButtonsContainer"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../BtnRespawn")
+focus_neighbor_bottom = NodePath("../BtnContinue")
+text = "Salir"
+alignment = 0

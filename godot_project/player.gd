@@ -29,8 +29,32 @@ var is_flying: bool = false
 const DOUBLE_TAP_WINDOW: float = 0.35
 const DEFAULT_SNAP_LENGTH: float = 0.3
 
+var input_enabled: bool = true
+var spawn_position: Vector3 = Vector3.ZERO
+var spawn_rotation_y: float = 0.0
+
+func set_input_enabled(enabled: bool) -> void:
+	input_enabled = enabled
+	if not enabled:
+		velocity = Vector3.ZERO
+
+func respawn() -> void:
+	global_position = spawn_position
+	velocity = Vector3.ZERO
+	is_flying = false
+	rot_y = spawn_rotation_y
+	rot_x = 0.0
+	rotation_degrees.y = rot_y
+	if camera:
+		camera.rotation_degrees.x = rot_x
+	var main_node = get_parent()
+	if main_node and main_node.has_method("_snap_player"):
+		main_node._snap_player(self)
+	print("[Player] Reaparecido en Parque Hidalgo: ", global_position)
+
 func _ready():
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	spawn_position = global_position
+	spawn_rotation_y = rotation_degrees.y
 	rot_y = rotation_degrees.y
 	if camera:
 		rot_x = camera.rotation_degrees.x
@@ -43,23 +67,32 @@ func _ready():
 	floor_block_on_wall = true
 	floor_snap_length = DEFAULT_SNAP_LENGTH
 
+	# Si existe StartScreen en la escena, comenzamos en el menú sin capturar el ratón
+	var start_screen = get_parent().get_node_or_null("StartScreen") if get_parent() else null
+	if start_screen:
+		input_enabled = false
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	else:
+		input_enabled = true
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
 func _input(event):
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		rot_y -= event.relative.x * sensitivity
-		rotation_degrees.y = rot_y
-		
-		rot_x -= event.relative.y * sensitivity
-		rot_x = clamp(rot_x, -89.0, 89.0)
-		if camera:
-			camera.rotation_degrees.x = rot_x
-			
 	if event is InputEventKey and event.pressed and not event.is_echo():
 		if event.keycode == KEY_ESCAPE:
-			if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-				Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+			var start_screen = get_tree().root.find_child("StartScreen", true, false)
+			if start_screen and start_screen.has_method("toggle_menu"):
+				start_screen.toggle_menu()
+				get_viewport().set_input_as_handled()
+				return
 			else:
-				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-				
+				if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+					Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+				else:
+					Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+					
+		if not input_enabled:
+			return
+			
 		if event.keycode == KEY_SPACE or event.is_action_pressed("ui_accept"):
 			var current_time = Time.get_ticks_msec() / 1000.0
 			# Double-tap Space anywhere (on floor or in air) toggles Minecraft-style flying
@@ -74,7 +107,21 @@ func _input(event):
 			else:
 				space_press_timer = current_time
 
+	if not input_enabled:
+		return
+
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		rot_y -= event.relative.x * sensitivity
+		rotation_degrees.y = rot_y
+		
+		rot_x -= event.relative.y * sensitivity
+		rot_x = clamp(rot_x, -89.0, 89.0)
+		if camera:
+			camera.rotation_degrees.x = rot_x
+
 func _physics_process(delta):
+	if not input_enabled:
+		return
 	if is_flying:
 		_process_flying(delta)
 	else:
