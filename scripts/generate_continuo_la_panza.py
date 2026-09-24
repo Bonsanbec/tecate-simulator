@@ -911,43 +911,43 @@ size = Vector3(0.50, 4.70, 14.50)
 [node name="ModelInstance" parent="." instance=ExtResource("1_glb")]
 
 [node name="Col_SaldosTelas" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.375, 2.35, 0.10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.375, 2.35, -0.10)
 shape = SubResource("BoxShape3D_saldos_telas")
 
 [node name="Col_Electronica" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.05, 2.35, 0.10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.05, 2.35, -0.10)
 shape = SubResource("BoxShape3D_electronica")
 
 [node name="Col_LP_BahiaIzq" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.10, 2.35, 0.10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.10, 2.35, -0.10)
 shape = SubResource("BoxShape3D_lp_izq")
 
 [node name="Col_LP_MachonCentral" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.025, 2.35, 0.10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.025, 2.35, -0.10)
 shape = SubResource("BoxShape3D_lp_machon")
 
 [node name="Col_LP_BahiaDer" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.95, 2.35, 0.10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.95, 2.35, -0.10)
 shape = SubResource("BoxShape3D_lp_der")
 
 [node name="Col_LoncheriaConchita" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.05, 2.35, 0.10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.05, 2.35, -0.10)
 shape = SubResource("BoxShape3D_conchita")
 
 [node name="Col_BienesRaices_Este" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.60, 2.35, 0.10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.60, 2.35, -0.10)
 shape = SubResource("BoxShape3D_bienes_raices_este")
 
 [node name="Col_Libertad_Norte" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.85, 2.35, 7.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.85, 2.35, -7.25)
 shape = SubResource("BoxShape3D_libertad_norte")
 
 [node name="Col_Muro_Posterior" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.00, 2.175, 14.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.00, 2.175, -14.35)
 shape = SubResource("BoxShape3D_muro_posterior")
 
 [node name="Col_Medianera_Sur" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.125, 2.35, 7.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.125, 2.35, -7.25)
 shape = SubResource("BoxShape3D_medianera_sur")
 """
     with open(tscn_path, "w", encoding="utf-8") as f:
