@@ -1,30 +1,54 @@
+# ── Entornos y metadatos del sistema ────────────────────────────────────────
 *.pyc
+__pycache__/
 venv/
 .DS_Store
-export/reconstruction_export_win.json
-export/reconstruction_export.json
-export/debug/reconstruction_diagnostics.json
-export/geometry.bin
-export/reconstruction_export_win.json
-export/reconstruction_export.json
-export/debug/reconstruction_diagnostics.json
-export/geometry.bin
-*.png
-*.import
+.env
+*:Zone.Identifier
+
+# ── Binarios grandes regenerables (NO versionar — usar servidor SMB) ─────────
+# Outputs horneados del pipeline
 *.glb
 *.babylon
-*.blend
-*.blend1
-*.json
-*.bin
 *.gltf
-.env
-/godot_project/.godot
-*:Zone.Identifier
-/export/minecraft_world/resource_pack
+*.bin
 *.nbi
 *.nbc
+# Archivos Blender (incluye fuentes grandes como osm2world_adjusted.blend)
+*.blend
+*.blend1
+# Texturas (regenerables por script)
+*.png
+*.import
+# JSON de caché y volcados de datos
+*.json
+
+# ── Directorios ignorados completamente ──────────────────────────────────────
+/godot_project/.godot
+/export/minecraft_world/resource_pack
 data
 export
 models
 reference
+
+# ── EXCEPCIONES: Fuentes de autoría manual (contrato por directorio) ─────────
+#
+# CONTRATO: blender_assets/buildings/ y blender_assets/*.blend (raíz) contienen
+# ÚNICAMENTE fuentes geométricas de autoría manual (< ~5 MB cada una).
+# Los outputs horneados y ajustados del pipeline NO deben colocarse aquí.
+#
+# Cualquier nuevo edificio o asset manual añadido a estas rutas queda
+# versionado automáticamente sin modificar este archivo.
+
+# Fuentes de edificios individuales (todos los .blend en buildings/)
+!blender_assets/buildings/*.blend
+
+# Fuentes de assets de mobiliario urbano y elementos en la raíz de blender_assets/
+!blender_assets/*.blend
+# Re-ignorar intermediarios del pipeline GIS (generados por script, no autoría manual)
+blender_assets/*_adjusted.blend
+
+# JSONs de configuración y manifiesto (no cachés ni volcados de datos)
+!blender_assets/.bake_manifest.json
+!godot_project/assets/nomenclatura_data.json
+!godot_project/assets/nomenclatura_corners.json
