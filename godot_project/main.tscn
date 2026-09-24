@@ -1,7 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://db7572d55c7a"]
 
 [ext_resource type="Script" path="res://apply_shader.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://assets/osm2world_baked.glb" id="2_geometry"]
 [ext_resource type="PackedScene" path="res://assets/tecate2.glb" id="3_terrain"]
 [ext_resource type="Script" path="res://player.gd" id="4_player_script"]
 [ext_resource type="PackedScene" path="res://assets/waterways_baked.glb" id="5_waterways"]
@@ -42,8 +41,6 @@ transform = Transform3D(0.84277856, 0, 0, 0, 0.84277856, 0, 0, 0, 0.84277856, 28
 [node name="Railways" parent="." instance=ExtResource("6_railways")]
 
 [node name="Bridges" parent="." instance=ExtResource("7_bridges")]
-
-[node name="Geometry" parent="." instance=ExtResource("2_geometry")]
 
 [node name="Kiosko" parent="." instance=ExtResource("10_kiosko")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6844, 400.0132, 2.6878)
