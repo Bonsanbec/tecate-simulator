@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" path="res://assets/palacio_municipal_2009.tscn" id="14_palacio_municipal"]
 [ext_resource type="PackedScene" path="res://assets/fuente_parque_hidalgo.tscn" id="15_fuente_hidalgo"]
 [ext_resource type="PackedScene" path="res://assets/buildings/edificio_continuo_la_panza.tscn" id="16_continuo_la_panza"]
+[ext_resource type="PackedScene" path="res://assets/buildings/edificio_cardenas_33.tscn" id="17_cardenas_33"]
 
 
 [sub_resource type="Environment" id="Environment_tct"]
@@ -52,11 +53,15 @@ transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 
 [node name="BBVA" parent="." instance=ExtResource("11_bbva")]
 transform = Transform3D(-0.99636, -0.000716, -0.085243, -0.00275, 0.999714, 0.02375, 0.085202, 0.023898, -0.996077, -66.8, 400, -24.81)
 
+[node name="Edificio_Cardenas_33" parent="." instance=ExtResource("17_cardenas_33")]
+transform = Transform3D(-0.99636, -0.000716, -0.085243, -0.00275, 0.999714, 0.02375, 0.085202, 0.023898, -0.996077, -69.356, 399.283, 5.072)
+
+
 [node name="Hotel_Tecate" parent="." instance=ExtResource("13_hotel_tecate")]
 transform = Transform3D(0.085219, 0.02393, -0.996075, -0.00278, 0.999713, 0.02378, 0.996358, 0.000743, 0.085261, -41.06, 398.79, 45.4)
 
 [node name="Palacio_Municipal" parent="." instance=ExtResource("14_palacio_municipal")]
-transform = Transform3D(-0.996344, -0.005629, -0.085242, -0.00781, 0.99965, 0.02528, 0.08507, 0.025853, -0.99604, 47.75, 398.79, 42.4)
+transform = Transform3D(-0.996344, -0.005629, -0.085242, -0.00781, 0.99965, 0.02528, 0.08507, 0.025853, -0.99604, 47.75, 398.79, 38.4)
 
 [node name="Continuo_La_Panza" parent="." instance=ExtResource("16_continuo_la_panza")]
 transform = Transform3D(-0.1077, -0.0058, 1.2462, -0.0111, 1.2508, 0.0037, -1.2461, -0.0107, -0.1077, 181.63, 400.87, 56.44)

@@ -585,7 +585,7 @@ def build_modulo_3_la_panza(mats, col):
     ]
     for dest, precio, z_pos in tarifas:
         create_3d_text("Tarifa_Dest_" + dest[:4], dest, 0.046, 0.004,
-                       (16.08, -0.03, z_pos), (math.radians(90), 0, 0), mats["texto_azul"], col, align_x='RIGHT')
+                       (16.40, -0.03, z_pos), (math.radians(90), 0, 0), mats["texto_azul"], col, align_x='RIGHT')
         create_3d_text("Tarifa_Precio_" + dest[:4], precio, 0.052, 0.004,
                        (16.42, -0.03, z_pos), (math.radians(90), 0, 0), mats["texto_rojo"], col, align_x='LEFT')
 
