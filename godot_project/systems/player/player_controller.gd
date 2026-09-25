@@ -106,14 +106,17 @@ func _ready():
 	_initialize_submodules()
 	_initialize_humanoid_rig()
 
-	# Si existe StartScreen en la escena, pausar inputs al inicio
+	# Si existe StartScreen en la escena, pausar inputs y ocultar HUD al inicio
 	var start_screen = get_parent().get_node_or_null("StartScreen") if get_parent() else null
 	if start_screen:
 		input_enabled = false
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		# El HUD ya nace oculto (visible = false en _ready); no se necesita llamada extra
 	else:
 		input_enabled = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		if hud:
+			hud.show_hud()
 
 func _initialize_submodules() -> void:
 	# 1. Director de Cámaras (1P / 2P / 3P con F5)
@@ -180,6 +183,12 @@ func set_input_enabled(enabled: bool) -> void:
 	input_enabled = enabled
 	if not enabled:
 		velocity = Vector3.ZERO
+	# Sincronizar visibilidad del HUD con el estado de juego activo
+	if hud:
+		if enabled:
+			hud.show_hud()
+		else:
+			hud.hide_hud()
 
 func respawn() -> void:
 	global_position = spawn_position

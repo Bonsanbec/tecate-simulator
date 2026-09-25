@@ -15,7 +15,17 @@ extends CanvasLayer
 var _badge_fade_timer: float = 3.0
 
 func _ready():
+	visible = false
+
+func show_hud() -> void:
 	visible = true
+
+func hide_hud() -> void:
+	visible = false
+	# Resetear el apuntador explícitamente para evitar que su estado interno
+	# quede activo mientras el CanvasLayer está oculto
+	if reticle:
+		reticle.visible = false
 
 func update_hud(
 	heading_degrees: float,
