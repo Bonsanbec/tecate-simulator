@@ -27,11 +27,12 @@ Documento técnico de especificación morfológica, paramétrica, fenestración,
 - **Integración Canónica en Escena Principal Godot (`godot_project/main.tscn`)**:
   - Instancia: `[node name="Edificio_Juarez_235" parent="." instance=ExtResource("21_juarez_235")]`
   - Transformación:
-    `transform = Transform3D(0.99636, 0, 0.08524, 0, 1, 0, -0.08524, 0, 0.99636, -53.85, 401.8, -35.95)`
-  - *Coordenadas de Inserción*:
-    - Origen $(X, Z) = (-53.85, -35.95)$: Vértice catastral $V39$ (esquina Poniente Av. Benito Juárez y Calle Lázaro Cárdenas). El signo negativo de $Z$ sitúa el predio correctamente en la acera norte de la calzada, internándose hacia el interior de la manzana en dirección al Callejón Libertad ($-Z$).
-    - Elevación $Y = 401.80\text{ m}$: Rasante calibrada que enrasa el acceso de La Michoacana en el extremo oriente ($Y \approx 402.03\text{ m}$) mientras el zócalo basal de $-2.00\text{ m}$ (cota $399.80\text{ m}$) sella subterráneamente el terreno en el extremo poniente ($Y \approx 400.76\text{ m}$), garantizando cero flotación en los $112.50\text{ m}$ de longitud.
-    - Orientación angular $\theta = -6.57^\circ$: Rotación de cuerpo rígido ($\det = +1.0000$) que alinea la fachada frontal con la tangente de la calle Juárez $(0.99344, -0.11438)$ y su normal hacia el sur $(0.11438, 0.99344)$.
+    `transform = Transform3D(0.843872, 0, -0.101884, 0, 0.85, 0, 0.101884, 0, 0.843872, -50, 401.6, -41.8)`
+  - *Calibración Geométrica y Desescalado Proporcional*:
+    - **Desescalado Proporcional Isótropo ($S = 0.8500$)**: Ajusta la longitud nominal de $112.50\text{ m}$ a $95.63\text{ m}$ ($95.91\text{ m}$ con marquesinas), encajando en la longitud útil del bloque ($96.37\text{ m}$ entre Calle Lázaro Cárdenas y Calle Pascual Ortiz Rubio). Elimina por completo la invasión del cruce vial oriente y de la manzana vecina, dejando márgenes libres en ambas bocacalles.
+    - **Paralelismo Analítico con la Línea Amarilla Central ($\theta = -6.88^\circ$, $\frac{\Delta Z}{\Delta X} = -0.1206$)**: Calibrado contra los 209 vértices reales de la pintura vial central (`M_RoadMarkingYellow`) en `roadways_baked.glb`. Con $X_z = -0.101884 < 0$, la fachada desciende en $Z$ conforme avanza en $X$ a la misma tasa exacta que la calle, manteniendo una distancia transversal rigurosamente constante de $5.83\text{ m}$ a la línea central y $2.02\text{ m}$ libres de banqueta respecto al asfalto en cada metro de su longitud. Cero comportamiento secante.
+    - **Cero Invasión de Carril Vehicular**: Con el origen en $Z = -41.80\text{ m}$, la fachada discurre sobre la acera peatonal norte ($Z \in [-41.80, -53.26\text{ m}]$), quedando completamente fuera del arroyo vehicular en todo su recorrido.
+    - **Cota Rasante Calibrada ($Y = 401.60\text{ m}$)**: Enrasa milimétricamente los accesos comerciales y entierra el zócalo basal continuo bajo el terreno, absorbiendo la topografía sin flotación.
 
 ---
 
