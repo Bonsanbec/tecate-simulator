@@ -54,7 +54,7 @@ transform = Transform3D(-0.99636, -0.000716, -0.085243, -0.00275, 0.999714, 0.02
 transform = Transform3D(-0.99636, -0.000716, -0.085243, -0.00275, 0.999714, 0.02375, 0.085202, 0.023898, -0.996077, -64.217, 399.280, 5.371)
 
 [node name="Edificio_Cardenas_25" parent="." instance=ExtResource("20_cardenas_25")]
-transform = Transform3D(-0.99636, -0.000716, -0.085243, -0.00275, 0.999714, 0.02375, 0.085202, 0.023898, -0.996077, -56.13, 398.78, 43.58)
+transform = Transform3D(-0.99636, -0.000716, -0.085243, -0.00275, 0.999714, 0.02375, 0.085202, 0.023898, -0.996077, -56.13, 398.78, 45.38)
 
 
 [node name="Hotel_Tecate" parent="." instance=ExtResource("13_hotel_tecate")]
