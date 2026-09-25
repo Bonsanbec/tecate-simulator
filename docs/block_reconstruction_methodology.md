@@ -56,7 +56,7 @@ Para evitar bloqueos por congelamiento de I/O en volúmenes de red locales, se e
 
 ```
 [ Servidor Remoto Windows ]                             [ Agente Antigravity (macOS) ]
-D:/tecate-simulator/data/                               scratch/staging/block_<id>/
+D:/tecate-backup/data/                               scratch/staging/block_<id>/
    ├── blocks_cache.json       -- (1. SCP Inicial) -->     ├── block_metadata.json
    ├── facades_cache.json                                  ├── facades.json
    ├── panoramas_cache.json                                └── images/
@@ -68,7 +68,7 @@ D:/tecate-simulator/data/                               scratch/staging/block_<i
 ### Comandos Normativos SCP
 ```bash
 # Transferencia con timeout estricto de 15 segundos:
-scp -o ConnectTimeout=15 HakkinDavid@hakkin.tail4b53f5.ts.net:"D:/tecate-simulator/data/screenshots/pano/<image_name>.png" scratch/staging/block_<id>/
+scp -o ConnectTimeout=15 HakkinDavid@hakkin.tail4b53f5.ts.net:"D:/tecate-backup/data/screenshots/pano/<image_name>.png" scratch/staging/block_<id>/
 ```
 
 ---
