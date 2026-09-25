@@ -1,0 +1,144 @@
+[gd_scene load_steps=18 format=3 uid="uid://cardenas_25_complejo_001"]
+
+[ext_resource type="PackedScene" path="res://assets/buildings/edificio_cardenas_25.glb" id="1_mesh"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pilastra"]
+size = Vector3(0.60, 3.40, 0.60)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_locales"]
+size = Vector3(0.30, 3.40, 72.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_terraza_piso"]
+size = Vector3(2.40, 0.20, 72.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_barandal_frontal"]
+size = Vector3(0.06, 0.95, 72.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_pa"]
+size = Vector3(0.30, 3.20, 72.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_escalon"]
+size = Vector3(0.20, 0.18, 3.80)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_norte"]
+size = Vector3(16.50, 6.40, 0.30)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_sur"]
+size = Vector3(11.20, 6.40, 0.30)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muro_trasero"]
+size = Vector3(0.30, 6.40, 72.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_parrilla_cuerpo"]
+size = Vector3(12.20, 4.20, 22.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_barda_poniente"]
+size = Vector3(0.40, 2.40, 52.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_barda_sur"]
+size = Vector3(40.80, 2.40, 0.40)
+
+[node name="Edificio_Cardenas_25" type="StaticBody3D"]
+
+[node name="ModelInstance" parent="." instance=ExtResource("1_mesh")]
+
+# 1. 14 Pilastras Frontales Analíticas Independientes (Galería Porticada Transitable)
+[node name="Col_Pilar_00" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -0.000)
+shape = SubResource("BoxShape3D_pilastra")
+
+[node name="Col_Pilar_01" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -5.538)
+shape = SubResource("BoxShape3D_pilastra")
+
+[node name="Col_Pilar_02" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -11.077)
+shape = SubResource("BoxShape3D_pilastra")
+
+[node name="Col_Pilar_03" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -16.615)
+shape = SubResource("BoxShape3D_pilastra")
+
+[node name="Col_Pilar_04" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -22.154)
+shape = SubResource("BoxShape3D_pilastra")
+
+[node name="Col_Pilar_05" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -27.692)
+shape = SubResource("BoxShape3D_pilastra")
+
+[node name="Col_Pilar_06" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -33.231)
+shape = SubResource("BoxShape3D_pilastra")
+
+[node name="Col_Pilar_07" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -38.769)
+shape = SubResource("BoxShape3D_pilastra")
+
+[node name="Col_Pilar_08" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -44.308)
+shape = SubResource("BoxShape3D_pilastra")
+
+[node name="Col_Pilar_09" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -49.846)
+shape = SubResource("BoxShape3D_pilastra")
+
+[node name="Col_Pilar_10" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -55.385)
+shape = SubResource("BoxShape3D_pilastra")
+
+[node name="Col_Pilar_11" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -60.923)
+shape = SubResource("BoxShape3D_pilastra")
+
+[node name="Col_Pilar_12" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -66.462)
+shape = SubResource("BoxShape3D_pilastra")
+
+[node name="Col_Pilar_13" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30, 1.70, -72.000)
+shape = SubResource("BoxShape3D_pilastra")
+
+# 2. Cancelería de Locales Retranqueada
+[node name="Col_Muro_Locales" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.45, 1.70, -36.00)
+shape = SubResource("BoxShape3D_muro_locales")
+
+# 3. Terraza y Barandales de Planta Alta
+[node name="Col_Piso_Terraza" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.20, 3.40, -36.00)
+shape = SubResource("BoxShape3D_terraza_piso")
+
+[node name="Col_Barandal_Frontal" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00, 3.90, -36.00)
+shape = SubResource("BoxShape3D_barandal_frontal")
+
+[node name="Col_Muro_PA" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.45, 4.90, -36.00)
+shape = SubResource("BoxShape3D_muro_pa")
+
+# 4. Muros Perimetrales Norte, Sur y Trasero
+[node name="Col_Muro_Norte" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 3.20, 0.00)
+shape = SubResource("BoxShape3D_muro_norte")
+
+[node name="Col_Muro_Sur" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.60, 3.20, -72.00)
+shape = SubResource("BoxShape3D_muro_sur")
+
+[node name="Col_Muro_Trasero" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.20, 3.20, -36.00)
+shape = SubResource("BoxShape3D_muro_trasero")
+
+# 5. La Parrilla Restaurant Bar & Grill y Bardas de Estacionamiento
+[node name="Col_Parrilla_Cuerpo" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.40, 2.10, -11.00)
+shape = SubResource("BoxShape3D_parrilla_cuerpo")
+
+[node name="Col_Barda_Poniente" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51.90, 1.20, -26.00)
+shape = SubResource("BoxShape3D_barda_poniente")
+
+[node name="Col_Barda_Sur" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.60, 1.20, -51.90)
+shape = SubResource("BoxShape3D_barda_sur")
