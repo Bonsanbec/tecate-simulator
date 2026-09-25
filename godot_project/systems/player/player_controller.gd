@@ -41,6 +41,8 @@ var current_slope_angle: float = 0.0
 var current_heading_deg: float = 0.0
 var current_speed_kmh: float = 0.0
 var current_altitude_msnm: float = 540.0
+var _street_update_timer: float = 0.0
+var _cached_street_name: String = ""
 
 # Posición y rotación de reaparición
 var spawn_position: Vector3 = Vector3.ZERO
@@ -406,24 +408,25 @@ func _update_procedural_animations(delta: float) -> void:
 		var q_chest = Quaternion.from_euler(Vector3(-lean_angle, 0.0, 0.0))
 		skeleton.set_bone_pose_rotation(bone_chest, q_chest)
 
-func _update_telemetry(_delta: float) -> void:
+func _update_telemetry(delta: float) -> void:
 	current_speed_kmh = Vector2(velocity.x, velocity.z).length() * 3.6
 	current_altitude_msnm = 540.0 + global_position.y # Cota base aproximada de Tecate
 
 	# Cálculo analítico del rumbo cartográfico (Heading Azimuth):
-	# En el marco geodésico de Tecate: +X = Este, -Z = Norte, -X = Oeste, +Z = Sur.
-	# atan2(forward.x, -forward.z) define el ángulo horario estándar: Norte=0°, Este=90°, Sur=180°, Oeste=270°.
 	var forward := -global_transform.basis.z
 	current_heading_deg = fposmod(rad_to_deg(atan2(forward.x, -forward.z)), 360.0)
 
-	# Consultar la calle hacia la que apunta el jugador (rayo en dirección forward).
-	# Se usa el vector forward del cuerpo del jugador, que coincide con el azimut
-	# de la brújula en 1P/3P. En modo vuelo la dirección es igualmente válida.
-	var nearest_street: String = ""
-	if has_node("/root/StreetNameLookup"):
-		nearest_street = get_node("/root/StreetNameLookup").get_street_ahead(
-			global_position, forward
-		)
+	# Optimización de rendimiento: Consultar nombre de calle a 5 Hz (cada 0.2 s)
+	# en lugar de 60 Hz para evitar congelamientos/stuttering.
+	_street_update_timer += delta
+	if _street_update_timer >= 0.2 or _cached_street_name.is_empty():
+		_street_update_timer = 0.0
+		if has_node("/root/StreetNameLookup"):
+			_cached_street_name = get_node("/root/StreetNameLookup").get_street_ahead(
+				global_position, forward
+			)
+
+	var nearest_street: String = _cached_street_name
 
 	if hud:
 		var is_1p = camera_director.current_mode == CameraDirectorClass.PerspectiveMode.FIRST_PERSON if camera_director else true

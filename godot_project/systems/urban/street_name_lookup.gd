@@ -8,7 +8,8 @@ extends Node
 ##     Determina qué calle física se encuentra enfrente del jugador en la
 ##     dirección de su mirada (vector forward), evaluando la intersección
 ##     del rayo de visión contra los segmentos reales de calle (acotados [A, B]).
-##     Elimina proyecciones infinitas falsas.
+##     Incluye caché interno de posición y dirección para cero costo de CPU
+##     cuando el jugador se mueve despacio o está detenido.
 ##
 ##   get_nearest_street(pos: Vector3) → String
 ##     Calle más cercana en posición, sin considerar dirección.
@@ -20,11 +21,17 @@ extends Node
 const DATA_PATH: String = "res://assets/street_segments.json"
 
 ## Radio de búsqueda alrededor del jugador (metros).
-const SEARCH_RADIUS: float = 300.0
+## 160 m cubre 25 celdas de grilla en lugar de 49, reduciendo a la mitad el área.
+const SEARCH_RADIUS: float = 160.0
 
 var _cell_size: float = 200.0
 var _segments: Array[Dictionary] = []
 var _grid: Dictionary = {}
+
+## Cache de última consulta para evitar recalculado innecesario
+var _last_query_pos: Vector3 = Vector3(INF, INF, INF)
+var _last_query_forward: Vector3 = Vector3.ZERO
+var _last_street_name: String = ""
 
 const HW_PRIORITY := {
 	"motorway": 0, "trunk": 1, "primary": 2, "secondary": 3,
@@ -72,6 +79,11 @@ func _load_data() -> void:
 
 ## Calle hacia la que apunta el jugador (intersección real de rayo contra segmento).
 func get_street_ahead(pos: Vector3, forward: Vector3) -> String:
+	# Caché de micro-movimientos: Si el jugador se movió menos de 0.5m y giró menos de ~3.6°,
+	# devolver el resultado en caché instantáneamente.
+	if pos.distance_squared_to(_last_query_pos) < 0.25 and forward.dot(_last_query_forward) > 0.998:
+		return _last_street_name
+
 	var dx: float = forward.x
 	var dz: float = forward.z
 	var len_xz: float = sqrt(dx * dx + dz * dz)
@@ -79,7 +91,11 @@ func get_street_ahead(pos: Vector3, forward: Vector3) -> String:
 		return get_nearest_street(pos)
 	dx /= len_xz
 	dz /= len_xz
-	return _query_ray(pos.x, pos.z, dx, dz)
+
+	_last_query_pos = pos
+	_last_query_forward = forward
+	_last_street_name = _query_ray(pos.x, pos.z, dx, dz)
+	return _last_street_name
 
 ## Calle más cercana al punto (sin importar dirección).
 func get_nearest_street(pos: Vector3) -> String:
@@ -134,9 +150,6 @@ func _query_ray(ox: float, oz: float, dx: float, dz: float) -> String:
 	return best_name
 
 ## Evalúa la intersección del rayo O + t*D contra el segmento acotado [A, B].
-## Si el rayo cruza la línea entre A y B, retorna exactamente la distancia t.
-## Si pasa dentro del corredor max_perp de los extremos de A y B, retorna t del extremo.
-## Retorna INF si no hay coincidencia.
 func _ray_segment_corridor(
 	ox: float, oz: float,
 	dx: float, dz: float,
@@ -168,7 +181,7 @@ func _ray_segment_corridor(
 	if t_a >= 0.0 and absf(p_a) <= max_perp:
 		min_t = minf(min_t, t_a)
 	if t_b >= 0.0 and absf(p_b) <= max_perp:
-		min_t = minf(min_t, t_a)
+		min_t = minf(min_t, t_b)
 
 	return min_t
 
