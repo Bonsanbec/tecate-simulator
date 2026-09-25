@@ -5,16 +5,13 @@ extends Node
 ## Carga street_segments.json al inicio y expone:
 ##
 ##   get_street_ahead(pos: Vector3, forward: Vector3) → String
-##     De las calles que rodean al jugador (dentro de NEARBY_RADIUS),
-##     devuelve aquella cuya línea infinita el rayo {pos + t·forward}
-##     cruzaría primero (menor t > 0).
-##     Esta es la semántica correcta para el header de brújula:
-##     "la primera barrera de calle que el jugador tiene enfrente."
+##     Determina qué calle física se encuentra enfrente del jugador en la
+##     dirección de su mirada (vector forward), evaluando la intersección
+##     del rayo de visión contra los segmentos reales de calle (acotados [A, B]).
+##     Elimina proyecciones infinitas falsas.
 ##
 ##   get_nearest_street(pos: Vector3) → String
 ##     Calle más cercana en posición, sin considerar dirección.
-##
-## El índice espacial de grilla garantiza O(k) por consulta.
 ##
 ## Registro en project.godot:
 ##   [autoload]
@@ -23,10 +20,7 @@ extends Node
 const DATA_PATH: String = "res://assets/street_segments.json"
 
 ## Radio de búsqueda alrededor del jugador (metros).
-## Sólo se consideran calles dentro de este radio; las más lejanas se ignoran.
-## ~120 m cubre 1-2 manzanas típicas de Tecate (~80-100 m de lado).
-const NEARBY_RADIUS: float = 120.0
-const NEARBY_RADIUS_SQ: float = 120.0 * 120.0
+const SEARCH_RADIUS: float = 300.0
 
 var _cell_size: float = 200.0
 var _segments: Array[Dictionary] = []
@@ -70,13 +64,13 @@ func _load_data() -> void:
 
 	_grid = parsed_dict.get("grid", {}) as Dictionary
 
-	print("[StreetNameLookup] Cargados %d segmentos, %d celdas, radio=%.0f m" % [
-		_segments.size(), _grid.size(), NEARBY_RADIUS
+	print("[StreetNameLookup] Cargados %d segmentos, %d celdas" % [
+		_segments.size(), _grid.size()
 	])
 
 # ── API pública ───────────────────────────────────────────────────────────────
 
-## Calle hacia la que apunta el jugador, entre las que lo rodean de cerca.
+## Calle hacia la que apunta el jugador (intersección real de rayo contra segmento).
 func get_street_ahead(pos: Vector3, forward: Vector3) -> String:
 	var dx: float = forward.x
 	var dz: float = forward.z
@@ -85,7 +79,7 @@ func get_street_ahead(pos: Vector3, forward: Vector3) -> String:
 		return get_nearest_street(pos)
 	dx /= len_xz
 	dz /= len_xz
-	return _query_ray_nearby(pos.x, pos.z, dx, dz)
+	return _query_ray(pos.x, pos.z, dx, dz)
 
 ## Calle más cercana al punto (sin importar dirección).
 func get_nearest_street(pos: Vector3) -> String:
@@ -96,8 +90,8 @@ func get_nearest_street_2d(x: float, z: float) -> String:
 
 # ── Internos ─────────────────────────────────────────────────────────────────
 
-func _query_ray_nearby(ox: float, oz: float, dx: float, dz: float) -> String:
-	var cr: int = int(ceil(NEARBY_RADIUS / _cell_size)) + 1
+func _query_ray(ox: float, oz: float, dx: float, dz: float) -> String:
+	var cr: int = int(ceil(SEARCH_RADIUS / _cell_size)) + 1
 	var cx0: int = int(floor(ox / _cell_size))
 	var cz0: int = int(floor(oz / _cell_size))
 
@@ -124,11 +118,8 @@ func _query_ray_nearby(ox: float, oz: float, dx: float, dz: float) -> String:
 				var x1: float = float(seg.get("x1", 0.0))
 				var z1: float = float(seg.get("z1", 0.0))
 
-				if _point_to_segment_sq(ox, oz, x0, z0, x1, z1) > NEARBY_RADIUS_SQ:
-					continue
-
-				var t: float = _ray_line_t(ox, oz, dx, dz, x0, z0, x1, z1)
-				if t < 0.0:
+				var t: float = _ray_segment_corridor(ox, oz, dx, dz, x0, z0, x1, z1, 20.0)
+				if t < 0.0 or t == INF:
 					continue
 
 				var hw_name: String = str(seg.get("hw", ""))
@@ -142,18 +133,44 @@ func _query_ray_nearby(ox: float, oz: float, dx: float, dz: float) -> String:
 		return _query_point(ox, oz)
 	return best_name
 
-func _ray_line_t(
+## Evalúa la intersección del rayo O + t*D contra el segmento acotado [A, B].
+## Si el rayo cruza la línea entre A y B, retorna exactamente la distancia t.
+## Si pasa dentro del corredor max_perp de los extremos de A y B, retorna t del extremo.
+## Retorna INF si no hay coincidencia.
+func _ray_segment_corridor(
 	ox: float, oz: float,
 	dx: float, dz: float,
 	ax: float, az: float,
-	bx: float, bz: float
+	bx: float, bz: float,
+	max_perp: float = 20.0
 ) -> float:
+	# 1. Intersección rayo vs segmento acotado [A, B]
 	var ex: float = bx - ax
 	var ez: float = bz - az
 	var det: float = dz * ex - dx * ez
-	if absf(det) < 0.0001:
-		return INF
-	return ((az - oz) * ex - (ax - ox) * ez) / det
+	if absf(det) > 0.0001:
+		var t: float = ((az - oz) * ex - (ax - ox) * ez) / det
+		var s: float = ((az - oz) * dx - (ax - ox) * dz) / det
+		if t >= 0.0 and s >= 0.0 and s <= 1.0:
+			return t
+
+	# 2. Corredor de visión (extremos de segmento dentro de max_perp)
+	var px: float = -dz
+	var pz: float = dx
+
+	var t_a: float = (ax - ox) * dx + (az - oz) * dz
+	var p_a: float = (ax - ox) * px + (az - oz) * pz
+
+	var t_b: float = (bx - ox) * dx + (bz - oz) * dz
+	var p_b: float = (bx - ox) * px + (bz - oz) * pz
+
+	var min_t: float = INF
+	if t_a >= 0.0 and absf(p_a) <= max_perp:
+		min_t = minf(min_t, t_a)
+	if t_b >= 0.0 and absf(p_b) <= max_perp:
+		min_t = minf(min_t, t_a)
+
+	return min_t
 
 func _query_point(px: float, pz: float) -> String:
 	var cx0: int = int(floor(px / _cell_size))
