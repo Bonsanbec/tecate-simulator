@@ -41,7 +41,7 @@ GLB_PATH = os.path.join(BUILDINGS_DIR, "edificio_juarez_235.glb")
 TSCN_PATH = os.path.join(BUILDINGS_DIR, "edificio_juarez_235.tscn")
 
 # Cotas Maestras
-Z_BASE = -1.30       # Zócalo basal subterráneo continuo
+Z_BASE = -2.00       # Zócalo basal subterráneo continuo extendido para absorción topográfica de 112m
 Z_GROUND = 0.00     # Cota rasante peatonal
 H_BARATERO_PB = 3.40
 H_BARATERO_N2 = 7.20
@@ -978,11 +978,6 @@ def generate_godot_tscn(tscn_path, glb_path):
 
 [ext_resource type="PackedScene" path="{glb_path}" id="1_mesh"]
 
-# ---------------------------------------------------------------------------
-# Colisionadores Analíticos BoxShape3D
-# Sincronización canónica glTF: X_godot = X_blender, Y_godot = Z_blender, Z_godot = -Y_blender
-# ---------------------------------------------------------------------------
-
 [sub_resource type="BoxShape3D" id="Box_Baratero_Frontal"]
 size = Vector3(26.50, 7.50, 16.00)
 
@@ -1000,8 +995,6 @@ size = Vector3(8.00, 4.30, 14.00)
 
 [sub_resource type="BoxShape3D" id="Box_Rodeo_Bar"]
 size = Vector3(13.50, 4.65, 16.00)
-
-# [VANO LIBRE X in [63.00, 69.50]: CERO COLISIONADORES - PASO DIÁFANO HACIA ESTACIONAMIENTO]
 
 [sub_resource type="BoxShape3D" id="Box_Hing_Kang"]
 size = Vector3(13.00, 4.65, 15.00)
@@ -1030,10 +1023,6 @@ size = Vector3(37.00, 2.50, 0.40)
 [sub_resource type="BoxShape3D" id="Box_Barda_Norte_2"]
 size = Vector3(33.00, 2.50, 0.40)
 
-# ---------------------------------------------------------------------------
-# Jerarquía del Nodo Raíz StaticBody3D
-# ---------------------------------------------------------------------------
-
 [node name="Edificio_Juarez_235" type="StaticBody3D"]
 
 [node name="ModelInstance" parent="." instance=ExtResource("1_mesh")]
@@ -1061,8 +1050,6 @@ shape = SubResource("Box_La_Fuente")
 [node name="Col_Rodeo_Bar" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56.25, 2.32, -8.00)
 shape = SubResource("Box_Rodeo_Bar")
-
-# [VANO LIBRE X in [63.00, 69.50]: CERO COLISIONADORES FRONTALES - PASO DIÁFANO]
 
 [node name="Col_Hing_Kang" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76.00, 2.32, -7.50)

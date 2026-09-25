@@ -20,14 +20,18 @@ Documento técnico de especificación morfológica, paramétrica, fenestración,
   - $\text{Eje }+Y$: Vector transversal hacia el fondo de la manzana en dirección Norte ($Y \in [0.00, 36.00\text{ m}]$).
   - $\text{Eje }+Z$: Cota de elevación vertical ($Z \in [-1.30, 13.50\text{ m}]$).
 - **Zócalo Basal Subterráneo Continuo (Protocolo Topográfico)**:
-  - Todos los muros de fachada, bardas perimetrales y medianeras descienden subterráneamente a $Z = -1.30\text{ m}$ ($Z \le -1.20\text{ m}$).
-  - Absorbe de forma hermética la pendiente natural de la vialidad hacia el cauce del río Tecate sin provocar mallas flotantes.
+  - Todos los muros de fachada, bardas perimetrales y medianeras descienden subterráneamente a $Z = -2.00\text{ m}$ ($Z \le -1.20\text{ m}$).
+  - Absorbe de forma hermética la pendiente natural de la vialidad hacia el cauce del río Tecate (desnivel de $1.27\text{ m}$ entre Cárdenas y Ortiz Rubio) sin provocar mallas flotantes.
 - **Prohibición Estricta de Banquetas Embebidas**:
   - El asset binario (`edificio_juarez_235.glb`) carece intencionalmente de banquetas, guarniciones y calzadas públicas. Las banquetas corresponden estrictamente a la capa GIS del simulador (`Roadways` y `Manzanas`).
-- **Integración en Escena Principal Godot (`godot_project/main.tscn`)**:
+- **Integración Canónica en Escena Principal Godot (`godot_project/main.tscn`)**:
   - Instancia: `[node name="Edificio_Juarez_235" parent="." instance=ExtResource("21_juarez_235")]`
   - Transformación:
-    `transform = Transform3D(0.99636, 0, 0.08524, 0, 1, 0, -0.08524, 0, 0.99636, -53.85, 398.79, 35.95)`
+    `transform = Transform3D(0.99636, 0, 0.08524, 0, 1, 0, -0.08524, 0, 0.99636, -53.85, 401.8, -35.95)`
+  - *Coordenadas de Inserción*:
+    - Origen $(X, Z) = (-53.85, -35.95)$: Vértice catastral $V39$ (esquina Poniente Av. Benito Juárez y Calle Lázaro Cárdenas). El signo negativo de $Z$ sitúa el predio correctamente en la acera norte de la calzada, internándose hacia el interior de la manzana en dirección al Callejón Libertad ($-Z$).
+    - Elevación $Y = 401.80\text{ m}$: Rasante calibrada que enrasa el acceso de La Michoacana en el extremo oriente ($Y \approx 402.03\text{ m}$) mientras el zócalo basal de $-2.00\text{ m}$ (cota $399.80\text{ m}$) sella subterráneamente el terreno en el extremo poniente ($Y \approx 400.76\text{ m}$), garantizando cero flotación en los $112.50\text{ m}$ de longitud.
+    - Orientación angular $\theta = -6.57^\circ$: Rotación de cuerpo rígido ($\det = +1.0000$) que alinea la fachada frontal con la tangente de la calle Juárez $(0.99344, -0.11438)$ y su normal hacia el sur $(0.11438, 0.99344)$.
 
 ---
 
