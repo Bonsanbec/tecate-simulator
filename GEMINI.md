@@ -29,3 +29,7 @@ Siempre que se te solicite crear, modificar, auditar o integrar un modelo 3D, ed
 
 7. **Acentuación Ortográfica Estricta**:
    - Toda documentación, reporte o mensaje al usuario en español debe contar con acentuación ortográfica completa y rigurosa.
+
+8. **Sincronización Canónica de Ejes de Profundidad glTF/Godot**:
+   - Al generar escenas `.tscn` con colisionadores analíticos para mallas exportadas vía glTF/GLB, es obligatorio aplicar la inversión de profundidad canónica $Z_{\text{godot}} = -Y_{\text{blender}}$.
+   - Verifica siempre el *bounding box* binario del archivo `.glb` exportado para certificar que los centros y extensiones de los cuerpos `BoxShape3D` coincidan milimétricamente con la geometría visual.
