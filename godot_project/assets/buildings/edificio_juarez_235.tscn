@@ -1,0 +1,147 @@
+[gd_scene load_steps=15 format=3 uid="uid://edificio_juarez_235_prod"]
+
+[ext_resource type="PackedScene" path="res://assets/buildings/edificio_juarez_235.glb" id="1_mesh"]
+
+# ---------------------------------------------------------------------------
+# Definición de Colisionadores Analíticos BoxShape3D
+# Sincronización Canónica glTF: X_godot = X_blender, Y_godot = Z_blender, Z_godot = -Y_blender
+# ---------------------------------------------------------------------------
+
+# 1. El Baratero & PRI
+[sub_resource type="BoxShape3D" id="BoxShape3D_baratero_comercial"]
+size = Vector3(26.50, 7.50, 16.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_baratero_nave_cardenas"]
+size = Vector3(26.50, 9.40, 20.00)
+
+# 2. Restaurant D'Arce
+[sub_resource type="BoxShape3D" id="BoxShape3D_darce"]
+size = Vector3(10.50, 4.30, 14.50)
+
+# 3. Local Blanco
+[sub_resource type="BoxShape3D" id="BoxShape3D_local_blanco"]
+size = Vector3(4.50, 3.80, 12.00)
+
+# 4. Dulcería La Fuente
+[sub_resource type="BoxShape3D" id="BoxShape3D_la_fuente"]
+size = Vector3(8.00, 4.30, 14.00)
+
+# 5. Bar Rodeo / Celosías
+[sub_resource type="BoxShape3D" id="BoxShape3D_rodeo_bar"]
+size = Vector3(13.50, 4.65, 16.00)
+
+# [VANO LIBRE X in [63.00, 69.50]: CERO COLISIONADORES - PASO DIÁFANO HACIA ESTACIONAMIENTO]
+
+# 6. Restaurante Hing Kang
+[sub_resource type="BoxShape3D" id="BoxShape3D_hing_kang"]
+size = Vector3(13.00, 4.65, 15.00)
+
+# 7. SKY Distribuidor
+[sub_resource type="BoxShape3D" id="BoxShape3D_sky"]
+size = Vector3(6.50, 4.10, 12.00)
+
+# 8. Local Arco Tradicional
+[sub_resource type="BoxShape3D" id="BoxShape3D_arco_tradicional"]
+size = Vector3(8.00, 4.20, 12.00)
+
+# 9. Joyería Anillos
+[sub_resource type="BoxShape3D" id="BoxShape3D_joyeria"]
+size = Vector3(5.00, 3.90, 11.00)
+
+# 10. La Michoacana y locales Ortiz Rubio
+[sub_resource type="BoxShape3D" id="BoxShape3D_michoacana"]
+size = Vector3(10.50, 4.30, 7.50)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_beauty_salon"]
+size = Vector3(8.50, 3.90, 6.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cerrajeria"]
+size = Vector3(8.50, 3.60, 8.50)
+
+# Bardas perimetrales de patio
+[sub_resource type="BoxShape3D" id="BoxShape3D_barda_norte_1"]
+size = Vector3(37.00, 2.50, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_barda_norte_2"]
+size = Vector3(33.00, 2.50, 0.40)
+
+# ---------------------------------------------------------------------------
+# Jerarquía del Nodo Raíz StaticBody3D
+# ---------------------------------------------------------------------------
+
+[node name="Edificio_Juarez_235" type="StaticBody3D"]
+
+[node name="ModelInstance" parent="." instance=ExtResource("1_mesh")]
+
+# 1. El Baratero
+[node name="Col_Baratero_Frontal" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.25, 3.75, -8.00)
+shape = SubResource("BoxShape3D_baratero_comercial")
+
+[node name="Col_Baratero_Nave" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.25, 4.70, -26.00)
+shape = SubResource("BoxShape3D_baratero_nave_cardenas")
+
+# 2. Restaurant D'Arce
+[node name="Col_Darce" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.75, 2.15, -7.25)
+shape = SubResource("BoxShape3D_darce")
+
+# 3. Local Blanco
+[node name="Col_Local_Blanco" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.25, 1.90, -6.00)
+shape = SubResource("BoxShape3D_local_blanco")
+
+# 4. Dulcería La Fuente
+[node name="Col_La_Fuente" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.50, 2.15, -7.00)
+shape = SubResource("BoxShape3D_la_fuente")
+
+# 5. Bar Rodeo
+[node name="Col_Rodeo_Bar" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56.25, 2.32, -8.00)
+shape = SubResource("BoxShape3D_rodeo_bar")
+
+# [VANO LIBRE X in [63.00, 69.50]: CERO COLISIONADORES FRONTALES - PASO DIÁFANO]
+
+# 6. Restaurante Hing Kang
+[node name="Col_Hing_Kang" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76.00, 2.32, -7.50)
+shape = SubResource("BoxShape3D_hing_kang")
+
+# 7. SKY Distribuidor
+[node name="Col_SKY" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85.75, 2.05, -6.00)
+shape = SubResource("BoxShape3D_sky")
+
+# 8. Local Arco Tradicional
+[node name="Col_Arco_Tradicional" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 93.00, 2.10, -6.00)
+shape = SubResource("BoxShape3D_arco_tradicional")
+
+# 9. Joyería Anillos
+[node name="Col_Joyeria" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 99.50, 1.95, -5.50)
+shape = SubResource("BoxShape3D_joyeria")
+
+# 10. La Michoacana y locales Ortiz Rubio
+[node name="Col_Michoacana" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 107.25, 2.15, -3.75)
+shape = SubResource("BoxShape3D_michoacana")
+
+[node name="Col_Beauty_Salon" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 108.25, 1.95, -10.50)
+shape = SubResource("BoxShape3D_beauty_salon")
+
+[node name="Col_Cerrajeria" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 108.25, 1.80, -17.75)
+shape = SubResource("BoxShape3D_cerrajeria")
+
+# Bardas perimetrales norte
+[node name="Col_Barda_Norte_1" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.00, 1.25, -36.00)
+shape = SubResource("BoxShape3D_barda_norte_1")
+
+[node name="Col_Barda_Norte_2" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85.50, 1.25, -36.00)
+shape = SubResource("BoxShape3D_barda_norte_2")

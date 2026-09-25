@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://db7572d55c7a"]
+[gd_scene load_steps=9 format=3 uid="uid://db7572d55c7a"]
 
 [ext_resource type="Script" path="res://apply_shader.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://assets/tecate2.glb" id="3_terrain"]
@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" path="res://assets/buildings/edificio_continuo_la_panza.tscn" id="16_continuo_la_panza"]
 [ext_resource type="PackedScene" path="res://assets/buildings/edificio_cardenas_33.tscn" id="17_cardenas_33"]
 [ext_resource type="PackedScene" path="res://assets/buildings/edificio_cardenas_25.tscn" id="20_cardenas_25"]
+[ext_resource type="PackedScene" path="res://assets/buildings/edificio_juarez_235.tscn" id="21_juarez_235"]
 [ext_resource type="PackedScene" path="res://systems/environment/sky_system.tscn" id="18_sky_system"]
 [ext_resource type="PackedScene" path="res://ui/start_screen.tscn" id="19_start_screen"]
 
@@ -65,6 +66,9 @@ transform = Transform3D(-0.996344, -0.005629, -0.085242, -0.00781, 0.99965, 0.02
 
 [node name="Continuo_La_Panza" parent="." instance=ExtResource("16_continuo_la_panza")]
 transform = Transform3D(-0.1077, -0.0058, 1.2462, -0.0111, 1.2508, 0.0037, -1.2461, -0.0107, -0.1077, 181.63, 400.87, 56.44)
+
+[node name="Edificio_Juarez_235" parent="." instance=ExtResource("21_juarez_235")]
+transform = Transform3D(0.99636, 0, 0.08524, 0, 1, 0, -0.08524, 0, 0.99636, -53.85, 398.79, 35.95)
 
 [node name="Nomenclatura" parent="." instance=ExtResource("12_nomenclatura")]
 
