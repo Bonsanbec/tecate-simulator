@@ -1,30 +1,39 @@
 """
 =============================================================================
 GENERADOR PROCEDURAL 3D: COMPLEJO COMERCIAL PDTE. LÁZARO CÁRDENAS 25
-(ÉPOCA: HISTÓRICO 2009 - VERSIÓN DE PRODUCCIÓN FOTORREALISTA V4.0 GROUND-TRUTH)
+(ÉPOCA: HISTÓRICO 2009 - VERSIÓN DE PRODUCCIÓN FOTORREALISTA V5.0 GROUND-TRUTH)
 =============================================================================
 Inmueble continuo Neocolonial / Colonial Californiano en Tecate, B.C.:
   - Fachada Este (Cárdenas): 13 arcos frontales continuos y 14 pilastras de laja (Longitud calibrada 67.60 m).
+  - Entablamento / arquitrabe continuo sobre arcos con capiteles moldurados de conexión.
   - Galería porticada transitable en Planta Baja (X in [0.00, 2.20 m]).
   - Cancelerías retranqueadas y locales históricos de 2009:
       Santander (1-4), La Michoacana (5-6), Escalera Central Transitable (7),
       Casa Musical Tecate (8), Óptica San Martín (9), Clínicas (10-11),
       Telas y Novedades Vero (12), Regalos Brisa (13).
-  - Planta Alta: Balcón corrido con barandales de forja negra, viguería maestra sobre
-    postes metálicos y canes tallados que sustentan la techumbre de tejas curvas.
-  - Fachada Norte (Libertad): Cajero Santander (ATM) con cancelería oscura, puertas dobles,
-    rótulo vertical rojo; 3 arcos ciegos con laja; 3 grandes ventanales superiores y panel de La Salamandra.
-  - Fachada Sur (Hidalgo): CERO BALCÓN FLOTANTE. Portal transitable abierto hacia Hidalgo en PB
-    con pilar esquinero masivo; muro sur de Regalos Brisa con 2 arcos de medio punto con dovelas de
-    ladrillo en relieve, escaparates interiores con maniquíes volumétricos de bautizo/comunión, farol colonial,
-    banco de medidores CFE, y en PA 2 grandes ventanales con rótulo 'Seguridad Comercial Tecate'.
-  - La Parrilla Restaurant Bar & Grill: Estructura envolvente en 'L' que ABRAZA el estacionamiento
-    por sus costados Este y Sur (frente norte en Libertad con espadaña misional curvilínea, porche ochavado,
-    ala este con ventanas rústicas con tejadillos de teja, y cuerpo sur aporticado con vanos calados que
-    revelan muros interiores turquesas, chimenea de extracción anclada y azotea cerrada).
-  - Explanada de estacionamiento: Patio interior confinado con rodamiento y barda poniente de La Tradición.
+  - Planta Alta: Balcón corrido con barandales de forja negra conectados a 90° en esquina norte,
+    viguería maestra sobre postes metálicos y canes tallados que sustentan la techumbre de tejas curvas.
+  - Fachada Norte (Libertad):
+      - Portal peatonal de esquina 100% diáfano y transitable.
+      - 3 arcos sobre muro Santander: 2 ciegos con zócalo de laja dorada rehundido y el 3.er arco
+        albergando el Cajero Automático Santander (ATM) con cancelería oscura, puertas dobles,
+        rótulo vertical rojo y puerta de servicio contigua.
+      - 3 grandes ventanales superiores en arco, balcón volado con ménsulas y panel de La Salamandra.
+      - Cierre testero perpendicular hermético en X = 14.50 m (cero pestañas abiertas).
+  - Fachada Sur (Hidalgo):
+      - Portal transitable abierto hacia Hidalgo en PB con pilar esquinero masivo de laja.
+      - Muro sur de Regalos Brisa con 2 arcos de medio punto con dovelas de ladrillo en relieve,
+        tímpanos macizos estucados cerrados (cero huecos negros), escaparates con maniquíes volumétricos,
+        machón de esquina sellado, farol colonial, banco de medidores CFE, y en PA 2 grandes ventanales
+        con rótulo 'Seguridad Comercial Tecate'.
+  - La Parrilla Restaurant Bar & Grill: Estructura envolvente en 'L' que ABRAZA el estacionamiento:
+      - Frente norte en Libertad con espadaña misional curvilínea y porche ochavado.
+      - Ala este con 3 ventanas rústicas con tejadillos de teja y losa de azotea hermética continua.
+      - Cuerpo sur aporticado con vanos calados que revelan muros interiores turquesas, chimenea anclada.
+  - Explanada de estacionamiento: Firme confinado con barda poniente de La Tradición y rótulos orientados
+    correctamente hacia el patio (rot_barda_tradicion = Euler(90°, -90°, 0°)).
   - Shaders PBR nativos con coordenadas UV en todas las mallas para compatibilidad plena glTF 2.0 y Godot 4.
-  - Física analítica 1:1 en Godot 4 (.tscn) con cero barreras invisibles ni cajas perpendiculares fantasma.
+  - Física analítica 1:1 en Godot 4 (.tscn) con cero barreras invisibles.
 =============================================================================
 """
 
@@ -189,7 +198,7 @@ def add_sloped_roof_hip(bm, x_eave, x_ridge, y_start, y_end, z_eave, z_ridge, hi
     v_soff_rl = bm.verts.new((x_ridge, y0_ridge, z_ridge - 0.14))
 
     bm.faces.new((v_soff_l, v_soff_rl, v_soff_rr, v_soff_r))
-    bm.faces.new((v_eave_l, v_soff_l, v_soff_r, v_eave_r)) # Fascia frontal
+    bm.faces.new((v_eave_l, v_soff_l, v_soff_r, v_eave_r))
 
 def add_sloped_roof_hip_end(bm, x_eave_front, x_ridge, y_eave_end, y_ridge_hip, z_eave, z_ridge, is_north=True):
     """Construye el faldón inclinado de cierre testero (hip end) en Norte o Sur."""
@@ -326,7 +335,6 @@ def make_pbr(name, base_color, roughness=0.85, metallic=0.0, alpha=1.0, tex_pref
 
 def create_materials():
     mats = {}
-    # Estructura principal
     mats["estuco_ocre"] = make_pbr("M_Estuco_Ocre_Colonial", (0.84, 0.79, 0.70), roughness=0.88, tex_prefix="hotel_tecate_stucco", use_tex_albedo=False)
     mats["pilastra_laja"] = make_pbr("M_Piedra_Laja_Pilastras", (0.75, 0.62, 0.45), roughness=0.90, tex_prefix="kiosko_laja")
     mats["ladrillo_dovelas"] = make_pbr("M_Ladrillo_Dovelas_Arcos", (0.55, 0.28, 0.20), roughness=0.85, tex_prefix="kiosko_ladrillo")
@@ -337,8 +345,8 @@ def create_materials():
     mats["zocalo_basal"] = make_pbr("M_Zocalo_Basal_Enterrado", (0.12, 0.13, 0.14), roughness=0.95)
     mats["concreto_losa"] = make_pbr("M_Concreto_Fascia_Terraza", (0.86, 0.84, 0.80), roughness=0.60)
     mats["vidrio_comercial"] = make_pbr("M_Vidrio_Comercial", (0.82, 0.88, 0.92), roughness=0.08, alpha=0.35)
-    mats["vidrio_oscuro"] = make_pbr("M_Vidrio_Oscuro_ATM", (0.12, 0.13, 0.15), roughness=0.10, alpha=0.85)
-    mats["aluminio_negro"] = make_pbr("M_Aluminio_Negro_Canceles", (0.10, 0.10, 0.10), roughness=0.30, metallic=0.80)
+    mats["vidrio_oscuro"] = make_pbr("M_Vidrio_Oscuro_ATM", (0.10, 0.11, 0.13), roughness=0.10, alpha=0.90)
+    mats["aluminio_negro"] = make_pbr("M_Aluminio_Negro_Canceles", (0.08, 0.08, 0.08), roughness=0.30, metallic=0.85)
     mats["aluminio_blanco"] = make_pbr("M_Aluminio_Blanco", (0.95, 0.95, 0.95), roughness=0.25, metallic=0.50)
     mats["persianas_blancas"] = make_pbr("M_Persianas_Verticales", (0.92, 0.92, 0.92), roughness=0.60)
     mats["azotea_asfalto"] = make_pbr("M_Azotea_Asfalto", (0.20, 0.20, 0.22), roughness=0.92)
@@ -404,7 +412,7 @@ def create_materials():
 # ---------------------------------------------------------------------------
 
 def build_front_cardenas(mats, col):
-    """Construye las 13 crujías frontales sobre Pdte. Lázaro Cárdenas (Longitud calibrada 67.60 m)."""
+    """Construye las 13 crujías frontales sobre Pdte. Lázaro Cárdenas con entablamento y capiteles."""
     objects = []
     bay_count = 13
     total_y = 67.60
@@ -419,42 +427,60 @@ def build_front_cardenas(mats, col):
     obj_zocalo = create_mesh_object("Cardenas_Zocalo_Basal_Enterrado", bm_zocalo, mats["zocalo_basal"], col)
     objects.append(obj_zocalo)
 
-    # B. 14 PILASTRAS DE MAMPOSTERÍA DE LAJA DORADA (Z in [0.00, 2.35 m])
+    # B. 14 PILASTRAS DE MAMPOSTERÍA DE LAJA DORADA CON CAPITELES MOLDURADOS
     bm_pil = bmesh.new()
     for i in range(bay_count + 1):
         yc = i * bay_w
         y1 = max(0.00, yc - pilar_w * 0.5)
         y2 = min(total_y, yc + pilar_w * 0.5)
-        # Fuste principal de laja con zócalo saliente
+        # Fuste de laja
         add_box(bm_pil, -0.02, pilar_d + 0.02, y1 - 0.02, y2 + 0.02, 0.00, 1.40)
-        # Coronación de laja moldurada
+        # Moldura de transición
         add_box(bm_pil, -0.04, pilar_d + 0.04, y1 - 0.04, y2 + 0.04, 1.40, 1.48)
         # Fuste superior estucado
-        add_box(bm_pil, 0.00, pilar_d, y1, y2, 1.48, 2.35)
-        # Capitel de arranque de arco
-        add_box(bm_pil, -0.05, pilar_d + 0.05, y1 - 0.04, y2 + 0.04, 2.35, 2.45)
+        add_box(bm_pil, 0.00, pilar_d, y1, y2, 1.48, 2.45)
+        # CAPITEL TOXANO / ÁBACO DE ARRANQUE QUE CONECTA CON DOVELAS Y ENTABLAMENTO
+        add_box(bm_pil, -0.06, pilar_d + 0.06, y1 - 0.06, y2 + 0.06, 2.45, 2.58)
     obj_pil = create_mesh_object("Cardenas_14_Pilastras_Laja", bm_pil, mats["pilastra_laja"], col, uv_scale=0.8)
     objects.append(obj_pil)
 
-    # C. 13 ARCOS REBAJADOS CON DOVELAS DE LADRILLO EN RELIEVE REAL Y ENJUTAS (Z in [2.35, 3.60 m])
+    # C. 13 ARCOS REBAJADOS CON DOVELAS DE LADRILLO EN RELIEVE REAL Y ENJUTAS (Z in [2.50, 3.55 m])
     bm_arcos = bmesh.new()
     bm_dovelas = bmesh.new()
+    bm_entablamento = bmesh.new()
+
     for i in range(bay_count):
         y_start = i * bay_w + pilar_w * 0.5
         y_end = (i + 1) * bay_w - pilar_w * 0.5
-        add_arch_spandrel(bm_arcos, 0.00, pilar_d, y_start, y_end, 2.45, 3.25, 3.60, segments=16)
+        add_arch_spandrel(bm_arcos, 0.00, pilar_d, y_start, y_end, 2.50, 3.30, 3.55, segments=16)
         # Rosca de dovelas de ladrillo con resalte volumétrico de 5 cm hacia la calle
-        add_arch_spandrel(bm_dovelas, -0.05, 0.00, y_start, y_end, 2.45, 3.25, 3.52, segments=16)
+        add_arch_spandrel(bm_dovelas, -0.05, 0.00, y_start, y_end, 2.50, 3.30, 3.48, segments=16)
+
+    # ENTABLAMENTO / ARQUITRABE CONTINUO QUE VINCULA PILASTRAS Y ARCOS CON LA LOSA DEL BALCÓN
+    add_box(bm_entablamento, -0.08, pilar_d + 0.05, 0.00, total_y, 3.45, 3.65)
+    # Cornisa de coronación bajo balcón
+    add_box(bm_entablamento, -0.10, pilar_d + 0.06, 0.00, total_y, 3.58, 3.65)
 
     obj_arcos = create_mesh_object("Cardenas_13_Arcos_Enjutas", bm_arcos, mats["estuco_ocre"], col)
     obj_dov = create_mesh_object("Cardenas_13_Arcos_DovelasLadrillo", bm_dovelas, mats["ladrillo_dovelas"], col, uv_scale=1.2)
-    objects.extend([obj_arcos, obj_dov])
+    obj_ent = create_mesh_object("Cardenas_Entablamento_Arquitrabe", bm_entablamento, mats["concreto_losa"], col)
+    objects.extend([obj_arcos, obj_dov, obj_ent])
 
-    # D. GALERÍA PORTICADA: FIRME DE TERRACOTA Y TECHO DE VIGAS (X in [0.00, 2.20 m])
+    # D. GALERÍA PORTICADA: FIRME DE TERRACOTA Y CIELO / VIGUERÍA DE TECHO (X in [0.00, 2.20 m])
     bm_piso = bmesh.new()
     add_box(bm_piso, 0.00, 2.20, 0.00, total_y, 0.00, 0.06)
     obj_piso = create_mesh_object("Cardenas_Portal_Piso_Terracota", bm_piso, mats["piso_terracota"], col, uv_scale=1.5)
     objects.append(obj_piso)
+
+    bm_cielo = bmesh.new()
+    # Plafón cerrado continuo bajo el balcón (elimina huecos vistos desde abajo)
+    add_box(bm_cielo, pilar_d, 2.20, 0.00, total_y, 3.45, 3.55)
+    # Vigas transversales de madera bajo el portal
+    for i in range(bay_count + 1):
+        yc = i * bay_w
+        add_box(bm_cielo, pilar_d - 0.02, 2.18, yc - 0.10, yc + 0.10, 3.32, 3.48)
+    obj_cie = create_mesh_object("Cardenas_Portal_Cielo_Vigas", bm_cielo, mats["madera_canes"], col)
+    objects.append(obj_cie)
 
     # E. CANCELERÍAS RETRANQUEADAS Y FACHADA COMERCIAL INTERIOR (X = 2.20 m)
     bm_canceles = bmesh.new()
@@ -483,25 +509,21 @@ def build_front_cardenas(mats, col):
             continue
 
         # Muro base y cancelería comercial en X = 2.20 m
-        add_box(bm_canceles, 2.15, 2.28, y_bay1, y_bay2, 0.00, 0.40) # Murete
-        add_box(bm_canceles, 2.15, 2.28, y_bay1, y_bay2, 3.20, 3.60) # Dintel
+        add_box(bm_canceles, 2.15, 2.28, y_bay1, y_bay2, 0.00, 0.40)
+        add_box(bm_canceles, 2.15, 2.28, y_bay1, y_bay2, 3.20, 3.65) # Dintel
         add_box(bm_canceles, 2.15, 2.28, y_bay1, y_bay1 + 0.40, 0.40, 3.20)
         add_box(bm_canceles, 2.15, 2.28, y_bay2 - 0.40, y_bay2, 0.40, 3.20)
 
-        # Bastidor de puertas y canceles centrales
         add_box(bm_canceles, 2.16, 2.26, y_mid - 0.05, y_mid + 0.05, 0.40, 3.20)
         add_box(bm_canceles, 2.16, 2.26, y_bay1 + 0.40, y_bay2 - 0.40, 2.15, 2.22)
 
-        # Vidrios comerciales transparentes con reflexión
         add_box(bm_vidrio, 2.18, 2.22, y_bay1 + 0.45, y_mid - 0.06, 0.45, 3.15)
         add_box(bm_vidrio, 2.18, 2.22, y_mid + 0.06, y_bay2 - 0.45, 0.45, 3.15)
 
-        # Persianas en Santander (Arcos 1 a 4)
         if i in [0, 1, 2, 3]:
             add_box(bm_persianas, 2.23, 2.25, y_bay1 + 0.50, y_mid - 0.10, 0.50, 3.10)
             add_box(bm_persianas, 2.23, 2.25, y_mid + 0.10, y_bay2 - 0.50, 0.50, 3.10)
 
-        # Mural de Casa Musical Tecate (Arco 8, Y in [36.4, 41.6])
         if i == 7:
             add_box(bm_murales, 2.23, 2.26, y_mid - 1.20, y_mid + 1.20, 0.80, 2.60)
 
@@ -512,7 +534,7 @@ def build_front_cardenas(mats, col):
     objects.extend([obj_can, obj_vid, obj_per, obj_mur])
 
     # F. RÓTULOS COMERCIALES HISTÓRICOS DE PLANTA BAJA (2009)
-    # Santander: Caja de luz roja en marquesina (Arcos 2 y 3, Y in [5.20, 15.60])
+    # Santander
     bm_sant = bmesh.new()
     add_box(bm_sant, -0.15, 0.12, 7.00, 13.80, 3.30, 3.90)
     obj_sant = create_mesh_object("Santander_Caja_Rojo", bm_sant, mats["santander_rojo"], col)
@@ -520,7 +542,7 @@ def build_front_cardenas(mats, col):
     t_sant = add_3d_text("Santander_Txt", "Santander", 0.44, 0.03, (-0.18, 10.40, 3.60), rot_cardenas, mats["santander_blanco"], col)
     objects.append(t_sant)
 
-    # La Michoacana: Fascia entrepiso sobre Arcos 5 y 6 (Y in [20.80, 31.20])
+    # La Michoacana
     bm_mich = bmesh.new()
     add_box(bm_mich, -0.10, 0.08, 21.50, 30.50, 3.30, 3.85)
     obj_mich = create_mesh_object("Michoacana_Panel_Fascia", bm_mich, mats["michoacana_blanco"], col)
@@ -529,7 +551,7 @@ def build_front_cardenas(mats, col):
     t_m2 = add_3d_text("Michoacana_Txt_Sub", "PALETERIA  Y  NEVERIA", 0.20, 0.02, (-0.12, 26.00, 3.42), rot_cardenas, mats["michoacana_azul"], col)
     objects.extend([t_m1, t_m2])
 
-    # Casa Musical Tecate: Rótulo sobre Arco 8
+    # Casa Musical Tecate
     bm_mus = bmesh.new()
     add_box(bm_mus, -0.08, 0.06, 37.00, 41.00, 3.00, 3.45)
     obj_mus = create_mesh_object("CasaMusical_Panel", bm_mus, mats["casa_musical_amarillo"], col)
@@ -537,7 +559,7 @@ def build_front_cardenas(mats, col):
     t_mus = add_3d_text("CasaMusical_Txt", "GUITARRAS\nCASA MUSICAL TECATE", 0.20, 0.025, (-0.10, 39.00, 3.22), rot_cardenas, mats["casa_musical_letras"], col)
     objects.append(t_mus)
 
-    # Óptica San Martín: Rótulo sobre Arco 9
+    # Óptica San Martín
     bm_opt = bmesh.new()
     add_box(bm_opt, -0.40, 0.05, 43.00, 45.60, 3.25, 3.70)
     obj_opt = create_mesh_object("Optica_Caja_Bandera", bm_opt, mats["optica_blanco"], col)
@@ -545,11 +567,11 @@ def build_front_cardenas(mats, col):
     t_opt = add_3d_text("Optica_Txt", "OPTICA\nSAN MARTIN", 0.18, 0.02, (-0.42, 44.30, 3.45), rot_cardenas, mats["optica_azul"], col)
     objects.append(t_opt)
 
-    # Consultorios: Rótulo sobre Arco 10
+    # Consultorios
     t_dent = add_3d_text("Dentista_Txt", "DENTISTA / GINECOLOGA", 0.20, 0.02, (2.16, 49.40, 3.15), rot_cardenas, mats["clinica_azul"], col)
     objects.append(t_dent)
 
-    # Telas y Novedades Vero: Rótulo sobre Arco 12
+    # Telas y Novedades Vero
     bm_vero = bmesh.new()
     add_box(bm_vero, -0.08, 0.06, 57.50, 62.00, 3.30, 3.85)
     obj_vero = create_mesh_object("TelasVero_Panel", bm_vero, mats["brisa_blanco"], col)
@@ -558,7 +580,7 @@ def build_front_cardenas(mats, col):
     t_v2 = add_3d_text("TelasVero_Txt2", "VERO", 0.32, 0.03, (-0.10, 59.75, 3.42), rot_cardenas, mats["telas_vero_celeste"], col)
     objects.extend([t_v1, t_v2])
 
-    # Regalos Brisa: Rótulo monumental sobre Arco 13
+    # Regalos Brisa
     bm_brisa = bmesh.new()
     add_box(bm_brisa, -0.12, 0.10, 62.80, 67.40, 3.30, 3.95)
     obj_brisa = create_mesh_object("RegalosBrisa_Panel", bm_brisa, mats["brisa_blanco"], col)
@@ -567,16 +589,16 @@ def build_front_cardenas(mats, col):
     t_b2 = add_3d_text("Brisa_Txt2", "ROPA DE BAUTIZO • RECUERDOS • RAMOS • PRIMERA COMUNION", 0.12, 0.015, (-0.14, 65.10, 3.45), rot_cardenas, mats["brisa_azul"], col)
     objects.extend([t_b1, t_b2])
 
-    # G. PLANTA ALTA: TERRAZA TRANSITABLE Y VENTANALES (Z in [3.60, 6.40 m])
+    # G. PLANTA ALTA: TERRAZA TRANSITABLE Y VENTANALES (Z in [3.60, 6.45 m])
     bm_terraza = bmesh.new()
     add_box(bm_terraza, 0.00, 2.20, 0.00, total_y, 3.55, 3.65)
-    add_box(bm_terraza, -0.08, 0.02, 0.00, total_y, 3.50, 3.68) # Sardinel
+    add_box(bm_terraza, -0.08, 0.02, 0.00, total_y, 3.50, 3.68)
     obj_ter = create_mesh_object("Cardenas_Terraza_Piso", bm_terraza, mats["concreto_losa"], col)
     objects.append(obj_ter)
 
     bm_barandal = bmesh.new()
-    add_box(bm_barandal, -0.03, 0.03, 0.00, total_y, 4.55, 4.60) # Pasamanos
-    add_box(bm_barandal, -0.02, 0.02, 0.00, total_y, 3.68, 3.72) # Pletina
+    add_box(bm_barandal, -0.03, 0.03, 0.00, total_y, 4.55, 4.60)
+    add_box(bm_barandal, -0.02, 0.02, 0.00, total_y, 3.68, 3.72)
     for i in range(int(total_y / 0.15)):
         y_bar = i * 0.15
         add_box(bm_barandal, -0.012, 0.012, y_bar - 0.012, y_bar + 0.012, 3.70, 4.55)
@@ -596,10 +618,10 @@ def build_front_cardenas(mats, col):
         y_v1 = y_mid - w_van * 0.5
         y_v2 = y_mid + w_van * 0.5
 
-        add_box(bm_muro_pa, 2.15, 2.30, y_bay1, y_v1, 3.65, 6.40)
-        add_box(bm_muro_pa, 2.15, 2.30, y_v2, y_bay2, 3.65, 6.40)
-        add_box(bm_muro_pa, 2.15, 2.30, y_v1, y_v2, 3.65, 4.35) # Antepecho
-        add_box(bm_muro_pa, 2.15, 2.30, y_v1, y_v2, 6.05, 6.40) # Dintel
+        add_box(bm_muro_pa, 2.15, 2.30, y_bay1, y_v1, 3.65, 6.45)
+        add_box(bm_muro_pa, 2.15, 2.30, y_v2, y_bay2, 3.65, 6.45)
+        add_box(bm_muro_pa, 2.15, 2.30, y_v1, y_v2, 3.65, 4.35)
+        add_box(bm_muro_pa, 2.15, 2.30, y_v1, y_v2, 6.05, 6.45)
 
         add_box(bm_vidrio_pa, 2.18, 2.22, y_v1, y_v2, 4.35, 6.00)
         add_arch_spandrel(bm_arcos_pa, 2.14, 2.26, y_v1, y_v2, 5.30, 6.00, 6.15, segments=12)
@@ -609,12 +631,10 @@ def build_front_cardenas(mats, col):
     obj_apa = create_mesh_object("Cardenas_Arcos_Ladrillo_PA", bm_arcos_pa, mats["ladrillo_dovelas"], col, uv_scale=1.2)
     objects.extend([obj_mpa, obj_vpa, obj_apa])
 
-    # Rótulos en Planta Alta (2009)
-    # Se Renta (Arco 2)
+    # Rótulos en Planta Alta
     t_rent = add_3d_text("SeRenta_Txt", "SE RENTA\n654-79-88", 0.26, 0.02, (2.14, 7.80, 5.20), rot_cardenas, mats["telas_vero_rojo"], col)
     objects.append(t_rent)
 
-    # Grupo Siesa Guardias (Arco 3)
     bm_sie1 = bmesh.new()
     add_box(bm_sie1, 2.13, 2.17, 11.20, 14.60, 4.80, 5.60)
     obj_sie1 = create_mesh_object("Siesa1_Panel", bm_sie1, mats["siesa_azul"], col)
@@ -622,7 +642,6 @@ def build_front_cardenas(mats, col):
     t_sie1 = add_3d_text("Siesa1_Txt", "GRUPO SIESA\nSOLICITA GUARDIAS", 0.20, 0.02, (2.12, 12.90, 5.20), rot_cardenas, mats["siesa_dorado"], col)
     objects.append(t_sie1)
 
-    # Grupo Siesa CCTV (Arco 4)
     bm_sie2 = bmesh.new()
     add_box(bm_sie2, 2.13, 2.17, 16.40, 19.80, 4.80, 5.60)
     obj_sie2 = create_mesh_object("Siesa2_Panel", bm_sie2, mats["siesa_azul"], col)
@@ -630,7 +649,6 @@ def build_front_cardenas(mats, col):
     t_sie2 = add_3d_text("Siesa2_Txt", "GRUPO SIESA\nVIDEOPORTEROS / CCTV", 0.20, 0.02, (2.12, 18.10, 5.20), rot_cardenas, mats["siesa_dorado"], col)
     objects.append(t_sie2)
 
-    # Calavera Tattoo Studio (Arco 12)
     bm_cal = bmesh.new()
     add_box(bm_cal, 2.13, 2.17, 58.20, 61.60, 4.80, 5.60)
     obj_cal = create_mesh_object("Calavera_Panel", bm_cal, mats["calavera_negro"], col)
@@ -644,16 +662,12 @@ def build_front_cardenas(mats, col):
     bm_canes = bmesh.new()
     bm_techo = bmesh.new()
 
-    # 14 Columnas de acero que suben desde el barandal hasta la trabe
     for i in range(bay_count + 1):
         yc = i * bay_w
         add_box(bm_postes, 0.02, 0.10, yc - 0.04, yc + 0.04, 3.65, 6.45)
 
-    # Trabe maestra continua que une los postes en la arista de la terraza
     add_box(bm_trabe, 0.00, 0.12, 0.00, total_y, 6.35, 6.50)
 
-    # Canes de madera tallada: apoyados en la trabe maestra y empotrados en el muro de PA
-    # Voladizo hacia la calle hasta X = -0.70 m (CERO vigas flotando en el aire)
     for i in range(int(total_y / 0.65)):
         yc = i * 0.65
         add_box(bm_canes, -0.70, 2.25, yc - 0.06, yc + 0.06, 6.32, 6.46)
@@ -663,17 +677,19 @@ def build_front_cardenas(mats, col):
     obj_cns = create_mesh_object("Cardenas_Canes_Madera", bm_canes, mats["madera_canes"], col)
     objects.extend([obj_pst, obj_trb, obj_cns])
 
-    # Cubierta de tejas curvas coloniales con remate a cuatro aguas
     add_sloped_roof_hip(bm_techo, -0.70, 3.00, -0.70, total_y + 0.70, 6.46, 7.45, hip_y_start=-0.70, hip_y_end=total_y + 0.70)
     add_teja_ribs(bm_techo, -0.70, 3.00, -0.70, total_y + 0.70, 6.46, 7.45, spacing=0.45, hip_y_start=-0.70, hip_y_end=total_y + 0.70)
     obj_tch = create_mesh_object("Cardenas_Techo_Tejas_Colonial", bm_techo, mats["teja_colonial"], col, uv_scale=1.5)
     objects.append(obj_tch)
 
-    # Cubierta plana hermética de azotea principal (X in [3.00, 11.20 m])
+    # Cubierta plana hermética de azotea principal
     bm_azot = bmesh.new()
-    add_box(bm_azot, 2.20, 11.20, 0.00, total_y, 6.30, 6.45) # Losa maciza
-    add_box(bm_azot, 11.00, 11.35, 0.00, total_y, 6.45, 6.85) # Pretil trasero
-    # 4 Tinacos cilíndricos de azotea
+    add_box(bm_azot, 2.20, 11.20, 0.00, total_y, 6.30, 6.45)
+    add_box(bm_azot, 11.00, 11.35, 0.00, total_y, 6.45, 6.85)
+    # Losa de azotea y pretiles para la crujía de Santander en Libertad (X in [11.20, 14.50 m])
+    add_box(bm_azot, 11.20, 14.50, 0.00, 4.50, 6.30, 6.45)
+    add_box(bm_azot, 14.35, 14.65, 0.00, 4.50, 6.45, 6.85)
+    add_box(bm_azot, 11.20, 14.50, 4.35, 4.65, 6.45, 6.85)
     for tin_y in [10.0, 26.0, 42.0, 60.0]:
         add_box(bm_azot, 5.00, 6.40, tin_y - 0.70, tin_y + 0.70, 6.45, 7.95)
     obj_az = create_mesh_object("Cardenas_Azotea_Asfalto_Tinacos", bm_azot, mats["azotea_asfalto"], col)
@@ -686,7 +702,13 @@ def build_front_cardenas(mats, col):
 # ---------------------------------------------------------------------------
 
 def build_north_libertad_facade(mats, col):
-    """Construye la fachada norte sobre Callejón Libertad con balcón corrido, ATM Santander y 3 arcos."""
+    """
+    Construye la fachada norte sobre Callejón Libertad:
+      - Portal peatonal de esquina 100% abierto y transitable.
+      - 3 arcos sobre muro Santander: 2 ciegos rehundidos y 3.er arco con Cajero Automático Santander (ATM).
+      - Barandales conectados a 90° en esquina norte sin solución de continuidad.
+      - Cierre perpendicular testero hermético en X = 14.50 m (cero pestañas abiertas).
+    """
     objects = []
     rot_north = (math.radians(90.0), 0.0, 0.0)
 
@@ -696,54 +718,91 @@ def build_north_libertad_facade(mats, col):
     bm_techo_n = bmesh.new()
     bm_balcon = bmesh.new()
 
-    x_cardenas_end = 14.50 # Límite del edificio Cárdenas 25 en Libertad
+    # 1. PLANTA BAJA: PORTAL DE ESQUINA ABIERTO Y MURO DE 3 ARCOS EN SANTANDER
+    # A. Vano peatonal abierto de esquina: X in [0.65, 2.20 m], Y = 0.00 m
+    # Sobre este vano hay un arco que vincula el pilar esquinero con el muro de Santander
+    add_arch_spandrel_x(bm_muro, -0.15, 0.15, 0.65, 2.20, 2.45, 3.25, 3.65, segments=10)
 
-    # 1. PLANTA BAJA: Muro base con arcos calados (X in [0.00, 14.50 m], Y = 0.00 m)
-    add_box(bm_muro, 0.00, 14.50, -0.15, 0.20, 0.00, 0.40) # Zócalo
-    add_box(bm_muro, 0.00, 14.50, -0.15, 0.20, 3.30, 3.65) # Dintel entrepiso
+    # B. Muro de Santander a lo largo de Libertad (X in [2.20, 14.50 m], Y = 0.00 m)
+    # Zócalo y dintel continuo
+    add_box(bm_muro, 2.20, 14.50, -0.15, 0.20, 0.00, 0.40)
+    add_box(bm_muro, 2.20, 14.50, -0.15, 0.20, 3.30, 3.65)
 
-    # Arcos 1 y 2: Ciegos con zócalo de laja dorada (X in [0.40, 4.40] y [4.80, 8.80])
-    for i in range(2):
-        x1 = i * 4.40 + 0.40
-        x2 = (i + 1) * 4.40 - 0.20
-        add_arch_spandrel_x(bm_ladrillo, -0.18, -0.12, x1, x2, 2.30, 3.05, 3.30, segments=12)
-        add_box(bm_muro, x1, x2, -0.16, -0.13, 0.40, 1.20) # Murete de laja
-        add_box(bm_muro, x1, x2, -0.15, -0.14, 1.20, 2.30) # Paño ciego estucado
+    # 3 Pilastras de mampostería de laja dorada que delimitan los 3 arcos
+    # Pilastra 1: X in [5.60, 6.25 m]
+    # Pilastra 2: X in [9.65, 10.30 m]
+    # Pilastra 3 (esquina poniente): X in [13.85, 14.50 m]
+    for x_p1, x_p2 in [(5.60, 6.25), (9.65, 10.30), (13.85, 14.50)]:
+        add_box(bm_muro, x_p1, x_p2, -0.18, 0.22, 0.00, 1.40) # Laja
+        add_box(bm_muro, x_p1 - 0.02, x_p2 + 0.02, -0.20, 0.24, 1.40, 1.48) # Moldura
+        add_box(bm_muro, x_p1, x_p2, -0.16, 0.20, 1.48, 2.45) # Estuco
+        add_box(bm_muro, x_p1 - 0.03, x_p2 + 0.03, -0.19, 0.23, 2.45, 2.58) # Capitel
 
-    # Arco 3 (Cajero Automático Santander - ATM, X in [9.00, 13.80 m]):
-    add_arch_spandrel_x(bm_ladrillo, -0.18, -0.12, 9.00, 13.80, 2.30, 3.05, 3.30, segments=14)
-    # Cancelería de perfiles negros y vidrio oscuro
-    add_box(bm_atm, 9.10, 12.60, -0.16, -0.12, 0.00, 2.55)
-    # Placa / rótulo vertical rojo Santander en pilastra
-    add_box(bm_atm, 8.95, 9.15, -0.18, -0.14, 0.80, 2.45)
-    # Puerta de servicio metálica gris junto al callejón
-    add_box(bm_muro, 12.65, 13.75, -0.16, -0.13, 0.00, 2.40)
+    # Arcos 1 y 2: Ciegos con nicho rehundido y zócalo de laja (X in [2.20, 5.60 m] y [6.25, 9.65 m])
+    for x1, x2 in [(2.20, 5.60), (6.25, 9.65)]:
+        # Dovelas de ladrillo visto en relieve de 5 cm
+        add_arch_spandrel_x(bm_ladrillo, -0.20, -0.14, x1, x2, 2.30, 3.05, 3.30, segments=14)
+        # Nicho rehundido interior
+        add_box(bm_muro, x1, x2, -0.08, 0.12, 0.40, 0.95) # Zócalo bajo de laja
+        add_box(bm_muro, x1, x2, -0.06, 0.10, 0.95, 2.50) # Paño ciego estucado con pátina
+        # Tímpano macizo
+        add_box(bm_muro, x1, x2, -0.08, 0.12, 2.50, 3.30)
 
-    # 2. PLANTA ALTA: BALCÓN CORRIDO DIÁFANO SOBRE CALLEJÓN LIBERTAD
+    # Arco 3 (Cajero Automático Santander - ATM, X in [10.30, 13.85 m]):
+    add_arch_spandrel_x(bm_ladrillo, -0.20, -0.14, 10.30, 13.85, 2.30, 3.05, 3.30, segments=14)
+    # Tímpano ciego superior sobre cancelería
+    add_box(bm_muro, 10.30, 13.85, -0.06, 0.10, 2.55, 3.30)
+
+    # Cancelería de perfiles de aluminio negro y doble puerta acristalada oscura
+    add_box(bm_atm, 10.40, 12.80, -0.12, -0.06, 0.00, 2.55) # Vidriería oscura
+    add_box(bm_muro, 10.38, 12.82, -0.14, -0.04, 2.50, 2.55) # Dintel negro
+    # Tiradores verticales metálicos en puertas
+    add_box(bm_atm, 11.55, 11.58, -0.16, -0.13, 0.85, 1.45)
+    add_box(bm_atm, 11.62, 11.65, -0.16, -0.13, 0.85, 1.45)
+    # Rótulo vertical rojo Santander 'CAJERO AUTOMÁTICO'
+    add_box(bm_atm, 10.32, 10.48, -0.18, -0.13, 0.60, 2.45)
+    # Puerta metálica de servicio contigua en X in [12.85, 13.75 m]
+    add_box(bm_muro, 12.85, 13.75, -0.10, 0.00, 0.00, 2.30)
+    add_box(bm_muro, 12.80, 13.80, -0.12, 0.02, 2.30, 2.40) # Marco
+
+    # 2. PLANTA ALTA: BALCÓN CORRIDO CON BARANDALES CONECTADOS A 90°
     # Losa de piso en voladizo (X in [0.00, 14.50 m], Y in [-1.20, 0.00 m])
     add_box(bm_balcon, 0.00, 14.50, -1.20, 0.00, 3.55, 3.65)
-    add_box(bm_balcon, 0.00, 14.50, -1.25, -1.18, 3.50, 3.68) # Sardinel
+    add_box(bm_balcon, 0.00, 14.50, -1.25, -1.18, 3.50, 3.68) # Sardinel norte
+    add_box(bm_balcon, -0.08, 0.02, -1.25, 0.00, 3.50, 3.68) # Sardinel poniente esquina
 
-    # Ménsulas de concreto que sustentan el balcón volado (CERO voladizo flotando)
+    # Ménsulas estructurales de concreto bajo el balcón volado
     for im in range(7):
         xm = 1.00 + im * 2.10
         add_box(bm_muro, xm - 0.12, xm + 0.12, -1.15, 0.10, 3.10, 3.55)
 
-    # Barandal de herrería de forja negra corrida en Y = -1.20 m
+    # Barandal corrido de forja negra a lo largo de Libertad (Y = -1.20 m)
     add_box(bm_balcon, 0.00, 14.50, -1.22, -1.18, 4.55, 4.60) # Pasamanos
-    add_box(bm_balcon, 0.00, 14.50, -1.21, -1.19, 3.68, 3.72) # Pletina
+    add_box(bm_balcon, 0.00, 14.50, -1.21, -1.19, 3.68, 3.72) # Pletina inferior
     for i in range(int(14.50 / 0.15)):
         xb = i * 0.15
         add_box(bm_balcon, xb - 0.012, xb + 0.012, -1.21, -1.19, 3.70, 4.55)
 
+    # UNIÓN A 90° DE BARANDALES EN LA ESQUINA NORTE (conecta Y=0 con Y=-1.20 en X=0)
+    add_box(bm_balcon, -0.02, 0.02, -1.20, 0.00, 4.55, 4.60) # Pasamanos de esquina
+    add_box(bm_balcon, -0.015, 0.015, -1.20, 0.00, 3.68, 3.72) # Pletina inferior
+    for i in range(int(1.20 / 0.15)):
+        yb = -i * 0.15
+        add_box(bm_balcon, -0.012, 0.012, yb - 0.012, yb + 0.012, 3.70, 4.55)
+
     # 3 grandes ventanales superiores en arco sobre el muro de PA (Y = 0.00 m)
-    add_box(bm_muro, 0.00, 14.50, -0.15, 0.15, 3.65, 4.30) # Antepecho
-    add_box(bm_muro, 0.00, 14.50, -0.15, 0.15, 6.10, 6.45) # Dintel superior
+    add_box(bm_muro, 0.00, 14.50, -0.15, 0.15, 3.65, 4.30)
+    add_box(bm_muro, 0.00, 14.50, -0.15, 0.15, 6.10, 6.45)
     for i in range(3):
         x1 = i * 4.40 + 0.60
         x2 = (i + 1) * 4.40 - 0.40
         add_arch_spandrel_x(bm_ladrillo, -0.16, -0.12, x1, x2, 5.20, 5.90, 6.10, segments=12)
-        add_box(bm_atm, x1 + 0.10, x2 - 0.10, -0.14, -0.12, 4.30, 5.80) # Vidrio y cancelería blanca
+        add_box(bm_atm, x1 + 0.10, x2 - 0.10, -0.14, -0.12, 4.30, 5.80)
+
+    # 3. CIERRE PERPENDICULAR TESTERO HERMÉTICO EN X = 14.50 m (CERO PESTAÑAS ABIERTAS)
+    # Muro testero que cierra la crujía de Santander contra el patio
+    add_box(bm_muro, 14.35, 14.65, -0.15, 4.50, 0.00, 6.45) # Muro testero PB y PA
+    add_box(bm_muro, 11.20, 14.50, 4.35, 4.65, 0.00, 6.45) # Cierre con muro posterior
 
     # Hip return hermético de la cubierta de tejas sobre el frente norte
     add_sloped_roof_hip_end(bm_techo_n, -0.70, 3.00, -0.70, 3.00, 6.46, 7.45, is_north=True)
@@ -756,7 +815,7 @@ def build_north_libertad_facade(mats, col):
     objects.extend([obj_mn, obj_ln, obj_atm, obj_bal, obj_tn])
 
     # Rótulo vertical tridimensional CAJERO AUTOMATICO
-    t_atm = add_3d_text("Libertad_Txt_Cajero", "CAJERO\nAUTOMATICO", 0.18, 0.02, (9.05, -0.20, 1.65), rot_north, mats["aluminio_blanco"], col)
+    t_atm = add_3d_text("Libertad_Txt_Cajero", "CAJERO\nAUTOMATICO", 0.18, 0.02, (10.40, -0.20, 1.65), rot_north, mats["santander_blanco"], col)
     objects.append(t_atm)
 
     # Letrero de Fraccionamiento La Salamandra colgado en el balcón
@@ -781,7 +840,7 @@ def build_north_libertad_facade(mats, col):
 def build_south_hidalgo_facade(mats, col):
     """
     Construye la fachada sur sobre Av. Miguel Hidalgo:
-      - CERO BALCÓN FLOTANTE: El balcón apoya firmemente sobre el pilar esquinero y muros portantes.
+      - CERO HUECOS: Tímpanos cerrados con mampostería estucada y machón de esquina sellado.
       - Portal peatonal abierto en PB hacia Hidalgo (X in [0.00, 2.20 m]).
       - 2 arcos con dovelas de ladrillo en relieve y escaparates de Regalos Brisa con maniquíes volumétricos.
       - 2 ventanales superiores en arco con rótulo 'Seguridad Comercial Tecate', farol colonial y medidores CFE.
@@ -802,29 +861,33 @@ def build_south_hidalgo_facade(mats, col):
     # 1. PLANTA BAJA (Regalos Brisa - X in [2.20, 11.20 m], Y = total_y)
     # Zócalo y dintel continuo
     add_box(bm_muro_s, 2.20, 11.20, total_y - 0.15, total_y + 0.15, 0.00, 0.40)
-    add_box(bm_muro_s, 2.20, 11.20, total_y - 0.15, total_y + 0.15, 3.30, 3.65) # Dintel entrepiso
-    add_box(bm_muro_s, 2.20, 2.60, total_y - 0.15, total_y + 0.15, 0.40, 3.30) # Machón oriente (junto a portal)
-    add_box(bm_muro_s, 5.80, 6.40, total_y - 0.15, total_y + 0.15, 0.40, 3.30) # Machón central
-    add_box(bm_muro_s, 9.60, 11.20, total_y - 0.15, total_y + 0.15, 0.40, 3.30) # Machón poniente
+    add_box(bm_muro_s, 2.20, 11.20, total_y - 0.15, total_y + 0.15, 3.30, 3.65)
 
-    # 2 amplios arcos con dovelas de ladrillo en relieve ($5 cm$) y escaparates de aluminio blanco
+    # SELLADO DEL MACHÓN VERTICAL DE ESQUINA (elimina el hueco con el portal en X = 2.20 m)
+    add_box(bm_muro_s, 2.15, 2.35, total_y - 0.65, total_y + 0.15, 0.00, 3.65)
+    # Machones frontal sur
+    add_box(bm_muro_s, 2.20, 2.60, total_y - 0.15, total_y + 0.15, 0.40, 3.30)
+    add_box(bm_muro_s, 5.80, 6.40, total_y - 0.15, total_y + 0.15, 0.40, 3.30)
+    add_box(bm_muro_s, 9.60, 11.20, total_y - 0.15, total_y + 0.15, 0.40, 3.30)
+
+    # 2 amplios arcos con dovelas de ladrillo en relieve (5 cm) y escaparates de aluminio blanco
     # Escaparate 1: X in [2.60, 5.80 m]
     # Escaparate 2: X in [6.40, 9.60 m]
     for x1, x2 in [(2.60, 5.80), (6.40, 9.60)]:
         add_arch_spandrel_x(bm_dov_s, total_y + 0.15, total_y + 0.20, x1, x2, 2.30, 3.05, 3.30, segments=14)
-        # Marco de aluminio blanco
+        # SELLADO MACIZO DEL TÍMPANO SUPERIOR (elimina el hueco negro sobre la ventana)
+        add_box(bm_muro_s, x1, x2, total_y - 0.10, total_y + 0.14, 2.50, 3.30)
+        # Marco de aluminio blanco del escaparate
         add_box(bm_muro_s, x1, x2, total_y + 0.10, total_y + 0.14, 0.40, 0.45)
-        add_box(bm_muro_s, x1, x2, total_y + 0.10, total_y + 0.14, 2.50, 2.55)
-        # Vidrio transparente
-        add_box(bm_vid_s, x1 + 0.05, x2 - 0.05, total_y + 0.11, total_y + 0.13, 0.45, 2.50)
+        add_box(bm_muro_s, x1, x2, total_y + 0.10, total_y + 0.14, 2.45, 2.52)
+        # Vidrio transparente reflectante
+        add_box(bm_vid_s, x1 + 0.05, x2 - 0.05, total_y + 0.11, total_y + 0.13, 0.45, 2.45)
 
     # Maniquíes volumétricos tridimensionales reales en el interior de los escaparates
-    # Escaparate 1: Bautizo blanco bordado y comunión
-    add_box(bm_maniqui, 3.20, 3.70, total_y - 0.40, total_y - 0.05, 0.45, 1.65) # Vestido Blanco Bautizo
-    add_box(bm_maniqui, 4.40, 4.90, total_y - 0.40, total_y - 0.05, 0.45, 1.85) # Vestido Comunión
-    # Escaparate 2: Quinceañera verde y gala
-    add_box(bm_maniqui, 7.00, 7.50, total_y - 0.40, total_y - 0.05, 0.45, 1.85) # Vestido Verde
-    add_box(bm_maniqui, 8.20, 8.70, total_y - 0.40, total_y - 0.05, 0.45, 1.65) # Vestido Blanco
+    add_box(bm_maniqui, 3.20, 3.70, total_y - 0.40, total_y - 0.05, 0.45, 1.65)
+    add_box(bm_maniqui, 4.40, 4.90, total_y - 0.40, total_y - 0.05, 0.45, 1.85)
+    add_box(bm_maniqui, 7.00, 7.50, total_y - 0.40, total_y - 0.05, 0.45, 1.85)
+    add_box(bm_maniqui, 8.20, 8.70, total_y - 0.40, total_y - 0.05, 0.45, 1.65)
 
     # Farol colonial de forja hexagonal en el machón central (X = 6.10 m)
     add_box(bm_farol, 6.02, 6.18, total_y + 0.15, total_y + 0.42, 2.30, 2.75)
@@ -834,23 +897,21 @@ def build_south_hidalgo_facade(mats, col):
     add_box(bm_med, 9.80, 10.80, total_y + 0.15, total_y + 0.32, 0.60, 2.10)
 
     # 2. PLANTA ALTA: 2 GRANDES VENTANALES EN ARCO (SEGURIDAD COMERCIAL TECATE)
-    add_box(bm_muro_s, 2.20, 11.20, total_y - 0.15, total_y + 0.15, 3.65, 4.30) # Antepecho
-    add_box(bm_muro_s, 2.20, 11.20, total_y - 0.15, total_y + 0.15, 6.10, 6.45) # Dintel superior
-    add_box(bm_muro_s, 5.80, 6.40, total_y - 0.15, total_y + 0.15, 4.30, 6.10) # Machón central PA
-    add_box(bm_muro_s, 9.60, 11.20, total_y - 0.15, total_y + 0.15, 4.30, 6.10) # Machón poniente PA
+    add_box(bm_muro_s, 2.20, 11.20, total_y - 0.15, total_y + 0.15, 3.65, 4.30)
+    add_box(bm_muro_s, 2.20, 11.20, total_y - 0.15, total_y + 0.15, 6.10, 6.45)
+    add_box(bm_muro_s, 5.80, 6.40, total_y - 0.15, total_y + 0.15, 4.30, 6.10)
+    add_box(bm_muro_s, 9.60, 11.20, total_y - 0.15, total_y + 0.15, 4.30, 6.10)
 
     for x1, x2 in [(2.60, 5.80), (6.40, 9.60)]:
         add_arch_spandrel_x(bm_dov_s, total_y + 0.15, total_y + 0.20, x1, x2, 5.20, 5.95, 6.10, segments=12)
         add_box(bm_vid_s, x1 + 0.05, x2 - 0.05, total_y + 0.11, total_y + 0.14, 4.30, 5.90)
-        # Montantes y travesaños blancos de 4 paños
         xmid = (x1 + x2) * 0.5
         add_box(bm_muro_s, xmid - 0.03, xmid + 0.03, total_y + 0.10, total_y + 0.15, 4.30, 5.85)
         add_box(bm_muro_s, x1 + 0.05, x2 - 0.05, total_y + 0.10, total_y + 0.15, 5.05, 5.12)
 
     # 3. CIERRE DEL BALCÓN EN EL EXTREMO SUR (X in [0.00, 2.20 m], Y = total_y)
-    # Losa perfectamente alineada apoyada sobre pilar y muro (CERO voladizo al vacío)
-    add_box(bm_balcon_s, 0.00, 2.20, total_y - 0.05, total_y, 4.55, 4.60) # Pasamanos de retorno
-    add_box(bm_balcon_s, 0.00, 2.20, total_y - 0.04, total_y, 3.68, 3.72) # Pletina inferior
+    add_box(bm_balcon_s, 0.00, 2.20, total_y - 0.05, total_y, 4.55, 4.60)
+    add_box(bm_balcon_s, 0.00, 2.20, total_y - 0.04, total_y, 3.68, 3.72)
     for i in range(int(2.20 / 0.15)):
         xb = i * 0.15
         add_box(bm_balcon_s, xb - 0.012, xb + 0.012, total_y - 0.04, total_y - 0.01, 3.70, 4.55)
@@ -868,7 +929,6 @@ def build_south_hidalgo_facade(mats, col):
     obj_ts = create_mesh_object("Hidalgo_Techo_Tejas_Hip", bm_techo_s, mats["teja_colonial"], col, uv_scale=1.5)
     objects.extend([obj_ms, obj_ds, obj_vs, obj_mq, obj_far, obj_med, obj_bs, obj_ts])
 
-    # Rótulo de vinil blanco en ventana poniente: SEGURIDAD COMERCIAL TECATE
     t_seg = add_3d_text("Hidalgo_Txt_Seguridad", "SEGURIDAD COMERCIAL TECATE", 0.18, 0.02, (8.00, total_y + 0.18, 5.25), rot_south, mats["aluminio_blanco"], col)
     objects.append(t_seg)
 
@@ -886,18 +946,14 @@ def build_rear_facade(mats, col):
     bm_rear = bmesh.new()
     bm_puertas = bmesh.new()
 
-    # Muro macizo cerrado continuo (X = 11.20 m, Y in [0.00, 67.60 m], Z in [-1.50, 6.85 m])
     add_box(bm_rear, 11.10, 11.35, 0.00, total_y, -1.50, 6.85)
 
-    # Puertas metálicas de evacuación y servicio en locales clave
     for y_door in [9.50, 25.50, 39.00, 59.50]:
         add_box(bm_puertas, 11.34, 11.38, y_door - 0.50, y_door + 0.50, 0.00, 2.15)
-        # Marco de puerta
         add_box(bm_rear, 11.33, 11.40, y_door - 0.55, y_door + 0.55, 2.15, 2.22)
         add_box(bm_rear, 11.33, 11.40, y_door - 0.58, y_door - 0.50, 0.00, 2.22)
         add_box(bm_rear, 11.33, 11.40, y_door + 0.50, y_door + 0.58, 0.00, 2.22)
 
-    # Bajantes pluviales de PVC blanco cada 18 m
     for y_pipe in [8.0, 25.0, 42.0, 59.0]:
         add_box(bm_rear, 11.34, 11.44, y_pipe - 0.06, y_pipe + 0.06, 0.00, 6.70)
 
@@ -914,14 +970,14 @@ def build_rear_facade(mats, col):
 def build_la_parrilla_complete(mats, col):
     """
     Construye La Parrilla como la estructura edificada continua que envuelve el estacionamiento:
-      - Frente Norte sobre Callejón Libertad (X in [17.50, 32.50 m], Y = 0.00 m).
-      - Ala Este del Estacionamiento (X = 32.50 m, Y in [0.00, 20.00 m]).
-      - Gran Cuerpo Sur Envolvente Aporticado de 2 niveles (X in [32.50, 68.00 m], Y in [18.00, 32.00 m]).
-        (Con vanos calados reales que revelan paramentos interiores turquesas y chimenea anclada).
+      - Frente Norte sobre Callejón Libertad con espadaña y porche ochavado.
+      - Ala Este del Estacionamiento con tejadillos de teja y losa de azotea hermética continua.
+      - Gran Cuerpo Sur Envolvente Aporticado de 2 niveles con chimenea anclada y azoteas cerradas.
     """
     objects = []
     rot_north = (math.radians(90.0), 0.0, 0.0)
-    rot_west = (math.radians(90.0), 0.0, math.radians(90.0))
+    # Orientación de texto sobre pared oeste (normal hacia +X)
+    rot_west_wall = (math.radians(90.0), 0.0, math.radians(90.0))
 
     bm_muro = bmesh.new()
     bm_espadaña = bmesh.new()
@@ -932,39 +988,33 @@ def build_la_parrilla_complete(mats, col):
     bm_tejas_p = bmesh.new()
 
     # 1. CUERPO NORTE (FRENTE A CALLEJÓN LIBERTAD, Y = 0.00 m)
-    # Zócalo basal enterrado (-1.50 a 0.00 m)
     add_box(bm_muro, 17.50, 32.70, -0.20, 20.20, -1.50, 0.00)
 
     # A. Marquesina rústica izquierda (X in [17.50, 24.00 m])
     add_box(bm_muro, 17.50, 18.20, -0.15, 0.20, 0.00, 3.80)
     add_box(bm_muro, 23.00, 24.00, -0.15, 0.20, 0.00, 3.80)
-    add_box(bm_muro, 18.20, 23.00, -0.15, 0.20, 0.00, 0.90) # Antepecho
-    add_box(bm_muro, 18.20, 23.00, -0.15, 0.20, 2.60, 3.80) # Dintel
+    add_box(bm_muro, 18.20, 23.00, -0.15, 0.20, 0.00, 0.90)
+    add_box(bm_muro, 18.20, 23.00, -0.15, 0.20, 2.60, 3.80)
 
-    # Ventanal apaisado con reja negra
     add_box(bm_ventanas, 18.20, 23.00, -0.12, 0.12, 0.90, 2.60)
     for i in range(int((23.00 - 18.20) / 0.18)):
         xb = 18.30 + i * 0.18
         add_box(bm_rejas, xb - 0.015, xb + 0.015, -0.22, -0.14, 0.85, 2.65)
 
-    # Marquesina de canes de madera
     for i in range(9):
         xb = 17.60 + i * 0.75
         add_box(bm_vigas, xb - 0.08, xb + 0.08, -0.75, 0.40, 3.45, 3.60)
 
-    # Estructura metálica de letrero en azotea
     add_box(bm_rejas, 17.80, 23.40, -0.10, 0.00, 4.00, 5.20)
 
     # B. Cuerpo con Espadaña Misional Ondulada (X in [24.00, 32.50 m])
     add_box(bm_muro, 24.00, 30.50, -0.15, 0.20, 0.00, 3.80)
-    # Espadaña ondulada central
     add_box(bm_espadaña, 24.00, 31.00, -0.15, 0.15, 3.80, 4.25)
     add_box(bm_espadaña, 25.20, 29.80, -0.15, 0.15, 4.25, 4.85)
     add_box(bm_espadaña, 26.20, 28.80, -0.15, 0.15, 4.85, 5.20)
 
-    # Ventana con reja colonial en X in [24.80, 27.50 m]
     add_box(bm_ventanas, 24.80, 27.50, -0.14, 0.14, 1.10, 2.40)
-    add_box(bm_rejas, 24.75, 27.55, -0.26, -0.12, 1.05, 2.45) # Pecho de paloma
+    add_box(bm_rejas, 24.75, 27.55, -0.26, -0.12, 1.05, 2.45)
 
     # Porche en esquina ochavada con zaguán diáfano de doble arco (X in [30.50, 32.50 m], Y in [0.00, 2.20 m])
     add_box(bm_muro, 30.50, 32.30, -0.15, 0.15, 2.60, 3.80)
@@ -973,74 +1023,65 @@ def build_la_parrilla_complete(mats, col):
     add_box(bm_muro, 32.35, 32.55, 0.00, 2.20, 2.60, 3.80)
     add_box(bm_muro, 32.35, 32.55, 2.00, 2.30, 0.00, 2.60)
 
-    # Firme y vigas del porche interior
     add_box(bm_muro, 30.50, 32.40, 0.00, 2.20, 0.00, 0.06)
     for ib in range(3):
         yb = 0.55 + ib * 0.60
         add_box(bm_vigas, 30.55, 32.35, yb - 0.06, yb + 0.06, 2.65, 2.78)
 
-    # Puerta interior de madera con herraje (Y = 2.20 m)
     add_box(bm_muro, 30.50, 32.30, 2.15, 2.35, 2.40, 3.80)
     add_box(bm_ventanas, 30.75, 32.05, 2.18, 2.28, 0.00, 2.35)
 
     # 2. ALA ESTE DEL ESTACIONAMIENTO (X = 32.50 m, Y in [0.00, 20.00 m])
     add_box(bm_muro, 32.35, 32.55, 2.20, 20.00, 0.00, 3.80)
 
-    # 3 Ventanas rústicas con tejadillos de teja colonial inclinada
+    # CUBIERTA HERMÉTICA SELLADA DE AZOTEA DEL ALA ESTE (resuelve Comentario 6)
+    add_box(bm_muro, 28.00, 32.55, 0.00, 20.00, 3.70, 3.85) # Losa maciza
+    add_box(bm_muro, 32.35, 32.55, 0.00, 20.00, 3.85, 4.30) # Pretil con albardilla
+
     for i in range(3):
         yw1 = 4.00 + i * 4.60
         yw2 = yw1 + 2.10
         ymid = (yw1 + yw2) * 0.5
         add_box(bm_ventanas, 32.36, 32.56, yw1, yw2, 1.10, 2.30)
         add_box(bm_rejas, 32.54, 32.68, yw1, yw2, 1.05, 2.35)
-        # Tejadillo de teja sobre la ventana
         add_box(bm_tejas_p, 32.52, 33.20, yw1 - 0.15, yw2 + 0.15, 2.40, 2.65)
-        # Can de madera de soporte
         add_box(bm_vigas, 32.25, 33.15, ymid - 0.08, ymid + 0.08, 2.30, 2.42)
 
-    # Copete en esquina con frontón curvo en Y in [16.00, 20.00 m]
     add_box(bm_espadaña, 32.35, 32.65, 16.00, 20.00, 3.80, 4.45)
     add_box(bm_ventanas, 32.36, 32.58, 17.50, 19.20, 0.00, 2.30)
 
     # 3. GRAN CUERPO SUR ENVOLVENTE APORTICADO (X in [32.50, 68.00 m], Y in [18.00, 32.00 m])
-    # Zócalo basal enterrado
     add_box(bm_muro, 32.50, 68.00, 18.00, 32.00, -1.50, 0.00)
 
-    # Muro frontal hacia el estacionamiento en Planta Baja (Y = 18.00 m)
+    # Muro frontal en PB (Y = 18.00 m)
     add_box(bm_muro, 32.50, 68.00, 17.85, 18.15, 0.00, 3.80)
-    # Puertas de servicio y ventilación en PB
     add_box(bm_ventanas, 36.00, 37.80, 17.82, 18.18, 0.00, 2.30)
     add_box(bm_ventanas, 46.00, 48.50, 17.82, 18.18, 1.20, 2.20)
 
-    # Losa de entrepiso y losa de azotea hermética continua
-    add_box(bm_muro, 32.50, 68.00, 18.00, 32.00, 3.70, 3.90) # Entrepiso
-    add_box(bm_muro, 32.50, 68.00, 18.00, 32.00, 6.70, 6.90) # Azotea
-    # Pretil perimetral continuo en azotea
+    # Losas de entrepiso y azotea hermética
+    add_box(bm_muro, 32.50, 68.00, 18.00, 32.00, 3.70, 3.90)
+    add_box(bm_muro, 32.50, 68.00, 18.00, 32.00, 6.70, 6.90)
     add_box(bm_muro, 32.50, 68.00, 17.85, 18.15, 6.90, 7.50)
     add_box(bm_muro, 32.50, 68.00, 31.85, 32.15, 6.90, 7.50)
     add_box(bm_muro, 67.85, 68.15, 18.00, 32.00, 6.90, 7.50)
 
-    # PLANTA ALTA: ESTRUCTURA APORTICADA CON VANOS CALADOS REALES (NO CAJAS CIAN PROTRUSIVAS)
-    # Columnas de concreto aparente
+    # Pórtico de concreto de Planta Alta con vanos calados reales
     for ic in range(5):
         xc = 34.00 + ic * 7.50
         add_box(bm_muro, xc - 0.25, xc + 0.25, 17.85, 18.15, 3.90, 6.70)
-    # Trabe superior continua
     add_box(bm_muro, 34.00, 64.00, 17.85, 18.15, 6.20, 6.70)
-    # Murete antepecho
     add_box(bm_muro, 34.00, 64.00, 17.85, 18.15, 3.90, 4.30)
 
-    # Paramentos interiores de fondo calados pintados en verde esmeralda/turquesa (Y = 24.00 m)
-    # Visibles a través de los vanos abiertos de la fachada
+    # Paramentos interiores turquesas visibles a través de los vanos
     add_box(bm_salones, 34.00, 64.00, 23.85, 24.15, 3.90, 6.70)
 
     # Muros de cierre perimetrales
-    add_box(bm_muro, 32.50, 68.00, 31.85, 32.15, 0.00, 6.90) # Posterior sur
-    add_box(bm_muro, 67.85, 68.15, 18.00, 32.00, 0.00, 6.90) # Poniente
+    add_box(bm_muro, 32.50, 68.00, 31.85, 32.15, 0.00, 6.90)
+    add_box(bm_muro, 67.85, 68.15, 18.00, 32.00, 0.00, 6.90)
 
-    # Tiro de chimenea sólidamente anclado y desplantado desde la losa de cocina
+    # Chimenea anclada
     add_box(bm_muro, 41.00, 43.20, 24.50, 26.70, 6.70, 8.50)
-    add_box(bm_rejas, 40.80, 43.40, 24.30, 26.90, 8.50, 8.90) # Sombrerete piramidal
+    add_box(bm_rejas, 40.80, 43.40, 24.30, 26.90, 8.50, 8.90)
 
     obj_parr_m = create_mesh_object("LaParrilla_Muros_Terracota", bm_muro, mats["parrilla_terracota"], col)
     obj_parr_e = create_mesh_object("LaParrilla_Espadaña_Misional", bm_espadaña, mats["parrilla_terracota"], col)
@@ -1060,7 +1101,7 @@ def build_la_parrilla_complete(mats, col):
     obj_adt = create_mesh_object("LaParrilla_Placa_ADT", bm_adt, mats["adt_azul"], col)
     objects.extend([t_parr1, t_parr2, obj_adt])
 
-    t_parr_lat = add_3d_text("LaParrilla_Txt_Lateral", "La Parrilla\nBar & Grill", 0.28, 0.03, (32.68, 18.00, 4.15), rot_west, mats["parrilla_rojo_letras"], col)
+    t_parr_lat = add_3d_text("LaParrilla_Txt_Lateral", "La Parrilla\nBar & Grill", 0.28, 0.03, (32.68, 18.00, 4.15), rot_west_wall, mats["parrilla_rojo_letras"], col)
     objects.append(t_parr_lat)
 
     return objects
@@ -1070,11 +1111,12 @@ def build_la_parrilla_complete(mats, col):
 # ---------------------------------------------------------------------------
 
 def build_parking_and_grounds(mats, col):
-    """Construye el patio interior de estacionamiento confinado entre La Parrilla y la barda poniente."""
+    """Construye el patio interior de estacionamiento y barda poniente con texto orientado canónicamente."""
     objects = []
-    rot_west = (math.radians(90.0), 0.0, math.radians(90.0))
+    # Orientación matemática canónica para texto en barda poniente vista desde el patio:
+    # Local X -> (0, -1, 0), Local Y -> (0, 0, 1), Normal -> (-1, 0, 0)
+    rot_barda_tradicion = (math.radians(90.0), 0.0, math.radians(-90.0))
 
-    # Explanada de estacionamiento: firme confinado (X in [32.50, 68.00 m], Y in [0.00, 18.00 m])
     bm_asf = bmesh.new()
     add_box(bm_asf, 32.50, 68.00, 0.00, 18.00, -0.05, 0.00)
     obj_asf = create_mesh_object("Estacionamiento_Pavimento_Asfalto", bm_asf, mats["asfalto_estacionamiento"], col, uv_scale=0.5)
@@ -1083,15 +1125,14 @@ def build_parking_and_grounds(mats, col):
     # Barda Poniente de La Tradición (X = 68.00 m, Y in [0.00, 18.00 m])
     bm_barda = bmesh.new()
     add_box(bm_barda, 67.85, 68.15, 0.00, 18.00, 0.00, 2.40)
-    add_box(bm_barda, 67.80, 68.20, 0.00, 18.00, 2.35, 2.48) # Albardilla
-    # Portón en arco blanco hacia predio contiguo
+    add_box(bm_barda, 67.80, 68.20, 0.00, 18.00, 2.35, 2.48)
     add_box(bm_barda, 67.80, 68.20, 14.50, 17.50, 2.40, 3.40)
     obj_brd = create_mesh_object("Estacionamiento_Barda_Tradicion", bm_barda, mats["barda_tradicion_blanca"], col)
     objects.append(obj_brd)
 
-    # Rótulo comercial histórico en barda: 'La Tradición / ESTACIONAMIENTO EXCLUSIVO'
-    t_trad1 = add_3d_text("Tradicion_Txt_Nombre", "La Tradición", 0.32, 0.02, (67.78, 9.00, 1.85), rot_west, mats["brisa_azul"], col)
-    t_trad2 = add_3d_text("Tradicion_Txt_Sub", "ESTACIONAMIENTO\nEXCLUSIVO", 0.22, 0.02, (67.78, 9.00, 1.35), rot_west, mats["calavera_negro"], col)
+    # Rótulo comercial en barda orientado de forma impecable hacia el patio (resuelve Comentario 5)
+    t_trad1 = add_3d_text("Tradicion_Txt_Nombre", "La Tradición", 0.32, 0.02, (67.75, 9.00, 1.85), rot_barda_tradicion, mats["brisa_azul"], col)
+    t_trad2 = add_3d_text("Tradicion_Txt_Sub", "ESTACIONAMIENTO\nEXCLUSIVO", 0.22, 0.02, (67.75, 9.00, 1.35), rot_barda_tradicion, mats["calavera_negro"], col)
     objects.extend([t_trad1, t_trad2])
 
     return objects
@@ -1141,6 +1182,7 @@ def setup_cameras_and_render(col):
         ("Cam_Hidalgo_Sur", (5.6, 85.0, 3.8), (5.6, 67.6, 3.0), 28.0),
         ("Cam_Parrilla_Libertad", (26.0, -18.0, 4.0), (26.0, 0.0, 3.2), 28.0),
         ("Cam_Estacionamiento_Reverso", (50.0, 5.0, 5.5), (28.0, 15.0, 3.0), 26.0),
+        ("Cam_Estacionamiento_Barda", (46.0, 9.0, 2.0), (68.0, 9.0, 1.8), 28.0),
         ("Cam_Cenital_Top", (28.0, 33.8, 95.0), (28.0, 33.8, 0.0), 24.0),
     ]
 
@@ -1211,7 +1253,7 @@ size = Vector3(2.20, 0.95, 0.06)
 size = Vector3(0.30, 3.20, 67.60)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_muro_norte_pb"]
-size = Vector3(14.50, 3.60, 0.30)
+size = Vector3(12.30, 3.60, 0.30)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_muro_sur_pb"]
 size = Vector3(9.00, 3.60, 0.30)
@@ -1252,7 +1294,7 @@ shape = SubResource("BoxShape3D_pilastra")
 """
     for i in range(bay_count):
         if i == 6:
-            continue # Vano diáfano para la escalera
+            continue
         yc_mid = (i + 0.5) * bay_w
         tscn_content += f"""[node name="Col_Local_{i:02d}" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.25, 1.80, {-yc_mid:.3f})
@@ -1302,7 +1344,7 @@ shape = SubResource("BoxShape3D_muro_pa")
 
 # 5. Muros Perimetrales PB y Cierre Posterior Continuo
 [node name="Col_Muro_Norte_PB" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.25, 1.80, 0.00)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.35, 1.80, 0.00)
 shape = SubResource("BoxShape3D_muro_norte_pb")
 
 [node name="Col_Muro_Sur_PB" type="CollisionShape3D" parent="."]
@@ -1347,26 +1389,26 @@ shape = SubResource("BoxShape3D_barda_tradicion")
 
 def main():
     print("=" * 70)
-    print("INICIANDO RECONSTRUCCIÓN PROCEDURAL V4.0 GROUND-TRUTH: CÁRDENAS 25")
+    print("INICIANDO RECONSTRUCCIÓN PROCEDURAL V5.0 GROUND-TRUTH: CÁRDENAS 25")
     print("=" * 70)
 
     root_col = clean_scene()
     mats = create_materials()
 
     # 1. Cuerpos arquitectónicos principales
-    print("-> 1. Generando Fachada Frontal Cárdenas (13 Arcos, 14 Pilastras, L=67.60 m)...")
+    print("-> 1. Generando Fachada Frontal Cárdenas (13 Arcos, Entablamento, Capiteles, L=67.60 m)...")
     objs_front = build_front_cardenas(mats, root_col)
 
-    print("-> 2. Generando Fachada Norte Callejón Libertad (ATM Santander, Balcón Corrido, 3 Arcos)...")
+    print("-> 2. Generando Fachada Norte Callejón Libertad (ATM Santander, Portal Abierto, 3 Arcos, Cierre X=14.5m)...")
     objs_north = build_north_libertad_facade(mats, root_col)
 
-    print("-> 3. Generando Fachada Sur Av. Miguel Hidalgo (2 Ventanales PA, Escaparates Brisa, Farol)...")
+    print("-> 3. Generando Fachada Sur Av. Miguel Hidalgo (Tímpanos Macizos Cerrados, Cero Huecos)...")
     objs_south = build_south_hidalgo_facade(mats, root_col)
 
     print("-> 4. Generando Muro Posterior Continuo de Cierre (X=11.20 m, Cero Huecos)...")
     objs_rear = build_rear_facade(mats, root_col)
 
-    print("-> 5. Generando La Parrilla (Estructura Envolvente en 'L' aporticada de 2 niveles)...")
+    print("-> 5. Generando La Parrilla (Estructura Envolvente en 'L' con Azotea Hermética Sellada)...")
     objs_parrilla = build_la_parrilla_complete(mats, root_col)
 
     print("-> 6. Generando Explanada de Estacionamiento y Barda Poniente La Tradición...")
@@ -1401,7 +1443,7 @@ def main():
     execute_validation_renders(cams)
 
     print("=" * 70)
-    print("PROCESO PROCEDURAL V4.0 FINALIZADO EXITOSAMENTE")
+    print("PROCESO PROCEDURAL V5.0 FINALIZADO EXITOSAMENTE")
     print("=" * 70)
 
 if __name__ == "__main__":

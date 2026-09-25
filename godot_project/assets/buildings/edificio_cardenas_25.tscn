@@ -30,7 +30,7 @@ size = Vector3(2.20, 0.95, 0.06)
 size = Vector3(0.30, 3.20, 67.60)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_muro_norte_pb"]
-size = Vector3(14.50, 3.60, 0.30)
+size = Vector3(12.30, 3.60, 0.30)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_muro_sur_pb"]
 size = Vector3(9.00, 3.60, 0.30)
@@ -263,7 +263,7 @@ shape = SubResource("BoxShape3D_muro_pa")
 
 # 5. Muros Perimetrales PB y Cierre Posterior Continuo
 [node name="Col_Muro_Norte_PB" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.25, 1.80, 0.00)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.35, 1.80, 0.00)
 shape = SubResource("BoxShape3D_muro_norte_pb")
 
 [node name="Col_Muro_Sur_PB" type="CollisionShape3D" parent="."]
