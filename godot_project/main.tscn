@@ -68,7 +68,7 @@ transform = Transform3D(-0.996344, -0.005629, -0.085242, -0.00781, 0.99965, 0.02
 transform = Transform3D(-0.1077, -0.0058, 1.2462, -0.0111, 1.2508, 0.0037, -1.2461, -0.0107, -0.1077, 181.63, 400.87, 56.44)
 
 [node name="Edificio_Juarez_235" parent="." instance=ExtResource("21_juarez_235")]
-transform = Transform3D(0.99636, 0, 0.08524, 0, 1, 0, -0.08524, 0, 0.99636, -53.85, 401.8, -35.95)
+transform = Transform3D(0.99636, 0, 0.08524, 0, 1, 0, -0.08524, 0, 0.99636, -53.85, 401.8, -43.95)
 
 [node name="Nomenclatura" parent="." instance=ExtResource("12_nomenclatura")]
 
