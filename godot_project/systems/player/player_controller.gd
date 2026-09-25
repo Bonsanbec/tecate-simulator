@@ -422,3 +422,6 @@ func _update_telemetry(_delta: float) -> void:
 			mode_str,
 			is_1p
 		)
+		# Actualizar gizmo de ejes con la orientación de la cámara activa
+		if camera_director and camera_director.active_camera:
+			hud.update_axes(camera_director.active_camera.global_transform.basis)

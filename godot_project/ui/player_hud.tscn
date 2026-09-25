@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://c6playerhud7781"]
 
 [ext_resource type="Script" path="res://ui/player_hud.gd" id="1_hud_script"]
+[ext_resource type="Script" path="res://ui/compass_axes_gizmo.gd" id="2_axes_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
 bg_color = Color(0.06, 0.08, 0.1, 0.65)
@@ -117,3 +118,14 @@ offset_bottom = 2.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(1, 1, 1, 0.45)
+
+[node name="AxesGizmo" type="Control" parent="."]
+script = ExtResource("2_axes_script")
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -104.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 104.0
+grow_horizontal = 0

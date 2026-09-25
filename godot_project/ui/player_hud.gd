@@ -10,6 +10,7 @@ extends CanvasLayer
 @onready var telemetry_label: Label = $BottomLeft/TelemetryLabel
 @onready var mode_badge: Label = $BottomRight/ModeBadge
 @onready var reticle: Control = $CenterReticle
+@onready var axes_gizmo: CompassAxesGizmo = $AxesGizmo
 
 var _badge_fade_timer: float = 3.0
 
@@ -44,6 +45,10 @@ func update_hud(
 	# 3. Retícula dinámica: Visible en 1P y 3P, discreta
 	if reticle:
 		reticle.visible = is_1p
+
+func update_axes(camera_basis: Basis) -> void:
+	if axes_gizmo:
+		axes_gizmo.set_camera_basis(camera_basis)
 
 func set_perspective_badge(mode_name: String) -> void:
 	if mode_badge:
