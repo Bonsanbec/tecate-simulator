@@ -162,7 +162,7 @@
         "paso": 5,
         "nombre": "Orientar la fachada u ochava",
         "formula": "theta = atan2(normal_esquina.x, normal_esquina.z)",
-        "basis_godot": "Transform3D(cos(theta), 0, -sin(theta),  0, 1, 0,  sin(theta), 0, cos(theta),  gx, gy, gz)"
+        "basis_godot": "Transform3D(cos(theta), 0, sin(theta),  0, 1, 0,  -sin(theta), 0, cos(theta),  gx, gy, gz)"
       }
     ]
   },

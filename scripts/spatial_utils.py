@@ -284,15 +284,17 @@ def normal_to_godot_transform3d(outward_normal: Vec2, gx: float, gy: float, gz: 
         s_val = f"{v:.6f}".rstrip("0").rstrip(".")
         return "0" if s_val == "-0" or s_val == "" else s_val
 
-    # Matriz de rotación en columna-major para Transform3D:
-    # Columna 1 (X local): (c, 0, -s)
-    # Columna 2 (Y local): (0, 1, 0)
-    # Columna 3 (Z local / Frente): (s, 0, c)
+    # En archivos .tscn de Godot 4, Transform3D(n0..n11) asigna:
+    # basis.x = (n0, n3, n6)
+    # basis.y = (n1, n4, n7)
+    # basis.z = (n2, n5, n8)
+    # Para que basis.x = (c, 0, -s) y basis.z = (s, 0, c):
+    # n0=c, n1=0, n2=s, n3=0, n4=1, n5=0, n6=-s, n7=0, n8=c
     return (
         f"Transform3D("
-        f"{_f(c)}, 0, {_f(-s)},  "
+        f"{_f(c)}, 0, {_f(s)},  "
         f"0, 1, 0,  "
-        f"{_f(s)}, 0, {_f(c)},  "
+        f"{_f(-s)}, 0, {_f(c)},  "
         f"{_f(gx)}, {_f(gy)}, {_f(gz)})"
     )
 
