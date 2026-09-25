@@ -39,3 +39,7 @@ environment/defaults/default_clear_color=Color(0.894118, 0.894118, 0.894118, 1)
 [debug]
 
 file_logging/enable_file_logging=false
+
+[autoload]
+
+StreetNameLookup="*res://systems/urban/street_name_lookup.gd"

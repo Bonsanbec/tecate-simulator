@@ -409,12 +409,21 @@ func _update_procedural_animations(delta: float) -> void:
 func _update_telemetry(_delta: float) -> void:
 	current_speed_kmh = Vector2(velocity.x, velocity.z).length() * 3.6
 	current_altitude_msnm = 540.0 + global_position.y # Cota base aproximada de Tecate
-	
+
 	# Cálculo analítico del rumbo cartográfico (Heading Azimuth):
 	# En el marco geodésico de Tecate: +X = Este, -Z = Norte, -X = Oeste, +Z = Sur.
 	# atan2(forward.x, -forward.z) define el ángulo horario estándar: Norte=0°, Este=90°, Sur=180°, Oeste=270°.
-	var forward = -global_transform.basis.z
+	var forward := -global_transform.basis.z
 	current_heading_deg = fposmod(rad_to_deg(atan2(forward.x, -forward.z)), 360.0)
+
+	# Consultar la calle hacia la que apunta el jugador (rayo en dirección forward).
+	# Se usa el vector forward del cuerpo del jugador, que coincide con el azimut
+	# de la brújula en 1P/3P. En modo vuelo la dirección es igualmente válida.
+	var nearest_street: String = ""
+	if has_node("/root/StreetNameLookup"):
+		nearest_street = get_node("/root/StreetNameLookup").get_street_ahead(
+			global_position, forward
+		)
 
 	if hud:
 		var is_1p = camera_director.current_mode == CameraDirectorClass.PerspectiveMode.FIRST_PERSON if camera_director else true
@@ -429,7 +438,8 @@ func _update_telemetry(_delta: float) -> void:
 			current_altitude_msnm,
 			current_slope_angle,
 			mode_str,
-			is_1p
+			is_1p,
+			nearest_street
 		)
 		# Actualizar gizmo de ejes con la orientación de la cámara activa
 		if camera_director and camera_director.active_camera:

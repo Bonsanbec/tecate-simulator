@@ -2,9 +2,11 @@ class_name PlayerHUD
 extends CanvasLayer
 
 ## Interfaz de Usuario (HUD) Diegética e Inmersiva para Tecate Simulator
-## Muestra brújula graduada superior con orientación hacia el Cuchumá,
-## telemetría de velocidad en km/h, altimetría sobre el nivel del mar,
-## gradiente topográfico de Tecate y estado de perspectiva de cámara (F5).
+## Muestra brújula graduada superior con la calle más cercana hacia la que
+## apunta la cámara, telemetría de velocidad en km/h, altimetría sobre el
+## nivel del mar, gradiente topográfico de Tecate y modo de cámara (F5).
+## La calle se obtiene del Autoload StreetNameLookup que consulta el índice
+## espacial generado desde el caché OSM del municipio.
 
 @onready var compass_label: Label = $TopCompass/CompassLabel
 @onready var telemetry_label: Label = $BottomLeft/TelemetryLabel
@@ -33,14 +35,15 @@ func update_hud(
 	altitude_meters: float,
 	slope_degrees: float,
 	camera_mode_name: String,
-	is_1p: bool
+	is_1p: bool,
+	nearest_street: String = ""
 ) -> void:
-	# 1. Actualizar Brújula Superior
+	# 1. Actualizar Brújula Superior con calle más cercana
 	if compass_label:
 		var deg_norm = fposmod(heading_degrees, 360.0)
 		var cardinal = _get_cardinal_direction(deg_norm)
-		var landmark_hint = _get_landmark_hint(deg_norm)
-		compass_label.text = "%03d° %s  |  %s" % [int(deg_norm), cardinal, landmark_hint]
+		var street_hint = _format_street_hint(nearest_street)
+		compass_label.text = "%03d° %s  |  %s" % [int(deg_norm), cardinal, street_hint]
 
 	# 2. Actualizar Telemetría Urbana
 	if telemetry_label:
@@ -52,7 +55,7 @@ func update_hud(
 			abs(slope_degrees)
 		]
 
-	# 3. Retícula dinámica: Visible en 1P y 3P, discreta
+	# 3. Retícula dinámica: Visible en 1P, discreta
 	if reticle:
 		reticle.visible = is_1p
 
@@ -82,18 +85,7 @@ func _get_cardinal_direction(deg: float) -> String:
 	elif deg < 292.5: return "W"
 	else: return "NW"
 
-func _get_landmark_hint(deg: float) -> String:
-	# En el marco municipal de Tecate:
-	# Oeste (~240° - 290°): Cerro Cuchumá (WGS84 lon -116.68, poniente)
-	# Este  (~70° - 110°): La Rumorosa / Mexicali (oriente)
-	# Norte (~340° - 20°): Parque Hidalgo / Frontera (norte)
-	# Sur   (~160° - 200°): Río Tecate / Cárdenas (sur)
-	if deg >= 240.0 and deg <= 290.0:
-		return "◄ Cerro Cuchumá (Oeste)"
-	elif deg >= 70.0 and deg <= 110.0:
-		return "► La Rumorosa (Este)"
-	elif deg >= 340.0 or deg <= 20.0:
-		return "▲ Parque Hidalgo / Frontera (Norte)"
-	elif deg >= 160.0 and deg <= 200.0:
-		return "▼ Río Tecate / Cárdenas (Sur)"
-	return "Rumbo Urbano Tecate"
+func _format_street_hint(street_name: String) -> String:
+	if street_name.is_empty():
+		return "Zona Urbana Tecate"
+	return street_name
