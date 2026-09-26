@@ -322,19 +322,111 @@ def add_3d_text_letters(bm, text_lines, center_x, center_y, base_z, rot_z=0.0,
                 add_solid_box(bm, center=(lx, ly, cur_z), size=(char_w, char_d, char_h), rot_z=rot_z, mat_index=mat_idx)
 
 # ==============================================================================
-# 3. TOPOGRAFÍA, ZÓCALO BASAL Y 8 ANDADORES EN ESTRELLA (ADAPTADO AL BLOQUE)
+# 3. TOPOGRAFÍA, ZÓCALO BASAL Y 8 ANDADORES EN ESTRELLA (POLÍGONO REAL DE MANZANA)
 # ==============================================================================
-print("[PARQUE HIDALGO] Construyendo plataforma sólida adaptada al bloque y andadores...")
+print("[PARQUE HIDALGO] Construyendo plataforma sólida con el perímetro exacto de las calles...")
 
-# Dimensiones exactas correspondientes a la Manzana de Tecate (117m ancho x 79.5m profundidad)
-# Zócalo basal continuo Z <= -1.50m (Garantía GEMINI.md)
-block_cx, block_cy = -0.45, 0.95
-block_w, block_d = 117.0, 79.5
+# Polígono perimetral exacto del Parque Hidalgo según las banquetas interiores de las 4 calles
+# (Av. Benito Juárez al Norte, Pdte. Pascual Ortiz Rubio al Este, Callejón Libertad al Sur,
+# y Pdte. Lázaro Cárdenas al Poniente con sus ochavas y alineación angular real).
+# Coordenadas relativas al Kiosko central (0.0, 0.0).
+PARK_PERIMETER_POLYGON = [
+    # Borde Este (Ortiz Rubio - de Norte a Sur)
+    (55.74, 25.22),
+    (56.49, 16.56),
+    (57.48, 5.02),
+    (57.97, -0.75),
+    (58.46, -6.52),
+    (59.21, -15.17),
+    (60.45, -29.65),
+    # Ochava SE (Ortiz Rubio y Callejón Libertad)
+    (60.95, -35.53),
+    (54.27, -38.22),
+    # Borde Sur (Callejón Libertad - de Este a Oeste)
+    (30.00, -38.50),
+    (0.00, -38.80),
+    (-25.00, -39.00),
+    # Ochava SO (Callejón Libertad y Pdte. Lázaro Cárdenas)
+    (-38.59, -39.11),
+    (-40.01, -28.33),
+    # Borde Poniente (Pdte. Lázaro Cárdenas - de Sur a Norte)
+    (-41.22, -19.74),
+    (-42.43, -11.16),
+    (-43.63, -2.57),
+    (-44.69, 5.74),
+    (-45.69, 14.09),
+    (-46.70, 22.44),
+    # Ochava NO (Pdte. Cárdenas y Av. Benito Juárez)
+    (-35.05, 33.99),
+    # Borde Norte (Av. Benito Juárez - de Oeste a Este, pendiente angular ~6.5°)
+    (-26.28, 35.00),
+    (-17.50, 36.01),
+    (-11.65, 36.68),
+    (-2.87, 37.69),
+    (2.98, 38.36),
+    (11.75, 39.37),
+    (20.53, 40.38),
+    (29.30, 41.39),
+    # Ochava NE (Av. Benito Juárez y Ortiz Rubio)
+    (43.93, 43.08),
+]
 
-add_solid_box(bm, center=(block_cx, block_cy, -0.75), size=(block_w, block_d, 1.50), mat_index=idx_zocalo)
+poly_xs = [p[0] for p in PARK_PERIMETER_POLYGON]
+poly_ys = [p[1] for p in PARK_PERIMETER_POLYGON]
+park_min_x, park_max_x = min(poly_xs), max(poly_xs)
+park_min_y, park_max_y = min(poly_ys), max(poly_ys)
+park_w = park_max_x - park_min_x
+park_d = park_max_y - park_min_y
+park_cx = (park_min_x + park_max_x) * 0.5
+park_cy = (park_min_y + park_max_y) * 0.5
 
-# Pradera de césped base (superficie z = 0.00m con normal hacia arriba)
-add_solid_box(bm, center=(block_cx, block_cy, -0.01), size=(block_w - 0.4, block_d - 0.4, 0.04), mat_index=idx_cesped, uv_scale=0.35)
+def add_extruded_polygon(bm, polygon_2d, z_top=0.00, z_bottom=-1.50, top_mat=idx_cesped, side_mat=idx_zocalo, bottom_mat=idx_zocalo):
+    """
+    Extruye verticalmente un polígono cerrado 2D arbitrario.
+    Genera zócalo basal continuo Z <= -1.50m (Garantía GEMINI.md) con orientación manifold hacia afuera.
+    """
+    signed_area = 0.0
+    n = len(polygon_2d)
+    for i in range(n):
+        j = (i + 1) % n
+        signed_area += polygon_2d[i][0] * polygon_2d[j][1] - polygon_2d[j][0] * polygon_2d[i][1]
+
+    pts = list(polygon_2d)
+    if signed_area < 0:
+        pts.reverse()
+
+    n_pts = len(pts)
+    top_verts = [bm.verts.new((x, y, z_top)) for x, y in pts]
+    bot_verts = [bm.verts.new((x, y, z_bottom)) for x, y in pts]
+
+    # Cara superior (CCW -> normal hacia +Z)
+    face_top = bm.faces.new(top_verts)
+    face_top.material_index = top_mat
+    res_top = bmesh.ops.triangulate(bm, faces=[face_top])
+    for f in res_top['faces']:
+        f.material_index = top_mat
+
+    # Cara inferior (CW -> normal hacia -Z)
+    face_bot = bm.faces.new(list(reversed(bot_verts)))
+    face_bot.material_index = bottom_mat
+    res_bot = bmesh.ops.triangulate(bm, faces=[face_bot])
+    for f in res_bot['faces']:
+        f.material_index = bottom_mat
+
+    # Caras laterales (muros perimetrales del zócalo)
+    side_faces = []
+    for i in range(n_pts):
+        j = (i + 1) % n_pts
+        f_side = bm.faces.new([top_verts[i], top_verts[j], bot_verts[j], bot_verts[i]])
+        f_side.material_index = side_mat
+        side_faces.append(f_side)
+
+    bm.normal_update()
+    assign_uvs(list(res_top['faces']), scale=0.35)
+    assign_uvs(side_faces, scale=1.0)
+
+# Construir plataforma basal con zócalo perimetral continuo a Z = -1.50m
+add_extruded_polygon(bm, PARK_PERIMETER_POLYGON, z_top=0.00, z_bottom=-1.50, top_mat=idx_cesped, side_mat=idx_zocalo)
 
 # Glorieta central de adoquín alrededor del Kiosko (vano libre R=5.80m que respeta las escaleras del Kiosko)
 add_solid_ring(bm, center=(0.0, 0.0, 0.03), r_ext=12.00, r_int=5.80, height=0.06, segments=36, mat_index=idx_adoquin)
@@ -370,27 +462,30 @@ def add_oriented_walkway(start_xy, end_xy, width, mat_idx=idx_adoquin):
     r_y = mid_y - ca * offset_dist
     add_solid_box(bm, center=(r_x, r_y, curb_h*0.5), size=(length, curb_w, curb_h), rot_z=angle, mat_index=idx_ocre)
 
-# 8 Andadores radiales en estrella (conectan la glorieta central con los 4 bordes y las 4 diagonales)
-add_oriented_walkway((0.0, 12.0), (0.0, 40.5), 4.80)     # Norte (Av. Benito Juárez)
-add_oriented_walkway((0.0, -12.0), (0.0, -39.0), 4.80)   # Sur (Callejón Libertad)
-add_oriented_walkway((12.0, 0.0), (58.0, 0.0), 5.20)     # Este (Ortiz Rubio - Frente a Palacio)
-add_oriented_walkway((-12.0, 0.0), (-59.0, 0.0), 5.00)   # Poniente (Cárdenas - Frente a BBVA)
-add_oriented_walkway((-8.5, 8.5), (-32.32, 15.19), 4.00) # Diagonal NO (Hacia la Fuente de la Paz)
+# 8 Andadores radiales en estrella (trazado orgánico asimétrico original que preserva las visuales históricas)
+add_oriented_walkway((0.0, 12.0), (0.0, 38.0), 4.80)     # Norte (Av. Benito Juárez)
+# Andador Sur dividido para alojar la explanada peatonal circular del Monumento a Hidalgo (hid_y = -22.0)
+add_oriented_walkway((0.0, -12.0), (0.0, -16.2), 4.80)   # Sur (Tramo norte hacia Kiosko)
+add_oriented_walkway((0.0, -27.8), (0.0, -39.0), 4.80)   # Sur (Tramo sur hacia Callejón Libertad)
+add_oriented_walkway((12.0, 0.0), (34.0, 0.0), 5.20)     # Este (Conecta exactamente en el borde de la explanada Este X=34)
+add_oriented_walkway((-12.0, 0.0), (-32.0, 0.0), 5.00)   # Poniente (Conecta en el borde de la explanada Poniente X=-32)
+add_oriented_walkway((-8.5, 8.5), (-25.10, 13.16), 4.00) # Diagonal NO (Conecta en el perímetro exterior R=7.5m de la Fuente)
 add_oriented_walkway((8.5, 8.5), (32.0, 23.0), 4.00)     # Diagonal NE (Hacia Monumento a Juárez)
 add_oriented_walkway((-8.5, -8.5), (-36.0, -25.0), 4.00) # Diagonal SO (Hacia Monumento a Cárdenas)
-add_oriented_walkway((8.5, -8.5), (38.0, -10.0), 4.00)   # Diagonal SE (Hacia Obelisco)
+add_oriented_walkway((8.5, -8.5), (34.0, -24.0), 4.00)   # Diagonal SE (Mismo ángulo histórico ~ -31.3° que sus homólogos NE y SO)
 
-# Conexión continua desde la Fuente de la Paz hacia el acceso noroeste
-add_oriented_walkway((-32.32, 15.19), (-58.0, 28.0), 3.80)
+# Conexión continua desde el perímetro de la Fuente hacia el acceso noroeste (Ochava NO)
+add_oriented_walkway((-38.55, 19.35), (-44.0, 23.0), 3.80)
 
 # Explanada circular pavimentada para la Fuente de la Paz (R=7.50m, centro exacto coincidente con Godot)
 fuente_cx, fuente_cy = -32.3156, 15.1878
 add_solid_cylinder(bm, center=(fuente_cx, fuente_cy, 0.03), radius=7.50, height=0.06, segments=36, mat_index=idx_adoquin)
 add_solid_ring(bm, center=(fuente_cx, fuente_cy, 0.16), r_ext=7.80, r_int=7.50, height=0.32, segments=36, mat_index=idx_ocre)
 
-# Explanadas pavimentadas en accesos este y poniente
+# Explanadas pavimentadas en accesos este y poniente (confinadas estrictamente dentro del polígono)
 add_solid_box(bm, center=(46.0, 0.0, 0.03), size=(24.0, 24.0, 0.06), mat_index=idx_adoquin, uv_scale=0.6)
-add_solid_box(bm, center=(-48.0, 0.0, 0.03), size=(22.0, 18.0, 0.06), mat_index=idx_adoquin, uv_scale=0.6)
+add_solid_box(bm, center=(-38.0, 0.0, 0.03), size=(12.0, 16.0, 0.06), mat_index=idx_adoquin, uv_scale=0.6)
+
 
 # ==============================================================================
 # 4. MODELADO DE LOS 4 MONUMENTOS HISTÓRICOS (ORIENTACIÓN RIGUROSA)
@@ -402,6 +497,22 @@ print("[PARQUE HIDALGO] Construyendo los 4 monumentos históricos fotorrealistas
 # Mirando hacia dentro (hacia el norte +Y, hacia el Kiosko)
 # ------------------------------------------------------------------------------
 hid_x, hid_y = 0.0, -22.0
+
+# 0. Explanada circular peatonal adoquinada alrededor del monumento (R=5.80m)
+add_solid_cylinder(bm, center=(hid_x, hid_y, 0.03), radius=5.80, height=0.06, segments=36, mat_index=idx_adoquin)
+# Bordillos curvados ocre delimitando jardineras laterales (este y oeste), dejando libres los accesos norte y sur (|X| <= 2.4)
+n_curb_h = 32
+for i in range(n_curb_h):
+    ang1 = 2.0 * math.pi * i / n_curb_h
+    ang2 = 2.0 * math.pi * (i + 1) / n_curb_h
+    mid_ang = (ang1 + ang2) * 0.5
+    if abs(math.cos(mid_ang)) > 0.45:
+        p1 = (hid_x + 5.92 * math.cos(ang1), hid_y + 5.92 * math.sin(ang1), 0.16)
+        p2 = (hid_x + 5.92 * math.cos(ang2), hid_y + 5.92 * math.sin(ang2), 0.16)
+        mx, my = (p1[0] + p2[0]) * 0.5, (p1[1] + p2[1]) * 0.5
+        seg_len = math.hypot(p2[0] - p1[0], p2[1] - p1[1])
+        seg_ang = math.atan2(p2[1] - p1[1], p2[0] - p1[0])
+        add_solid_box(bm, center=(mx, my, 0.16), size=(seg_len * 1.05, 0.25, 0.32), rot_z=seg_ang, mat_index=idx_ocre)
 
 # 1. Medallón circular en el suelo (Piedra laja rústica de media_1790414613164.png)
 add_solid_cylinder(bm, center=(hid_x, hid_y, 0.04), radius=3.20, height=0.08, segments=32, mat_index=idx_laja)
@@ -593,35 +704,134 @@ add_solid_box(bm, center=(ob_x, ob_y + 0.64, 1.50), size=(0.65, 0.03, 0.48), mat
 add_solid_box(bm, center=(ob_x - 0.64, ob_y, 1.50), size=(0.03, 0.65, 0.48), mat_index=idx_bronce)
 add_solid_box(bm, center=(ob_x + 0.64, ob_y, 1.50), size=(0.03, 0.65, 0.48), mat_index=idx_bronce)
 
-# ==============================================================================
-# 5. ALCORQUES ANULARES ELEVADOS Y JARDINERAS PERIMETRALES
-# ==============================================================================
-print("[PARQUE HIDALGO] Construyendo alcorques anulares continuos...")
+# ------------------------------------------------------------------------------
+# MONUMENTO 5: CASETITA BLANCA CONMEMORATIVA (Borde del Andador Noroeste)
+# Basada en evidencia fotográfica media_1790444944727.jpg
+# ------------------------------------------------------------------------------
+print("[PARQUE HIDALGO] Construyendo casetita blanca conmemorativa y murete curvo (media_1790444944727.jpg)...")
+cas_w_x, cas_w_y = -17.0, 14.5
+cas_rot = math.radians(-16.0) # Orientada hacia el andador diagonal Noroeste
+ca_cw, sa_cw = math.cos(cas_rot), math.sin(cas_rot)
 
-def add_continuous_tree_planter(bm, center_xy, r_ext=1.60, r_int=1.25, height=0.38):
+def rot_cw(lx, ly, lz):
+    return (lx * ca_cw - ly * sa_cw + cas_w_x, lx * sa_cw + ly * ca_cw + cas_w_y, lz)
+
+# Casetita blanca de estuco
+add_solid_box(bm, center=rot_cw(0.0, 0.0, 1.25), size=(2.40, 1.80, 2.50), rot_z=cas_rot, mat_index=idx_pedestal_blanco)
+# Losa de techo con cornisa y pequeño alero
+add_solid_box(bm, center=rot_cw(0.0, 0.0, 2.54), size=(2.60, 2.00, 0.12), rot_z=cas_rot, mat_index=idx_pedestal_blanco)
+# Friso superior con celosías caladas de ventilación (cuadros oscuros en relieve)
+for v_i in range(3):
+    add_solid_box(bm, center=rot_cw(-0.65 + v_i*0.65, -0.91, 2.30), size=(0.45, 0.03, 0.18), rot_z=cas_rot, mat_index=idx_forja)
+# Marco conmemorativo vertical negro en fachada frontal con placa blanca
+add_solid_box(bm, center=rot_cw(0.0, -0.91, 1.35), size=(0.60, 0.03, 0.90), rot_z=cas_rot, mat_index=idx_forja)
+add_solid_box(bm, center=rot_cw(0.0, -0.92, 1.35), size=(0.50, 0.02, 0.80), rot_z=cas_rot, mat_index=idx_blanco_camisa)
+# Puerta de madera entablerada café rústica en el lateral derecho
+add_solid_box(bm, center=rot_cw(1.21, 0.0, 1.05), size=(0.04, 0.85, 1.95), rot_z=cas_rot, mat_index=idx_madera)
+# Bote de basura negro adyacente a la puerta (media_1790444944727.jpg)
+add_solid_cylinder(bm, center=rot_cw(1.50, -0.65, 0.45), radius=0.30, height=0.90, segments=12, mat_index=idx_forja)
+
+# Murete blanco curvo/escalonado de contención frente a la casetita (media_1790444944727.jpg)
+mur_pts = [
+    rot_cw(-3.6, -1.8, 0.20),
+    rot_cw(-2.4, -1.8, 0.35),
+    rot_cw(-1.2, -1.8, 0.50),
+    rot_cw(0.0, -1.8, 0.55),
+    rot_cw(1.2, -1.8, 0.50),
+    rot_cw(2.4, -1.8, 0.35),
+    rot_cw(3.6, -1.8, 0.20)
+]
+for mi in range(len(mur_pts)-1):
+    p1 = mur_pts[mi]
+    p2 = mur_pts[mi+1]
+    seg_m = ((p1[0]+p2[0])*0.5, (p1[1]+p2[1])*0.5, (p1[2]+p2[2])*0.5)
+    seg_l = math.hypot(p2[0]-p1[0], p2[1]-p1[1])
+    seg_a = math.atan2(p2[1]-p1[1], p2[0]-p1[0])
+    seg_h = max(0.40, seg_m[2]*2.0)
+    add_solid_box(bm, center=(seg_m[0], seg_m[1], seg_h*0.5), size=(seg_l*1.05, 0.28, seg_h), rot_z=seg_a, mat_index=idx_pedestal_blanco)
+
+# Remate semicircular central decorativo en el murete blanco
+add_solid_cylinder(bm, center=rot_cw(0.0, -1.8, 0.95), radius=0.35, height=0.28, segments=16, mat_index=idx_pedestal_blanco)
+
+# ==============================================================================
+# 5. ALCORQUES ANULARES ELEVADOS Y ÁRBOLES ACOPLADOS 1:1
+# ==============================================================================
+print("[PARQUE HIDALGO] Generando alcorques anulares con árboles 1:1 acoplados...")
+
+def add_foliage_sphere(bm, center, radius, mat_index=idx_follaje):
+    res = bmesh.ops.create_icosphere(bm, subdivisions=2, radius=radius, matrix=Matrix.Translation(center))
+    for v in res['verts']:
+        dist = 1.0 + 0.08 * math.sin(v.co.x * 3.0) * math.cos(v.co.y * 3.0)
+        v.co = Vector(center) + (v.co - Vector(center)) * dist
+    faces = set(f for v in res['verts'] for f in v.link_faces)
+    for f in faces:
+        f.smooth = True
+        f.material_index = mat_index
+    assign_uvs(list(faces), 1.0)
+
+def add_organic_tree(bm, pos_xy, trunk_h=3.5, trunk_r=0.45, crown_r=4.0, crown_h=5.5):
+    tx, ty = pos_xy
+    add_solid_cylinder(bm, center=(tx, ty, trunk_h*0.5), radius=trunk_r, height=trunk_h, segments=12, mat_index=idx_corteza)
+    add_solid_cylinder(bm, center=(tx, ty, 0.25), radius=trunk_r * 1.35, height=0.50, segments=12, mat_index=idx_corteza)
+
+    for b_i in range(3):
+        b_ang = b_i * (2.0 * math.pi / 3.0)
+        bx = math.cos(b_ang) * 0.45
+        by = math.sin(b_ang) * 0.45
+        add_solid_cylinder(bm, center=(tx + bx, ty + by, trunk_h + 0.8), radius=trunk_r*0.45, height=1.8, segments=8, mat_index=idx_corteza)
+
+    cz_base = trunk_h + crown_h * 0.45
+    add_foliage_sphere(bm, (tx, ty, cz_base + 0.5), radius=crown_r * 0.85)
+    for c_i in range(5):
+        c_ang = c_i * (2.0 * math.pi / 5.0)
+        clx = tx + math.cos(c_ang) * (crown_r * 0.52)
+        cly = ty + math.sin(c_ang) * (crown_r * 0.52)
+        clz = cz_base + (c_i % 2) * 0.7 - 0.2
+        add_foliage_sphere(bm, (clx, cly, clz), radius=crown_r * 0.65)
+
+def add_tree_with_planter(bm, center_xy, r_ext=1.60, r_int=1.25, height=0.38):
     cx, cy = center_xy
     add_solid_ring(bm, center=(cx, cy, height*0.5), r_ext=r_ext, r_int=r_int, height=height, segments=24, mat_index=idx_ocre, smooth=True)
     add_solid_cylinder(bm, center=(cx, cy, height - 0.06), radius=r_int, height=0.12, segments=20, mat_index=idx_tierra)
+    # Acoplamiento estricto 1:1: cada alcorque tiene exactamente un árbol
+    add_organic_tree(bm, center_xy, trunk_h=3.4, trunk_r=0.40, crown_r=3.5, crown_h=5.0)
 
-alcorque_positions = [
-    (-4.5, 24.0), (4.5, 24.0), (-3.8, 16.0), (3.8, 16.0),
-    (-4.0, -15.0), (4.0, -15.0), (-4.2, -28.0), (4.2, -28.0),
-    (24.0, 5.5), (24.0, -5.5), (32.0, 7.5), (32.0, -6.5),
-    (-22.0, 6.0), (-22.0, -6.0), (-36.0, 8.0)
+# Lista única de alcorques elevados con árbol acoplado (ubicados en bordes de andadores)
+alcorques_specs = [
+    # Andador Norte (costados)
+    (-3.4, 22.0), (3.4, 22.0), (-3.4, 30.0), (3.4, 30.0),
+    # Andador Sur (costados)
+    (-3.4, -15.0), (3.4, -15.0), (-3.4, -29.0), (3.4, -29.0),
+    # Andador Este (costados)
+    (20.0, 3.6), (20.0, -3.6), (32.0, 3.6), (32.0, -5.5),
+    # Andador Poniente (costados)
+    (-18.0, 3.5), (-18.0, -3.5),
+    # Plaza de la Fuente (borde exterior, según panorama real)
+    (-24.5, 14.5)
 ]
-for pos in alcorque_positions:
-    add_continuous_tree_planter(bm, pos)
+for apos in alcorques_specs:
+    add_tree_with_planter(bm, apos)
+
+# Árboles monumentales de sombra ÚNICAMENTE dentro de las praderas interiores de césped:
+monumental_trees_in_gardens = [
+    # Cuadrante Noreste
+    (14.0, 14.0), (20.0, 10.0), (12.0, 26.0), (24.0, 16.0),
+    # Cuadrante Sureste (despejados del andador diagonal SE que va hacia 34, -24)
+    (18.0, -5.5), (26.0, -7.0), (14.0, -23.0), (22.0, -27.0),
+    # Cuadrante Suroeste
+    (-14.0, -14.0), (-20.0, -10.0), (-20.0, -20.0), (-26.0, -16.0),
+    # Cuadrante Noroeste (lejos de la casetita blanca y de la fuente)
+    (-12.0, 24.0), (-18.0, 6.0), (-26.0, 6.0)
+]
+for mt in monumental_trees_in_gardens:
+    add_organic_tree(bm, mt, trunk_h=4.2, trunk_r=0.50, crown_r=4.5, crown_h=6.5)
 
 # ==============================================================================
-# 6. MOBILIARIO URBANO (BANCAS POR DENTRO DE ANDADORES, MIRANDO AL CENTRO)
+# 6. MOBILIARIO URBANO (BANCAS Y FAROLAS EN COSTADOS, PASO CENTRAL 100% DESPEJADO)
 # ==============================================================================
 print("[PARQUE HIDALGO] Generando mobiliario urbano (bancas, farolas y mesas)...")
 
 def add_ornamental_bench(bm, pos_xy, angle_rad=0.0):
-    """
-    Banca colonial de hierro forjado con escudo ornamental (media_1790414673421.jpg).
-    Por diseño trigonométrico: angle_rad = atan2(-dx, dy) apunta al vector (dx, dy).
-    """
     px, py = pos_xy
     ca = math.cos(angle_rad)
     sa = math.sin(angle_rad)
@@ -642,8 +852,6 @@ def add_ornamental_bench(bm, pos_xy, angle_rad=0.0):
     for sy, sz in [(-0.16, 0.42), (-0.05, 0.43), (0.07, 0.44), (0.19, 0.44)]:
         add_solid_box(bm, center=rot(0.0, sy, sz), size=(1.76, 0.10, 0.035), rot_z=angle_rad, mat_index=idx_madera)
 
-# REGLA DEL USUARIO: "las bancas siempre van por dentro de los andadores, viendo hacia dentro de los andadores"
-# Calculamos posiciones estrictamente sobre el pavimento del andador, orientadas hacia su eje central.
 benches_specs = [
     # Andador Norte (x=0, ancho 4.8m -> bancas en x=±1.95m viendo al centro x=0)
     ((-1.95, 18.0), -math.pi * 0.5), # Oeste viendo al Este (+X)
@@ -678,15 +886,19 @@ benches_specs = [
     ((10.5 * math.cos(math.radians(245)), 10.5 * math.sin(math.radians(245))), math.atan2(10.5 * math.cos(math.radians(245)), -10.5 * math.sin(math.radians(245)))),
     ((10.5 * math.cos(math.radians(295)), 10.5 * math.sin(math.radians(295))), math.atan2(10.5 * math.cos(math.radians(295)), -10.5 * math.sin(math.radians(295)))),
     ((10.5 * math.cos(math.radians(335)), 10.5 * math.sin(math.radians(335))), math.atan2(10.5 * math.cos(math.radians(335)), -10.5 * math.sin(math.radians(335)))),
+
+    # Dos bancas coloniales frente a la casetita blanca (media_1790444944727.jpg)
+    (rot_cw(-1.5, -2.8, 0.0)[:2], cas_rot + math.pi),
+    (rot_cw(1.5, -2.8, 0.0)[:2], cas_rot + math.pi)
 ]
 for bp, bang in benches_specs:
     add_ornamental_bench(bm, bp, bang)
 
 def add_triple_colonial_lamp(bm, pos_xy):
     lx, ly = pos_xy
-    add_solid_cylinder(bm, center=(lx, ly, 0.25), radius=0.34, height=0.50, segments=8, mat_index=idx_forja)
-    add_solid_cylinder(bm, center=(lx, ly, 2.00), radius=0.09, height=3.00, segments=12, mat_index=idx_forja)
-    add_solid_cylinder(bm, center=(lx, ly, 3.55), radius=0.18, height=0.20, segments=12, mat_index=idx_forja)
+    add_solid_cylinder(bm, center=(lx, ly, 0.25), radius=0.30, height=0.50, segments=8, mat_index=idx_forja)
+    add_solid_cylinder(bm, center=(lx, ly, 2.00), radius=0.08, height=3.00, segments=12, mat_index=idx_forja)
+    add_solid_cylinder(bm, center=(lx, ly, 3.55), radius=0.16, height=0.20, segments=12, mat_index=idx_forja)
 
     for arm in range(3):
         ang = arm * (2.0 * math.pi / 3.0)
@@ -697,15 +909,23 @@ def add_triple_colonial_lamp(bm, pos_xy):
         add_solid_cylinder(bm, center=(fx, fy, 3.82), radius=0.22, height=0.36, segments=6, mat_index=idx_forja)
         add_truncated_pyramid(bm, center=(fx, fy, 4.08), base_s=(0.36, 0.36), top_s=(0.06, 0.06), height=0.26, mat_index=idx_forja)
 
+# Farolas en los costados de los andadores (paso central 100% expedito y transitable)
 lamp_positions = [
-    (-9.0, 9.0), (9.0, 9.0), (-9.0, -9.0), (9.0, -9.0),
-    (0.0, 31.0), (0.0, -33.0), (45.0, 0.0), (-48.0, 0.0),
-    (28.0, 10.0), (28.0, -10.0),
+    # Esquinas de chaflán de la glorieta central
+    (-9.5, 9.5), (9.5, 9.5), (-9.5, -9.5), (9.5, -9.5),
+    # Andador Norte (costados)
+    (-2.15, 23.0), (2.15, 31.0),
+    # Andador Sur (costados)
+    (-2.15, -16.0), (2.15, -31.0),
+    # Andador Este (costados)
+    (22.0, 2.30), (32.0, -2.30),
+    # Andador Poniente (costados)
+    (-19.0, 2.20), (-29.0, -2.20)
 ]
 for lp in lamp_positions:
     add_triple_colonial_lamp(bm, lp)
 
-# Mesas de ajedrez / picnic de concreto con bancos rectangulares (media_1790414528108.jpg)
+# Mesas de ajedrez / picnic de concreto ÚNICAMENTE en la explanada Este (media_1790414528108.jpg)
 def add_chess_table(bm, pos_xy):
     tx, ty = pos_xy
     add_solid_cylinder(bm, center=(tx, ty, 0.38), radius=0.24, height=0.76, segments=12, mat_index=idx_cantera)
@@ -716,7 +936,8 @@ def add_chess_table(bm, pos_xy):
     for bx, by in [(0, -0.85), (0, 0.85)]:
         add_solid_box(bm, center=(tx + bx, ty + by, 0.22), size=(0.90, 0.32, 0.44), mat_index=idx_cantera)
 
-for cp in [(24.0, 8.0), (24.0, 10.5), (24.0, -8.0), (24.0, -10.5), (-34.0, 12.0), (-34.0, 14.5)]:
+# Mesas de ajedrez / picnic de concreto en la explanada Este (media_1790414528108.jpg)
+for cp in [(44.0, 4.5), (44.0, 8.0), (48.0, 4.5), (48.0, 8.0)]:
     add_chess_table(bm, cp)
 
 # Botes de basura de forja cilíndricos
@@ -733,74 +954,11 @@ def add_blue_trash_drum(bm, pos_xy):
 
 blue_drum_positions = [
     (-10.0, 12.0), (10.0, 12.0), (-10.0, -12.0), (10.0, -12.0),
-    (36.0, 3.0), (-42.0, 3.0)
+    (36.0, 3.0), (-38.0, 3.0)
 ]
 for bdp in blue_drum_positions:
     add_blue_trash_drum(bm, bdp)
 
-# Caseta rústica / techumbre de parada de taxis con teja a dos aguas (media_1790414528108.jpg)
-def add_taxi_shelter(bm, pos_xy, angle_rad=0.0):
-    px, py = pos_xy
-    ca, sa = math.cos(angle_rad), math.sin(angle_rad)
-    def rot(lx, ly, lz):
-        return (lx * ca - ly * sa + px, lx * sa + ly * ca + py, lz)
-    for sx, sy in [(-1.3, -0.85), (1.3, -0.85), (-1.3, 0.85), (1.3, 0.85)]:
-        add_solid_box(bm, center=rot(sx, sy, 1.25), size=(0.16, 0.16, 2.50), rot_z=angle_rad, mat_index=idx_madera)
-    add_solid_box(bm, center=rot(0.0, 0.80, 1.40), size=(2.30, 0.06, 1.10), rot_z=angle_rad, mat_index=idx_pedestal_blanco)
-    add_solid_box(bm, center=rot(0.0, -0.85, 2.45), size=(2.90, 0.14, 0.14), rot_z=angle_rad, mat_index=idx_madera)
-    add_solid_box(bm, center=rot(0.0, 0.85, 2.45), size=(2.90, 0.14, 0.14), rot_z=angle_rad, mat_index=idx_madera)
-    add_truncated_pyramid(bm, center=rot(0.0, 0.0, 2.85), base_s=(3.20, 2.30), top_s=(3.00, 0.30), height=0.65, rot_z=angle_rad, mat_index=idx_teja_roja)
-
-add_taxi_shelter(bm, (-36.0, 18.0), angle_rad=0.0)
-
-# ==============================================================================
-# 7. MASAS FORESTALES ORGÁNICAS (CERO PALMERAS: FRESNOS Y EUCALIPTOS)
-# ==============================================================================
-print("[PARQUE HIDALGO] Generando masa forestal realista (sin palmeras)...")
-
-def add_foliage_sphere(bm, center, radius, mat_index=idx_follaje):
-    res = bmesh.ops.create_icosphere(bm, subdivisions=2, radius=radius, matrix=Matrix.Translation(center))
-    for v in res['verts']:
-        dist = 1.0 + 0.08 * math.sin(v.co.x * 3.0) * math.cos(v.co.y * 3.0)
-        v.co = Vector(center) + (v.co - Vector(center)) * dist
-    faces = set(f for v in res['verts'] for f in v.link_faces)
-    for f in faces:
-        f.smooth = True
-        f.material_index = mat_index
-    assign_uvs(list(faces), 1.0)
-
-def add_organic_tree(bm, pos_xy, trunk_h=3.5, trunk_r=0.45, crown_r=4.0, crown_h=5.5):
-    tx, ty = pos_xy
-    add_truncated_pyramid(bm, center=(tx, ty, trunk_h*0.5), base_s=(trunk_r*2.2, trunk_r*2.2), top_s=(trunk_r*1.6, trunk_r*1.6),
-                         height=trunk_h, mat_index=idx_corteza)
-    for b_idx in range(4):
-        b_ang = b_idx * (math.pi * 0.5) + 0.25
-        bx = math.cos(b_ang) * (trunk_r * 1.6)
-        by = math.sin(b_ang) * (trunk_r * 1.6)
-        add_solid_cylinder(bm, center=(tx + bx, ty + by, trunk_h + 0.8), radius=trunk_r*0.45, height=1.8, segments=8, mat_index=idx_corteza)
-
-    cz_base = trunk_h + crown_h * 0.45
-    add_foliage_sphere(bm, (tx, ty, cz_base + 0.5), radius=crown_r * 0.85)
-    for c_i in range(5):
-        c_ang = c_i * (2.0 * math.pi / 5.0)
-        clx = tx + math.cos(c_ang) * (crown_r * 0.52)
-        cly = ty + math.sin(c_ang) * (crown_r * 0.52)
-        clz = cz_base + (c_i % 2) * 0.7 - 0.2
-        add_foliage_sphere(bm, (clx, cly, clz), radius=crown_r * 0.65)
-
-for pos in alcorque_positions[:12]:
-    add_organic_tree(bm, pos, trunk_h=3.2, trunk_r=0.42, crown_r=3.6, crown_h=5.2)
-
-monumental_trees = [
-    (18.0, 24.0), (24.0, 16.0), (12.0, 26.0),
-    (-24.0, 24.0), (-16.0, 26.0), (-38.0, 22.0),
-    (16.0, -22.0), (26.0, -18.0), (32.0, -24.0),
-    (-20.0, -20.0), (-26.0, -16.0), (-18.0, -26.0),
-    (-14.0, 12.0), (14.0, 12.0), (-14.0, -12.0), (14.0, -12.0),
-    (-42.0, 18.0), (42.0, 14.0), (-46.0, -14.0), (44.0, -20.0)
-]
-for mt in monumental_trees:
-    add_organic_tree(bm, mt, trunk_h=4.5, trunk_r=0.55, crown_r=4.8, crown_h=7.0)
 
 # ==============================================================================
 # 8. FINALIZACIÓN DE MALLA Y EXPORTACIÓN GLTF
@@ -836,15 +994,15 @@ print(f"[PARQUE HIDALGO] Archivo .blend guardado en {BLEND_OUT_PATH}")
 # ==============================================================================
 print(f"[PARQUE HIDALGO] Escribiendo escena Godot con colisiones analíticas en {TSCN_OUT_PATH}...")
 
-tscn_content = f"""[gd_scene load_steps=12 format=3 uid="uid://b8parquehidalgo2009"]
+tscn_content = f"""[gd_scene load_steps=13 format=3 uid="uid://b8parquehidalgo2009"]
 
 [ext_resource type="PackedScene" path="res://assets/parque_miguel_hidalgo.glb" id="1_mesh"]
 
 [sub_resource type="BoxShape3D" id="Shape_Plataforma_General"]
-size = Vector3({block_w:.1f}, 1.5, {block_d:.1f})
+size = Vector3({park_w:.1f}, 1.5, {park_d:.1f})
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Norte"]
-size = Vector3(5.0, 0.4, 28.5)
+size = Vector3(5.0, 0.4, 26.0)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Sur"]
 size = Vector3(5.0, 0.4, 27.0)
@@ -853,7 +1011,7 @@ size = Vector3(5.0, 0.4, 27.0)
 size = Vector3(46.0, 0.4, 5.5)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Oeste"]
-size = Vector3(47.0, 0.4, 5.2)
+size = Vector3(32.0, 0.4, 5.2)
 
 [sub_resource type="BoxShape3D" id="Shape_Podio_Juarez"]
 size = Vector3(7.0, 0.7, 5.5)
@@ -877,6 +1035,9 @@ size = Vector3(1.4, 6.0, 1.4)
 [sub_resource type="BoxShape3D" id="Shape_Muro_Cardenas"]
 size = Vector3(4.4, 1.5, 0.6)
 
+[sub_resource type="BoxShape3D" id="Shape_Caseta_Blanca"]
+size = Vector3(2.6, 2.6, 2.0)
+
 [node name="ParqueMiguelHidalgo" type="Node3D"]
 
 [node name="VisualMesh" parent="." instance=ExtResource("1_mesh")]
@@ -887,12 +1048,12 @@ collision_mask = 0
 
 # 1. Plataforma basal enterrada transitable
 [node name="Col_Plataforma" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {block_cx:.2f}, -0.75, {-block_cy:.2f})
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {park_cx:.2f}, -0.75, {-park_cy:.2f})
 shape = SubResource("Shape_Plataforma_General")
 
 # 2. Andadores principales transitables
 [node name="Col_Andador_N" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, -26.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, -25.0)
 shape = SubResource("Shape_Andador_Norte")
 
 [node name="Col_Andador_S" type="CollisionShape3D" parent="StaticBody3D"]
@@ -904,11 +1065,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.0, 0.2, 0.0)
 shape = SubResource("Shape_Andador_Este")
 
 [node name="Col_Andador_W" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.5, 0.2, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.0, 0.2, 0.0)
 shape = SubResource("Shape_Andador_Oeste")
 
-# 3. Colisiones del Monumento a Benito Juárez (Noreste, rotado hacia la esquina exterior)
-# En Godot basis.x = (-0.707107, 0, -0.707107), basis.y = (0, 1, 0), basis.z = (0.707107, 0, -0.707107)
+# 3. Colisiones del Monumento a Benito Juárez (Noreste)
 [node name="Col_Podio_Juarez" type="CollisionShape3D" parent="StaticBody3D"]
 transform = Transform3D(-0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, {bj_x:.1f}, 0.35, {-bj_y:.1f})
 shape = SubResource("Shape_Podio_Juarez")
@@ -917,7 +1077,7 @@ shape = SubResource("Shape_Podio_Juarez")
 transform = Transform3D(-0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, {bj_x:.1f}, 1.65, {-bj_y:.1f})
 shape = SubResource("Shape_Pedestal_Juarez")
 
-# 4. Colisiones del Monumento a Miguel Hidalgo (Sur, mirando hacia dentro al Kiosko)
+# 4. Colisiones del Monumento a Miguel Hidalgo (Sur)
 [node name="Col_Medallon_Hidalgo" type="CollisionShape3D" parent="StaticBody3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {hid_x:.1f}, 0.1, {-hid_y:.1f})
 shape = SubResource("Shape_Medallon_Hidalgo")
@@ -935,11 +1095,15 @@ shape = SubResource("Shape_Obelisco_Base")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {ob_x:.1f}, 3.2, {-ob_y:.1f})
 shape = SubResource("Shape_Obelisco_Fuste")
 
-# 6. Colisiones del Monumento a Lázaro Cárdenas (Suroeste, rotado hacia la esquina exterior)
-# En Godot basis.x = (0.707107, 0, 0.707107), basis.y = (0, 1, 0), basis.z = (-0.707107, 0, 0.707107)
+# 6. Colisiones del Monumento a Lázaro Cárdenas (Suroeste)
 [node name="Col_Muro_Cardenas" type="CollisionShape3D" parent="StaticBody3D"]
 transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, {lc_x:.1f}, 0.75, {-lc_y:.1f})
 shape = SubResource("Shape_Muro_Cardenas")
+
+# 7. Colisiones de la Casetita Blanca Conmemorativa (Noroeste)
+[node name="Col_Caseta_Blanca" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(0.961262, 0, -0.275637, 0, 1, 0, 0.275637, 0, 0.961262, {cas_w_x:.1f}, 1.3, {-cas_w_y:.1f})
+shape = SubResource("Shape_Caseta_Blanca")
 """
 
 with open(TSCN_OUT_PATH, "w", encoding="utf-8") as f:
@@ -987,9 +1151,9 @@ def setup_camera(name, loc, target, lens=35.0):
 cameras_specs = [
     {
         "name": "Cam_01_Cenital_Top",
-        "loc": (-0.45, 0.95, 82.0),
-        "target": (-0.45, 0.95, 0.0),
-        "lens": 35.0,
+        "loc": (park_cx, park_cy, 110.0),
+        "target": (park_cx, park_cy, 0.0),
+        "lens": 28.0,
         "filename": "parque_01_cenital_top.png"
     },
     {
@@ -1030,7 +1194,7 @@ cameras_specs = [
         "filename": "parque_06_obelisco_cantera_e.png"
     },
     {
-        # Vista peatonal sobre el andador mostrando las bancas ubicadas dentro del pavimento
+        # Vista peatonal sobre el andador mostrando las bancas y farolas en los costados
         "name": "Cam_07_Peatonal_Andador_Bancas",
         "loc": (0.80, 33.0, 1.65),
         "target": (0.0, 10.0, 1.2),
@@ -1038,11 +1202,12 @@ cameras_specs = [
         "filename": "parque_07_peatonal_andador_bancas.png"
     },
     {
-        "name": "Cam_08_Acceso_Oeste_Cardenas",
-        "loc": (-56.0, 0.0, 2.4),
-        "target": (-20.0, 0.0, 1.8),
+        # Vista hacia la Casetita Blanca en el borde del andador Noroeste (media_1790444944727.jpg)
+        "name": "Cam_08_Casetita_Blanca_NW",
+        "loc": (-19.2, 8.0, 2.1),
+        "target": (-17.0, 14.5, 1.35),
         "lens": 28.0,
-        "filename": "parque_08_acceso_oeste_cardenas.png"
+        "filename": "parque_08_casetita_blanca_nw.png"
     }
 ]
 
@@ -1056,3 +1221,4 @@ for cam_info in cameras_specs:
     bpy.ops.render.render(write_still=True)
 
 print("[PARQUE HIDALGO] ¡Generación procedural fotorrealista y validación cerradas con éxito!")
+
