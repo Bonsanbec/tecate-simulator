@@ -18,6 +18,7 @@
 [ext_resource type="PackedScene" path="res://assets/buildings/edificio_cardenas_33.tscn" id="17_cardenas_33"]
 [ext_resource type="PackedScene" path="res://assets/buildings/edificio_cardenas_25.tscn" id="20_cardenas_25"]
 [ext_resource type="PackedScene" path="res://assets/buildings/edificio_juarez_235.tscn" id="21_juarez_235"]
+[ext_resource type="PackedScene" path="res://assets/buildings/manzana_central_2009.tscn" id="22_manzana_central"]
 [ext_resource type="PackedScene" path="res://systems/environment/sky_system.tscn" id="18_sky_system"]
 [ext_resource type="PackedScene" path="res://ui/start_screen.tscn" id="19_start_screen"]
 
@@ -69,6 +70,9 @@ transform = Transform3D(-0.1077, -0.0058, 1.2462, -0.0111, 1.2508, 0.0037, -1.24
 
 [node name="Edificio_Juarez_235" parent="." instance=ExtResource("21_juarez_235")]
 transform = Transform3D(0.844388, -0.008554, 0.097136, 0.012013, 0.849398, -0.029635, -0.096769, 0.030813, 0.843911, -48.8735, 400.9325, -45.1705)
+
+[node name="Manzana_Central_2009" parent="." instance=ExtResource("22_manzana_central")]
+transform = Transform3D(0.950513, 0.011756, -0.092452, -0.009246, 0.999444, 0.032033, 0.084122, -0.026832, 0.861452, 56.5282, 399.5098, 29.9695)
 
 [node name="Nomenclatura" parent="." instance=ExtResource("12_nomenclatura")]
 
