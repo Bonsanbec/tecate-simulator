@@ -1,125 +1,215 @@
-[gd_scene load_steps=19 format=3 uid="uid://manzana_central_2009_prod"]
+[gd_scene load_steps=32 format=3 uid="uid://manzana_central_2009_prod"]
 [ext_resource type="PackedScene" path="res://assets/buildings/manzana_central_2009.glb" id="1_glb"]
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(8.00, 6.80, 14.50)
+size = Vector3(9.00, 3.60, 9.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2"]
-size = Vector3(12.00, 4.20, 42.00)
+size = Vector3(23.00, 7.60, 18.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3"]
-size = Vector3(14.00, 4.40, 34.69)
+size = Vector3(12.00, 3.80, 18.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_4"]
-size = Vector3(16.00, 8.60, 10.00)
+size = Vector3(14.00, 3.90, 18.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5"]
-size = Vector3(0.50, 3.80, 0.50)
+size = Vector3(12.00, 3.70, 18.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_6"]
-size = Vector3(0.50, 3.80, 0.50)
+size = Vector3(14.00, 4.00, 18.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_7"]
-size = Vector3(0.50, 3.80, 0.50)
+size = Vector3(10.00, 3.80, 18.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_8"]
-size = Vector3(48.50, 4.30, 13.00)
+size = Vector3(15.00, 7.40, 19.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_9"]
-size = Vector3(23.50, 7.40, 19.00)
+size = Vector3(0.30, 2.60, 19.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_10"]
-size = Vector3(6.00, 5.80, 26.00)
+size = Vector3(6.00, 3.60, 19.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_11"]
-size = Vector3(6.00, 5.80, 26.00)
+size = Vector3(8.00, 5.50, 19.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_12"]
-size = Vector3(0.40, 3.20, 27.00)
+size = Vector3(9.00, 3.60, 10.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_13"]
-size = Vector3(22.73, 3.80, 16.00)
+size = Vector3(16.00, 3.80, 11.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_14"]
-size = Vector3(22.00, 7.80, 24.00)
+size = Vector3(16.00, 3.50, 10.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_15"]
-size = Vector3(20.00, 3.90, 16.00)
+size = Vector3(16.00, 3.60, 11.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_16"]
-size = Vector3(20.00, 6.90, 22.00)
+size = Vector3(16.00, 6.80, 13.00)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_17"]
-size = Vector3(20.00, 5.20, 22.00)
+size = Vector3(14.00, 7.20, 13.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_18"]
+size = Vector3(16.00, 4.20, 18.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_19"]
+size = Vector3(15.00, 6.50, 18.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_20"]
+size = Vector3(8.00, 3.50, 18.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_21"]
+size = Vector3(24.00, 7.60, 18.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_22"]
+size = Vector3(22.00, 4.80, 18.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_23"]
+size = Vector3(14.00, 3.20, 0.40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_24"]
+size = Vector3(0.40, 3.20, 8.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_25"]
+size = Vector3(0.50, 3.80, 0.50)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_26"]
+size = Vector3(0.50, 3.80, 0.50)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_27"]
+size = Vector3(0.40, 3.20, 36.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_28"]
+size = Vector3(17.60, 5.50, 30.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_29"]
+size = Vector3(0.30, 2.60, 40.00)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_30"]
+size = Vector3(25.00, 2.60, 0.30)
 
 [node name="Manzana_Central_2009" type="StaticBody3D"]
 
 [node name="MeshInstance" parent="." instance=ExtResource("1_glb")]
 
-[node name="Col_West_Placita" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.00, 3.40, -7.25)
+[node name="Col_ModasDaVinci" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.50, 1.80, -72.50)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Col_West_Comercios" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.00, 2.10, -35.50)
+[node name="Col_TelasElias" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.50, 3.80, -68.00)
 shape = SubResource("BoxShape3D_2")
 
-[node name="Col_West_DaVinci_Norte" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.00, 2.20, -73.84)
+[node name="Col_MariscosElChapo" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.00, 1.90, -68.00)
 shape = SubResource("BoxShape3D_3")
 
-[node name="Col_North_Elias_RearWall" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.50, 4.30, -81.50)
+[node name="Col_TaqLosArcos" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51.00, 1.95, -68.00)
 shape = SubResource("BoxShape3D_4")
 
-[node name="Col_North_Elias_Col1" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.00, 1.90, -90.94)
+[node name="Col_RosticeriaPolos" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64.00, 1.85, -68.00)
 shape = SubResource("BoxShape3D_5")
 
-[node name="Col_North_Elias_Col2" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.00, 1.90, -90.94)
+[node name="Col_FarmaciaPueblo" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 77.00, 2.00, -68.00)
 shape = SubResource("BoxShape3D_6")
 
-[node name="Col_North_Elias_Col3" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.00, 1.90, -90.94)
+[node name="Col_BarberAzteca" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 89.00, 1.90, -68.00)
 shape = SubResource("BoxShape3D_7")
 
-[node name="Col_North_Comercios_A" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.75, 2.15, -84.69)
+[node name="Col_HotelJuarez" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 101.50, 3.70, -67.50)
 shape = SubResource("BoxShape3D_8")
 
-[node name="Col_North_HotelJuarez" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 90.25, 3.70, -81.69)
+[node name="Col_MuroMedellin" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 113.85, 1.30, -67.50)
 shape = SubResource("BoxShape3D_9")
 
-[node name="Col_North_Terminal_L" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 118.00, 2.90, -78.19)
+[node name="Col_SuperTaqTecate" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 117.00, 1.80, -67.50)
 shape = SubResource("BoxShape3D_10")
 
-[node name="Col_North_Terminal_R" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 131.73, 2.90, -78.19)
+[node name="Col_TerminalNorte" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 124.00, 2.75, -67.50)
 shape = SubResource("BoxShape3D_11")
 
-[node name="Col_East_Darsenas_Wall" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 134.53, 1.60, -61.50)
+[node name="Col_BarberiaBetos" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.50, 1.80, -63.00)
 shape = SubResource("BoxShape3D_12")
 
-[node name="Col_South_Naves_Suroriente" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 123.36, 1.90, -8.00)
+[node name="Col_CopyFast" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.00, 1.90, -52.50)
 shape = SubResource("BoxShape3D_13")
 
-[node name="Col_South_HotelColonial" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 101.00, 3.90, -12.00)
+[node name="Col_MRMultiservicios" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.00, 1.75, -42.00)
 shape = SubResource("BoxShape3D_14")
 
-[node name="Col_South_Fimbres_Arrematec" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80.00, 1.95, -8.00)
+[node name="Col_CafeLosPinos" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.00, 1.80, -31.50)
 shape = SubResource("BoxShape3D_15")
 
-[node name="Col_South_Heras_Sonora" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.00, 3.45, -11.00)
+[node name="Col_TaqLaPlacita" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.00, 3.40, -19.50)
 shape = SubResource("BoxShape3D_16")
 
-[node name="Col_South_DulceriaPrisci" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.00, 2.60, -11.00)
+[node name="Col_LaFlorMichoacanSur" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.00, 3.60, -6.50)
 shape = SubResource("BoxShape3D_17")
 
+[node name="Col_DulceriaPrisci" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.00, 2.10, -9.00)
+shape = SubResource("BoxShape3D_18")
+
+[node name="Col_RestauranteHeras" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.50, 3.25, -9.00)
+shape = SubResource("BoxShape3D_19")
+
+[node name="Col_CasetaJardin" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64.00, 1.75, -9.00)
+shape = SubResource("BoxShape3D_20")
+
+[node name="Col_HotelColonial" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80.00, 3.80, -9.00)
+shape = SubResource("BoxShape3D_21")
+
+[node name="Col_TallerSur" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 103.00, 2.40, -9.00)
+shape = SubResource("BoxShape3D_22")
+
+[node name="Col_BardaSurTerminal" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 121.00, 1.60, -0.20)
+shape = SubResource("BoxShape3D_23")
+
+[node name="Col_BardaSureste" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 127.80, 1.60, -4.00)
+shape = SubResource("BoxShape3D_24")
+
+[node name="Col_PilarPortonSur" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 127.75, 1.90, -8.00)
+shape = SubResource("BoxShape3D_25")
+
+[node name="Col_PilarPortonNorte" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 127.75, 1.90, -22.00)
+shape = SubResource("BoxShape3D_26")
+
+[node name="Col_MuroOrienteTerminal" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 127.80, 1.60, -40.00)
+shape = SubResource("BoxShape3D_27")
+
+[node name="Col_NaveTalleresInterior" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 118.80, 2.75, -41.00)
+shape = SubResource("BoxShape3D_28")
+
+[node name="Col_BardaInterior1" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.15, 1.30, -38.00)
+shape = SubResource("BoxShape3D_29")
+
+[node name="Col_BardaInterior2" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 57.50, 1.30, -58.15)
+shape = SubResource("BoxShape3D_30")

@@ -1,39 +1,49 @@
 """
-Generador Procedural 3D de Alta Fidelidad Fotorrealista: Manzana Central Urbana (2009)
+Generador Procedural 3D de Alta Fidelidad Fotorrealista: Manzana Central Tecate (2009)
 ========================================================================================
-Tecate Simulator — Reconstrucción integral de la manzana catastral block_lat_32.57328_lon_-116.62516
-Delimitada por:
-  - Norte: Avenida Benito Juárez
-  - Sur: Callejón Libertad
-  - Oeste: Calle Presidente Pascual Ortiz Rubio
-  - Este: Calle Presidente Abelardo L. Rodríguez
+Reconstruye con precisión milimétrica la manzana delimitada por:
+  - Norte: Av. Benito Juárez (128.00 m)
+  - Poniente: Calle Pdte. Pascual Ortiz Rubio (77.00 m)
+  - Sur: Callejón Libertad (128.00 m)
+  - Oriente: Calle Pdte. Abelardo L. Rodríguez (77.00 m)
 
-Hitos y Comercios Históricos (2009):
-  - Central / Terminal de Autobuses Tecate B.C. (ABC, TNS, Elite, SuburBaja)
-  - Telas Elías / Bordados Elías (2 niveles monumental ocre, pórtico con columnas)
-  - Hotel Juárez & Cafetería Juárez (2 niveles con grandes ventanales)
-  - Hotel Colonial (fachada patrimonial colonial californiana en Callejón Libertad)
-  - Dulcería Prisci (fachada lámina roja acanalada, toldo multicolor, rótulo corpóreo)
-  - Heras Café Internet / Restaurant 2 de Sonora (2 niveles con barandal rústico de troncos)
-  - Arrematec Demoliciones (fachada amarilla y roja con portón de herrería)
-  - Escritorio Público Fimbres (fachada naranja)
-  - CopyFast (Centro de Copiado con marquesina azul)
-  - Taquería La Placita (2 niveles azul cobalto)
-  - La Flor de Michoacán (2 frentes: Ortiz Rubio/Libertad y Av. Juárez)
-  - Farmacia del Pueblo, Rosticería Los Polos, Taquería Los Arcos, Mariscos El Chapo
-  - Barber Shop Azteca 230, Modas Da Vinci, Don Elías, Beto's Barbería, Café Los Pinos
-  - Belrom Bienes Raíces, Joyería, Gimnasio
-  - Patios interiores, dársenas de autobuses techadas, cercha espacial tridimensional de acero
+TOPOLOGÍA CANÓNICA NO TRASLAPADA (Zero Overlaps, Zero Coplanar Z-Fighting):
+  - Cara Norte (Av. Benito Juárez, Y = 77.00m):
+      [0.0, 9.0]    Modas Da Vinci (esquina NW, tejas 3D)
+      [9.0, 32.0]   Telas Elías (2 niv, ocre monumental)
+      [32.0, 44.0]  Mariscos El Chapo / Birriería (arco ladrillo)
+      [44.0, 58.0]  Taquería Los Arcos (cercha espacial y toldo curvo)
+      [58.0, 70.0]  Rosticería Los Polos B.C. (toldo y asador)
+      [70.0, 84.0]  Farmacia del Pueblo (alero teja colonial)
+      [84.0, 94.0]  Barber Shop Azteca 230 (poste barbero 3D)
+      [94.0, 109.0] Hotel Juárez & Cafetería Juárez (2 niv, azulejo blanco brillante)
+      [109.0, 114.0] Callejón Medellín y Villegas (paso interior con barda)
+      [114.0, 120.0] Super Taquería Tecate (toldo y mostrador)
+      [120.0, 128.0] Terminal Central de Autobuses (Norte y ochava NE, marquesina zig-zag)
 
-ESTÁNDAR RIGUROSO:
-  - CERO texturas de panoramas pegadas en quads. 100% geometría procedural en mallas y textos 3D.
-  - Zócalo basal continuo enterrado a Z = -1.50 m (sin intersecciones redundantes).
-  - Cero banquetas embebidas en el .glb.
-  - Particionado estricto de volúmenes edilicios: cero cajas duplicadas o superpuestas en esquinas.
-  - Cubiertas retranqueadas dentro de parapetos para evitar perforaciones y coplanaridad.
-  - Vidrios con transmisión física PBR.
-  - Orientación canónica de textos anti-espejo en cada fachada cardinal.
-  - Escena .tscn con física analítica descompuesta (BoxShape3D) transitable.
+  - Cara Poniente (Ortiz Rubio, X = 0.00m):
+      [68.0, 77.0]  Modas Da Vinci (lateral oeste)
+      [58.0, 68.0]  Barbería y Baños Beto's (peluquería, escalones azules y poste)
+      [47.0, 58.0]  CopyFast • Centro de Copiado (fascia azul marino)
+      [37.0, 47.0]  MR Multiservicios (estuco salmón)
+      [26.0, 37.0]  Café Los Pinos (chapa de piedra laja natural y toldo rojo)
+      [13.0, 26.0]  Taquería La Placita (2 niv, azul cobalto, balcón y rótulo saliente)
+      [0.0, 13.0]   La Flor de Michoacán (2 niv, esquina SW, tejas 3D, pilastras verdes)
+
+  - Cara Sur (Callejón Libertad, Y = 0.00m):
+      [0.0, 14.0]   La Flor de Michoacán (fachada sur envolvente)
+      [14.0, 30.0]  Dulcería Prisci (lámina ondulada roja y toldos amarillos)
+      [30.0, 45.0]  Restaurant 2 de Sonora / Heras Internet (2 niv, tejas y A/C)
+      [45.0, 68.0]  Patio interior / estacionamiento abierto y caseta
+      [68.0, 92.0]  Hotel Colonial (2 niv, misión colonial con espadañas y forja)
+      [92.0, 114.0] Taller / Bodega Sur (concreto, canes de madera, ladrillo expuesto)
+      [114.0, 128.0] Barda perimetral sur de la terminal (muro verde)
+
+  - Cara Oriente (Abelardo L. Rodríguez, X = 128.00m):
+      [0.0, 8.0]    Barda sureste
+      [8.0, 22.0]   Portón monumental de autobuses (cercha espacial 14m, reja tubular, paso abierto)
+      [22.0, 58.0]  Muro verde de terminal con carrito de hot dogs en banqueta
+      [58.0, 77.0]  Terminal de Autobuses (fachada oriente con marquesina zig-zag)
 """
 
 import os
@@ -43,7 +53,7 @@ import bmesh
 from mathutils import Vector, Euler
 
 # ---------------------------------------------------------------------------
-# 1. Configuración de Rutas y Parámetros Maestros
+# 1. Rutas y Dimensiones Maestras
 # ---------------------------------------------------------------------------
 TEXTURES_DIR = os.path.abspath("godot_project/assets/textures")
 BUILDINGS_DIR = os.path.abspath("godot_project/assets/buildings")
@@ -57,22 +67,22 @@ BLEND_PATH = os.path.join(BLENDER_DIR, "manzana_central_2009.blend")
 GLB_PATH = os.path.join(BUILDINGS_DIR, "manzana_central_2009.glb")
 TSCN_PATH = os.path.join(BUILDINGS_DIR, "manzana_central_2009.tscn")
 
-# Dimensiones Globales de la Manzana (Coordenadas Cartesianas Canónicas)
-X_MAX = 134.73
-Y_MAX = 91.19
+X_MAX = 128.00
+Y_MAX = 77.00
 Z_BASE = -1.50
 Z_GROUND = 0.00
 
-# Rotaciones Euler Canónicas Anti-Espejo para Curvas de Texto FONT
-ROT_SOUTH = (math.radians(90.0), 0.0, 0.0)                         # Normal (0, -1, 0)
-ROT_NORTH = (math.radians(90.0), 0.0, math.radians(180.0))         # Normal (0, +1, 0)
-ROT_WEST  = (math.radians(90.0), 0.0, math.radians(-90.0))        # Normal (-1, 0, 0)
-ROT_EAST  = (math.radians(90.0), 0.0, math.radians(90.0))         # Normal (+1, 0, 0)
+FONT_PATH = "/System/Library/Fonts/Supplemental/Impact.ttf"
+if not os.path.exists(FONT_PATH):
+    FONT_PATH = "/System/Library/Fonts/Helvetica.ttc"
 
-FONT_PATH = "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
+ROT_SOUTH = (math.radians(90.0), 0.0, 0.0)
+ROT_NORTH = (math.radians(90.0), 0.0, math.radians(180.0))
+ROT_WEST  = (math.radians(90.0), 0.0, math.radians(-90.0))
+ROT_EAST  = (math.radians(90.0), 0.0, math.radians(90.0))
 
 # ---------------------------------------------------------------------------
-# 2. Utilidades de Escena y BMesh
+# 2. Primitivas Geométricas Limpias (Sin Traslapes)
 # ---------------------------------------------------------------------------
 def clean_scene():
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -84,33 +94,129 @@ def clean_scene():
     return col
 
 def add_box(bm, x1, x2, y1, y2, z1, z2):
-    """Genera paralelepípedo cerrado limpio con normales exteriores."""
-    xa, xb = min(x1, x2), max(x1, x2)
-    ya, yb = min(y1, y2), max(y1, y2)
-    za, zb = min(z1, z2), max(z1, z2)
+    """Genera paralelepípedo limpio con normales hacia el exterior."""
     verts = [
-        bm.verts.new((xa, ya, za)), bm.verts.new((xb, ya, za)),
-        bm.verts.new((xb, yb, za)), bm.verts.new((xa, yb, za)),
-        bm.verts.new((xa, ya, zb)), bm.verts.new((xb, ya, zb)),
-        bm.verts.new((xb, yb, zb)), bm.verts.new((xa, yb, zb))
+        bm.verts.new((x1, y1, z1)), bm.verts.new((x2, y1, z1)),
+        bm.verts.new((x2, y2, z1)), bm.verts.new((x1, y2, z1)),
+        bm.verts.new((x1, y1, z2)), bm.verts.new((x2, y1, z2)),
+        bm.verts.new((x2, y2, z2)), bm.verts.new((x1, y2, z2))
     ]
-    bm.faces.new((verts[0], verts[1], verts[2], verts[3])) # -Z
-    bm.faces.new((verts[4], verts[7], verts[6], verts[5])) # +Z
-    bm.faces.new((verts[0], verts[4], verts[5], verts[1])) # -Y
-    bm.faces.new((verts[1], verts[5], verts[6], verts[2])) # +X
-    bm.faces.new((verts[2], verts[6], verts[7], verts[3])) # +Y
-    bm.faces.new((verts[3], verts[7], verts[4], verts[0])) # -X
+    f0 = bm.faces.new((verts[0], verts[1], verts[2], verts[3]))
+    f1 = bm.faces.new((verts[4], verts[7], verts[6], verts[5]))
+    f2 = bm.faces.new((verts[0], verts[4], verts[5], verts[1]))
+    f3 = bm.faces.new((verts[1], verts[5], verts[6], verts[2]))
+    f4 = bm.faces.new((verts[2], verts[6], verts[7], verts[3]))
+    f5 = bm.faces.new((verts[3], verts[7], verts[4], verts[0]))
+    return [f0, f1, f2, f3, f4, f5]
 
-def add_canopy_quarter_round_x(bm, x1, x2, y_back, depth, z_bottom, height, segments=8):
-    """Genera toldo abombado de cuarto de cilindro a lo largo del eje X (fachadas Norte o Sur)."""
-    sign = -1.0 if depth > 0 else 1.0
-    abs_d = abs(depth)
+def add_window_frame_and_glass(bm, x1, x2, y_wall, z1, z2, frame_w=0.08, frame_d=0.05, axis='Y', facing=1):
+    """
+    Cancelería de aluminio extruida con vidrio reflectivo que sobresale ligeramente
+    de la pared, eliminando z-fighting y sombras internas negras.
+    """
+    faces_frame = []
+    faces_glass = []
+    
+    if axis == 'Y':
+        y_f0 = y_wall + facing * 0.005
+        y_f1 = y_wall + facing * (0.005 + frame_d)
+        y_min, y_max = min(y_f0, y_f1), max(y_f0, y_f1)
+        
+        # Marco superior (dintel)
+        faces_frame.extend(add_box(bm, x1, x2, y_min, y_max, z2 - frame_w, z2))
+        # Marco inferior (alféizar)
+        faces_frame.extend(add_box(bm, x1, x2, y_min, y_max, z1, z1 + frame_w))
+        # Jambas laterales
+        faces_frame.extend(add_box(bm, x1, x1 + frame_w, y_min, y_max, z1, z2))
+        faces_frame.extend(add_box(bm, x2 - frame_w, x2, y_min, y_max, z1, z2))
+        
+        # Panel de vidrio reflectivo central
+        y_g = y_wall + facing * 0.02
+        v_g = [
+            bm.verts.new((x1 + frame_w, y_g, z1 + frame_w)),
+            bm.verts.new((x2 - frame_w, y_g, z1 + frame_w)),
+            bm.verts.new((x2 - frame_w, y_g, z2 - frame_w)),
+            bm.verts.new((x1 + frame_w, y_g, z2 - frame_w))
+        ]
+        if facing > 0:
+            faces_glass.append(bm.faces.new(v_g))
+        else:
+            faces_glass.append(bm.faces.new((v_g[0], v_g[3], v_g[2], v_g[1])))
+    else:
+        x_f0 = y_wall + facing * 0.005
+        x_f1 = y_wall + facing * (0.005 + frame_d)
+        x_min, x_max = min(x_f0, x_f1), max(x_f0, x_f1)
+        
+        # Marco superior
+        faces_frame.extend(add_box(bm, x_min, x_max, x1, x2, z2 - frame_w, z2))
+        # Marco inferior
+        faces_frame.extend(add_box(bm, x_min, x_max, x1, x2, z1, z1 + frame_w))
+        # Jambas
+        faces_frame.extend(add_box(bm, x_min, x_max, x1, x1 + frame_w, z1, z2))
+        faces_frame.extend(add_box(bm, x_min, x_max, x2 - frame_w, x2, z1, z2))
+        
+        # Vidrio reflectivo
+        x_g = y_wall + facing * 0.02
+        v_g = [
+            bm.verts.new((x_g, x1 + frame_w, z1 + frame_w)),
+            bm.verts.new((x_g, x2 - frame_w, z1 + frame_w)),
+            bm.verts.new((x_g, x2 - frame_w, z2 - frame_w)),
+            bm.verts.new((x_g, x1 + frame_w, z2 - frame_w))
+        ]
+        if facing > 0:
+            faces_glass.append(bm.faces.new((v_g[0], v_g[3], v_g[2], v_g[1])))
+        else:
+            faces_glass.append(bm.faces.new(v_g))
+            
+    return faces_frame, faces_glass
+
+def add_teja_ribs_x(bm, x_start, x_end, y_eave, y_ridge, z_eave, z_ridge, spacing=0.40):
+    """Genera hiladas de teja colonial curva 3D con canales y cobijas a lo largo de X."""
+    faces = []
+    num_ribs = max(1, int((x_end - x_start) / spacing))
+    for i in range(num_ribs):
+        xc = x_start + (i + 0.5) * spacing
+        v0 = bm.verts.new((xc - 0.12, y_eave, z_eave + 0.03))
+        v1 = bm.verts.new((xc + 0.12, y_eave, z_eave + 0.03))
+        v2 = bm.verts.new((xc + 0.12, y_ridge, z_ridge + 0.03))
+        v3 = bm.verts.new((xc - 0.12, y_ridge, z_ridge + 0.03))
+        v_top0 = bm.verts.new((xc, y_eave, z_eave + 0.10))
+        v_top1 = bm.verts.new((xc, y_ridge, z_ridge + 0.10))
+
+        faces.append(bm.faces.new((v0, v1, v_top0)))
+        faces.append(bm.faces.new((v1, v2, v_top1, v_top0)))
+        faces.append(bm.faces.new((v2, v3, v_top1)))
+        faces.append(bm.faces.new((v3, v0, v_top0, v_top1)))
+    return faces
+
+def add_teja_ribs_y(bm, y_start, y_end, x_eave, x_ridge, z_eave, z_ridge, spacing=0.40):
+    """Genera hiladas de teja colonial curva 3D a lo largo de Y."""
+    faces = []
+    num_ribs = max(1, int((y_end - y_start) / spacing))
+    for i in range(num_ribs):
+        yc = y_start + (i + 0.5) * spacing
+        v0 = bm.verts.new((x_eave, yc - 0.12, z_eave + 0.03))
+        v1 = bm.verts.new((x_eave, yc + 0.12, z_eave + 0.03))
+        v2 = bm.verts.new((x_ridge, yc + 0.12, z_ridge + 0.03))
+        v3 = bm.verts.new((x_ridge, yc - 0.12, z_ridge + 0.03))
+        v_top0 = bm.verts.new((x_eave, yc, z_eave + 0.10))
+        v_top1 = bm.verts.new((x_ridge, yc, z_ridge + 0.10))
+
+        faces.append(bm.faces.new((v0, v1, v_top0)))
+        faces.append(bm.faces.new((v1, v2, v_top1, v_top0)))
+        faces.append(bm.faces.new((v2, v3, v_top1)))
+        faces.append(bm.faces.new((v3, v0, v_top0, v_top1)))
+    return faces
+
+def add_canopy_quarter_round(bm, x1, x2, y_wall, depth=1.40, z_base=3.20, height=0.70, segments=6, facing=1):
+    """Toldo de cuarto de cilindro de lona tensada con faldón y tapas laterales."""
+    faces = []
     arc_pts = []
     for i in range(segments + 1):
         th = (math.pi * 0.5) * (i / segments)
-        dy = sign * abs_d * math.cos(th)
+        dy = depth * math.cos(th) * facing
         dz = height * math.sin(th)
-        arc_pts.append((y_back + dy, z_bottom + dz))
+        arc_pts.append((y_wall + dy, z_base + dz))
 
     for i in range(segments):
         y0, z0 = arc_pts[i]
@@ -119,148 +225,130 @@ def add_canopy_quarter_round_x(bm, x1, x2, y_back, depth, z_bottom, height, segm
         v_br = bm.verts.new((x2, y0, z0))
         v_tr = bm.verts.new((x2, y1, z1))
         v_tl = bm.verts.new((x1, y1, z1))
-        bm.faces.new((v_bl, v_br, v_tr, v_tl))
+        faces.append(bm.faces.new((v_bl, v_br, v_tr, v_tl)))
 
-    # Tapas laterales
-    v_b_top = bm.verts.new((x1, y_back, z_bottom + height))
-    v_b_bot = bm.verts.new((x1, y_back, z_bottom))
-    v_f_bot = bm.verts.new((x1, y_back + sign * abs_d, z_bottom))
-    bm.faces.new((v_b_bot, v_f_bot, v_b_top))
+    y_front = y_wall + depth * facing
+    v_top1 = bm.verts.new((x1, y_wall, z_base + height))
+    v_bot1 = bm.verts.new((x1, y_wall, z_base))
+    v_frt1 = bm.verts.new((x1, y_front, z_base))
+    faces.append(bm.faces.new((v_bot1, v_frt1, v_top1)))
 
-    v_r_top = bm.verts.new((x2, y_back, z_bottom + height))
-    v_r_bot = bm.verts.new((x2, y_back, z_bottom))
-    v_r_fbot = bm.verts.new((x2, y_back + sign * abs_d, z_bottom))
-    bm.faces.new((v_r_bot, v_r_top, v_r_fbot))
+    v_top2 = bm.verts.new((x2, y_wall, z_base + height))
+    v_bot2 = bm.verts.new((x2, y_wall, z_base))
+    v_frt2 = bm.verts.new((x2, y_front, z_base))
+    faces.append(bm.faces.new((v_bot2, v_top2, v_frt2)))
 
-def add_canopy_quarter_round_y(bm, y_start, y_end, x_back, depth, z_bottom, height, segments=8):
-    """Genera toldo abombado de cuarto de cilindro a lo largo del eje Y (fachadas Poniente u Oriente)."""
-    sign = -1.0 if depth > 0 else 1.0
-    abs_d = abs(depth)
-    arc_pts = []
-    for i in range(segments + 1):
-        th = (math.pi * 0.5) * (i / segments)
-        dx = sign * abs_d * math.cos(th)
-        dz = height * math.sin(th)
-        arc_pts.append((x_back + dx, z_bottom + dz))
+    f_valance = add_box(bm, x1, x2, min(y_front, y_front - 0.03*facing), max(y_front, y_front - 0.03*facing), z_base - 0.16, z_base)
+    faces.extend(f_valance)
+    return faces
+
+def add_space_truss_beam(bm, p1, p2, width=0.45, height=0.75, bays=12):
+    """Viga tridimensional en celosía de perfiles tubulares de acero."""
+    faces = []
+    v_dir = (p2 - p1).normalized()
+    total_len = (p2 - p1).length
+    v_up = Vector((0.0, 0.0, 1.0))
+    v_side = v_dir.cross(v_up).normalized()
+
+    for i in range(bays):
+        t0 = i / bays
+        t1 = (i + 1) / bays
+        ptA = p1 + v_dir * (t0 * total_len)
+        ptB = p1 + v_dir * (t1 * total_len)
+
+        cA = [
+            ptA - v_side * (width*0.5) - v_up * (height*0.5),
+            ptA + v_side * (width*0.5) - v_up * (height*0.5),
+            ptA + v_side * (width*0.5) + v_up * (height*0.5),
+            ptA - v_side * (width*0.5) + v_up * (height*0.5)
+        ]
+        cB = [
+            ptB - v_side * (width*0.5) - v_up * (height*0.5),
+            ptB + v_side * (width*0.5) - v_up * (height*0.5),
+            ptB + v_side * (width*0.5) + v_up * (height*0.5),
+            ptB - v_side * (width*0.5) + v_up * (height*0.5)
+        ]
+        vA = [bm.verts.new(p) for p in cA]
+        vB = [bm.verts.new(p) for p in cB]
+
+        for j in range(4):
+            jn = (j + 1) % 4
+            faces.append(bm.faces.new((vA[j], vB[j], vB[jn], vA[jn])))
+
+        faces.append(bm.faces.new((vA[0], vB[1], vB[2], vA[3])))
+    return faces
+
+def add_folded_plate_canopy(bm, x1, x2, y_wall, depth=1.60, z_base=3.20, height=0.45, folds=10):
+    """Marquesina de losa de concreto plegada en zig-zag (sawtooth) de la Terminal de Autobuses."""
+    faces = []
+    dx = (x2 - x1) / folds
+    y_proj = y_wall + depth
+    for i in range(folds):
+        xa = x1 + i * dx
+        xb = xa + dx * 0.5
+        xc = x1 + (i + 1) * dx
+
+        v_wa = bm.verts.new((xa, y_wall, z_base))
+        v_wb = bm.verts.new((xb, y_wall, z_base + height))
+        v_wc = bm.verts.new((xc, y_wall, z_base))
+
+        v_pa = bm.verts.new((xa, y_proj, z_base - 0.10))
+        v_pb = bm.verts.new((xb, y_proj, z_base + height - 0.10))
+        v_pc = bm.verts.new((xc, y_proj, z_base - 0.10))
+
+        faces.append(bm.faces.new((v_wa, v_pa, v_pb, v_wb)))
+        faces.append(bm.faces.new((v_wb, v_pb, v_pc, v_wc)))
+        faces.append(bm.faces.new((v_pa, v_pc, v_pb)))
+    return faces
+
+def add_tinaco(bm, cx, cy, z_base, radius=0.55, height=1.15, segments=10):
+    """Tinaco cilíndrico de azotea con tapa cónica."""
+    faces = []
+    bot_verts, top_verts = [], []
+    for i in range(segments):
+        th = (2.0 * math.pi * i) / segments
+        bot_verts.append(bm.verts.new((cx + radius * math.cos(th), cy + radius * math.sin(th), z_base)))
+        top_verts.append(bm.verts.new((cx + radius * math.cos(th), cy + radius * math.sin(th), z_base + height)))
+
+    v_apex = bm.verts.new((cx, cy, z_base + height + 0.22))
+    v_bot_c = bm.verts.new((cx, cy, z_base))
 
     for i in range(segments):
-        x0, z0 = arc_pts[i]
-        x1, z1 = arc_pts[i+1]
-        v_bl = bm.verts.new((x0, y_start, z0))
-        v_br = bm.verts.new((x0, y_end, z0))
-        v_tr = bm.verts.new((x1, y_end, z1))
-        v_tl = bm.verts.new((x1, y_start, z1))
-        bm.faces.new((v_bl, v_br, v_tr, v_tl))
+        inxt = (i + 1) % segments
+        faces.append(bm.faces.new((bot_verts[i], bot_verts[inxt], top_verts[inxt], top_verts[i])))
+        faces.append(bm.faces.new((top_verts[i], top_verts[inxt], v_apex)))
+        faces.append(bm.faces.new((bot_verts[inxt], bot_verts[i], v_bot_c)))
+    return faces
 
-    # Tapas laterales
-    v_b_top = bm.verts.new((x_back, y_start, z_bottom + height))
-    v_b_bot = bm.verts.new((x_back, y_start, z_bottom))
-    v_f_bot = bm.verts.new((x_back + sign * abs_d, y_start, z_bottom))
-    bm.faces.new((v_b_bot, v_b_top, v_f_bot))
-
-    v_r_top = bm.verts.new((x_back, y_end, z_bottom + height))
-    v_r_bot = bm.verts.new((x_back, y_end, z_bottom))
-    v_r_fbot = bm.verts.new((x_back + sign * abs_d, y_end, z_bottom))
-    bm.faces.new((v_r_bot, v_r_fbot, v_r_top))
-
-def add_teja_ribs_x(bm, x_start, x_end, y_eave, y_ridge, z_eave, z_ridge, spacing=0.36):
-    """Hiladas de tejas coloniales curvas 3D con canales y cobijas a lo largo de X."""
-    num_ribs = max(1, int(abs(x_end - x_start) / spacing))
-    x_min = min(x_start, x_end)
-    for i in range(num_ribs):
-        xc = x_min + (i + 0.5) * spacing
-        v0 = bm.verts.new((xc - 0.10, y_eave, z_eave + 0.03))
-        v1 = bm.verts.new((xc + 0.10, y_eave, z_eave + 0.03))
-        v2 = bm.verts.new((xc + 0.10, y_ridge, z_ridge + 0.03))
-        v3 = bm.verts.new((xc - 0.10, y_ridge, z_ridge + 0.03))
-        v_top0 = bm.verts.new((xc, y_eave, z_eave + 0.09))
-        v_top1 = bm.verts.new((xc, y_ridge, z_ridge + 0.09))
-
-        bm.faces.new((v0, v1, v_top0))
-        bm.faces.new((v1, v2, v_top1, v_top0))
-        bm.faces.new((v2, v3, v_top1))
-        bm.faces.new((v3, v0, v_top0, v_top1))
-
-def add_teja_ribs_y(bm, y_start, y_end, x_eave, x_ridge, z_eave, z_ridge, spacing=0.36):
-    """Hiladas de tejas coloniales curvas 3D a lo largo de Y (fachada Poniente u Oriente)."""
-    num_ribs = max(1, int(abs(y_end - y_start) / spacing))
-    y_min = min(y_start, y_end)
-    for i in range(num_ribs):
-        yc = y_min + (i + 0.5) * spacing
-        v0 = bm.verts.new((x_eave, yc - 0.10, z_eave + 0.03))
-        v1 = bm.verts.new((x_eave, yc + 0.10, z_eave + 0.03))
-        v2 = bm.verts.new((x_ridge, yc + 0.10, z_ridge + 0.03))
-        v3 = bm.verts.new((x_ridge, yc - 0.10, z_ridge + 0.03))
-        v_top0 = bm.verts.new((x_eave, yc, z_eave + 0.09))
-        v_top1 = bm.verts.new((x_ridge, yc, z_ridge + 0.09))
-
-        bm.faces.new((v0, v1, v_top0))
-        bm.faces.new((v1, v2, v_top1, v_top0))
-        bm.faces.new((v2, v3, v_top1))
-        bm.faces.new((v3, v0, v_top0, v_top1))
-
-def add_arch_spandrel_x(bm, y_front, y_back, x_start, x_end, z_spring, z_crown, z_top, segments=12):
-    """Construye arco rebajado en X con intradós para arcos de ladrillo o vanos decorativos."""
-    span = x_end - x_start
-    x_center = (x_start + x_end) * 0.5
-    rise = z_crown - z_spring
-    r = (rise**2 + (span * 0.5)**2) / (2.0 * rise)
-    center_z = z_crown - r
-
-    arc_pts = []
-    for i in range(segments + 1):
-        t = i / segments
-        x = x_start + t * span
-        dx = x - x_center
-        dy_sq = dx**2
-        dz = math.sqrt(max(0.0, r**2 - dy_sq if dy_sq <= r**2 else 0.0))
-        z = center_z + dz
-        arc_pts.append((x, z))
-
-    y_min = min(y_front, y_back)
-    y_max = max(y_front, y_back)
+def add_barber_pole(bm, cx, cy, z_bottom, height=0.85, radius=0.10, segments=8):
+    """Poste de barbería cilíndrico."""
+    faces = []
+    bot_v, top_v = [], []
+    for i in range(segments):
+        th = (2.0 * math.pi * i) / segments
+        bot_v.append(bm.verts.new((cx + radius * math.cos(th), cy + radius * math.sin(th), z_bottom)))
+        top_v.append(bm.verts.new((cx + radius * math.cos(th), cy + radius * math.sin(th), z_bottom + height)))
 
     for i in range(segments):
-        x0, z0 = arc_pts[i]
-        x1, z1 = arc_pts[i+1]
-        v_bl_in = bm.verts.new((x0, y_max, z0))
-        v_br_in = bm.verts.new((x1, y_max, z1))
-        v_tr_in = bm.verts.new((x1, y_max, z_top))
-        v_tl_in = bm.verts.new((x0, y_max, z_top))
+        inxt = (i + 1) % segments
+        faces.append(bm.faces.new((bot_v[i], bot_v[inxt], top_v[inxt], top_v[i])))
+    return faces
 
-        v_bl_out = bm.verts.new((x0, y_min, z0))
-        v_br_out = bm.verts.new((x1, y_min, z1))
-        v_tr_out = bm.verts.new((x1, y_min, z_top))
-        v_tl_out = bm.verts.new((x0, y_min, z_top))
-
-        bm.faces.new((v_bl_out, v_tl_out, v_tr_out, v_br_out))
-        bm.faces.new((v_bl_in, v_br_in, v_tr_in, v_tl_in))
-        bm.faces.new((v_bl_out, v_br_out, v_br_in, v_bl_in))
-        bm.faces.new((v_tl_out, v_tl_in, v_tr_in, v_tr_out))
-
-def add_space_frame_truss_y(bm, x1, x2, y1, y2, z1, z2, subdivisions=8):
-    """Construye cercha espacial tridimensional de acero galvanizado a lo largo del eje Y (portón central)."""
-    dy = (y2 - y1) / subdivisions
-    r_pipe = 0.04
-    for i in range(subdivisions):
-        ya = y1 + i * dy
-        yb = y1 + (i + 1) * dy
-        # 4 cordones longitudinales
-        add_box(bm, x1 - r_pipe, x1 + r_pipe, ya, yb, z1 - r_pipe, z1 + r_pipe)
-        add_box(bm, x1 - r_pipe, x1 + r_pipe, ya, yb, z2 - r_pipe, z2 + r_pipe)
-        add_box(bm, x2 - r_pipe, x2 + r_pipe, ya, yb, z1 - r_pipe, z1 + r_pipe)
-        add_box(bm, x2 - r_pipe, x2 + r_pipe, ya, yb, z2 - r_pipe, z2 + r_pipe)
-        # Montantes verticales
-        add_box(bm, x1 - r_pipe, x1 + r_pipe, ya - r_pipe, ya + r_pipe, z1, z2)
-        add_box(bm, x2 - r_pipe, x2 + r_pipe, ya - r_pipe, ya + r_pipe, z1, z2)
-        # Travesaños transversales
-        add_box(bm, x1, x2, ya - r_pipe, ya + r_pipe, z1 - r_pipe, z1 + r_pipe)
-        add_box(bm, x1, x2, ya - r_pipe, ya + r_pipe, z2 - r_pipe, z2 + r_pipe)
-        # Diagonales cruzadas en X
-        add_box(bm, (x1 + x2)*0.5 - r_pipe, (x1 + x2)*0.5 + r_pipe, ya, yb, z1 - r_pipe, z2 + r_pipe)
+def add_hotdog_cart(bm, cx, cy, z_base):
+    """Puesto callejero de hot dogs en banqueta."""
+    faces = []
+    faces.extend(add_box(bm, cx - 0.70, cx + 0.70, cy - 0.45, cy + 0.45, z_base + 0.25, z_base + 0.95))
+    faces.extend(add_box(bm, cx - 0.60, cx - 0.50, cy - 0.50, cy - 0.45, z_base, z_base + 0.40))
+    faces.extend(add_box(bm, cx + 0.50, cx + 0.60, cy - 0.50, cy - 0.45, z_base, z_base + 0.40))
+    faces.extend(add_box(bm, cx - 0.65, cx - 0.60, cy - 0.40, cy - 0.35, z_base + 0.95, z_base + 1.90))
+    faces.extend(add_box(bm, cx + 0.60, cx + 0.65, cy - 0.40, cy - 0.35, z_base + 0.95, z_base + 1.90))
+    faces.extend(add_box(bm, cx - 0.65, cx - 0.60, cy + 0.35, cy + 0.40, z_base + 0.95, z_base + 1.90))
+    faces.extend(add_box(bm, cx + 0.60, cx + 0.65, cy + 0.35, cy + 0.40, z_base + 0.95, z_base + 1.90))
+    faces.extend(add_box(bm, cx - 0.85, cx + 0.85, cy - 0.55, cy + 0.55, z_base + 1.85, z_base + 2.10))
+    return faces
 
 def auto_uv_bmesh(bm, scale_u=0.5, scale_v=0.5):
-    """Genera coordenadas UV ortogonales cúbicas con preservación métrica."""
+    """Genera coordenadas UV ortogonales cúbicas con preservación de escala métrica."""
     uv_layer = bm.loops.layers.uv.verify()
     for face in bm.faces:
         n = face.normal
@@ -275,761 +363,752 @@ def auto_uv_bmesh(bm, scale_u=0.5, scale_v=0.5):
                 u, w = v.x * scale_u, v.y * scale_v
             loop[uv_layer].uv = (u, w)
 
-def create_mesh_object(name, bm, material, col, uv_scale=0.5):
-    auto_uv_bmesh(bm, uv_scale, uv_scale)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    mesh = bpy.data.meshes.new(f"Mesh_{name}")
-    bm.to_mesh(mesh)
-    bm.free()
-    obj = bpy.data.objects.new(name, mesh)
-    if material:
-        obj.data.materials.append(material)
-    col.objects.link(obj)
-    return obj
+# ---------------------------------------------------------------------------
+# 3. Pipeline de Materiales PBR
+# ---------------------------------------------------------------------------
+def create_material(name, color_rgba, roughness=0.65, metallic=0.0, normal_tex_path=None, albedo_tex_path=None):
+    mat = bpy.data.materials.get(name)
+    if mat is None:
+        mat = bpy.data.materials.new(name=name)
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    nodes.clear()
 
-def add_3d_text(name, body, size, extrude, loc, rot_euler, mat, col, align_x='CENTER'):
-    """Crea rótulo corpóreo en curvas 3D extruidas con orientación anti-espejo."""
-    f_curve = bpy.data.curves.new(type="FONT", name=f"Font_{name}")
-    f_curve.body = body
-    f_curve.size = size
-    f_curve.extrude = extrude
-    f_curve.align_x = align_x
-    f_curve.align_y = 'CENTER'
+    output = nodes.new(type="ShaderNodeOutputMaterial")
+    output.location = (500, 0)
+    bsdf = nodes.new(type="ShaderNodeBsdfPrincipled")
+    bsdf.location = (100, 0)
 
-    # Asignar fuente del sistema si existe
-    if os.path.exists(FONT_PATH):
+    bsdf.inputs["Base Color"].default_value = color_rgba
+    bsdf.inputs["Roughness"].default_value = roughness
+    bsdf.inputs["Metallic"].default_value = metallic
+
+    if albedo_tex_path and os.path.exists(albedo_tex_path):
+        alb_node = nodes.new(type="ShaderNodeTexImage")
+        alb_node.location = (-300, 150)
         try:
-            font_data = bpy.data.fonts.load(FONT_PATH)
-            f_curve.font = font_data
+            img = bpy.data.images.load(albedo_tex_path, check_existing=True)
+            alb_node.image = img
+            links.new(alb_node.outputs["Color"], bsdf.inputs["Base Color"])
         except Exception:
             pass
 
-    obj = bpy.data.objects.new(name, f_curve)
-    obj.location = Vector(loc)
-    obj.rotation_euler = Euler(rot_euler, 'XYZ')
-    if mat:
-        obj.data.materials.append(mat)
-    col.objects.link(obj)
-    return obj
+    if normal_tex_path and os.path.exists(normal_tex_path):
+        tex_node = nodes.new(type="ShaderNodeTexImage")
+        tex_node.location = (-400, -200)
+        try:
+            img = bpy.data.images.load(normal_tex_path, check_existing=True)
+            img.colorspace_settings.name = 'Non-Color'
+            tex_node.image = img
+            norm_node = nodes.new(type="ShaderNodeNormalMap")
+            norm_node.location = (-150, -200)
+            norm_node.inputs["Strength"].default_value = 0.85
+            links.new(tex_node.outputs["Color"], norm_node.inputs["Color"])
+            links.new(norm_node.outputs["Normal"], bsdf.inputs["Normal"])
+        except Exception as e:
+            print(f"[Aviso] Error en mapa normal {normal_tex_path}: {e}")
 
-# ---------------------------------------------------------------------------
-# 3. Fábrica de Materiales PBR
-# ---------------------------------------------------------------------------
-def make_pbr_material(name, base_color=(0.8, 0.8, 0.8), roughness=0.85, metallic=0.0, alpha=1.0, transmission=0.0, ior=1.45):
-    """Crea material Principled BSDF conectado y robusto para glTF y Cycles."""
-    mat = bpy.data.materials.new(name=name)
-    mat.use_nodes = True
-    nodes = mat.node_tree.nodes
-    nodes.clear()
-    out = nodes.new(type='ShaderNodeOutputMaterial')
-    bsdf = nodes.new(type='ShaderNodeBsdfPrincipled')
-    bsdf.inputs['Base Color'].default_value = (base_color[0], base_color[1], base_color[2], 1.0)
-    bsdf.inputs['Roughness'].default_value = roughness
-    bsdf.inputs['Metallic'].default_value = metallic
-
-    if 'Transmission Weight' in bsdf.inputs and transmission > 0.0:
-        bsdf.inputs['Transmission Weight'].default_value = transmission
-    elif 'Transmission' in bsdf.inputs and transmission > 0.0:
-        bsdf.inputs['Transmission'].default_value = transmission
-
-    if 'IOR' in bsdf.inputs:
-        bsdf.inputs['IOR'].default_value = ior
-
-    if alpha < 1.0:
-        bsdf.inputs['Alpha'].default_value = alpha
-        if hasattr(mat, 'blend_method'):
-            mat.blend_method = 'BLEND'
-
-    mat.node_tree.links.new(bsdf.outputs['BSDF'], out.inputs['Surface'])
+    links.new(bsdf.outputs["BSDF"], output.inputs["Surface"])
     return mat
 
-def create_all_materials():
+def setup_materials():
     mats = {}
-    # Basamentos y Estucos Arquitectónicos
-    mats["zocalo_basal"] = make_pbr_material("M_Zocalo_Basal", (0.20, 0.22, 0.24), roughness=0.92)
-    mats["stucco_blanco"] = make_pbr_material("M_Stucco_Blanco", (0.90, 0.89, 0.86), roughness=0.85)
-    mats["stucco_ocre_elias"] = make_pbr_material("M_Stucco_Ocre_Elias", (0.87, 0.62, 0.24), roughness=0.78)
-    mats["stucco_salmon_sonora"] = make_pbr_material("M_Stucco_Salmon_Sonora", (0.85, 0.48, 0.38), roughness=0.82)
-    mats["stucco_naranja_fimbres"] = make_pbr_material("M_Stucco_Naranja_Fimbres", (0.86, 0.42, 0.16), roughness=0.80)
-    mats["stucco_amarillo_arrematec"] = make_pbr_material("M_Stucco_Amarillo_Arrematec", (0.92, 0.82, 0.22), roughness=0.78)
-    mats["stucco_amarillo_michoacana"] = make_pbr_material("M_Stucco_Amarillo_Michoacana", (0.95, 0.85, 0.28), roughness=0.80)
-    mats["stucco_azul_placita"] = make_pbr_material("M_Stucco_Azul_Placita", (0.12, 0.38, 0.70), roughness=0.78)
-    mats["muro_verde_salvia"] = make_pbr_material("M_Muro_Verde_Salvia", (0.38, 0.50, 0.40), roughness=0.82)
-    mats["muro_gris_tecnico"] = make_pbr_material("M_Muro_Gris_Tecnico", (0.55, 0.56, 0.56), roughness=0.88)
+    tex_corrugated = os.path.join(TEXTURES_DIR, "corrugated_metal_normal.png")
+    tex_shingle = os.path.join(TEXTURES_DIR, "shingle_roof_normal.png")
+    tex_stucco = os.path.join(TEXTURES_DIR, "hotel_tecate_stucco_normal.png")
+    tex_laja_norm = os.path.join(TEXTURES_DIR, "kiosko_laja_normal.png")
+    tex_laja_alb = os.path.join(TEXTURES_DIR, "kiosko_laja_albedo.png")
+    tex_ladrillo = os.path.join(TEXTURES_DIR, "kiosko_ladrillo_normal.png")
 
-    # Materiales Rústicos y Tradicionales
-    mats["piedra_laja_pinos"] = make_pbr_material("M_Piedra_Laja_Pinos", (0.64, 0.52, 0.38), roughness=0.85)
-    mats["ladrillo_rojo_arcos"] = make_pbr_material("M_Ladrillo_Rojo_Arcos", (0.60, 0.22, 0.15), roughness=0.82)
-    mats["teja_barro_3d"] = make_pbr_material("M_Teja_Barro_3D", (0.65, 0.25, 0.14), roughness=0.72)
-    mats["cantera_colonial"] = make_pbr_material("M_Cantera_Colonial", (0.82, 0.80, 0.74), roughness=0.75)
-    mats["madera_rustica_troncos"] = make_pbr_material("M_Madera_Rustica_Troncos", (0.32, 0.20, 0.12), roughness=0.85)
+    mats['plinth'] = create_material("Mat_Plinth_Basalt", (0.16, 0.16, 0.16, 1.0), roughness=0.92)
+    mats['white_stucco'] = create_material("Mat_Stucco_White", (0.88, 0.88, 0.86, 1.0), roughness=0.72, normal_tex_path=tex_stucco)
+    mats['cream_stucco'] = create_material("Mat_Stucco_Cream", (0.83, 0.79, 0.69, 1.0), roughness=0.75, normal_tex_path=tex_stucco)
+    mats['salmon_stucco'] = create_material("Mat_Stucco_Salmon", (0.78, 0.48, 0.42, 1.0), roughness=0.70, normal_tex_path=tex_stucco)
+    mats['mint_stucco'] = create_material("Mat_Stucco_Mint", (0.42, 0.65, 0.48, 1.0), roughness=0.68, normal_tex_path=tex_stucco)
+    mats['cobalt_stucco'] = create_material("Mat_Stucco_Cobalt", (0.10, 0.28, 0.62, 1.0), roughness=0.65, normal_tex_path=tex_stucco)
+    mats['telas_ochre'] = create_material("Mat_Telas_Ochre", (0.76, 0.49, 0.18, 1.0), roughness=0.68, normal_tex_path=tex_stucco)
+    mats['terminal_green'] = create_material("Mat_Terminal_Green", (0.34, 0.48, 0.36, 1.0), roughness=0.78, normal_tex_path=tex_stucco)
+    mats['grey_concrete'] = create_material("Mat_Grey_Concrete", (0.52, 0.52, 0.52, 1.0), roughness=0.88)
+    mats['hotel_white_tile'] = create_material("Mat_Hotel_White_Tile", (0.94, 0.94, 0.94, 1.0), roughness=0.18)
 
-    # Metales y Chapas Industriales PBR
-    mats["lamina_rojo_prisci"] = make_pbr_material("M_Lamina_Rojo_Prisci", (0.78, 0.12, 0.12), roughness=0.40, metallic=0.30)
-    mats["lamina_amarillo_central"] = make_pbr_material("M_Lamina_Amarillo_Central", (0.86, 0.68, 0.18), roughness=0.45, metallic=0.20)
-    mats["hormigon_alero_central"] = make_pbr_material("M_Hormigon_Alero_Central", (0.74, 0.73, 0.70), roughness=0.80)
-    mats["cercha_azul_acero"] = make_pbr_material("M_Cercha_Azul_Acero", (0.12, 0.30, 0.60), roughness=0.35, metallic=0.75)
-    mats["cortina_acero_galv"] = make_pbr_material("M_Cortina_Acero_Galv", (0.68, 0.70, 0.72), roughness=0.35, metallic=0.80)
-    mats["herreria_negra"] = make_pbr_material("M_Herreria_Negra", (0.06, 0.06, 0.07), roughness=0.40, metallic=0.85)
+    mats['prisci_red_metal'] = create_material("Mat_Prisci_Red_Sheet", (0.78, 0.12, 0.12, 1.0), roughness=0.45, normal_tex_path=tex_corrugated)
+    mats['terminal_beige_metal'] = create_material("Mat_Terminal_Beige_Sheet", (0.76, 0.71, 0.53, 1.0), roughness=0.55, normal_tex_path=tex_corrugated)
+    mats['shingle_roof'] = create_material("Mat_Roof_Shingle", (0.52, 0.28, 0.18, 1.0), roughness=0.80, normal_tex_path=tex_shingle)
+    mats['clay_tile'] = create_material("Mat_Clay_Tile", (0.65, 0.24, 0.12, 1.0), roughness=0.78)
+    mats['asphalt_yard'] = create_material("Mat_Asphalt_Yard", (0.18, 0.18, 0.18, 1.0), roughness=0.90)
+    mats['dirt_yard'] = create_material("Mat_Dirt_Yard", (0.55, 0.44, 0.32, 1.0), roughness=0.95)
 
-    # Cancelería y Vidrios Físicos PBR
-    mats["aluminio_oscuro"] = make_pbr_material("M_Aluminio_Oscuro", (0.12, 0.12, 0.13), roughness=0.25, metallic=0.85)
-    mats["aluminio_blanco"] = make_pbr_material("M_Aluminio_Blanco", (0.92, 0.92, 0.93), roughness=0.30, metallic=0.60)
-    mats["aluminio_rojo"] = make_pbr_material("M_Aluminio_Rojo", (0.75, 0.12, 0.12), roughness=0.35, metallic=0.50)
-    mats["vidrio_comercial"] = make_pbr_material("M_Vidrio_Comercial", (0.85, 0.92, 0.98), roughness=0.04, metallic=0.05, alpha=0.35, transmission=0.88, ior=1.52)
-    mats["azulejo_blanco"] = make_pbr_material("M_Azulejo_Blanco", (0.92, 0.92, 0.92), roughness=0.18)
+    mats['brick_rustic'] = create_material("Mat_Brick_Rustic", (0.62, 0.24, 0.16, 1.0), roughness=0.85, normal_tex_path=tex_ladrillo)
+    mats['stone_laja'] = create_material("Mat_Stone_Laja", (0.64, 0.54, 0.42, 1.0), roughness=0.85, normal_tex_path=tex_laja_norm, albedo_tex_path=tex_laja_alb)
 
-    # Toldos y Carpas Textiles
-    mats["toldo_rojo"] = make_pbr_material("M_Toldo_Rojo", (0.75, 0.12, 0.12), roughness=0.70)
-    mats["toldo_azul"] = make_pbr_material("M_Toldo_Azul", (0.12, 0.30, 0.62), roughness=0.70)
-    mats["toldo_amarillo"] = make_pbr_material("M_Toldo_Amarillo", (0.92, 0.78, 0.18), roughness=0.70)
-    mats["toldo_verde"] = make_pbr_material("M_Toldo_Verde", (0.14, 0.58, 0.26), roughness=0.70)
+    mats['steel_blue'] = create_material("Mat_Steel_Blue_Truss", (0.12, 0.28, 0.72, 1.0), roughness=0.35, metallic=0.75)
+    mats['iron_black'] = create_material("Mat_Wrought_Iron_Black", (0.05, 0.05, 0.05, 1.0), roughness=0.50, metallic=0.60)
+    mats['aluminum_frame'] = create_material("Mat_Aluminum_Frame", (0.75, 0.75, 0.75, 1.0), roughness=0.30, metallic=0.85)
 
-    # Azoteas y Suelos Interiores
-    mats["azotea_impermeable"] = make_pbr_material("M_Azotea_Impermeable", (0.35, 0.34, 0.33), roughness=0.90)
-    mats["patio_asfalto"] = make_pbr_material("M_Patio_Asfalto", (0.28, 0.28, 0.28), roughness=0.90)
-    mats["patio_grava"] = make_pbr_material("M_Patio_Grava", (0.50, 0.48, 0.44), roughness=0.95)
+    mats['awning_coca_red'] = create_material("Mat_Awning_Coca_Red", (0.82, 0.08, 0.08, 1.0), roughness=0.60)
+    mats['awning_blue'] = create_material("Mat_Awning_Capota_Blue", (0.12, 0.32, 0.70, 1.0), roughness=0.60)
+    mats['awning_yellow_michoacan'] = create_material("Mat_Awning_Yellow_Michoacan", (0.92, 0.78, 0.12, 1.0), roughness=0.55)
+    mats['awning_striped_prisci'] = create_material("Mat_Awning_Striped_Prisci", (0.88, 0.82, 0.30, 1.0), roughness=0.60)
 
-    # Rótulos Corpóreos 3D
-    mats["letras_doradas"] = make_pbr_material("M_Letras_Doradas", (0.88, 0.70, 0.22), roughness=0.30, metallic=0.75)
-    mats["letras_blancas"] = make_pbr_material("M_Letras_Blancas", (0.96, 0.96, 0.96), roughness=0.35)
-    mats["letras_azules"] = make_pbr_material("M_Letras_Azules", (0.10, 0.30, 0.75), roughness=0.40)
-    mats["letras_rojas"] = make_pbr_material("M_Letras_Rojas", (0.85, 0.10, 0.10), roughness=0.40)
-    mats["letras_amarillas"] = make_pbr_material("M_Letras_Amarillas", (0.96, 0.86, 0.14), roughness=0.35)
+    # Vidrio Arquitectónico Reflectivo PBR
+    mats['glass_pbr'] = create_material("Mat_Glass_PBR_Physical", (0.18, 0.24, 0.30, 1.0), roughness=0.06, metallic=0.35)
 
+    mats['text_gold'] = create_material("Mat_Text_Gold_Metal", (0.92, 0.75, 0.22, 1.0), roughness=0.25, metallic=0.80)
+    mats['text_blue'] = create_material("Mat_Text_Blue_Corp", (0.08, 0.22, 0.65, 1.0), roughness=0.35)
+    mats['text_red'] = create_material("Mat_Text_Red_Corp", (0.85, 0.10, 0.10, 1.0), roughness=0.35)
+    mats['text_white'] = create_material("Mat_Text_White_Corp", (0.95, 0.95, 0.95, 1.0), roughness=0.30)
     return mats
 
-# ---------------------------------------------------------------------------
-# 4. Construcción Modular No Solapada de Edificios y Fachadas
-# ---------------------------------------------------------------------------
-
-def build_unified_foundation(mats, col):
-    """Zócalo basal continuo perimetral enterrado a Z = -1.50 m (sin intersecciones redundantes)."""
-    print("Construyendo Zócalo Basal Enterrado Continuo...")
-    bm = bmesh.new()
-    t = 0.25 # espesor del muro de cimentación
-    add_box(bm, 0.00, X_MAX, Y_MAX - t, Y_MAX, Z_BASE, 0.00)     # Norte
-    add_box(bm, 0.00, X_MAX, 0.00, t, Z_BASE, 0.00)             # Sur
-    add_box(bm, 0.00, t, t, Y_MAX - t, Z_BASE, 0.00)             # Poniente
-    add_box(bm, X_MAX - t, X_MAX, t, Y_MAX - t, Z_BASE, 0.00)     # Oriente
-    create_mesh_object("Perimeter_Basal_Foundation", bm, mats["zocalo_basal"], col)
-
-def build_west_facade_ortiz_rubio(mats, col):
-    """Zona 1: Fachada Poniente sobre Calle Presidente Pascual Ortiz Rubio (Y in [0.00, 78.00])."""
-    print("Construyendo Zona 1: Fachada Poniente (Ortiz Rubio)...")
-    bm_placita = bmesh.new()
-    bm_pinos = bmesh.new()
-    bm_white = bmesh.new()
-    bm_roof = bmesh.new()
-    bm_trim = bmesh.new()
-    bm_glass = bmesh.new()
-
-    # 1. Taquería La Placita & Flor de Michoacán Sur (Y in [0.00, 14.50]) - 2 Niveles (H=6.80m)
-    # Muro azul cobalto auténtico
-    add_box(bm_placita, 0.00, 8.00, 0.00, 14.50, 0.00, 6.80)
-    # Balcón planta alta en Y in [0.00, 14.50], Z in [3.20, 4.40] con barandal de celosía
-    add_box(bm_trim, -0.40, 0.00, 0.00, 14.50, 3.20, 3.35) # Losa volada balcón
-    add_box(bm_trim, -0.40, -0.35, 0.00, 14.50, 3.35, 4.25) # Barandal exterior
-    # Escaparates PB y PA
-    add_box(bm_glass, -0.05, 0.05, 1.50, 6.50, 0.60, 2.80)
-    add_box(bm_glass, -0.05, 0.05, 8.00, 13.50, 0.60, 2.80)
-    add_box(bm_glass, 0.10, 0.20, 2.00, 6.00, 3.80, 5.80) # Ventanas PA
-    add_box(bm_glass, 0.10, 0.20, 8.50, 12.50, 3.80, 5.80)
-    # Alero de tejas 3D en remate superior Z in [6.80, 7.25]
-    add_teja_ribs_y(bm_roof, 0.00, 14.50, -0.50, 0.80, 6.75, 7.25)
-
-    # 2. Café Los Pinos (Y in [14.50, 23.20]) - 1 Nivel piedra laja (H=3.65m)
-    add_box(bm_pinos, 0.00, 12.00, 14.50, 23.20, 0.00, 3.65)
-    # Cancelería y puertas
-    add_box(bm_glass, -0.05, 0.05, 15.50, 19.50, 0.80, 2.60)
-    add_box(bm_glass, -0.05, 0.05, 20.20, 22.50, 0.00, 2.60) # Puerta
-    # Toldo abombado rojo Los Pinos
-    add_canopy_quarter_round_y(bm_trim, 15.00, 22.80, 0.00, 1.10, 2.70, 0.75)
-
-    # 3. MR Multiservicios (Y in [23.20, 31.00]) - 1 Nivel (H=3.50m)
-    add_box(bm_white, 0.00, 12.00, 23.20, 31.00, 0.00, 3.50)
-    add_box(bm_placita, -0.05, 0.05, 23.20, 31.00, 0.00, 0.65) # Zócalo azul
-    add_box(bm_glass, -0.05, 0.05, 24.50, 29.50, 0.90, 2.50) # Escaparate
-
-    # 4. CopyFast (Y in [31.00, 42.50]) - 1 Nivel (H=4.10m)
-    add_box(bm_white, 0.00, 12.00, 31.00, 42.50, 0.00, 4.10)
-    add_box(bm_trim, -0.05, 0.05, 31.00, 42.50, 0.00, 0.70) # Zócalo gris
-    # Marquesina azul saliente
-    add_box(bm_placita, -0.45, 0.05, 31.20, 42.30, 3.10, 4.05)
-    # Cancelería de doble vitrina y puerta central
-    add_box(bm_glass, -0.05, 0.05, 32.00, 36.00, 0.85, 2.85)
-    add_box(bm_glass, -0.05, 0.05, 37.50, 41.50, 0.85, 2.85)
-    add_box(bm_glass, -0.05, 0.05, 36.20, 37.30, 0.00, 2.85) # Puerta
-
-    # 5. Beto's Barbería (Y in [42.50, 48.00]) - 1 Nivel (H=3.90m)
-    add_box(bm_white, 0.00, 12.00, 42.50, 48.00, 0.00, 3.90)
-    add_box(bm_placita, -0.05, 0.05, 42.50, 48.00, 0.00, 0.65) # Zócalo azul
-    add_box(bm_glass, -0.05, 0.05, 43.50, 47.00, 0.85, 2.65)
-    # Barber pole cilíndrico
-    add_box(bm_trim, -0.30, -0.15, 42.70, 42.85, 1.60, 2.40)
-
-    # 6. Modas Da Vinci Poniente (Y in [48.00, 56.50]) - Porche Nupcial (H=4.30m)
-    add_box(bm_white, 0.00, 14.00, 48.00, 56.50, 0.00, 4.30)
-    # Porche saliente con faldón de tejas 3D volado 1.40m
-    add_box(bm_trim, -1.40, 0.00, 48.20, 56.30, 2.65, 2.75) # Viguería de techo
-    add_teja_ribs_y(bm_roof, 48.20, 56.30, -1.45, 0.20, 2.70, 3.40)
-    add_box(bm_glass, -0.05, 0.05, 49.50, 55.50, 0.40, 2.50) # Vitrina novias
-
-    # 7. Multiservicios Don Elías (Y in [56.50, 78.00]) - (H=4.25m)
-    # Termina exactamente en Y = 78.00 para NO solapar con la esquina Norponiente
-    add_box(bm_white, 0.00, 14.00, 56.50, 78.00, 0.00, 4.25)
-    # Alero corrido de tejas coloniales
-    add_teja_ribs_y(bm_roof, 56.50, 77.00, -0.60, 0.40, 3.80, 4.35)
-    # Toldo azul capota Don Elías
-    add_canopy_quarter_round_y(bm_trim, 58.00, 63.50, 0.00, 0.90, 2.50, 0.65)
-    add_box(bm_glass, -0.05, 0.05, 58.50, 63.00, 0.90, 2.30)
-    add_box(bm_glass, -0.05, 0.05, 70.00, 75.00, 1.20, 2.60)
-
-    create_mesh_object("West_Placita_Walls", bm_placita, mats["stucco_azul_placita"], col)
-    create_mesh_object("West_LosPinos_Walls", bm_pinos, mats["piedra_laja_pinos"], col)
-    create_mesh_object("West_Commercial_White_Walls", bm_white, mats["stucco_blanco"], col)
-    create_mesh_object("West_Roof_Tiles", bm_roof, mats["teja_barro_3d"], col)
-    create_mesh_object("West_Trim", bm_trim, mats["aluminio_oscuro"], col)
-    create_mesh_object("West_Glass", bm_glass, mats["vidrio_comercial"], col)
-
-    # Rótulos Corpóreos 3D en Cara Poniente (Rotación ROT_WEST)
-    add_3d_text("Txt_LaPlacita", "TAQUERÍA LA PLACITA", 0.52, 0.08, (-0.25, 7.25, 3.65), ROT_WEST, mats["letras_blancas"], col)
-    add_3d_text("Txt_LosPinos", "CAFE LOS PINOS", 0.42, 0.06, (-0.15, 18.80, 3.55), ROT_WEST, mats["letras_blancas"], col)
-    add_3d_text("Txt_CopyFast", "COPY FAST", 0.65, 0.08, (-0.50, 36.80, 3.65), ROT_WEST, mats["letras_amarillas"], col)
-    add_3d_text("Txt_Betos", "BARBERIA BETO'S", 0.38, 0.06, (-0.12, 45.25, 3.35), ROT_WEST, mats["letras_rojas"], col)
-    add_3d_text("Txt_DaVinci_West", "Modas Da Vinci", 0.48, 0.07, (-0.15, 52.25, 3.85), ROT_WEST, mats["letras_azules"], col)
-    add_3d_text("Txt_DonElias_West", "DON ELIAS", 0.36, 0.06, (-0.12, 60.75, 3.55), ROT_WEST, mats["letras_blancas"], col)
-
-def build_north_facade_juarez(mats, col):
-    """Zona 2: Fachada Norte sobre Avenida Benito Juárez (X in [0.00, 115.00])."""
-    print("Construyendo Zona 2: Fachada Norte (Av. Juárez)...")
-    bm_white = bmesh.new()
-    bm_elias = bmesh.new()
-    bm_michoacana = bmesh.new()
-    bm_roof = bmesh.new()
-    bm_trim = bmesh.new()
-    bm_glass = bmesh.new()
-    bm_brick = bmesh.new()
-    bm_metal = bmesh.new()
-
-    # 1. Esquina Norponiente: Modas Da Vinci / Cortina Shutter (X in [0.00, 8.50], Y in [78.00, Y_MAX]) - (H=4.30m)
-    # Este volumen comprende la esquina completa sin solapamiento
-    add_box(bm_white, 0.00, 8.50, 78.00, Y_MAX, 0.00, 4.30)
-    add_teja_ribs_x(bm_roof, 0.00, 8.50, Y_MAX + 0.60, Y_MAX - 0.40, 3.80, 4.35)
-    add_box(bm_glass, 2.00, 7.00, Y_MAX - 0.05, Y_MAX + 0.05, 0.50, 2.70)
-    # Cortina enrollable blanca en la cara poniente de la esquina
-    add_box(bm_trim, -0.08, 0.02, 78.50, 86.50, 0.00, 2.80)
-
-    # 2. Telas Elías / Bordados Elías (X in [8.50, 24.50]) - 2 Niveles Monumental Ocre (H=8.60m)
-    # Planta Alta Ocre con parapeto asimétrico
-    add_box(bm_elias, 8.50, 24.50, 76.00, Y_MAX, 3.80, 8.60)
-    # Parapeto curvo superior decorativo en X in [12.00, 22.00], Z in [8.60, 9.40]
-    add_box(bm_elias, 12.00, 22.00, Y_MAX - 0.10, Y_MAX, 8.60, 9.40)
-    # Pórtico de Planta Baja: Galería cubierta transitable con 3 columnas cuadradas
-    for cx in [10.00, 16.00, 23.00]:
-        add_box(bm_elias, cx - 0.25, cx + 0.25, Y_MAX - 0.50, Y_MAX, 0.00, 3.80)
-    # Muro interior retrasado del pórtico (Y = 86.50)
-    add_box(bm_elias, 8.50, 24.50, 76.00, 86.50, 0.00, 3.80)
-    add_box(bm_glass, 9.50, 23.50, 86.45, 86.55, 0.50, 3.20) # Vitrinas interiores telas
-    # Ventanales en arco Planta Alta: 3 ventanales verticales (X=14.0, 16.5, 19.0) y mirador poniente (X in [9.0, 12.5])
-    add_box(bm_glass, 9.00, 12.50, Y_MAX - 0.05, Y_MAX + 0.05, 4.80, 7.80) # Mirador
-    for vx in [14.00, 16.50, 19.00]:
-        add_box(bm_glass, vx - 0.65, vx + 0.65, Y_MAX - 0.05, Y_MAX + 0.05, 4.80, 7.50)
-        add_arch_spandrel_x(bm_elias, Y_MAX, Y_MAX - 0.15, vx - 0.65, vx + 0.65, 7.50, 8.00, 8.20)
-
-    # 3. Farmacia del Pueblo (X in [24.50, 36.80]) - 1 Nivel (H=4.20m)
-    add_box(bm_white, 24.50, 36.80, 78.00, Y_MAX, 0.00, 4.20)
-    add_teja_ribs_x(bm_roof, 24.50, 36.80, Y_MAX + 0.60, Y_MAX - 0.40, 3.70, 4.25)
-    add_box(bm_glass, 25.50, 35.50, Y_MAX - 0.05, Y_MAX + 0.05, 0.80, 2.80)
-    # Cercha metálica de espectacular azotea (Z in [4.40, 6.20])
-    add_box(bm_trim, 26.00, 35.00, Y_MAX - 0.50, Y_MAX - 0.30, 4.40, 6.20)
-
-    # 4. Rosticería Los Polos B.C. (X in [36.80, 44.50]) - (H=4.00m)
-    add_box(bm_white, 36.80, 44.50, 78.00, Y_MAX, 0.00, 4.00)
-    # Toldo semicilíndrico abombado rojo
-    add_canopy_quarter_round_x(bm_trim, 37.00, 44.20, Y_MAX, 1.20, 2.50, 0.80)
-    add_box(bm_trim, 37.50, 43.50, Y_MAX - 0.05, Y_MAX + 0.05, 0.00, 1.10) # Barra mostrador
-
-    # 5. Taquería Los Arcos (X in [44.50, 54.00]) - (H=4.30m)
-    add_box(bm_white, 44.50, 54.00, 78.00, Y_MAX, 0.00, 4.30)
-    add_canopy_quarter_round_x(bm_trim, 44.80, 53.50, Y_MAX, 1.30, 2.60, 0.85)
-    # Cercha metálica sobre frontispicio Z in [4.30, 5.80]
-    add_box(bm_trim, 45.00, 53.50, Y_MAX - 0.20, Y_MAX, 4.30, 5.80)
-
-    # 6. Mariscos El Chapo / Birria (X in [54.00, 60.50]) - Portal con Arco de Tabique (H=4.10m)
-    add_box(bm_white, 54.00, 60.50, 78.00, Y_MAX, 0.00, 4.10)
-    # Gran arco de tabique rojo en el acceso central (X in [55.20, 59.30])
-    add_arch_spandrel_x(bm_brick, Y_MAX, Y_MAX - 0.35, 55.20, 59.30, 2.10, 3.20, 3.50)
-    add_box(bm_brick, 54.80, 55.20, Y_MAX - 0.35, Y_MAX, 0.00, 2.20) # Jambas
-    add_box(bm_brick, 59.30, 59.70, Y_MAX - 0.35, Y_MAX, 0.00, 2.20)
-
-    # 7. La Flor de Michoacán Norte & Súper Taquería Tecate (X in [60.50, 73.00]) - (H=4.00m)
-    add_box(bm_michoacana, 60.50, 73.00, 78.00, Y_MAX, 0.00, 4.00)
-    add_box(bm_glass, 61.50, 66.00, Y_MAX - 0.05, Y_MAX + 0.05, 0.80, 2.80) # Flor Michoacán
-    add_box(bm_glass, 67.50, 72.00, Y_MAX - 0.05, Y_MAX + 0.05, 0.80, 2.80) # Taquería Tecate
-    add_box(bm_trim, 67.00, 72.50, Y_MAX - 0.15, Y_MAX + 0.15, 2.90, 3.80) # Marquesina roja
-
-    # 8. Callejón y Rampa Despacho Jurídico (X in [73.00, 78.50]) - Vano Diáfano Transitable
-    add_box(bm_white, 73.00, 73.30, 50.00, Y_MAX, 0.00, 3.50) # Muro Poniente callejón
-    add_box(bm_white, 78.20, 78.50, 50.00, Y_MAX, 0.00, 3.50) # Muro Oriente callejón
-
-    # 9. Hotel Juárez & Cafetería Juárez (X in [78.50, 91.00]) - 2 Niveles (H=7.40m)
-    add_box(bm_white, 78.50, 91.00, 70.00, Y_MAX, 0.00, 7.40)
-    # Gran ventanal PA de Hotel Juárez
-    add_box(bm_glass, 80.00, 89.50, Y_MAX - 0.05, Y_MAX + 0.05, 4.50, 6.50)
-    # Planta Baja Cafetería Juárez con cancelería roja
-    add_box(bm_trim, 79.50, 90.00, Y_MAX - 0.15, Y_MAX + 0.15, 3.20, 3.80) # Marquesina
-    add_box(bm_glass, 80.00, 89.50, Y_MAX - 0.05, Y_MAX + 0.05, 0.60, 3.00)
-
-    # 10. Barber Shop Azteca 230 & Abarrotes Lety (X in [91.00, 102.00]) - 2 Niveles (H=6.90m)
-    add_box(bm_white, 91.00, 102.00, 72.00, Y_MAX, 0.00, 6.90)
-    add_box(bm_glass, 92.50, 97.00, Y_MAX - 0.05, Y_MAX + 0.05, 0.60, 2.70)
-    add_box(bm_glass, 98.00, 101.50, Y_MAX - 0.05, Y_MAX + 0.05, 0.60, 2.70)
-    # Lucernario / invernadero piramidal verde en azotea Z in [6.90, 8.30]
-    add_box(bm_trim, 93.00, 98.00, Y_MAX - 6.00, Y_MAX - 2.00, 6.90, 8.30)
-
-    # 11. Restaurante La Flor de Michoacán (X in [102.00, 110.50]) - Arco tabique y shingle (H=4.20m)
-    add_box(bm_michoacana, 102.00, 110.50, 75.00, Y_MAX, 0.00, 4.20)
-    add_arch_spandrel_x(bm_brick, Y_MAX, Y_MAX - 0.35, 104.50, 108.50, 2.10, 3.20, 3.50)
-    # Techo shingle asfáltico
-    add_box(bm_roof, 101.80, 110.70, 75.00, Y_MAX + 0.40, 4.10, 4.60)
-
-    # 12. Callejón / Portón Acceso Autobuses (X in [110.50, 115.00])
-    add_box(bm_metal, 110.50, 115.00, Y_MAX - 0.15, Y_MAX, 0.00, 2.80) # Reja azul
-
-    create_mesh_object("North_Commercial_White_Walls", bm_white, mats["stucco_blanco"], col)
-    create_mesh_object("North_TelasElias_Ochre_Walls", bm_elias, mats["stucco_ocre_elias"], col)
-    create_mesh_object("North_Michoacana_Yellow_Walls", bm_michoacana, mats["stucco_amarillo_michoacana"], col)
-    create_mesh_object("North_Roof_Tiles", bm_roof, mats["teja_barro_3d"], col)
-    create_mesh_object("North_Trim", bm_trim, mats["aluminio_oscuro"], col)
-    create_mesh_object("North_Glass", bm_glass, mats["vidrio_comercial"], col)
-    create_mesh_object("North_Brick_Arches", bm_brick, mats["ladrillo_rojo_arcos"], col)
-    create_mesh_object("North_Metal_Gate", bm_metal, mats["cercha_azul_acero"], col)
-
-    # Rótulos Corpóreos 3D en Cara Norte (Rotación ROT_NORTH)
-    add_3d_text("Txt_TelasElias", "Telas Elias", 0.85, 0.12, (16.50, Y_MAX + 0.18, 7.85), ROT_NORTH, mats["letras_doradas"], col)
-    add_3d_text("Txt_BordadosElias", "Bordados Elias", 0.50, 0.08, (16.50, Y_MAX + 0.16, 7.15), ROT_NORTH, mats["letras_doradas"], col)
-    add_3d_text("Txt_FarmaciaPueblo", "FARMACIA DEL PUEBLO", 0.72, 0.10, (30.65, Y_MAX - 0.35, 5.35), ROT_NORTH, mats["letras_blancas"], col)
-    add_3d_text("Txt_Polos", "ROSTICERIA LOS POLOS", 0.45, 0.07, (40.65, Y_MAX + 0.15, 3.65), ROT_NORTH, mats["letras_blancas"], col)
-    add_3d_text("Txt_LosArcos", "TAQUERIA LOS ARCOS", 0.55, 0.08, (49.25, Y_MAX + 0.15, 4.85), ROT_NORTH, mats["letras_blancas"], col)
-    add_3d_text("Txt_Chapo", "MARISCOS EL CHAPO", 0.48, 0.07, (57.25, Y_MAX + 0.15, 3.85), ROT_NORTH, mats["letras_blancas"], col)
-    add_3d_text("Txt_FlorMichoacanNorte", "LA FLOR DE MICHOACAN", 0.45, 0.07, (66.00, Y_MAX + 0.15, 3.55), ROT_NORTH, mats["letras_amarillas"], col)
-    add_3d_text("Txt_HotelJuarez", "HOTEL JUAREZ", 0.80, 0.12, (84.75, Y_MAX + 0.16, 7.05), ROT_NORTH, mats["letras_azules"], col)
-    add_3d_text("Txt_CafeteriaJuarez", "CAFETERIA JUAREZ", 0.45, 0.07, (84.75, Y_MAX + 0.16, 3.55), ROT_NORTH, mats["letras_blancas"], col)
-    add_3d_text("Txt_BarberAzteca", "BARBER AZTECA", 0.48, 0.07, (96.50, Y_MAX + 0.15, 3.45), ROT_NORTH, mats["letras_azules"], col)
-
-def build_terminal_and_east_facade(mats, col):
-    """Zona 3: Terminal de Autobuses (Noreste) y Fachada Oriente sobre Calle Abelardo L. Rodríguez."""
-    print("Construyendo Zona 3: Terminal de Autobuses y Fachada Oriente...")
-    bm_term_walls = bmesh.new()
-    bm_term_fascia = bmesh.new()
-    bm_green = bmesh.new()
-    bm_white = bmesh.new()
-    bm_trim = bmesh.new()
-    bm_glass = bmesh.new()
-    bm_truss = bmesh.new()
-    bm_shed = bmesh.new()
-
-    # 1. Terminal de Autobuses Tecate B.C. (X in [115.00, X_MAX], Y in [65.00, Y_MAX]) - Hito Cívico (H=5.80m)
-    # Volumen unificado sin solapamientos
-    add_box(bm_term_walls, 115.00, X_MAX, 65.00, Y_MAX, 0.00, 5.80)
-    # Fascia metálica acanalada amarilla superior (Z in [4.40, 5.80]) a lo largo de Norte y Oriente
-    add_box(bm_term_fascia, 115.00, X_MAX, Y_MAX - 0.10, Y_MAX + 0.15, 4.40, 5.80) # Norte
-    add_box(bm_term_fascia, X_MAX - 0.10, X_MAX + 0.15, 75.00, Y_MAX, 4.40, 5.80) # Oriente
-    # Alero de concreto con modillones trapezoidales esculpidos (Z in [3.80, 4.40])
-    add_box(bm_trim, 114.80, X_MAX + 0.40, Y_MAX - 0.20, Y_MAX + 0.85, 3.80, 4.40)
-    add_box(bm_trim, X_MAX - 0.20, X_MAX + 0.85, 74.80, Y_MAX + 0.40, 3.80, 4.40)
-    # Modillones en frontis norte
-    for mx in range(int(115.50), int(X_MAX), 3):
-        add_box(bm_trim, mx - 0.30, mx + 0.30, Y_MAX + 0.10, Y_MAX + 0.95, 3.40, 4.10)
-    # Muro cortina vidriado de piso a techo
-    add_box(bm_glass, 116.00, X_MAX - 0.50, Y_MAX - 0.05, Y_MAX + 0.05, 0.20, 3.70) # Norte
-    add_box(bm_glass, X_MAX - 0.05, X_MAX + 0.05, 78.00, 88.00, 0.50, 3.50)           # Oriente
-
-    # 2. Dársenas y Muro Verde Salvia (Y in [48.00, 65.00]) - (H=3.20m)
-    add_box(bm_green, X_MAX - 0.40, X_MAX, 48.00, 65.00, 0.00, 3.20)
-    # Cobertizo volado en shed hacia el patio interior (X in [112.00, X_MAX - 0.40])
-    add_box(bm_shed, 112.00, X_MAX - 0.40, 50.00, 65.00, 3.60, 4.50)
-
-    # 3. Mega Cercha Espacial Azul y Portón de Maniobras (Y in [34.00, 48.00])
-    add_space_frame_truss_y(bm_truss, X_MAX - 0.40, X_MAX + 0.40, 34.00, 48.00, 4.80, 5.80, subdivisions=8)
-    add_box(bm_truss, X_MAX - 0.35, X_MAX + 0.35, 33.60, 34.40, 0.00, 5.80)
-    add_box(bm_truss, X_MAX - 0.35, X_MAX + 0.35, 47.60, 48.40, 0.00, 5.80)
-    add_box(bm_truss, X_MAX - 0.15, X_MAX, 34.00, 42.00, 0.00, 2.60) # Portón corredizo
-
-    # 4. Muro Perimetral Suroriente (Y in [0.00, 12.00]) - (H=3.00m)
-    # Muro limpio de cierre oriente
-    add_box(bm_white, X_MAX - 0.30, X_MAX, 0.00, 12.00, 0.00, 3.00)
-
-    create_mesh_object("Terminal_Building_Walls", bm_term_walls, mats["stucco_blanco"], col)
-    create_mesh_object("Terminal_Yellow_Fascia", bm_term_fascia, mats["lamina_amarillo_central"], col)
-    create_mesh_object("East_Green_Walls", bm_green, mats["muro_verde_salvia"], col)
-    create_mesh_object("East_Trim", bm_trim, mats["aluminio_oscuro"], col)
-    create_mesh_object("East_Glass", bm_glass, mats["vidrio_comercial"], col)
-    create_mesh_object("East_Truss_SpaceFrame", bm_truss, mats["cercha_azul_acero"], col)
-    create_mesh_object("East_Bus_Shed", bm_shed, mats["lamina_amarillo_central"], col)
-
-    # Rótulos Corpóreos Terminal (Norte)
-    add_3d_text("Txt_TerminalAutobuses", "TERMINAL DE AUTOBUSES TECATE", 0.75, 0.10, (124.50, Y_MAX + 0.22, 5.25), ROT_NORTH, mats["letras_blancas"], col)
-    add_3d_text("Txt_SuburBaja", "Subur BAJA", 0.55, 0.08, (124.50, Y_MAX + 0.20, 4.65), ROT_NORTH, mats["letras_rojas"], col)
-
-def build_south_facade_libertad(mats, col):
-    """Zona 4: Fachada Sur sobre Callejón Libertad (X in [0.00, 134.40], Y in [0.00, 24.00])."""
-    print("Construyendo Zona 4: Fachada Sur (Callejón Libertad)...")
-    bm_prisci = bmesh.new()
-    bm_heras = bmesh.new()
-    bm_arrematec = bmesh.new()
-    bm_fimbres = bmesh.new()
-    bm_colonial = bmesh.new()
-    bm_colonial_cantera = bmesh.new()
-    bm_white = bmesh.new()
-    bm_warehouse = bmesh.new()
-    bm_roof = bmesh.new()
-    bm_trim = bmesh.new()
-    bm_glass = bmesh.new()
-    bm_wood = bmesh.new()
-
-    # 1. Naves de Servicio Suroriente (X in [112.00, 134.40]) - (H=3.80m)
-    add_box(bm_warehouse, 112.00, 134.40, 0.00, 16.00, 0.00, 3.80)
-    add_box(bm_trim, 111.80, 134.40, -0.20, 16.00, 3.75, 4.00) # Remate cubierta
-
-    # 2. Hotel Colonial (X in [90.00, 112.00]) - Fachada Patrimonial 2 Niveles (H=7.80m)
-    add_box(bm_colonial, 90.00, 112.00, 0.00, 24.00, 0.00, 7.80)
-    # Balcón corrido en planta alta con barandal de hierro forjado ornamental
-    add_box(bm_trim, 93.00, 105.00, -0.60, 0.00, 3.60, 3.75) # Losa balcón
-    add_box(bm_trim, 93.00, 105.00, -0.60, -0.55, 3.75, 4.65) # Barandal hierro
-    # Ventanal en arco en planta alta con cantera
-    add_arch_spandrel_x(bm_colonial_cantera, 0.00, 0.15, 96.00, 99.00, 4.80, 6.20, 6.50)
-    add_box(bm_glass, 96.20, 98.80, -0.05, 0.05, 4.00, 6.00)
-    # Parapeto superior estilo misión con almenas
-    add_box(bm_colonial, 92.00, 108.00, 0.00, 0.30, 7.80, 8.60)
-    for ax in range(94, 106, 3):
-        add_box(bm_colonial_cantera, ax, ax + 1.20, -0.05, 0.35, 8.00, 8.50) # Almenas cantera
-    # Planta Baja acceso de cantera y farol
-    add_box(bm_colonial_cantera, 95.50, 98.50, -0.15, 0.00, 0.00, 3.00) # Marco cantera
-    add_box(bm_glass, 96.00, 98.00, -0.05, 0.05, 0.00, 2.70) # Puerta acceso
-    add_box(bm_trim, 94.50, 95.00, -0.35, -0.05, 2.20, 2.80) # Farol colonial
-
-    # 3. Escritorio Público Fimbres (X in [80.00, 90.00]) - 1 Nivel Naranja (H=3.80m)
-    add_box(bm_fimbres, 80.00, 90.00, 0.00, 16.00, 0.00, 3.80)
-    add_canopy_quarter_round_x(bm_trim, 80.50, 89.50, 0.00, -0.80, 2.40, 0.55) # Toldo ondulado
-    add_box(bm_glass, 81.50, 88.50, -0.05, 0.05, 0.80, 2.30)
-
-    # 4. Arrematec Demoliciones (X in [70.00, 80.00]) - Fachada Amarilla/Roja (H=3.90m)
-    add_box(bm_arrematec, 70.00, 80.00, 0.00, 16.00, 0.00, 3.90)
-    add_box(bm_prisci, 70.00, 80.00, -0.05, 0.05, 0.00, 0.80) # Zócalo rojo
-    add_box(bm_glass, 72.00, 77.00, -0.05, 0.05, 0.90, 2.40) # Ventana con reja
-    add_box(bm_trim, 70.00, 71.80, -0.10, 0.00, 0.00, 2.80) # Portón negro
-
-    # 5. Entrada al Gran Patio de Estacionamiento Manzana (X in [56.00, 70.00]) - Vano Libre
-    add_box(bm_white, 56.00, 56.40, 0.00, 35.00, 0.00, 2.80) # Murete poniente
-    add_box(bm_white, 69.60, 70.00, 0.00, 35.00, 0.00, 2.80) # Murete oriente
-    add_box(bm_trim, 56.50, 69.50, -0.05, 0.05, 0.00, 2.20) # Reja ciclónica abierta
-
-    # 6. Heras Café Internet / Restaurant 2 de Sonora (X in [36.00, 56.00]) - 2 Niveles Rústico Salmón (H=6.90m)
-    add_box(bm_heras, 36.00, 56.00, 0.00, 22.00, 0.00, 6.90)
-    # Tejavana volada sobre la planta alta Z in [6.80, 7.30]
-    add_teja_ribs_x(bm_roof, 36.00, 56.00, -0.80, 0.20, 6.60, 7.20)
-    # Barandal rústico superior de troncos de madera
-    for bx in range(36, 56, 2):
-        add_box(bm_wood, bx + 0.85, bx + 1.15, -0.45, -0.35, 3.40, 4.40) # Postes
-    add_box(bm_wood, 36.00, 56.00, -0.45, -0.35, 3.80, 3.95) # Tronco inferior
-    add_box(bm_wood, 36.00, 56.00, -0.45, -0.35, 4.30, 4.45) # Tronco pasamanos
-    # Planta Baja Restaurant 2 de Sonora
-    add_arch_spandrel_x(bm_heras, 0.00, 0.20, 47.00, 49.50, 1.90, 2.60, 2.80) # Puerta en arco
-    add_box(bm_glass, 38.00, 46.00, -0.05, 0.05, 0.80, 2.40)
-    add_box(bm_trim, 37.00, 55.00, -0.05, 0.05, 0.00, 0.70) # Zócalo verde menta
-
-    # 7. Helove S.A. de C.V. (X in [28.00, 36.00]) - (H=3.80m)
-    add_box(bm_white, 28.00, 36.00, 0.00, 18.00, 0.00, 3.80)
-    add_canopy_quarter_round_x(bm_trim, 28.50, 35.50, 0.00, -1.00, 2.30, 0.65) # Toldo azul
-    add_box(bm_glass, 29.50, 34.50, -0.05, 0.05, 0.80, 2.20)
-
-    # 8. Dulcería Prisci (X in [8.00, 28.00]) - Nave Lámina Roja (H=5.20m)
-    add_box(bm_prisci, 8.00, 28.00, 0.00, 22.00, 0.00, 5.20)
-    # Toldo corrido abovedado multicolor de 20m de longitud (Z in [2.10, 2.85])
-    add_canopy_quarter_round_x(bm_trim, 8.20, 27.80, 0.00, -1.35, 2.05, 0.80)
-    # Planta Baja con cortinas enrollables y cancelería
-    add_box(bm_trim, 9.00, 15.00, -0.05, 0.05, 0.00, 2.00) # Cortina metálica
-    add_box(bm_glass, 16.00, 27.00, -0.05, 0.05, 0.20, 2.00) # Entrada tienda
-
-    # 9. Retorno Sur de La Placita (X in [0.00, 8.00], Y in [0.00, 14.50])
-    # Los muros ya fueron generados en La Placita (West_Placita_Walls).
-    # Solo agregamos aquí la cancelería de acceso sur:
-    add_box(bm_glass, 1.00, 7.00, -0.05, 0.05, 0.60, 2.60)
-
-    create_mesh_object("South_DulceriaPrisci_Walls", bm_prisci, mats["lamina_rojo_prisci"], col)
-    create_mesh_object("South_Heras_Sonora_Walls", bm_heras, mats["stucco_salmon_sonora"], col)
-    create_mesh_object("South_Arrematec_Walls", bm_arrematec, mats["stucco_amarillo_arrematec"], col)
-    create_mesh_object("South_Fimbres_Walls", bm_fimbres, mats["stucco_naranja_fimbres"], col)
-    create_mesh_object("South_HotelColonial_Walls", bm_colonial, mats["stucco_blanco"], col)
-    create_mesh_object("South_HotelColonial_Cantera", bm_colonial_cantera, mats["cantera_colonial"], col)
-    create_mesh_object("South_Commercial_White_Walls", bm_white, mats["stucco_blanco"], col)
-    create_mesh_object("South_Warehouses_Walls", bm_warehouse, mats["muro_gris_tecnico"], col)
-    create_mesh_object("South_Roof_Tiles", bm_roof, mats["teja_barro_3d"], col)
-    create_mesh_object("South_Trim", bm_trim, mats["aluminio_oscuro"], col)
-    create_mesh_object("South_Glass", bm_glass, mats["vidrio_comercial"], col)
-    create_mesh_object("South_Rustic_Wood", bm_wood, mats["madera_rustica_troncos"], col)
-
-    # Rótulos Corpóreos 3D en Cara Sur (Rotación ROT_SOUTH)
-    add_3d_text("Txt_HotelColonial_Front", "HOTEL COLONIAL", 0.70, 0.10, (100.00, -0.15, 6.95), ROT_SOUTH, mats["letras_rojas"], col)
-    add_3d_text("Txt_Fimbres", "ESCRITORIO PUBLICO FIMBRES", 0.40, 0.06, (85.00, -0.12, 3.45), ROT_SOUTH, mats["letras_blancas"], col)
-    add_3d_text("Txt_Arrematec", "ARREMATEC DEMOLICIONES", 0.38, 0.06, (75.00, -0.12, 3.45), ROT_SOUTH, mats["letras_rojas"], col)
-    add_3d_text("Txt_HerasInternet", "HERAS CAFE INTERNET", 0.58, 0.08, (46.00, -0.15, 5.85), ROT_SOUTH, mats["letras_blancas"], col)
-    add_3d_text("Txt_RestaurantSonora", "RESTAURANT 2 DE SONORA", 0.48, 0.07, (46.00, -0.12, 2.95), ROT_SOUTH, mats["letras_amarillas"], col)
-    add_3d_text("Txt_Helove", "HELOVE S.A. DE C.V.", 0.38, 0.06, (32.00, -0.12, 3.35), ROT_SOUTH, mats["letras_blancas"], col)
-    add_3d_text("Txt_DulceriaPrisci", "DULCERIA Prisci", 0.95, 0.14, (18.00, -0.18, 4.15), ROT_SOUTH, mats["letras_amarillas"], col)
-
-def build_interior_courtyards_and_roofs(mats, col):
-    """Zona 5: Patios Interiores, Cubiertas Herméticas Retranqueadas y Estructuras de Servicio."""
-    print("Construyendo Zona 5: Patios Interiores y Azoteas Retranqueadas...")
-    bm_roof = bmesh.new()
-    bm_pave = bmesh.new()
-    bm_walls = bmesh.new()
-
-    # 1. Cubiertas de Edificios Retranqueadas (CERO cruces hacia las fachadas exteriores)
-    # Franja Poniente (Ortiz Rubio)
-    add_box(bm_roof, 0.40, 7.80, 0.40, 14.10, 6.55, 6.70)   # La Placita PA
-    add_box(bm_roof, 0.40, 11.60, 14.70, 23.00, 3.45, 3.60)  # Los Pinos
-    add_box(bm_roof, 0.40, 11.60, 23.40, 30.80, 3.30, 3.45)  # MR Multiservicios
-    add_box(bm_roof, 0.40, 11.60, 31.20, 42.30, 3.90, 4.05)  # CopyFast
-    add_box(bm_roof, 0.40, 11.60, 42.70, 47.80, 3.70, 3.85)  # Beto's
-    add_box(bm_roof, 0.40, 13.60, 48.20, 56.30, 4.10, 4.25)  # Da Vinci Poniente
-    add_box(bm_roof, 0.40, 13.60, 56.70, 77.80, 4.05, 4.20)  # Don Elías
-    add_box(bm_roof, 0.40, 8.30, 78.20, 90.80, 4.10, 4.25)   # Esquina Da Vinci Norte
-
-    # Franja Norte (Av. Juárez)
-    add_box(bm_roof, 8.70, 24.30, 76.20, 90.80, 8.35, 8.50)  # Telas Elías PA
-    add_box(bm_roof, 24.70, 36.60, 78.20, 90.80, 4.00, 4.15) # Farmacia del Pueblo
-    add_box(bm_roof, 37.00, 44.30, 78.20, 90.80, 3.80, 3.95) # Los Polos
-    add_box(bm_roof, 44.70, 53.80, 78.20, 90.80, 4.10, 4.25) # Los Arcos
-    add_box(bm_roof, 54.20, 60.30, 78.20, 90.80, 3.90, 4.05) # Mariscos El Chapo
-    add_box(bm_roof, 60.70, 72.80, 78.20, 90.80, 3.80, 3.95) # Flor Michoacán Norte
-    add_box(bm_roof, 78.70, 90.80, 70.20, 90.80, 7.15, 7.30) # Hotel Juárez PA
-    add_box(bm_roof, 91.20, 101.80, 72.20, 90.80, 6.65, 6.80)# Barber Azteca PA
-    add_box(bm_roof, 102.20, 110.30, 75.20, 90.80, 4.00, 4.15)# Flor Michoacán Este
-    add_box(bm_roof, 115.20, 134.30, 65.20, 90.80, 5.55, 5.70)# Terminal Norte
-
-    # Franja Sur (Callejón Libertad)
-    add_box(bm_roof, 112.20, 134.30, 0.40, 15.80, 3.60, 3.75)# Naves Suroriente
-    add_box(bm_roof, 90.20, 111.80, 0.40, 23.80, 7.55, 7.70) # Hotel Colonial PA
-    add_box(bm_roof, 80.20, 89.80, 0.40, 15.80, 3.60, 3.75)  # Fimbres
-    add_box(bm_roof, 70.20, 79.80, 0.40, 15.80, 3.70, 3.85)  # Arrematec
-    add_box(bm_roof, 36.20, 55.80, 0.40, 21.80, 6.65, 6.80)  # Heras / Sonora PA
-    add_box(bm_roof, 28.20, 35.80, 0.40, 17.80, 3.60, 3.75)  # Helove
-    add_box(bm_roof, 8.20, 27.80, 0.40, 21.80, 5.00, 5.15)   # Dulcería Prisci Nave
-
-    # 2. Pavimentos de Patios Interiores (Z = 0.00 a 0.05m)
-    # Patio Central Maniobras Autobuses (X in [85.00, 130.00], Y in [25.00, 65.00])
-    add_box(bm_pave, 85.00, 130.00, 25.00, 65.00, 0.00, 0.05)
-    # Estacionamiento Sur (X in [45.00, 75.00], Y in [10.00, 48.00])
-    add_box(bm_pave, 45.00, 75.00, 10.00, 48.00, 0.00, 0.05)
-    # Patio Norte Despachos (X in [65.00, 85.00], Y in [50.00, 75.00])
-    add_box(bm_pave, 65.00, 85.00, 50.00, 75.00, 0.00, 0.05)
-
-    # 3. Muros Interiores de Despachos y Talleres
-    add_box(bm_walls, 65.00, 85.00, 48.00, 50.00, 0.00, 3.40) # Barda divisoria
-    add_box(bm_walls, 85.00, 85.40, 25.00, 65.00, 0.00, 3.40) # Barda patio autobuses
-
-    # 4. Rótulo Monumental en Azotea de Hotel Colonial mirando hacia el Patio Oriente
-    add_3d_text("Txt_Colonial_Roof", "HOTEL COLONIAL", 0.90, 0.12, (101.00, 24.50, 8.40), ROT_NORTH, mats["letras_rojas"], col)
-
-    create_mesh_object("Rooftops_Asphalt", bm_roof, mats["azotea_impermeable"], col)
-    create_mesh_object("Interior_Pavements", bm_pave, mats["patio_asfalto"], col)
-    create_mesh_object("Interior_Walls", bm_walls, mats["stucco_blanco"], col)
+def assign_material_to_faces(mesh_obj, faces, mat):
+    if mat.name not in mesh_obj.data.materials:
+        mesh_obj.data.materials.append(mat)
+    mat_idx = mesh_obj.data.materials.find(mat.name)
+    for f in faces:
+        f.material_index = mat_idx
 
 # ---------------------------------------------------------------------------
-# 5. Generación de Escena Godot 4 con Física Analítica
+# 4. Ensamblaje Arquitectónico Riguroso (Zero Traslapes)
 # ---------------------------------------------------------------------------
-def generate_godot_tscn(tscn_path, glb_path):
-    """Genera escena Godot 4 con colisionadores analíticos BoxShape3D y sincronización canónica."""
-    print(f"Generando escena Godot 4 con colisiones analíticas: {tscn_path}...")
+def build_zocalo_monolitico(bm, mats, mesh_obj):
+    t = 0.40
+    f_south = add_box(bm, 0, X_MAX, 0, t, Z_BASE, Z_GROUND)
+    f_north = add_box(bm, 0, X_MAX, Y_MAX - t, Y_MAX, Z_BASE, Z_GROUND)
+    f_west  = add_box(bm, 0, t, 0, Y_MAX, Z_BASE, Z_GROUND)
+    f_east  = add_box(bm, X_MAX - t, X_MAX, 0, Y_MAX, Z_BASE, Z_GROUND)
+    assign_material_to_faces(mesh_obj, f_south + f_north + f_west + f_east, mats['plinth'])
 
-    # En Godot:
-    # X_godot = X_blender
-    # Y_godot = Z_blender
-    # Z_godot = -Y_blender
+def build_north_facade_juarez(bm, mats, mesh_obj):
+    y_front = Y_MAX
+    y_back = Y_MAX - 16.00
 
-    boxes = [
-        # 1. Cuerpo Poniente (Ortiz Rubio)
-        ("Col_West_Placita", Vector((8.00, 6.80, 14.50)), Vector((4.00, 3.40, -7.25))),
-        ("Col_West_Comercios", Vector((12.00, 4.20, 42.00)), Vector((6.00, 2.10, -35.50))),
-        ("Col_West_DaVinci_Norte", Vector((14.00, 4.40, 34.69)), Vector((7.00, 2.20, -73.84))),
+    # 1. Modas Da Vinci (X = 0 a 9m, Y = 68 a 77m, Z = 3.60m)
+    f_base = add_box(bm, 0, 9.0, 68.0, y_front, Z_GROUND, 3.60)
+    assign_material_to_faces(mesh_obj, f_base, mats['white_stucco'])
+    f_tejas_dv = add_teja_ribs_x(bm, 0, 9.0, y_front + 0.35, y_front - 0.80, 3.55, 4.05, spacing=0.38)
+    assign_material_to_faces(mesh_obj, f_tejas_dv, mats['clay_tile'])
+    fr, gl = add_window_frame_and_glass(bm, 1.20, 7.80, y_front, 0.40, 2.90, axis='Y', facing=1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
 
-        # 2. Cuerpo Norte (Av. Juárez)
-        ("Col_North_Elias_RearWall", Vector((16.00, 8.60, 10.00)), Vector((16.50, 4.30, -81.50))),
-        ("Col_North_Elias_Col1", Vector((0.50, 3.80, 0.50)), Vector((10.00, 1.90, -90.94))),
-        ("Col_North_Elias_Col2", Vector((0.50, 3.80, 0.50)), Vector((16.00, 1.90, -90.94))),
-        ("Col_North_Elias_Col3", Vector((0.50, 3.80, 0.50)), Vector((23.00, 1.90, -90.94))),
-        ("Col_North_Comercios_A", Vector((48.50, 4.30, 13.00)), Vector((48.75, 2.15, -84.69))),
-        ("Col_North_HotelJuarez", Vector((23.50, 7.40, 19.00)), Vector((90.25, 3.70, -81.69))),
-        ("Col_North_Terminal_L", Vector((6.00, 5.80, 26.00)), Vector((118.00, 2.90, -78.19))),
-        ("Col_North_Terminal_R", Vector((6.00, 5.80, 26.00)), Vector((131.73, 2.90, -78.19))),
+    # 2. Telas Elías / Bordados Elías (X = 9 a 32m, Y = 59 a 77m, Z = 7.60m)
+    f_telas = add_box(bm, 9.0, 32.0, 59.0, y_front, Z_GROUND, 7.60)
+    assign_material_to_faces(mesh_obj, f_telas, mats['telas_ochre'])
+    f_corn_telas = add_box(bm, 8.80, 32.20, y_front - 0.10, y_front + 0.25, 7.50, 7.75)
+    assign_material_to_faces(mesh_obj, f_corn_telas, mats['white_stucco'])
+    p1 = add_box(bm, 9.0, 9.70, y_front - 0.80, y_front, Z_GROUND, 3.80)
+    p2 = add_box(bm, 20.15, 20.85, y_front - 0.80, y_front, Z_GROUND, 3.80)
+    p3 = add_box(bm, 31.30, 32.0, y_front - 0.80, y_front, Z_GROUND, 3.80)
+    assign_material_to_faces(mesh_obj, p1 + p2 + p3, mats['telas_ochre'])
+    fr, gl = add_window_frame_and_glass(bm, 10.50, 30.50, y_front, 4.20, 7.00, axis='Y', facing=1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
 
-        # 3. Cuerpo Oriente (Abelardo L. Rodríguez)
-        ("Col_East_Darsenas_Wall", Vector((0.40, 3.20, 27.00)), Vector((134.53, 1.60, -61.50))),
+    # 3. Mariscos Preparados El Chapo (X = 32 a 44m, Y = 59 a 77m, Z = 3.80m)
+    f_chapo = add_box(bm, 32.0, 44.0, 59.0, y_front, Z_GROUND, 3.80)
+    assign_material_to_faces(mesh_obj, f_chapo, mats['white_stucco'])
+    f_arco = add_box(bm, 34.0, 38.0, y_front, y_front + 0.12, Z_GROUND, 3.20)
+    assign_material_to_faces(mesh_obj, f_arco, mats['brick_rustic'])
+    fr, gl = add_window_frame_and_glass(bm, 34.40, 37.60, y_front + 0.12, Z_GROUND, 3.00, axis='Y', facing=1)
+    assign_material_to_faces(mesh_obj, fr, mats['iron_black'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+    fr, gl = add_window_frame_and_glass(bm, 39.0, 43.0, y_front, 0.80, 2.80, axis='Y', facing=1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
 
-        # 4. Cuerpo Sur (Callejón Libertad)
-        ("Col_South_Naves_Suroriente", Vector((22.73, 3.80, 16.00)), Vector((123.36, 1.90, -8.00))),
-        ("Col_South_HotelColonial", Vector((22.00, 7.80, 24.00)), Vector((101.00, 3.90, -12.00))),
-        ("Col_South_Fimbres_Arrematec", Vector((20.00, 3.90, 16.00)), Vector((80.00, 1.95, -8.00))),
-        ("Col_South_Heras_Sonora", Vector((20.00, 6.90, 22.00)), Vector((46.00, 3.45, -11.00))),
-        ("Col_South_DulceriaPrisci", Vector((20.00, 5.20, 22.00)), Vector((18.00, 2.60, -11.00))),
+    # 4. Taquería Los Arcos (X = 44 a 58m, Y = 59 a 77m, Z = 3.90m)
+    f_arcos = add_box(bm, 44.0, 58.0, 59.0, y_front, Z_GROUND, 3.90)
+    assign_material_to_faces(mesh_obj, f_arcos, mats['cream_stucco'])
+    f_truss_arc = add_space_truss_beam(bm, Vector((44.50, y_front - 0.20, 3.95)), Vector((57.50, y_front - 0.20, 3.95)), width=0.30, height=0.70, bays=8)
+    assign_material_to_faces(mesh_obj, f_truss_arc, mats['steel_blue'])
+    f_canopy_arc = add_canopy_quarter_round(bm, 44.50, 57.50, y_front, depth=1.60, z_base=3.20, height=0.75, facing=1)
+    assign_material_to_faces(mesh_obj, f_canopy_arc, mats['awning_coca_red'])
+    fr, gl = add_window_frame_and_glass(bm, 45.0, 57.0, y_front, 0.60, 2.80, axis='Y', facing=1)
+    assign_material_to_faces(mesh_obj, fr, mats['hotel_white_tile'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 5. Rosticería Los Polos B.C. (X = 58 a 70m, Y = 59 a 77m, Z = 3.70m)
+    f_polos = add_box(bm, 58.0, 70.0, 59.0, y_front, Z_GROUND, 3.70)
+    assign_material_to_faces(mesh_obj, f_polos, mats['white_stucco'])
+    f_canopy_pol = add_canopy_quarter_round(bm, 58.50, 69.50, y_front, depth=1.50, z_base=3.10, height=0.65, facing=1)
+    assign_material_to_faces(mesh_obj, f_canopy_pol, mats['awning_coca_red'])
+    fr, gl = add_window_frame_and_glass(bm, 59.0, 69.0, y_front, 0.70, 2.80, axis='Y', facing=1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 6. Farmacia del Pueblo (X = 70 a 84m, Y = 59 a 77m, Z = 4.00m)
+    f_farm = add_box(bm, 70.0, 84.0, 59.0, y_front, Z_GROUND, 4.00)
+    assign_material_to_faces(mesh_obj, f_farm, mats['cream_stucco'])
+    f_tejas_farm = add_teja_ribs_x(bm, 69.80, 84.20, y_front + 1.40, y_front, 3.10, 4.10, spacing=0.38)
+    assign_material_to_faces(mesh_obj, f_tejas_farm, mats['clay_tile'])
+    fr, gl = add_window_frame_and_glass(bm, 71.0, 83.0, y_front, 0.40, 2.90, axis='Y', facing=1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 7. Barber Shop Azteca 230 (X = 84 a 94m, Y = 59 a 77m, Z = 3.80m)
+    f_azt = add_box(bm, 84.0, 94.0, 59.0, y_front, Z_GROUND, 3.80)
+    assign_material_to_faces(mesh_obj, f_azt, mats['white_stucco'])
+    f_bp = add_barber_pole(bm, 84.35, y_front + 0.15, 1.40, height=0.85, radius=0.10)
+    assign_material_to_faces(mesh_obj, f_bp, mats['awning_coca_red'])
+    fr, gl = add_window_frame_and_glass(bm, 85.0, 93.0, y_front, 0.50, 2.80, axis='Y', facing=1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 8. Hotel Juárez & Cafetería Juárez (X = 94 a 109m, Y = 58 a 77m, Z = 7.40m)
+    f_hj = add_box(bm, 94.0, 109.0, 58.0, y_front, Z_GROUND, 7.40)
+    assign_material_to_faces(mesh_obj, f_hj, mats['hotel_white_tile'])
+    fr, gl = add_window_frame_and_glass(bm, 95.0, 108.0, y_front, 0.50, 2.90, axis='Y', facing=1)
+    assign_material_to_faces(mesh_obj, fr, mats['awning_coca_red'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+    fr, gl = add_window_frame_and_glass(bm, 96.0, 107.0, y_front, 4.40, 6.20, axis='Y', facing=1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # Callejón Medellín y Villegas (X = 109 a 114m)
+    f_muro_med = add_box(bm, 113.70, 114.0, 58.0, y_front, Z_GROUND, 2.60)
+    assign_material_to_faces(mesh_obj, f_muro_med, mats['white_stucco'])
+
+    # 9. Super Taquería Tecate (X = 114 a 120m, Y = 58 a 77m, Z = 3.60m)
+    f_stt = add_box(bm, 114.0, 120.0, 58.0, y_front, Z_GROUND, 3.60)
+    assign_material_to_faces(mesh_obj, f_stt, mats['cream_stucco'])
+    f_stt_can = add_canopy_quarter_round(bm, 114.20, 119.80, y_front, depth=1.30, z_base=3.10, height=0.55, facing=1)
+    assign_material_to_faces(mesh_obj, f_stt_can, mats['awning_coca_red'])
+    fr, gl = add_window_frame_and_glass(bm, 114.50, 119.50, y_front, 0.60, 2.80, axis='Y', facing=1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 10. Terminal Central de Autobuses (X = 120 a 128m, Y = 58 a 77m, Z = 5.50m) - Un Solo Volumen Maestro
+    f_term = add_box(bm, 120.0, 128.0, 58.0, y_front, Z_GROUND, 5.50)
+    assign_material_to_faces(mesh_obj, f_term, mats['terminal_green'])
+    f_fascia_n = add_box(bm, 119.80, 128.0, y_front + 0.05, y_front + 0.20, 3.60, 5.40)
+    assign_material_to_faces(mesh_obj, f_fascia_n, mats['terminal_beige_metal'])
+    f_fold_n = add_folded_plate_canopy(bm, 119.80, 128.0, y_front, depth=1.60, z_base=3.15, height=0.45, folds=8)
+    assign_material_to_faces(mesh_obj, f_fold_n, mats['grey_concrete'])
+    fr, gl = add_window_frame_and_glass(bm, 120.50, 127.50, y_front, 0.20, 3.00, axis='Y', facing=1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+def build_west_facade_ortiz_rubio(bm, mats, mesh_obj):
+    x_front = 0.00
+
+    # 1. Modas Da Vinci (Lateral: Y = 68 a 77m)
+    fr, gl = add_window_frame_and_glass(bm, 70.0, 76.0, x_front, 0.40, 2.90, axis='X', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 2. Barbería y Baños Beto's (X = 0 a 9m, Y = 58 a 68m, Z = 3.60m) - Sin Traslape
+    f_beto = add_box(bm, x_front, 9.0, 58.0, 68.0, Z_GROUND, 3.60)
+    assign_material_to_faces(mesh_obj, f_beto, mats['white_stucco'])
+    f_steps_b = add_box(bm, x_front - 0.40, x_front, 59.50, 66.50, Z_GROUND, 0.25)
+    assign_material_to_faces(mesh_obj, f_steps_b, mats['steel_blue'])
+    f_bp_b = add_barber_pole(bm, x_front - 0.15, 59.0, 1.40, height=0.85, radius=0.10)
+    assign_material_to_faces(mesh_obj, f_bp_b, mats['awning_coca_red'])
+    fr, gl = add_window_frame_and_glass(bm, 59.50, 67.0, x_front, 0.40, 2.90, axis='X', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 3. CopyFast • Centro de Copiado (X = 0 a 16m, Y = 47 a 58m, Z = 3.80m)
+    f_fast = add_box(bm, x_front, 16.0, 47.0, 58.0, Z_GROUND, 3.80)
+    assign_material_to_faces(mesh_obj, f_fast, mats['white_stucco'])
+    f_fascia_cf = add_box(bm, x_front - 0.15, x_front, 47.20, 57.80, 2.80, 3.75)
+    assign_material_to_faces(mesh_obj, f_fascia_cf, mats['cobalt_stucco'])
+    fr, gl = add_window_frame_and_glass(bm, 48.0, 57.0, x_front, 0.35, 2.70, axis='X', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 4. MR Multiservicios (X = 0 a 16m, Y = 37 a 47m, Z = 3.50m)
+    f_mr = add_box(bm, x_front, 16.0, 37.0, 47.0, Z_GROUND, 3.50)
+    assign_material_to_faces(mesh_obj, f_mr, mats['salmon_stucco'])
+    fr, gl = add_window_frame_and_glass(bm, 38.0, 46.0, x_front, 0.50, 2.80, axis='X', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 5. Café Los Pinos (X = 0 a 16m, Y = 26 a 37m, Z = 3.60m) - Piedra Laja
+    f_pinos = add_box(bm, x_front, 16.0, 26.0, 37.0, Z_GROUND, 3.60)
+    assign_material_to_faces(mesh_obj, f_pinos, mats['stone_laja'])
+    f_pinos_can = add_canopy_quarter_round(bm, x_front - 1.30, x_front, 27.0, depth=1.30, z_base=2.65, height=0.60, facing=-1)
+    fr, gl = add_window_frame_and_glass(bm, 27.50, 35.50, x_front, 0.50, 2.60, axis='X', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 6. Taquería La Placita (X = 0 a 16m, Y = 13 a 26m, Z = 6.80m, 2 Niveles) - Azul Cobalto
+    f_plac = add_box(bm, x_front, 16.0, 13.0, 26.0, Z_GROUND, 6.80)
+    assign_material_to_faces(mesh_obj, f_plac, mats['cobalt_stucco'])
+    f_balc_fl = add_box(bm, x_front - 1.20, x_front, 13.50, 25.50, 3.40, 3.55)
+    f_balc_rail = add_box(bm, x_front - 1.20, x_front - 1.10, 13.50, 25.50, 3.55, 4.45)
+    assign_material_to_faces(mesh_obj, f_balc_fl, mats['cobalt_stucco'])
+    assign_material_to_faces(mesh_obj, f_balc_rail, mats['steel_blue'])
+    f_sign_plac = add_box(bm, x_front - 1.80, x_front - 0.20, 19.0, 19.20, 4.80, 6.20)
+    assign_material_to_faces(mesh_obj, f_sign_plac, mats['awning_coca_red'])
+    fr, gl = add_window_frame_and_glass(bm, 14.0, 25.0, x_front, 0.20, 2.90, axis='X', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+    fr, gl = add_window_frame_and_glass(bm, 14.5, 24.5, x_front, 3.80, 6.00, axis='X', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 7. La Flor de Michoacán (Esquina Suroeste, X = 0 a 14m, Y = 0 a 13m, Z = 7.20m, 2 Niveles)
+    f_mich_sw = add_box(bm, x_front, 14.0, 0.0, 13.0, Z_GROUND, 7.20)
+    assign_material_to_faces(mesh_obj, f_mich_sw, mats['white_stucco'])
+    f_tejas_mich = add_teja_ribs_y(bm, 0.0, 13.20, x_front - 1.40, x_front + 0.20, 6.80, 7.35, spacing=0.38)
+    assign_material_to_faces(mesh_obj, f_tejas_mich, mats['clay_tile'])
+    f_rail_mich = add_box(bm, x_front - 1.20, x_front - 1.10, 0.20, 12.80, 3.60, 4.50)
+    assign_material_to_faces(mesh_obj, f_rail_mich, mats['terminal_green'])
+    f_fascia_mich = add_box(bm, x_front - 0.20, x_front, 0.20, 12.80, 2.90, 3.75)
+    assign_material_to_faces(mesh_obj, f_fascia_mich, mats['awning_yellow_michoacan'])
+    for py in [0.20, 4.0, 8.0, 12.5]:
+        col_m = add_box(bm, x_front - 0.35, x_front, py, py + 0.40, Z_GROUND, 2.90)
+        assign_material_to_faces(mesh_obj, col_m, mats['mint_stucco'])
+    fr, gl = add_window_frame_and_glass(bm, 0.80, 12.0, x_front, 0.20, 2.80, axis='X', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+def build_south_facade_libertad(bm, mats, mesh_obj):
+    y_front = 0.00
+
+    # 1. La Flor de Michoacán (Retorno Sur: X = 0 a 14m)
+    f_tejas_ms = add_teja_ribs_x(bm, 0.0, 14.0, y_front - 1.40, y_front + 0.20, 6.80, 7.35, spacing=0.38)
+    assign_material_to_faces(mesh_obj, f_tejas_ms, mats['clay_tile'])
+    f_fascia_ms = add_box(bm, 0.20, 13.80, y_front - 0.20, y_front, 2.90, 3.75)
+    assign_material_to_faces(mesh_obj, f_fascia_ms, mats['awning_yellow_michoacan'])
+    for px in [0.20, 4.5, 9.0, 13.5]:
+        col_ms = add_box(bm, px, px + 0.40, y_front - 0.35, y_front, Z_GROUND, 2.90)
+        assign_material_to_faces(mesh_obj, col_ms, mats['mint_stucco'])
+    fr, gl = add_window_frame_and_glass(bm, 1.0, 13.0, y_front, 0.20, 2.80, axis='Y', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 2. Dulcería Prisci (X = 14 a 30m, Y = 0 a 18m, Z = 4.20m) - Lámina Roja
+    f_prisci = add_box(bm, 14.0, 30.0, y_front, 18.0, Z_GROUND, 4.20)
+    assign_material_to_faces(mesh_obj, f_prisci, mats['prisci_red_metal'])
+    f_toldo_pr = add_canopy_quarter_round(bm, 15.0, 29.0, y_front, depth=1.50, z_base=2.90, height=0.65, facing=-1)
+    assign_material_to_faces(mesh_obj, f_toldo_pr, mats['awning_striped_prisci'])
+    f_box_pr = add_box(bm, 28.5, 29.0, y_front - 1.20, y_front - 0.10, 2.50, 5.20)
+    assign_material_to_faces(mesh_obj, f_box_pr, mats['text_gold'])
+    fr, gl = add_window_frame_and_glass(bm, 15.50, 28.50, y_front, 0.50, 2.70, axis='Y', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 3. Restaurant 2 de Sonora / Heras Internet (X = 30 a 45m, Y = 0 a 18m, Z = 6.50m)
+    f_heras = add_box(bm, 30.0, 45.0, y_front, 18.0, Z_GROUND, 6.50)
+    assign_material_to_faces(mesh_obj, f_heras, mats['salmon_stucco'])
+    f_tejas_h = add_teja_ribs_x(bm, 29.80, 45.20, y_front - 1.20, y_front, 3.35, 3.85, spacing=0.38)
+    assign_material_to_faces(mesh_obj, f_tejas_h, mats['clay_tile'])
+    f_ac_h = add_box(bm, 39.5, 40.5, y_front - 0.70, y_front, 5.0, 5.80)
+    assign_material_to_faces(mesh_obj, f_ac_h, mats['grey_concrete'])
+    f_box_int = add_box(bm, 38.0, 38.35, y_front - 1.20, y_front - 0.10, 4.40, 6.20)
+    assign_material_to_faces(mesh_obj, f_box_int, mats['awning_yellow_michoacan'])
+    fr, gl = add_window_frame_and_glass(bm, 31.0, 44.0, y_front, 0.30, 2.90, axis='Y', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+    fr, gl = add_window_frame_and_glass(bm, 32.0, 43.5, y_front, 4.10, 5.80, axis='Y', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 4. Patio Interior y Caseta (X = 45 a 68m)
+    f_dirt = add_box(bm, 45.0, 60.0, y_front, 38.0, Z_GROUND - 0.03, Z_GROUND)
+    assign_material_to_faces(mesh_obj, f_dirt, mats['dirt_yard'])
+    f_fence = add_box(bm, 60.0, 68.0, y_front, y_front + 0.15, Z_GROUND, 1.80)
+    assign_material_to_faces(mesh_obj, f_fence, mats['iron_black'])
+    f_shed = add_box(bm, 60.5, 67.5, y_front + 0.50, y_front + 5.0, Z_GROUND, 3.20)
+    assign_material_to_faces(mesh_obj, f_shed, mats['cream_stucco'])
+    f_shed_roof = add_box(bm, 60.2, 67.8, y_front + 0.30, y_front + 5.2, 3.20, 3.50)
+    assign_material_to_faces(mesh_obj, f_shed_roof, mats['shingle_roof'])
+
+    # 5. Hotel Colonial (X = 68 a 92m, Y = 0 a 18m, Z = 7.60m) - Misión Colonial
+    f_col = add_box(bm, 68.0, 92.0, y_front, 18.0, Z_GROUND, 7.60)
+    assign_material_to_faces(mesh_obj, f_col, mats['white_stucco'])
+    f_balc_c_fl = add_box(bm, 69.0, 91.0, y_front - 1.10, y_front, 3.60, 3.75)
+    f_balc_c_rail = add_box(bm, 69.0, 91.0, y_front - 1.10, y_front - 1.00, 3.75, 4.65)
+    assign_material_to_faces(mesh_obj, f_balc_c_fl, mats['white_stucco'])
+    assign_material_to_faces(mesh_obj, f_balc_c_rail, mats['iron_black'])
+    for sx in [72.0, 80.0, 88.0]:
+        f_esp = add_box(bm, sx - 1.50, sx + 1.50, y_front, y_front + 0.35, 7.60, 8.60)
+        assign_material_to_faces(mesh_obj, f_esp, mats['white_stucco'])
+    fr, gl = add_window_frame_and_glass(bm, 70.0, 90.0, y_front, 0.40, 3.00, axis='Y', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['stone_laja'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+    fr, gl = add_window_frame_and_glass(bm, 70.50, 89.50, y_front, 4.20, 6.60, axis='Y', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['stone_laja'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 6. Taller / Bodega Sur (X = 92 a 114m, Y = 0 a 18m, Z = 4.80m)
+    f_tall = add_box(bm, 92.0, 114.0, y_front, 18.0, Z_GROUND, 4.80)
+    assign_material_to_faces(mesh_obj, f_tall, mats['grey_concrete'])
+    for vx in range(93, 114, 2):
+        f_can = add_box(bm, vx, vx + 0.18, y_front - 0.45, y_front, 4.55, 4.75)
+        assign_material_to_faces(mesh_obj, f_can, mats['clay_tile'])
+    f_patch = add_box(bm, 95.0, 97.0, y_front - 0.05, y_front + 0.02, 1.20, 2.40)
+    assign_material_to_faces(mesh_obj, f_patch, mats['brick_rustic'])
+    fr, gl = add_window_frame_and_glass(bm, 94.0, 96.5, y_front, 3.40, 4.20, axis='Y', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['iron_black'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+    fr, gl = add_window_frame_and_glass(bm, 102.0, 104.5, y_front, 3.40, 4.20, axis='Y', facing=-1)
+    assign_material_to_faces(mesh_obj, fr, mats['iron_black'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+    # 7. Barda Perimetral Sur de la Terminal (X = 114 a 128m, Z = 3.20m)
+    f_barda_s = add_box(bm, 114.0, X_MAX, y_front, y_front + 0.35, Z_GROUND, 3.20)
+    assign_material_to_faces(mesh_obj, f_barda_s, mats['terminal_green'])
+
+def build_east_facade_rodriguez(bm, mats, mesh_obj):
+    x_front = X_MAX
+    x_in = X_MAX - 0.35
+
+    # 1. Barda Sureste (Y = 0 a 8m, Z = 3.20m)
+    f_barda_se = add_box(bm, x_in, x_front, 0.0, 8.0, Z_GROUND, 3.20)
+    assign_material_to_faces(mesh_obj, f_barda_se, mats['terminal_green'])
+
+    # 2. Portón Monumental de la Terminal (Y = 8 a 22m, Luz = 14.00m, Z = 3.80m / 4.40m)
+    pilar_sur = add_box(bm, x_front - 0.50, x_front, 7.75, 8.25, Z_GROUND, 3.80)
+    pilar_nte = add_box(bm, x_front - 0.50, x_front, 21.75, 22.25, Z_GROUND, 3.80)
+    assign_material_to_faces(mesh_obj, pilar_sur + pilar_nte, mats['grey_concrete'])
+
+    # Reja tubular azul con barrotes verticales (Y = 8.0 a 13.5) y paso abierto de autobuses (Y = 13.5 a 22.0)
+    for gy in [8.10 + 0.35 * i for i in range(15)]:
+        f_bar = add_box(bm, x_front - 0.10, x_front - 0.04, gy - 0.03, gy + 0.03, Z_GROUND, 3.20)
+        assign_material_to_faces(mesh_obj, f_bar, mats['steel_blue'])
+    f_rail_top = add_box(bm, x_front - 0.12, x_front - 0.02, 8.0, 13.50, 3.15, 3.30)
+    f_rail_mid = add_box(bm, x_front - 0.12, x_front - 0.02, 8.0, 13.50, 1.50, 1.62)
+    f_rail_bot = add_box(bm, x_front - 0.12, x_front - 0.02, 8.0, 13.50, 0.08, 0.20)
+    assign_material_to_faces(mesh_obj, f_rail_top + f_rail_mid + f_rail_bot, mats['steel_blue'])
+
+    # Líneas viales amarillas en el pavimento del acceso vehicular
+    f_stripe = add_box(bm, x_front - 5.0, x_front + 0.50, 17.65, 17.85, Z_GROUND - 0.02, Z_GROUND)
+    assign_material_to_faces(mesh_obj, f_stripe, mats['awning_yellow_michoacan'])
+
+    # Cercha espacial tridimensional de 14 metros uniendo ambos pilares sin huecos
+    p_start = Vector((x_front - 0.25, 8.0, 3.65))
+    p_end   = Vector((x_front - 0.25, 22.0, 3.65))
+    f_truss = add_space_truss_beam(bm, p_start, p_end, width=0.45, height=0.75, bays=12)
+    assign_material_to_faces(mesh_obj, f_truss, mats['steel_blue'])
+
+    # 3. Muro Verde Oriente de la Terminal (Y = 22 a 58m, Z = 3.20m)
+    f_muro_e = add_box(bm, x_in, x_front, 22.0, 58.0, Z_GROUND, 3.20)
+    assign_material_to_faces(mesh_obj, f_muro_e, mats['terminal_green'])
+    f_hotdog = add_hotdog_cart(bm, x_front + 1.20, 34.0, Z_GROUND)
+    assign_material_to_faces(mesh_obj, f_hotdog, mats['awning_yellow_michoacan'])
+
+    # Nave de talleres interiores de autobuses (Z = 5.50m)
+    f_tall_nave = add_box(bm, x_front - 18.0, x_front - 0.35, 26.0, 56.0, Z_GROUND, 5.50)
+    assign_material_to_faces(mesh_obj, f_tall_nave, mats['terminal_green'])
+    f_roof_tall = add_box(bm, x_front - 18.20, x_front - 0.20, 25.80, 56.20, 5.50, 6.10)
+    assign_material_to_faces(mesh_obj, f_roof_tall, mats['terminal_beige_metal'])
+
+    # 4. Terminal de Autobuses - Fachada Oriente (Y = 58 a 77m, Z = 5.50m)
+    # Nota: El volumen maestro fue creado en la fachada norte; aquí añadimos la fascia, marquesina y ventanales oriente
+    f_fascia_e = add_box(bm, x_front + 0.05, x_front + 0.20, 58.0, 77.0, 3.60, 5.40)
+    assign_material_to_faces(mesh_obj, f_fascia_e, mats['terminal_beige_metal'])
+    f_fold_mesh = add_box(bm, x_front, x_front + 1.60, 58.0, 77.0, 3.20, 3.55)
+    assign_material_to_faces(mesh_obj, f_fold_mesh, mats['grey_concrete'])
+    fr, gl = add_window_frame_and_glass(bm, 59.0, 75.0, x_front, 0.20, 3.00, axis='X', facing=1)
+    assign_material_to_faces(mesh_obj, fr, mats['aluminum_frame'])
+    assign_material_to_faces(mesh_obj, gl, mats['glass_pbr'])
+
+def build_interior_courtyards_and_terminals(bm, mats, mesh_obj):
+    # 1. Patio de maniobras asfaltado
+    f_yard = add_box(bm, 70.0, X_MAX - 0.40, 8.0, 58.0, Z_GROUND - 0.03, Z_GROUND)
+    assign_material_to_faces(mesh_obj, f_yard, mats['asphalt_yard'])
+
+    # 2. Dársenas techadas de autobuses
+    f_shed_roof = add_box(bm, 78.0, 108.0, 38.0, 52.0, 4.40, 4.65)
+    assign_material_to_faces(mesh_obj, f_shed_roof, mats['terminal_beige_metal'])
+    for cx in [80.0, 93.0, 106.0]:
+        for cy in [40.0, 50.0]:
+            f_col = add_box(bm, cx - 0.15, cx + 0.15, cy - 0.15, cy + 0.15, Z_GROUND, 4.40)
+            assign_material_to_faces(mesh_obj, f_col, mats['steel_blue'])
+
+    # 3. Autobuses de pasajeros aparcados
+    for bus_x, bus_y, bus_color in [(82.0, 42.0, mats['white_stucco']), (95.0, 42.0, mats['steel_blue'])]:
+        f_bus = add_box(bm, bus_x, bus_x + 10.50, bus_y, bus_y + 2.80, Z_GROUND + 0.35, Z_GROUND + 3.40)
+        assign_material_to_faces(mesh_obj, f_bus, bus_color)
+        f_bus_win = add_box(bm, bus_x - 0.05, bus_x + 10.55, bus_y - 0.05, bus_y + 2.85, Z_GROUND + 1.80, Z_GROUND + 2.90)
+        assign_material_to_faces(mesh_obj, f_bus_win, mats['glass_pbr'])
+
+    # 4. Bardas medianeras divisorias
+    f_barda_div = add_box(bm, 45.0, 45.25, 18.0, 58.0, Z_GROUND, 2.60)
+    f_barda_div2 = add_box(bm, 45.0, 70.0, 58.0, 58.25, Z_GROUND, 2.60)
+    assign_material_to_faces(mesh_obj, f_barda_div + f_barda_div2, mats['white_stucco'])
+
+    # 5. Equipamiento de Azotea
+    tinaco_locs = [
+        (6.0, 70.0, 3.60), (20.0, 68.0, 7.60), (50.0, 68.0, 3.90),
+        (65.0, 68.0, 3.70), (78.0, 68.0, 4.00), (105.0, 68.0, 7.40),
+        (10.0, 10.0, 7.20), (22.0, 10.0, 4.20), (80.0, 10.0, 7.60)
+    ]
+    for tx, ty, tz in tinaco_locs:
+        f_tin = add_tinaco(bm, tx, ty, tz, radius=0.55, height=1.15)
+        assign_material_to_faces(mesh_obj, f_tin, mats['plinth'])
+
+    for ex, ey, ez in [(52.0, 72.0, 3.90), (64.0, 72.0, 3.70)]:
+        f_ex = add_box(bm, ex - 0.40, ex + 0.40, ey - 0.40, ey + 0.40, ez, ez + 0.85)
+        assign_material_to_faces(mesh_obj, f_ex, mats['aluminum_frame'])
+
+# ---------------------------------------------------------------------------
+# 5. Rótulos Corpóreos 3D Anti-Espejo
+# ---------------------------------------------------------------------------
+def add_3d_text(col, text_str, pos, rot_euler, size=0.55, extrude=0.06, mat=None, align_x='CENTER'):
+    t_curve = bpy.data.curves.new(name=f"Text_{text_str[:8]}", type='FONT')
+    t_curve.body = text_str
+    t_curve.size = size
+    t_curve.extrude = extrude
+    t_curve.align_x = align_x
+    t_curve.align_y = 'BOTTOM'
+
+    if os.path.exists(FONT_PATH):
+        try:
+            t_curve.font = bpy.data.fonts.load(FONT_PATH)
+        except Exception:
+            pass
+
+    t_obj = bpy.data.objects.new(name=f"TxtObj_{text_str[:12]}", object_data=t_curve)
+    t_obj.location = pos
+    t_obj.rotation_euler = rot_euler
+    if mat:
+        t_obj.data.materials.append(mat)
+    col.objects.link(t_obj)
+    return t_obj
+
+def build_all_signage_and_typography(col, mats):
+    # Cara Norte (Av. Benito Juárez)
+    add_3d_text(col, "MODAS DA VINCI", (4.5, Y_MAX + 0.10, 3.40), ROT_NORTH, size=0.45, mat=mats['text_gold'])
+    add_3d_text(col, "TELAS ELIAS", (20.5, Y_MAX + 0.12, 6.80), ROT_NORTH, size=0.85, extrude=0.08, mat=mats['text_gold'])
+    add_3d_text(col, "MARISCOS EL CHAPO", (38.0, Y_MAX + 0.15, 3.30), ROT_NORTH, size=0.45, mat=mats['text_red'])
+    add_3d_text(col, "TAQUERIA LOS ARCOS", (51.0, Y_MAX + 0.10, 3.30), ROT_NORTH, size=0.48, mat=mats['text_white'])
+    add_3d_text(col, "ROSTICERIA LOS POLOS", (64.0, Y_MAX + 0.10, 3.20), ROT_NORTH, size=0.42, mat=mats['text_red'])
+    add_3d_text(col, "FARMACIA DEL PUEBLO", (77.0, Y_MAX + 0.12, 4.30), ROT_NORTH, size=0.55, mat=mats['text_white'])
+    add_3d_text(col, "BARBER SHOP AZTECA 230", (89.0, Y_MAX + 0.10, 3.30), ROT_NORTH, size=0.42, mat=mats['text_blue'])
+    add_3d_text(col, "HOTEL JUAREZ", (101.5, Y_MAX + 0.12, 6.60), ROT_NORTH, size=0.80, extrude=0.08, mat=mats['text_blue'])
+    add_3d_text(col, "CAFETERIA JUAREZ", (101.5, Y_MAX + 0.10, 3.10), ROT_NORTH, size=0.45, mat=mats['text_red'])
+    add_3d_text(col, "SUPER TAQUERIA TECATE", (117.0, Y_MAX + 0.10, 3.25), ROT_NORTH, size=0.40, mat=mats['text_white'])
+    add_3d_text(col, "TERMINAL DE AUTOBUSES TECATE B.C.", (124.0, Y_MAX + 0.15, 4.80), ROT_NORTH, size=0.46, extrude=0.06, mat=mats['text_red'])
+    add_3d_text(col, "ABC • TNS • ELITE • SUBURBAJA", (124.0, Y_MAX + 0.15, 4.10), ROT_NORTH, size=0.35, mat=mats['text_blue'])
+
+    # Cara Poniente (Ortiz Rubio)
+    add_3d_text(col, "BARBERIA BETO'S", (-0.10, 63.5, 3.10), ROT_WEST, size=0.44, mat=mats['text_red'])
+    add_3d_text(col, "COPYFAST • CENTRO DE COPIADO", (-0.10, 52.5, 3.20), ROT_WEST, size=0.50, mat=mats['text_white'])
+    add_3d_text(col, "MR MULTISERVICIOS", (-0.10, 42.0, 3.10), ROT_WEST, size=0.42, mat=mats['text_blue'])
+    add_3d_text(col, "CAFE LOS PINOS", (-0.10, 31.5, 3.20), ROT_WEST, size=0.45, mat=mats['text_white'])
+    add_3d_text(col, "TAQUERIA LA PLACITA", (-0.12, 19.5, 6.20), ROT_WEST, size=0.65, extrude=0.08, mat=mats['text_gold'])
+    add_3d_text(col, "LA FLOR DE MICHOACAN", (-0.12, 6.5, 6.40), ROT_WEST, size=0.70, extrude=0.08, mat=mats['text_red'])
+
+    # Cara Sur (Callejón Libertad)
+    add_3d_text(col, "LA FLOR DE MICHOACAN", (7.0, -0.12, 6.40), ROT_SOUTH, size=0.65, extrude=0.08, mat=mats['text_red'])
+    add_3d_text(col, "DULCERIA PRISCI", (22.0, -0.12, 3.60), ROT_SOUTH, size=0.75, extrude=0.08, mat=mats['text_gold'])
+    add_3d_text(col, "RESTAURANT 2 DE SONORA", (36.0, -0.10, 3.10), ROT_SOUTH, size=0.40, mat=mats['text_red'])
+    add_3d_text(col, "INTERNET 2DO. PISO", (40.0, -0.12, 5.80), ROT_SOUTH, size=0.48, mat=mats['text_blue'])
+    add_3d_text(col, "HOTEL COLONIAL", (80.0, -0.15, 6.80), ROT_SOUTH, size=0.85, extrude=0.08, mat=mats['text_red'])
+
+    # Cara Oriente (Abelardo L. Rodríguez)
+    add_3d_text(col, "BIENVENIDOS A TECATE", (X_MAX - 1.20, 42.0, 4.80), ROT_EAST, size=0.65, extrude=0.06, mat=mats['text_white'])
+    add_3d_text(col, "TERMINAL CENTRAL DE AUTOBUSES", (X_MAX + 0.15, 68.0, 4.60), ROT_EAST, size=0.45, mat=mats['text_red'])
+
+# ---------------------------------------------------------------------------
+# 6. Escena Godot 4 con Colisiones Analíticas 1:1
+# ---------------------------------------------------------------------------
+def generate_godot_scene_1to1():
+    shapes = []
+
+    def add_shape(name, x1, x2, y1, y2, z1, z2):
+        sx = round(abs(x2 - x1), 2)
+        sz = round(abs(y2 - y1), 2)
+        sy = round(abs(z2 - z1), 2)
+        cx = round((x1 + x2) * 0.5, 2)
+        cz = round(-(y1 + y2) * 0.5, 2)
+        cy = round((z1 + z2) * 0.5, 2)
+        shapes.append((name, (sx, sy, sz), (cx, cy, cz)))
+
+    # Fachada Norte (Juárez)
+    add_shape("Col_ModasDaVinci", 0, 9, 68, 77, 0, 3.60)
+    add_shape("Col_TelasElias", 9, 32, 59, 77, 0, 7.60)
+    add_shape("Col_MariscosElChapo", 32, 44, 59, 77, 0, 3.80)
+    add_shape("Col_TaqLosArcos", 44, 58, 59, 77, 0, 3.90)
+    add_shape("Col_RosticeriaPolos", 58, 70, 59, 77, 0, 3.70)
+    add_shape("Col_FarmaciaPueblo", 70, 84, 59, 77, 0, 4.00)
+    add_shape("Col_BarberAzteca", 84, 94, 59, 77, 0, 3.80)
+    add_shape("Col_HotelJuarez", 94, 109, 58, 77, 0, 7.40)
+    add_shape("Col_MuroMedellin", 113.70, 114.0, 58, 77, 0, 2.60)
+    add_shape("Col_SuperTaqTecate", 114, 120, 58, 77, 0, 3.60)
+    add_shape("Col_TerminalNorte", 120, 128, 58, 77, 0, 5.50)
+
+    # Fachada Poniente (Ortiz Rubio)
+    add_shape("Col_BarberiaBetos", 0, 9, 58, 68, 0, 3.60)
+    add_shape("Col_CopyFast", 0, 16, 47, 58, 0, 3.80)
+    add_shape("Col_MRMultiservicios", 0, 16, 37, 47, 0, 3.50)
+    add_shape("Col_CafeLosPinos", 0, 16, 26, 37, 0, 3.60)
+    add_shape("Col_TaqLaPlacita", 0, 16, 13, 26, 0, 6.80)
+    add_shape("Col_LaFlorMichoacanSur", 0, 14, 0, 13, 0, 7.20)
+
+    # Fachada Sur (Libertad)
+    add_shape("Col_DulceriaPrisci", 14, 30, 0, 18, 0, 4.20)
+    add_shape("Col_RestauranteHeras", 30, 45, 0, 18, 0, 6.50)
+    add_shape("Col_CasetaJardin", 60, 68, 0, 18, 0, 3.50)
+    add_shape("Col_HotelColonial", 68, 92, 0, 18, 0, 7.60)
+    add_shape("Col_TallerSur", 92, 114, 0, 18, 0, 4.80)
+    add_shape("Col_BardaSurTerminal", 114, 128, 0, 0.40, 0, 3.20)
+
+    # Fachada Oriente (Abelardo L. Rodríguez)
+    add_shape("Col_BardaSureste", 127.60, 128.0, 0, 8, 0, 3.20)
+    add_shape("Col_PilarPortonSur", 127.50, 128.0, 7.75, 8.25, 0, 3.80)
+    add_shape("Col_PilarPortonNorte", 127.50, 128.0, 21.75, 22.25, 0, 3.80)
+    add_shape("Col_MuroOrienteTerminal", 127.60, 128.0, 22, 58, 0, 3.20)
+    add_shape("Col_NaveTalleresInterior", 110, 127.60, 26, 56, 0, 5.50)
+
+    # Bardas divisorias interiores
+    add_shape("Col_BardaInterior1", 45.0, 45.30, 18, 58, 0, 2.60)
+    add_shape("Col_BardaInterior2", 45.0, 70.0, 58, 58.30, 0, 2.60)
+
+    tscn_content = [
+        f'[gd_scene load_steps={len(shapes) + 2} format=3 uid="uid://manzana_central_2009_prod"]',
+        '[ext_resource type="PackedScene" path="res://assets/buildings/manzana_central_2009.glb" id="1_glb"]'
     ]
 
-    tscn_content = []
-    tscn_content.append('[gd_scene load_steps=%d format=3 uid="uid://manzana_central_2009_prod"]\n' % (len(boxes) + 2))
-    tscn_content.append('[ext_resource type="PackedScene" path="res://assets/buildings/manzana_central_2009.glb" id="1_glb"]\n')
+    for i, (name, size, _) in enumerate(shapes, 1):
+        tscn_content.append(f'[sub_resource type="BoxShape3D" id="BoxShape3D_{i}"]')
+        tscn_content.append(f'size = Vector3({size[0]:.2f}, {size[1]:.2f}, {size[2]:.2f})\n')
 
-    for i, (name, size, pos) in enumerate(boxes):
-        sub_id = f"BoxShape3D_{i+1}"
-        tscn_content.append(f'[sub_resource type="BoxShape3D" id="{sub_id}"]\n')
-        tscn_content.append(f'size = Vector3({size.x:.2f}, {size.y:.2f}, {size.z:.2f})\n\n')
+    tscn_content.append('[node name="Manzana_Central_2009" type="StaticBody3D"]\n')
+    tscn_content.append('[node name="MeshInstance" parent="." instance=ExtResource("1_glb")]\n')
 
-    tscn_content.append('[node name="Manzana_Central_2009" type="StaticBody3D"]\n\n')
-    tscn_content.append('[node name="MeshInstance" parent="." instance=ExtResource("1_glb")]\n\n')
+    for i, (name, _, center) in enumerate(shapes, 1):
+        tscn_content.append(f'[node name="{name}" type="CollisionShape3D" parent="."]')
+        tscn_content.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {center[0]:.2f}, {center[1]:.2f}, {center[2]:.2f})')
+        tscn_content.append(f'shape = SubResource("BoxShape3D_{i}")\n')
 
-    for i, (name, size, pos) in enumerate(boxes):
-        sub_id = f"BoxShape3D_{i+1}"
-        tscn_content.append(f'[node name="{name}" type="CollisionShape3D" parent="."]\n')
-        tscn_content.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {pos.x:.2f}, {pos.y:.2f}, {pos.z:.2f})\n')
-        tscn_content.append(f'shape = SubResource("{sub_id}")\n\n')
-
-    with open(tscn_path, "w", encoding="utf-8") as f:
-        f.writelines(tscn_content)
-    print(f"Escena Godot 4 guardada exitosamente: {tscn_path}")
+    with open(TSCN_PATH, "w", encoding="utf-8") as f:
+        f.write("\n".join(tscn_content))
+    print(f"[Exportación] Escena Godot 4 analítica 1:1 guardada en: {TSCN_PATH} ({len(shapes)} colisionadores).")
 
 # ---------------------------------------------------------------------------
-# 6. Iluminación y Cámaras Técnicas Diurnas (Cycles CPU)
+# 7. Renderizado de Validación en Circuito Cerrado (Cycles CPU)
 # ---------------------------------------------------------------------------
-def setup_lighting_and_cameras(col):
+def setup_render_cameras(col):
+    cameras = [
+        ("Cam_01_NW_Juarez_Ortiz", (-15.0, 92.0, 8.5), (math.radians(72.0), 0.0, math.radians(-145.0))),
+        ("Cam_02_North_Juarez_Center", (64.0, 96.0, 8.0), (math.radians(75.0), 0.0, math.radians(180.0))),
+        ("Cam_03_NE_Juarez_Rodriguez", (142.0, 92.0, 8.5), (math.radians(72.0), 0.0, math.radians(145.0))),
+        ("Cam_04_East_Rodriguez_Gate", (144.0, 15.0, 7.5), (math.radians(75.0), 0.0, math.radians(90.0))),
+        ("Cam_05_SE_Libertad_Rodriguez", (142.0, -15.0, 8.0), (math.radians(72.0), 0.0, math.radians(35.0))),
+        ("Cam_06_South_Libertad_Center", (64.0, -18.0, 7.5), (math.radians(75.0), 0.0, 0.0)),
+        ("Cam_07_SW_Libertad_Ortiz", (-15.0, -15.0, 8.5), (math.radians(72.0), 0.0, math.radians(-35.0))),
+        ("Cam_08_Top_Aerial_Z75", (64.0, 38.5, 75.0), (0.0, 0.0, 0.0))
+    ]
+    created = []
+    for name, loc, rot in cameras:
+        cdata = bpy.data.cameras.new(name)
+        cdata.lens = 24.0 if "Aerial" in name else 28.0
+        cdata.clip_start = 0.5
+        cdata.clip_end = 400.0
+        cobj = bpy.data.objects.new(name, cdata)
+        cobj.location = Vector(loc)
+        cobj.rotation_euler = Euler(rot, 'XYZ')
+        col.objects.link(cobj)
+        created.append(cobj)
+    return created
+
+def render_validation_suite(cameras):
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     scene.cycles.device = 'CPU'
-    scene.cycles.samples = 48
-    scene.cycles.use_denoising = True
+    scene.cycles.samples = 32
     scene.render.resolution_x = 1280
     scene.render.resolution_y = 720
+    scene.render.image_settings.file_format = 'PNG'
 
-    # Sol Diurno Principal (Key light desde Suroeste con luz cálida natural)
-    sun_data = bpy.data.lights.new(name="Sun_Key", type='SUN')
-    sun_data.energy = 3.6
-    sun_data.angle = math.radians(6.0) # sombra suave natural
-    sun_data.color = (1.0, 0.98, 0.94)
-    sun_obj = bpy.data.objects.new("Sun_Key", sun_data)
-    sun_obj.rotation_euler = (math.radians(52.0), math.radians(18.0), math.radians(-35.0))
-    col.objects.link(sun_obj)
-
-    # Sol de Relleno Suave (Fill light desde Noreste para iluminación equilibrada)
-    sun_fill_data = bpy.data.lights.new(name="Sun_Fill", type='SUN')
-    sun_fill_data.energy = 1.4
-    sun_fill_data.angle = math.radians(15.0)
-    sun_fill_data.color = (0.85, 0.92, 1.0)
-    sun_fill_obj = bpy.data.objects.new("Sun_Fill", sun_fill_data)
-    sun_fill_obj.rotation_euler = (math.radians(55.0), math.radians(-20.0), math.radians(145.0))
-    col.objects.link(sun_fill_obj)
-
-    # Cielo diurno
     world = scene.world
     if not world:
         world = bpy.data.worlds.new("World_Sky")
         scene.world = world
     world.use_nodes = True
-    bg_node = world.node_tree.nodes.get("Background")
-    if bg_node:
-        bg_node.inputs['Color'].default_value = (0.82, 0.88, 0.96, 1.0)
-        bg_node.inputs['Strength'].default_value = 1.35
+    wnodes = world.node_tree.nodes
+    wlinks = world.node_tree.links
+    wnodes.clear()
+    w_out = wnodes.new(type="ShaderNodeOutputWorld")
+    w_bg = wnodes.new(type="ShaderNodeBackground")
+    w_bg.inputs["Color"].default_value = (0.76, 0.86, 0.98, 1.0)
+    w_bg.inputs["Strength"].default_value = 1.25
+    wlinks.new(w_bg.outputs["Background"], w_out.inputs["Surface"])
 
-    cameras = {}
-    cam_specs = [
-        # Cam 1: Perspectiva Noroeste en ángulo hacia Telas Elías y Da Vinci
-        ("Cam_01_NW_Juarez_Ortiz", (-18.0, 108.0, 6.5), (math.radians(80.0), 0.0, math.radians(-130.0)), 22.0),
-        # Cam 2: Elevación frontal Av. Juárez a cota de calle (Hotel Juárez, taquerías, comercios)
-        ("Cam_02_North_Juarez_Center", (67.0, 126.0, 7.0), (math.radians(82.0), 0.0, math.radians(180.0)), 18.0),
-        # Cam 3: Perspectiva Noreste (Terminal de Autobuses y esquina Rodríguez)
-        ("Cam_03_NE_Juarez_Rodriguez", (152.0, 108.0, 6.5), (math.radians(80.0), 0.0, math.radians(135.0)), 22.0),
-        # Cam 4: Elevación frontal oriente (Abelardo L. Rodríguez: dársenas, cercha espacial)
-        ("Cam_04_East_Rodriguez", (158.0, 45.0, 6.0), (math.radians(84.0), 0.0, math.radians(90.0)), 20.0),
-        # Cam 5: Perspectiva Suroriente (esquina Callejón Libertad y Rodríguez)
-        ("Cam_05_SE_Libertad_Rodriguez", (152.0, -18.0, 6.5), (math.radians(80.0), 0.0, math.radians(45.0)), 22.0),
-        # Cam 6: Elevación frontal sur a cota de calle (Hotel Colonial, Fimbres, Arrematec, Heras, Prisci)
-        ("Cam_06_South_Libertad_Center", (67.0, -32.0, 6.5), (math.radians(82.0), 0.0, math.radians(0.0)), 18.0),
-        # Cam 7: Perspectiva Surponiente (Dulcería Prisci, Heras Internet, La Placita)
-        ("Cam_07_SW_Libertad_Ortiz", (-18.0, -18.0, 6.5), (math.radians(80.0), 0.0, math.radians(-45.0)), 22.0),
-        # Cam 8: Vista Cenital Superior Ortográfica a Z=85m
-        ("Cam_08_Top_Aerial_Z75", (67.36, 45.60, 85.0), (math.radians(0.0), 0.0, math.radians(0.0)), 22.0),
-    ]
+    sun_data = bpy.data.lights.new("Sun_Light", type='SUN')
+    sun_data.energy = 4.2
+    sun_data.color = (1.0, 0.96, 0.90)
+    sun_obj = bpy.data.objects.new("Sun_Obj", sun_data)
+    sun_obj.rotation_euler = (math.radians(55.0), math.radians(20.0), math.radians(-40.0))
+    bpy.context.scene.collection.objects.link(sun_obj)
 
-    for name, loc, rot, lens in cam_specs:
-        cam_data = bpy.data.cameras.new(name)
-        cam_data.lens = lens
-        cam_obj = bpy.data.objects.new(name, cam_data)
-        cam_obj.location = loc
-        cam_obj.rotation_euler = rot
-        col.objects.link(cam_obj)
-        cameras[name] = cam_obj
-
-    return cameras
-
-def render_validation_suite(cameras):
-    scene = bpy.context.scene
-    for cam_name, cam_obj in cameras.items():
-        print(f"Renderizando vista técnica cerrada: {cam_name}...")
-        scene.camera = cam_obj
-        out_file = os.path.join(DOCS_IMAGES_DIR, f"{cam_name}.png")
-        scene.render.filepath = out_file
+    print("[Render] Ejecutando suite de validación visual de 8 cámaras...")
+    for cam in cameras:
+        scene.camera = cam
+        out_path = os.path.join(DOCS_IMAGES_DIR, f"{cam.name}.png")
+        scene.render.filepath = out_path
         bpy.ops.render.render(write_still=True)
-        print(f"  Guardado render de validación: {out_file}")
+        print(f"  ✓ Render guardado: {out_path}")
 
 # ---------------------------------------------------------------------------
-# 7. Orquestación Principal
+# 8. Ensamblaje Principal
 # ---------------------------------------------------------------------------
 def main():
-    print("===========================================================================")
-    print("INICIANDO RECONSTRUCCIÓN PROCEDURAL 3D DE LA MANZANA CENTRAL COMPLETA (2009)")
-    print("===========================================================================")
+    print("=================================================================")
+    print("Iniciando Generación Fotorrealista: Manzana Central Tecate (2009)")
+    print(f"Dimensiones Canónicas: X = {X_MAX}m, Y = {Y_MAX}m, Z_BASE = {Z_BASE}m")
+    print("=================================================================")
 
-    root_col = clean_scene()
-    mats = create_all_materials()
+    col = clean_scene()
+    mats = setup_materials()
 
-    # Construcción de la cimentación continua y las 4 zonas edilicias sin solapamiento
-    build_unified_foundation(mats, root_col)
-    build_west_facade_ortiz_rubio(mats, root_col)
-    build_north_facade_juarez(mats, root_col)
-    build_terminal_and_east_facade(mats, root_col)
-    build_south_facade_libertad(mats, root_col)
-    build_interior_courtyards_and_roofs(mats, root_col)
+    bm = bmesh.new()
+    mesh = bpy.data.meshes.new("Manzana_Central_Mesh")
+    obj = bpy.data.objects.new("Manzana_Central_Building", mesh)
+    col.objects.link(obj)
 
-    # Configuración de cámaras e iluminación diurna balanceada
-    cams = setup_lighting_and_cameras(root_col)
+    print("[Geometría] Construyendo zócalo basal enterrado continuo...")
+    build_zocalo_monolitico(bm, mats, obj)
 
-    # Guardar archivo maestro .blend
+    print("[Geometría] Construyendo fachada Norte (Av. Benito Juárez)...")
+    build_north_facade_juarez(bm, mats, obj)
+
+    print("[Geometría] Construyendo fachada Poniente (Ortiz Rubio)...")
+    build_west_facade_ortiz_rubio(bm, mats, obj)
+
+    print("[Geometría] Construyendo fachada Sur (Callejón Libertad)...")
+    build_south_facade_libertad(bm, mats, obj)
+
+    print("[Geometría] Construyendo fachada Oriente y portón azul (Abelardo L. Rodríguez)...")
+    build_east_facade_rodriguez(bm, mats, obj)
+
+    print("[Geometría] Construyendo patios interiores y dársenas...")
+    build_interior_courtyards_and_terminals(bm, mats, obj)
+
+    print("[UV Mapping] Generando coordenadas métricas ortogonales...")
+    auto_uv_bmesh(bm, scale_u=0.5, scale_v=0.5)
+
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.update()
+
+    print("[Tipografía] Generando rótulos corpóreos 3D anti-espejo...")
+    build_all_signage_and_typography(col, mats)
+
     bpy.ops.wm.save_as_mainfile(filepath=BLEND_PATH)
-    print(f"Archivo maestro Blender guardado: {BLEND_PATH}")
+    print(f"[Blender] Archivo maestro guardado en: {BLEND_PATH}")
 
-    # Exportar archivo de producción glTF/GLB
     bpy.ops.export_scene.gltf(
         filepath=GLB_PATH,
         export_format='GLB',
         use_selection=False,
-        export_cameras=False,
-        export_lights=False,
-        export_apply=True,
         export_yup=True,
-        export_materials='EXPORT',
-        export_image_format='AUTO'
+        export_apply=True
     )
-    print(f"Asset de producción GLB exportado: {GLB_PATH}")
+    print(f"[glTF] Asset exportado exitosamente en: {GLB_PATH}")
 
-    # Generar escena Godot .tscn con física analítica
-    generate_godot_tscn(TSCN_PATH, "res://assets/buildings/manzana_central_2009.glb")
+    generate_godot_scene_1to1()
 
-    # Renderizar la suite de validación visual de 8 cámaras
-    render_validation_suite(cams)
+    cameras = setup_render_cameras(col)
+    render_validation_suite(cameras)
 
-    print("===========================================================================")
-    print("RECONSTRUCCIÓN PROCEDURAL DE LA MANZANA CENTRAL FINALIZADA CON ÉXITO")
-    print("===========================================================================")
+    print("=================================================================")
+    print("Reconstrucción Fotorrealista de la Manzana Central Completada.")
+    print("=================================================================")
 
 if __name__ == "__main__":
     main()
