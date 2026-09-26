@@ -331,44 +331,21 @@ print("[PARQUE HIDALGO] Construyendo plataforma sólida con el perímetro exacto
 # y Pdte. Lázaro Cárdenas al Poniente con sus ochavas y alineación angular real).
 # Coordenadas relativas al Kiosko central (0.0, 0.0).
 PARK_PERIMETER_POLYGON = [
-    # Borde Este (Ortiz Rubio - de Norte a Sur)
-    (55.74, 25.22),
-    (56.49, 16.56),
-    (57.48, 5.02),
-    (57.97, -0.75),
-    (58.46, -6.52),
-    (59.21, -15.17),
-    (60.45, -29.65),
-    # Ochava SE (Ortiz Rubio y Callejón Libertad)
-    (60.95, -35.53),
-    (54.27, -38.22),
-    # Borde Sur (Callejón Libertad - de Este a Oeste)
-    (30.00, -38.50),
-    (0.00, -38.80),
-    (-25.00, -39.00),
-    # Ochava SO (Callejón Libertad y Pdte. Lázaro Cárdenas)
-    (-38.59, -39.11),
-    (-40.01, -28.33),
-    # Borde Poniente (Pdte. Lázaro Cárdenas - de Sur a Norte)
-    (-41.22, -19.74),
-    (-42.43, -11.16),
-    (-43.63, -2.57),
-    (-44.69, 5.74),
-    (-45.69, 14.09),
-    (-46.70, 22.44),
-    # Ochava NO (Pdte. Cárdenas y Av. Benito Juárez)
-    (-35.05, 33.99),
-    # Borde Norte (Av. Benito Juárez - de Oeste a Este, pendiente angular ~6.5°)
-    (-26.28, 35.00),
-    (-17.50, 36.01),
-    (-11.65, 36.68),
-    (-2.87, 37.69),
-    (2.98, 38.36),
-    (11.75, 39.37),
-    (20.53, 40.38),
-    (29.30, 41.39),
-    # Ochava NE (Av. Benito Juárez y Ortiz Rubio)
-    (43.93, 43.08),
+    # Ochava SO (Callejón Libertad y Av. Pdte. Lázaro Cárdenas)
+    (-49.56, -30.58),
+    (-47.94, -33.08),
+    (-44.13, -35.21),
+    # Frente Sur (Callejón Libertad) y Ochava SE (Ortiz Rubio)
+    ( 55.32, -41.53),
+    ( 56.93, -31.70),
+    # Costado Oriente (Calle Pdte. Pascual Ortiz Rubio) y Ochava NE (Av. Juárez)
+    ( 64.45,  37.80),
+    ( 64.45,  41.92),
+    # Frente Norte (Avenida Benito Juárez)
+    (-35.30,  46.53),
+    # Ochava NO (Av. Benito Juárez y Av. Pdte. Lázaro Cárdenas)
+    (-39.92,  46.39),
+    (-43.71,  38.67),
 ]
 
 poly_xs = [p[0] for p in PARK_PERIMETER_POLYGON]
@@ -463,12 +440,12 @@ def add_oriented_walkway(start_xy, end_xy, width, mat_idx=idx_adoquin):
     add_solid_box(bm, center=(r_x, r_y, curb_h*0.5), size=(length, curb_w, curb_h), rot_z=angle, mat_index=idx_ocre)
 
 # 8 Andadores radiales en estrella (trazado orgánico asimétrico original que preserva las visuales históricas)
-add_oriented_walkway((0.0, 12.0), (0.0, 38.0), 4.80)     # Norte (Av. Benito Juárez)
+add_oriented_walkway((0.0, 12.0), (0.0, 46.5), 4.80)     # Norte (Av. Benito Juárez)
 # Andador Sur dividido para alojar la explanada peatonal circular del Monumento a Hidalgo (hid_y = -22.0)
 add_oriented_walkway((0.0, -12.0), (0.0, -16.2), 4.80)   # Sur (Tramo norte hacia Kiosko)
-add_oriented_walkway((0.0, -27.8), (0.0, -39.0), 4.80)   # Sur (Tramo sur hacia Callejón Libertad)
-add_oriented_walkway((12.0, 0.0), (34.0, 0.0), 5.20)     # Este (Conecta exactamente en el borde de la explanada Este X=34)
-add_oriented_walkway((-12.0, 0.0), (-32.0, 0.0), 5.00)   # Poniente (Conecta en el borde de la explanada Poniente X=-32)
+add_oriented_walkway((0.0, -27.8), (0.0, -41.5), 4.80)   # Sur (Tramo sur hacia Callejón Libertad)
+add_oriented_walkway((12.0, 0.0), (46.0, 0.0), 5.20)     # Este (Conecta con explanada Este)
+add_oriented_walkway((-12.0, 0.0), (-38.0, 0.0), 5.00)   # Poniente (Conecta con explanada Poniente)
 add_oriented_walkway((-8.5, 8.5), (-25.10, 13.16), 4.00) # Diagonal NO (Conecta en el perímetro exterior R=7.5m de la Fuente)
 add_oriented_walkway((8.5, 8.5), (32.0, 23.0), 4.00)     # Diagonal NE (Hacia Monumento a Juárez)
 add_oriented_walkway((-8.5, -8.5), (-36.0, -25.0), 4.00) # Diagonal SO (Hacia Monumento a Cárdenas)
@@ -483,8 +460,8 @@ add_solid_cylinder(bm, center=(fuente_cx, fuente_cy, 0.03), radius=7.50, height=
 add_solid_ring(bm, center=(fuente_cx, fuente_cy, 0.16), r_ext=7.80, r_int=7.50, height=0.32, segments=36, mat_index=idx_ocre)
 
 # Explanadas pavimentadas en accesos este y poniente (confinadas estrictamente dentro del polígono)
-add_solid_box(bm, center=(46.0, 0.0, 0.03), size=(24.0, 24.0, 0.06), mat_index=idx_adoquin, uv_scale=0.6)
-add_solid_box(bm, center=(-38.0, 0.0, 0.03), size=(12.0, 16.0, 0.06), mat_index=idx_adoquin, uv_scale=0.6)
+add_solid_box(bm, center=(55.0, 0.0, 0.03), size=(18.0, 24.0, 0.06), mat_index=idx_adoquin, uv_scale=0.6)
+add_solid_box(bm, center=(-43.5, 0.0, 0.03), size=(11.0, 16.0, 0.06), mat_index=idx_adoquin, uv_scale=0.6)
 
 
 # ==============================================================================
@@ -1002,16 +979,16 @@ tscn_content = f"""[gd_scene load_steps=13 format=3 uid="uid://b8parquehidalgo20
 size = Vector3({park_w:.1f}, 1.5, {park_d:.1f})
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Norte"]
-size = Vector3(5.0, 0.4, 26.0)
+size = Vector3(5.0, 0.4, 34.5)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Sur"]
-size = Vector3(5.0, 0.4, 27.0)
+size = Vector3(5.0, 0.4, 29.5)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Este"]
-size = Vector3(46.0, 0.4, 5.5)
+size = Vector3(52.0, 0.4, 5.5)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Oeste"]
-size = Vector3(32.0, 0.4, 5.2)
+size = Vector3(37.0, 0.4, 5.2)
 
 [sub_resource type="BoxShape3D" id="Shape_Podio_Juarez"]
 size = Vector3(7.0, 0.7, 5.5)
@@ -1053,19 +1030,19 @@ shape = SubResource("Shape_Plataforma_General")
 
 # 2. Andadores principales transitables
 [node name="Col_Andador_N" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, -25.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, -29.25)
 shape = SubResource("Shape_Andador_Norte")
 
 [node name="Col_Andador_S" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, 25.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, 26.75)
 shape = SubResource("Shape_Andador_Sur")
 
 [node name="Col_Andador_E" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.0, 0.2, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.0, 0.2, 0.0)
 shape = SubResource("Shape_Andador_Este")
 
 [node name="Col_Andador_W" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.0, 0.2, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.5, 0.2, 0.0)
 shape = SubResource("Shape_Andador_Oeste")
 
 # 3. Colisiones del Monumento a Benito Juárez (Noreste)

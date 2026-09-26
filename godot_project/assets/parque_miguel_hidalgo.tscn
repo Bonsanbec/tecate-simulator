@@ -3,19 +3,19 @@
 [ext_resource type="PackedScene" path="res://assets/parque_miguel_hidalgo.glb" id="1_mesh"]
 
 [sub_resource type="BoxShape3D" id="Shape_Plataforma_General"]
-size = Vector3(107.7, 1.5, 82.2)
+size = Vector3(114.0, 1.5, 88.1)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Norte"]
-size = Vector3(5.0, 0.4, 26.0)
+size = Vector3(5.0, 0.4, 34.5)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Sur"]
-size = Vector3(5.0, 0.4, 27.0)
+size = Vector3(5.0, 0.4, 29.5)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Este"]
-size = Vector3(46.0, 0.4, 5.5)
+size = Vector3(52.0, 0.4, 5.5)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Oeste"]
-size = Vector3(32.0, 0.4, 5.2)
+size = Vector3(37.0, 0.4, 5.2)
 
 [sub_resource type="BoxShape3D" id="Shape_Podio_Juarez"]
 size = Vector3(7.0, 0.7, 5.5)
@@ -52,24 +52,24 @@ collision_mask = 0
 
 # 1. Plataforma basal enterrada transitable
 [node name="Col_Plataforma" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.12, -0.75, -1.98)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.45, -0.75, -2.50)
 shape = SubResource("Shape_Plataforma_General")
 
 # 2. Andadores principales transitables
 [node name="Col_Andador_N" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, -25.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, -29.25)
 shape = SubResource("Shape_Andador_Norte")
 
 [node name="Col_Andador_S" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, 25.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, 26.75)
 shape = SubResource("Shape_Andador_Sur")
 
 [node name="Col_Andador_E" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.0, 0.2, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.0, 0.2, 0.0)
 shape = SubResource("Shape_Andador_Este")
 
 [node name="Col_Andador_W" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.0, 0.2, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.5, 0.2, 0.0)
 shape = SubResource("Shape_Andador_Oeste")
 
 # 3. Colisiones del Monumento a Benito Juárez (Noreste)
