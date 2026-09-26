@@ -12,8 +12,9 @@ description: >-
 Esta habilidad guía al agente en la ejecución del *pipeline* estándar de 7 fases para reconstrucción de inmuebles en Tecate.
 
 ## Lectura Obligatoria Previa
-Antes de generar código o ejecutar cómputo, consulta el estándar universal completo:
-- [`docs/metodologia_reconstruccion_edificios.md`](../../docs/metodologia_reconstruccion_edificios.md)
+Antes de generar código o ejecutar cómputo, consulta los estándares universales completos:
+- [`docs/metodologia_reconstruccion_edificios.md`](../../docs/metodologia_reconstruccion_edificios.md) (Estándar general de edificios individuales y assets).
+- [`docs/block_reconstruction_methodology.md`](../../docs/block_reconstruction_methodology.md) (Estándar de reconstrucción procedural por manzanas urbanas completas y complejos multilote).
 
 ## Flujo Operativo en 7 Fases
 
