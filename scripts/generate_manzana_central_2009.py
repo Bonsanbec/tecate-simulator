@@ -657,21 +657,13 @@ def build_terminal_and_east_facade(mats, col):
     add_box(bm_truss, X_MAX - 0.35, X_MAX + 0.35, 47.60, 48.40, 0.00, 5.80)
     add_box(bm_truss, X_MAX - 0.15, X_MAX, 34.00, 42.00, 0.00, 2.60) # Portón corredizo
 
-    # 4. Complejo Belrom Bienes Raíces, Joyería y Gimnasio (Y in [12.00, 34.00]) - (H=4.20m)
-    add_box(bm_white, 118.00, X_MAX, 12.00, 34.00, 0.00, 4.20)
-    # 3 Arcos moldurados
-    for ay in [16.00, 22.00, 28.00]:
-        add_box(bm_trim, X_MAX - 0.05, X_MAX + 0.12, ay - 1.60, ay + 1.60, 0.00, 3.20)
-        add_box(bm_glass, X_MAX - 0.05, X_MAX + 0.05, ay - 1.20, ay + 1.20, 0.60, 2.80)
-
-    # 5. Muro Perimetral Suroriente (Y in [0.00, 12.00]) - (H=3.00m)
+    # 4. Muro Perimetral Suroriente (Y in [0.00, 12.00]) - (H=3.00m)
     # Muro limpio de cierre oriente
     add_box(bm_white, X_MAX - 0.30, X_MAX, 0.00, 12.00, 0.00, 3.00)
 
     create_mesh_object("Terminal_Building_Walls", bm_term_walls, mats["stucco_blanco"], col)
     create_mesh_object("Terminal_Yellow_Fascia", bm_term_fascia, mats["lamina_amarillo_central"], col)
     create_mesh_object("East_Green_Walls", bm_green, mats["muro_verde_salvia"], col)
-    create_mesh_object("East_Belrom_White_Walls", bm_white, mats["stucco_blanco"], col)
     create_mesh_object("East_Trim", bm_trim, mats["aluminio_oscuro"], col)
     create_mesh_object("East_Glass", bm_glass, mats["vidrio_comercial"], col)
     create_mesh_object("East_Truss_SpaceFrame", bm_truss, mats["cercha_azul_acero"], col)
@@ -680,12 +672,6 @@ def build_terminal_and_east_facade(mats, col):
     # Rótulos Corpóreos Terminal (Norte)
     add_3d_text("Txt_TerminalAutobuses", "TERMINAL DE AUTOBUSES TECATE", 0.75, 0.10, (124.50, Y_MAX + 0.22, 5.25), ROT_NORTH, mats["letras_blancas"], col)
     add_3d_text("Txt_SuburBaja", "Subur BAJA", 0.55, 0.08, (124.50, Y_MAX + 0.20, 4.65), ROT_NORTH, mats["letras_rojas"], col)
-
-    # Rótulos Corpóreos Cara Oriente (Rotación ROT_EAST)
-    add_3d_text("Txt_BienvenidoTecate", "Bienvenidos a Tecate", 0.62, 0.08, (X_MAX + 0.12, 6.00, 2.20), ROT_EAST, mats["letras_blancas"], col)
-    add_3d_text("Txt_Belrom", "BELROM BIENES RAICES", 0.45, 0.06, (X_MAX + 0.15, 25.00, 3.75), ROT_EAST, mats["letras_amarillas"], col)
-    add_3d_text("Txt_Joyeria", "JOYERIA", 0.42, 0.06, (X_MAX + 0.15, 19.00, 3.75), ROT_EAST, mats["letras_blancas"], col)
-    add_3d_text("Txt_Gimnasio", "GIMNASIO", 0.42, 0.06, (X_MAX + 0.15, 14.50, 3.75), ROT_EAST, mats["letras_blancas"], col)
 
 def build_south_facade_libertad(mats, col):
     """Zona 4: Fachada Sur sobre Callejón Libertad (X in [0.00, 134.40], Y in [0.00, 24.00])."""
@@ -824,9 +810,6 @@ def build_interior_courtyards_and_roofs(mats, col):
     add_box(bm_roof, 102.20, 110.30, 75.20, 90.80, 4.00, 4.15)# Flor Michoacán Este
     add_box(bm_roof, 115.20, 134.30, 65.20, 90.80, 5.55, 5.70)# Terminal Norte
 
-    # Franja Oriente (Rodríguez)
-    add_box(bm_roof, 118.20, 134.30, 12.20, 33.80, 4.00, 4.15)# Belrom / Locales Oriente
-
     # Franja Sur (Callejón Libertad)
     add_box(bm_roof, 112.20, 134.30, 0.40, 15.80, 3.60, 3.75)# Naves Suroriente
     add_box(bm_roof, 90.20, 111.80, 0.40, 23.80, 7.55, 7.70) # Hotel Colonial PA
@@ -885,7 +868,6 @@ def generate_godot_tscn(tscn_path, glb_path):
 
         # 3. Cuerpo Oriente (Abelardo L. Rodríguez)
         ("Col_East_Darsenas_Wall", Vector((0.40, 3.20, 27.00)), Vector((134.53, 1.60, -61.50))),
-        ("Col_East_Belrom_Locales", Vector((16.00, 4.20, 22.00)), Vector((126.73, 2.10, -23.00))),
 
         # 4. Cuerpo Sur (Callejón Libertad)
         ("Col_South_Naves_Suroriente", Vector((22.73, 3.80, 16.00)), Vector((123.36, 1.90, -8.00))),
@@ -966,7 +948,7 @@ def setup_lighting_and_cameras(col):
         ("Cam_02_North_Juarez_Center", (67.0, 126.0, 7.0), (math.radians(82.0), 0.0, math.radians(180.0)), 18.0),
         # Cam 3: Perspectiva Noreste (Terminal de Autobuses y esquina Rodríguez)
         ("Cam_03_NE_Juarez_Rodriguez", (152.0, 108.0, 6.5), (math.radians(80.0), 0.0, math.radians(135.0)), 22.0),
-        # Cam 4: Elevación frontal oriente (Abelardo L. Rodríguez: dársenas, cercha espacial, Belrom)
+        # Cam 4: Elevación frontal oriente (Abelardo L. Rodríguez: dársenas, cercha espacial)
         ("Cam_04_East_Rodriguez", (158.0, 45.0, 6.0), (math.radians(84.0), 0.0, math.radians(90.0)), 20.0),
         # Cam 5: Perspectiva Suroriente (esquina Callejón Libertad y Rodríguez)
         ("Cam_05_SE_Libertad_Rodriguez", (152.0, -18.0, 6.5), (math.radians(80.0), 0.0, math.radians(45.0)), 22.0),

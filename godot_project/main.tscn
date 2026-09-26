@@ -72,7 +72,7 @@ transform = Transform3D(-0.1077, -0.0058, 1.2462, -0.0111, 1.2508, 0.0037, -1.24
 transform = Transform3D(0.844388, -0.008554, 0.097136, 0.012013, 0.849398, -0.029635, -0.096769, 0.030813, 0.843911, -48.8735, 400.9325, -45.1705)
 
 [node name="Manzana_Central_2009" parent="." instance=ExtResource("22_manzana_central")]
-transform = Transform3D(0.950513, 0.011756, -0.092452, -0.009246, 0.999444, 0.032033, 0.084122, -0.026832, 0.861452, 56.5282, 399.5098, 29.9695)
+transform = Transform3D(0.939855, -0.008788, 0.097136, 0.009220, 0.939497, -0.029342, -0.013676, 0.029475, 0.939438, 56.0728, 399.6291, 29.8674)
 
 [node name="Nomenclatura" parent="." instance=ExtResource("12_nomenclatura")]
 
