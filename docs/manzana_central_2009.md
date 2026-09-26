@@ -52,29 +52,27 @@ Al descomponer la matriz en sus vectores de base según la convención canónica
 
 ## 3. Calibración Matemática Canónica de Producción
 
-Para corregir los tres problemas se aplicó la formulación analítica de la metodología:
+### A. La Causa Raíz del Cierre y Dimensionamiento de la Manzana
+1. **La Confusión de la Caja Envolvente Diagonal**:
+   - En `blocks_cache.json`, la manzana catastral se encuentra orientada con un rumbo geodésico canónico de $\theta = -4.842^\circ$ (headings de fachada: $85.10^\circ, 175.16^\circ, 265.10^\circ, 355.16^\circ$).
+   - La distancia diagonal entre esquinas extremas opuestas sin rotar (Bounding Box cartesiano AABB) arrojaba $\Delta Z = 29.14 - (-62.05) = 91.19\text{ m}$.
+   - El generador procedural tomó este valor como si fuera el fondo de la manzana y dimensionó el modelo en $134.73\text{ m} \times 91.19\text{ m}$.
+   - Sin embargo, la **distancia perpendicular real entre la Avenida Juárez y el Callejón Libertad** es de **$80.62\text{ m}$** ($78.3\text{ m}$ en zona de desplante de muros).
+   - El modelo en Blender posee por tanto casi $13\text{ metros}$ de fondo excedente acumulados en el patio interior de maniobras y en la prolongación de los locales de Ortiz Rubio.
 
-1. **Escala Uniforme e Isótropa ($S = 0.9400$)**:
-   - Se unificaron los tres ejes a $S_x = S_y = S_z = 0.9400$.
-   - Con $S = 0.9400$, la longitud de muros en $X$ es $134.73 \times 0.9400 = 126.65\text{ m}$ (total con marquesinas: $128.81\text{ m}$), encajando con holguras simétricas de banqueta dentro del frente de $129.04\text{ m}$ de la manzana catastral ($1.81\text{ m}$ libre en Pascual Ortiz Rubio y $0.58\text{ m}$ en Abelardo L. Rodríguez).
-   - En profundidad, $91.19 \times 0.9400 = 85.72\text{ m}$, coincidiendo milimétricamente con el lateral oriente de la manzana ($86.01\text{ m}$).
+2. **Alineación Angular con el Rumbo Geodésico Canónico ($\theta = -4.842^\circ$)**:
+   - La rotación se calibra con el rumbo canónico de la trama urbana de Tecate ($\theta = -4.842^\circ$).
+   - Vector longitudinal Este en el plano del terreno: $\vec{u}_x = (0.996390, 0.011957, -0.084040)$.
+   - Vector vertical normal: $\vec{u}_y = (-0.009349, 0.999465, 0.031356)$.
+   - Vector transversal Sur: $\vec{u}_z = \vec{u}_x \times \vec{u}_y = (0.084368, -0.030458, 0.995969)$.
+   - Ortonormalidad estricta con determinante $+1.000000$.
 
-2. **Alineación Angular Analítica con Avenida Juárez ($\theta = -0.8509^\circ$)**:
-   - Vector longitudinal unitario horizontal: $\vec{u}_{xh} = (0.999890, 0, -0.014853)$.
-   - Proyección sobre el plano del suelo con normal $\vec{n}_{suelo} = (-0.009349, 0.999465, 0.031356)$:
-     $$\vec{u}_x = (0.999846, 0.009809, -0.014549)$$
-     $$\vec{u}_y = (-0.009349, 0.999465, 0.031356)$$
-     $$\vec{u}_z = \vec{u}_x \times \vec{u}_y = (0.014849, -0.031215, 0.999402)$$
-   - Ortonormalidad exacta: $\vec{u}_x \cdot \vec{u}_y = 0$, $\vec{u}_x \cdot \vec{u}_z = 0$, $\vec{u}_y \cdot \vec{u}_z = 0$, determinante $= +1.000000$.
-
-3. **Cota de Rasante y Enrase Topográfico Milimétrico**:
-   - Desplante de origen en $(X_0, Y_0, Z_0) = (56.0728, 399.6291, 29.8674)$.
-   - Cotas en las cuatro esquinas:
-     - **SW (Ortiz Rubio & Libertad)**: $(56.07, 399.63, 29.87)$ — Cota de terreno: $399.63\text{ m}$ (discrepancia: $0.0000\text{ m}$).
-     - **SE (Rodríguez & Libertad)**: $(182.70, 400.87, 28.02)$ — Cota de terreno: $400.87\text{ m}$ (discrepancia: $0.0000\text{ m}$).
-     - **NW (Ortiz Rubio & Juárez)**: $(54.80, 402.30, -55.80)$ — Cota de terreno: $402.30\text{ m}$ (discrepancia: $0.0000\text{ m}$).
-     - **NE (Rodríguez & Juárez)**: $(181.43, 403.55, -57.64)$ — Cota de terreno: $403.55\text{ m}$ (discrepancia: $0.0000\text{ m}$).
-   - Discrepancia vertical en toda la huella: **$0.00\text{ cm}$**.
+3. **Compensación de Escala y Balance Simétrico de Banquetas**:
+   - Para que el complejo encaje rigurosamente dentro de la manzana catastral sin invadir ninguna de las cuatro vialidades perimetrales:
+     - En $X$ (ancho poniente-oriente): $S_x = 0.9350 \implies 134.73 \times 0.9350 = 125.97\text{ m}$, dejando **$1.39\text{ m}$ de banqueta libre** en Ortiz Rubio y **$1.39\text{ m}$** en Rodríguez.
+     - En $Z$ (profundidad norte-sur): $S_z = 0.8520 \implies 91.19 \times 0.8520 = 77.69\text{ m}$, dejando **$1.46\text{ m}$ de banqueta libre** en Avenida Juárez y **$1.46\text{ m}$** en Callejón Libertad.
+     - En $Y$ (altura): $S_y = 0.9350$ (sincronizada exactamente con el eje longitudinal).
+   - Todos los aleros y marquesinas quedan protegidos dentro del polígono de la manzana ($+0.65\text{ m}$ en Juárez, $+0.78\text{ m}$ en Libertad, $+0.03\text{ m}$ en Ortiz Rubio y $+0.59\text{ m}$ en Rodríguez).
 
 ---
 
@@ -82,24 +80,24 @@ Para corregir los tres problemas se aplicó la formulación analítica de la met
 
 ```tscn
 [node name="Manzana_Central_2009" parent="." instance=ExtResource("22_manzana_central")]
-transform = Transform3D(0.939855, -0.008788, 0.013958, 0.009220, 0.939497, -0.029342, -0.013676, 0.029475, 0.939438, 56.0728, 399.6291, 29.8674)
+transform = Transform3D(0.931625, -0.008741, 0.071882, 0.011180, 0.934499, -0.025950, -0.078577, 0.029318, 0.848566, 57.6839, 399.7161, 27.5752)
 ```
 
 ---
 
 ## 5. Tabla de Mapeo de Componentes de la Matriz
 
-| Índice en `.tscn` | Componente de Matriz | Valor en `e56cfe5` (Erróneo) | Valor Calibrado (Corregido) | Justificación Física / Canónica |
-| :--- | :--- | :--- | :--- | :--- |
-| `n0` | $\text{basis.x.x}$ | $0.950513$ | $0.939855$ | Escala $S \cdot \cos\theta$ longitudinal |
-| `n1` | $\text{basis.y.x}$ | $+0.011756$ | $-0.008788$ | Inclinación de normal hacia Poniente (signo corregido) |
-| `n2` | $\text{basis.z.x}$ | $-0.092452$ | $+0.013958$ | Componente $X$ de eje transversal (signo corregido) |
-| `n3` | $\text{basis.x.y}$ | $-0.009246$ | $+0.009220$ | Pendiente longitudinal ascendente hacia Oriente |
-| `n4` | $\text{basis.y.y}$ | $0.999444$ | $0.939497$ | Escala uniforme $S$ en eje vertical |
-| `n5` | $\text{basis.z.y}$ | $+0.032033$ | $-0.029342$ | Pendiente transversal descendente hacia el río |
-| `n6` | $\text{basis.x.z}$ | $+0.084122$ | $-0.013676$ | Descenso en $Z$ hacia el Norte (paralelo a Juárez, signo corregido) |
-| `n7` | $\text{basis.y.z}$ | $-0.026832$ | $+0.029475$ | Inclinación de normal hacia Sur (signo corregido) |
-| `n8` | $\text{basis.z.z}$ | $0.861452$ | $0.939438$ | Escala uniforme $S$ (eliminada deformación del 86%) |
-| `n9` | $\text{origin.x}$ | $56.5282$ | $56.0728$ | Origen enrasado en esquina Suroeste |
-| `n10` | $\text{origin.y}$ | $399.5098$ | $399.6291$ | Cota rasante milimétrica en plano topográfico |
-| `n11` | $\text{origin.z}$ | $29.9695$ | $29.8674$ | Retranqueo perimetral simétrico de banquetas |
+| Índice en `.tscn` | Componente | Valor Calibrado | Justificación Física / Canónica |
+| :--- | :--- | :--- | :--- |
+| `n0` | $\text{basis.x.x}$ | $0.931625$ | $S_x \cdot u_x.x$ a lo largo de la calle |
+| `n1` | $\text{basis.y.x}$ | $-0.008741$ | Normal topográfica ascendente hacia Oriente (signo corregido) |
+| `n2` | $\text{basis.z.x}$ | $+0.071882$ | Componente $X$ del eje transversal hacia Callejón Libertad ($>0$) |
+| `n3` | $\text{basis.x.y}$ | $+0.011180$ | Pendiente longitudinal del terreno |
+| `n4` | $\text{basis.y.y}$ | $0.934499$ | Escala vertical sincronizada con el eje longitudinal ($S_y = 0.9350$) |
+| `n5` | $\text{basis.z.y}$ | $-0.025950$ | Pendiente transversal del terreno hacia el río |
+| `n6` | $\text{basis.x.z}$ | $-0.078577$ | Descenso hacia el Norte ($\theta = -4.842^\circ$, paralelo a Juárez y Libertad) |
+| `n7` | $\text{basis.y.z}$ | $+0.029318$ | Normal topográfica descendente hacia Norte (signo corregido) |
+| `n8` | $\text{basis.z.z}$ | $0.848566$ | Escala transversal compensatoria para profundidad real ($S_z = 0.8520$) |
+| `n9` | $\text{origin.x}$ | $57.6839$ | Origen centrado con $1.39\text{ m}$ de banqueta en Ortiz Rubio |
+| `n10` | $\text{origin.y}$ | $399.7161$ | Cota de rasante enrasada con el plano del suelo |
+| `n11` | $\text{origin.z}$ | $27.5752$ | Origen centrado con $1.46\text{ m}$ de banqueta en Callejón Libertad |
