@@ -20,7 +20,7 @@ enum PerspectiveMode {
 
 # Parámetros Primera Persona (1P)
 @export var eye_height: float = 1.68
-@export var eye_forward_offset: float = 0.06
+@export var eye_forward_offset: float = 0.16
 @export var fov_1p: float = 75.0
 
 # Parámetros Tercera Persona (3P)
@@ -92,7 +92,7 @@ func _build_camera_rig() -> void:
 		cam_1p.name = "Camera3D"
 		character_body.add_child(cam_1p)
 
-	cam_1p.position = Vector3(0.0, eye_height, eye_forward_offset)
+	cam_1p.position = Vector3(0.0, eye_height, -eye_forward_offset)
 	cam_1p.fov = fov_1p
 	cam_1p.near = 0.05 # Near plane ultra corto para ver manos sin recorte facial
 	cam_1p.far = 16000.0
@@ -205,4 +205,4 @@ func update_head_bob(delta: float, speed_ratio: float, is_grounded: bool) -> voi
 		current_bob_offset = current_bob_offset.lerp(target_bob, 14.0 * delta)
 
 	if cam_1p:
-		cam_1p.position = Vector3(0.0, eye_height, eye_forward_offset) + current_bob_offset
+		cam_1p.position = Vector3(0.0, eye_height, -eye_forward_offset) + current_bob_offset

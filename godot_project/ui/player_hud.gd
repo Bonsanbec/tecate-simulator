@@ -89,3 +89,14 @@ func _format_street_hint(street_name: String) -> String:
 	if street_name.is_empty():
 		return "Zona Urbana Tecate"
 	return street_name
+
+func _get_landmark_hint(deg: float) -> String:
+	var norm = fposmod(deg, 360.0)
+	if norm >= 45.0 and norm < 135.0:
+		return "Hacia La Rumorosa / Mexicali"
+	elif norm >= 225.0 and norm < 315.0:
+		return "Hacia el Cerro Cuchumá / Tijuana"
+	elif norm >= 135.0 and norm < 225.0:
+		return "Hacia Ensenada / Valle de Guadalupe"
+	else:
+		return "Hacia la Frontera / USA"

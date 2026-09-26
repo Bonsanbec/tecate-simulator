@@ -172,6 +172,39 @@ func _process(_delta):
 
 		print("✓ Brújula validada: Norte=0°, Este=90° (Rumorosa), Oeste=270° (Cuchumá).")
 
+		# Validar cámara subjetiva adelantada al plano facial (evita ver clavícula)
+		var cam_dir = _player.camera_director
+		assert(cam_dir.eye_forward_offset >= 0.15, "eye_forward_offset debe ser >= 0.15 para evitar ver la clavícula")
+		assert(cam_dir.cam_1p.position.z < -0.10, "cam_1p debe situarse en Z negativo (adelante) para línea visual limpia")
+		print("✓ Posición de cámara 1P validada: Situada al frente en Z negativo, libre de clipping con clavícula.")
+
+		# Validar huesos de extremidades inferiores para locomoción
+		assert(_player.bone_upperleg_l != -1 and _player.bone_upperleg_r != -1, "Huesos UpperLeg L/R deben estar vinculados")
+		assert(_player.bone_lowerleg_l != -1 and _player.bone_lowerleg_r != -1, "Huesos LowerLeg L/R deben estar vinculados")
+		assert(_player.walk_speed >= 2.0, "walk_speed debe ser >= 2.0 m/s para desplazamiento ágil en Tecate")
+		assert(_player.fly_vertical_speed >= 20.0, "fly_vertical_speed debe ser >= 20.0 para ascenso potente en vuelo")
+		print("✓ Rig de locomoción validado: Huesos de piernas vinculados y velocidades optimizadas.")
+
+		# Validar Modo Screenshot F1 (ocultar HUD y avatar, suspender inputs)
+		_player.set_input_enabled(true)
+		assert(hud.visible == true, "HUD debe estar visible tras habilitar juego activo")
+
+		var event_f1 = InputEventKey.new()
+		event_f1.keycode = KEY_F1
+		event_f1.pressed = true
+		_player._input(event_f1)
+		assert(_player.is_f1_photo_mode == true, "Modo F1 debe activarse")
+		assert(hud.visible == false, "El HUD debe ocultarse en modo F1")
+		assert(_player.humanoid_scene.visible == false, "El avatar humanoide debe ocultarse en modo F1")
+		print("✓ Modo F1 activado: HUD y avatar ocultos correctamente para screenshots.")
+
+		# Desactivar Modo Screenshot F1 con segundo toggle
+		_player._input(event_f1)
+		assert(_player.is_f1_photo_mode == false, "Modo F1 debe desactivarse")
+		assert(_player.humanoid_scene.visible == true, "El avatar debe volver a ser visible tras salir de F1")
+		assert(hud.visible == true, "El HUD debe restaurarse al salir de F1")
+		print("✓ Modo F1 desactivado: HUD y avatar restaurados, control restablecido.")
+
 	elif _frames >= 16:
 		if _frames > 16:
 			return
