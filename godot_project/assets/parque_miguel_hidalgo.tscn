@@ -1,21 +1,36 @@
-[gd_scene load_steps=13 format=3 uid="uid://b8parquehidalgo2009"]
+[gd_scene load_steps=18 format=3 uid="uid://b8parquehidalgo2009"]
 
 [ext_resource type="PackedScene" path="res://assets/parque_miguel_hidalgo.glb" id="1_mesh"]
 
 [sub_resource type="BoxShape3D" id="Shape_Plataforma_General"]
-size = Vector3(114.0, 1.5, 88.1)
+size = Vector3(116.8, 1.5, 80.2)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Norte"]
-size = Vector3(5.0, 0.4, 34.5)
+size = Vector3(5.0, 0.4, 24.0)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Sur"]
-size = Vector3(5.0, 0.4, 29.5)
+size = Vector3(5.0, 0.4, 25.0)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Este"]
-size = Vector3(52.0, 0.4, 5.5)
+size = Vector3(43.5, 0.4, 5.5)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Oeste"]
-size = Vector3(37.0, 0.4, 5.2)
+size = Vector3(44.5, 0.4, 5.2)
+
+[sub_resource type="BoxShape3D" id="Shape_Andador_Noreste"]
+size = Vector3(43.0, 0.4, 4.2)
+
+[sub_resource type="BoxShape3D" id="Shape_Andador_Sureste"]
+size = Vector3(48.0, 0.4, 4.2)
+
+[sub_resource type="BoxShape3D" id="Shape_Andador_Suroeste"]
+size = Vector3(42.0, 0.4, 4.2)
+
+[sub_resource type="BoxShape3D" id="Shape_Andador_Noroeste_1"]
+size = Vector3(17.5, 0.4, 4.2)
+
+[sub_resource type="BoxShape3D" id="Shape_Andador_Noroeste_2"]
+size = Vector3(18.5, 0.4, 4.0)
 
 [sub_resource type="BoxShape3D" id="Shape_Podio_Juarez"]
 size = Vector3(7.0, 0.7, 5.5)
@@ -52,59 +67,81 @@ collision_mask = 0
 
 # 1. Plataforma basal enterrada transitable
 [node name="Col_Plataforma" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.45, -0.75, -2.50)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.10, -0.71, -0.67)
 shape = SubResource("Shape_Plataforma_General")
 
-# 2. Andadores principales transitables
+# 2. Andadores principales transitables ortogonales y diagonales
 [node name="Col_Andador_N" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, -29.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.83, -23.85)
 shape = SubResource("Shape_Andador_Norte")
 
 [node name="Col_Andador_S" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, 26.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, -0.37, 24.20)
 shape = SubResource("Shape_Andador_Sur")
 
 [node name="Col_Andador_E" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.0, 0.2, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.60, 0.46, 0.0)
 shape = SubResource("Shape_Andador_Este")
 
 [node name="Col_Andador_W" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.5, 0.2, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.25, 0.01, 0.0)
 shape = SubResource("Shape_Andador_Oeste")
 
-# 3. Colisiones del Monumento a Benito Juárez (Noreste)
+# 3. Andador Noreste (Hacia Monumento a Benito Juárez)
+[node name="Col_Andador_NE" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(0.8284, 0, 0.5601, 0, 1, 0, -0.5601, 0, 0.8284, 26.25, 0.92, -20.50)
+shape = SubResource("Shape_Andador_Noreste")
+
+# 4. Andadores diagonales restantes
+[node name="Col_Andador_SE" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(0.9046, 0, -0.4262, 0, 1, 0, 0.4262, 0, 0.9046, 30.25, -0.03, 18.75)
+shape = SubResource("Shape_Andador_Sureste")
+
+[node name="Col_Andador_SW" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(-0.8208, 0, -0.5712, 0, 1, 0, 0.5712, 0, -0.8208, -25.75, -0.44, 20.50)
+shape = SubResource("Shape_Andador_Suroeste")
+
+[node name="Col_Andador_NW_1" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(-0.9631, 0, 0.2691, 0, 1, 0, -0.2691, 0, -0.9631, -16.80, 0.39, -10.83)
+shape = SubResource("Shape_Andador_Noroeste_1")
+
+[node name="Col_Andador_NW_2" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(-0.9063, 0, 0.4226, 0, 1, 0, -0.4226, 0, -0.9063, -46.78, 0.50, -23.18)
+shape = SubResource("Shape_Andador_Noroeste_2")
+
+# 5. Colisiones del Monumento a Benito Juárez (Noreste)
 [node name="Col_Podio_Juarez" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(-0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, 32.0, 0.35, -23.0)
+transform = Transform3D(-0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, 44.0, 1.48, -32.5)
 shape = SubResource("Shape_Podio_Juarez")
 
 [node name="Col_Pedestal_Juarez" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(-0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, 32.0, 1.65, -23.0)
+transform = Transform3D(-0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, 44.0, 2.78, -32.5)
 shape = SubResource("Shape_Pedestal_Juarez")
 
-# 4. Colisiones del Monumento a Miguel Hidalgo (Sur)
+# 6. Colisiones del Monumento a Miguel Hidalgo (Sur)
 [node name="Col_Medallon_Hidalgo" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.1, 22.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, -0.41, 22.0)
 shape = SubResource("Shape_Medallon_Hidalgo")
 
 [node name="Col_Pedestal_Hidalgo" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.2, 22.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.69, 22.0)
 shape = SubResource("Shape_Pedestal_Hidalgo")
 
-# 5. Colisiones del Obelisco Conmemorativo (Este)
+# 7. Colisiones del Obelisco Conmemorativo (Este)
 [node name="Col_Obelisco_Base" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.0, 0.3, 10.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.0, 0.38, 10.0)
 shape = SubResource("Shape_Obelisco_Base")
 
 [node name="Col_Obelisco_Fuste" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.0, 3.2, 10.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.0, 3.28, 10.0)
 shape = SubResource("Shape_Obelisco_Fuste")
 
-# 6. Colisiones del Monumento a Lázaro Cárdenas (Suroeste)
+# 8. Colisiones del Monumento a Lázaro Cárdenas (Suroeste)
 [node name="Col_Muro_Cardenas" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, -36.0, 0.75, 25.0)
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, -45.0, -0.36, 34.0)
 shape = SubResource("Shape_Muro_Cardenas")
 
-# 7. Colisiones de la Casetita Blanca Conmemorativa (Noroeste)
+# 9. Colisiones de la Casetita Blanca Conmemorativa (Noroeste)
 [node name="Col_Caseta_Blanca" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(0.961262, 0, -0.275637, 0, 1, 0, 0.275637, 0, 0.961262, -17.0, 1.3, -14.5)
+transform = Transform3D(0.961262, 0, -0.275637, 0, 1, 0, 0.275637, 0, 0.961262, -17.0, 1.58, -14.5)
 shape = SubResource("Shape_Caseta_Blanca")

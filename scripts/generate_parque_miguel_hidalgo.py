@@ -33,6 +33,14 @@ os.makedirs(RENDERS_DIR, exist_ok=True)
 os.makedirs(os.path.dirname(GLB_OUT_PATH), exist_ok=True)
 os.makedirs(os.path.dirname(BLEND_OUT_PATH), exist_ok=True)
 
+# Función matemática de pendiente topográfica real calibrada desde manzanas_baked.glb (error RMS = 0.043m)
+def get_terrain_elevation(x, y):
+    """
+    Calcula la cota topográfica Z relativa al Kiosko (0,0) según la rampa real
+    del terreno en Godot Engine 4 (caída de 2.69m de Noreste a Suroeste).
+    """
+    return 0.006567 * x + 0.024857 * y + 0.035282
+
 print("[PARQUE HIDALGO] Limpiando escena de Blender...")
 bpy.ops.wm.read_factory_settings(use_empty=True)
 
@@ -326,26 +334,37 @@ def add_3d_text_letters(bm, text_lines, center_x, center_y, base_z, rot_z=0.0,
 # ==============================================================================
 print("[PARQUE HIDALGO] Construyendo plataforma sólida con el perímetro exacto de las calles...")
 
-# Polígono perimetral exacto del Parque Hidalgo según las banquetas interiores de las 4 calles
-# (Av. Benito Juárez al Norte, Pdte. Pascual Ortiz Rubio al Este, Callejón Libertad al Sur,
-# y Pdte. Lázaro Cárdenas al Poniente con sus ochavas y alineación angular real).
+# Polígono perimetral canónico exacto del Parque Hidalgo extraído directamente de la capa M_UrbanPark
+# de manzanas_baked.glb (área exacta: 7,947.6 m², 116.8m de ancho por 80.2m de fondo).
 # Coordenadas relativas al Kiosko central (0.0, 0.0).
 PARK_PERIMETER_POLYGON = [
-    # Ochava SO (Callejón Libertad y Av. Pdte. Lázaro Cárdenas)
-    (-49.56, -30.58),
-    (-47.94, -33.08),
-    (-44.13, -35.21),
-    # Frente Sur (Callejón Libertad) y Ochava SE (Ortiz Rubio)
-    ( 55.32, -41.53),
-    ( 56.93, -31.70),
-    # Costado Oriente (Calle Pdte. Pascual Ortiz Rubio) y Ochava NE (Av. Juárez)
-    ( 64.45,  37.80),
-    ( 64.45,  41.92),
-    # Frente Norte (Avenida Benito Juárez)
-    (-35.30,  46.53),
-    # Ochava NO (Av. Benito Juárez y Av. Pdte. Lázaro Cárdenas)
-    (-39.92,  46.39),
-    (-43.71,  38.67),
+    # Borde Este (Pdte. Pascual Ortiz Rubio - de Norte a Sur)
+    (52.66, 40.78),   # Esquina Noreste (Av. Benito Juárez y Ortiz Rubio)
+    (54.00, 20.00),
+    (55.20, 0.00),    # Acceso Este
+    (56.40, -20.00),
+    (57.30, -31.93),  # Esquina Sureste (Ortiz Rubio y Callejón Libertad)
+    # Borde Sur (Callejón Libertad - de Este a Oeste)
+    (38.00, -33.40),
+    (18.00, -34.80),
+    (0.00, -36.40),   # Acceso Sur (Eje Callejón Libertad)
+    (-20.00, -38.00),
+    (-39.22, -39.44), # Fin Ochava Suroeste (Callejón Libertad)
+    # Ochava Suroeste (Pdte. Lázaro Cárdenas y Callejón Libertad)
+    (-44.98, -37.01),
+    (-51.24, -33.40),
+    (-52.94, -32.42), # Inicio Ochava Suroeste (Pdte. Cárdenas)
+    # Borde Poniente (Pdte. Lázaro Cárdenas - de Sur a Norte)
+    (-56.61, -3.38),
+    (-56.81, -1.15),  # Acceso Poniente
+    (-59.04, 24.65),
+    (-59.50, 29.97),  # Esquina Noroeste (Av. Benito Juárez y Pdte. Cárdenas)
+    # Borde Norte (Av. Benito Juárez - de Oeste a Este)
+    (-40.00, 31.80),
+    (-20.00, 33.70),
+    (0.00, 35.70),    # Acceso Norte (Eje Av. Benito Juárez)
+    (20.00, 37.60),
+    (36.00, 39.20),
 ]
 
 poly_xs = [p[0] for p in PARK_PERIMETER_POLYGON]
@@ -439,29 +458,25 @@ def add_oriented_walkway(start_xy, end_xy, width, mat_idx=idx_adoquin):
     r_y = mid_y - ca * offset_dist
     add_solid_box(bm, center=(r_x, r_y, curb_h*0.5), size=(length, curb_w, curb_h), rot_z=angle, mat_index=idx_ocre)
 
-# 8 Andadores radiales en estrella (trazado orgánico asimétrico original que preserva las visuales históricas)
-add_oriented_walkway((0.0, 12.0), (0.0, 46.5), 4.80)     # Norte (Av. Benito Juárez)
+# 8 Andadores radiales en estrella (extendidos para consumir la manzana completa hasta sus linderos reales)
+add_oriented_walkway((0.0, 12.0), (0.0, 35.70), 4.80)     # Norte (Acceso Av. Benito Juárez)
 # Andador Sur dividido para alojar la explanada peatonal circular del Monumento a Hidalgo (hid_y = -22.0)
-add_oriented_walkway((0.0, -12.0), (0.0, -16.2), 4.80)   # Sur (Tramo norte hacia Kiosko)
-add_oriented_walkway((0.0, -27.8), (0.0, -41.5), 4.80)   # Sur (Tramo sur hacia Callejón Libertad)
-add_oriented_walkway((12.0, 0.0), (46.0, 0.0), 5.20)     # Este (Conecta con explanada Este)
-add_oriented_walkway((-12.0, 0.0), (-38.0, 0.0), 5.00)   # Poniente (Conecta con explanada Poniente)
-add_oriented_walkway((-8.5, 8.5), (-25.10, 13.16), 4.00) # Diagonal NO (Conecta en el perímetro exterior R=7.5m de la Fuente)
-add_oriented_walkway((8.5, 8.5), (32.0, 23.0), 4.00)     # Diagonal NE (Hacia Monumento a Juárez)
-add_oriented_walkway((-8.5, -8.5), (-36.0, -25.0), 4.00) # Diagonal SO (Hacia Monumento a Cárdenas)
-add_oriented_walkway((8.5, -8.5), (34.0, -24.0), 4.00)   # Diagonal SE (Mismo ángulo histórico ~ -31.3° que sus homólogos NE y SO)
+add_oriented_walkway((0.0, -12.0), (0.0, -16.20), 4.80)   # Sur (Tramo norte hacia Kiosko)
+add_oriented_walkway((0.0, -27.80), (0.0, -36.40), 4.80)  # Sur (Tramo sur hacia Callejón Libertad)
+add_oriented_walkway((12.0, 0.0), (55.20, 0.0), 5.20)     # Este (Hasta lindero con Pdte. Pascual Ortiz Rubio)
+add_oriented_walkway((-12.0, 0.0), (-56.50, 0.0), 5.00)   # Poniente (Hasta lindero con Pdte. Lázaro Cárdenas)
+add_oriented_walkway((-8.5, 8.5), (-25.10, 13.16), 4.00)  # Diagonal NO (Conecta en perímetro exterior de la Fuente)
+add_oriented_walkway((8.5, 8.5), (44.00, 32.50), 4.00)    # Diagonal NE (Extendida hasta podio de Benito Juárez junto a esquina NE)
+add_oriented_walkway((-8.5, -8.5), (-43.00, -32.50), 4.00) # Diagonal SO (Extendida hacia Monumento a Cárdenas en ochava SW)
+add_oriented_walkway((8.5, -8.5), (52.00, -29.00), 4.00)  # Diagonal SE (Extendida hacia esquina SE Ortiz Rubio y Libertad)
 
 # Conexión continua desde el perímetro de la Fuente hacia el acceso noroeste (Ochava NO)
-add_oriented_walkway((-38.55, 19.35), (-44.0, 23.0), 3.80)
+add_oriented_walkway((-38.55, 19.35), (-55.00, 27.00), 3.80)
 
 # Explanada circular pavimentada para la Fuente de la Paz (R=7.50m, centro exacto coincidente con Godot)
 fuente_cx, fuente_cy = -32.3156, 15.1878
 add_solid_cylinder(bm, center=(fuente_cx, fuente_cy, 0.03), radius=7.50, height=0.06, segments=36, mat_index=idx_adoquin)
 add_solid_ring(bm, center=(fuente_cx, fuente_cy, 0.16), r_ext=7.80, r_int=7.50, height=0.32, segments=36, mat_index=idx_ocre)
-
-# Explanadas pavimentadas en accesos este y poniente (confinadas estrictamente dentro del polígono)
-add_solid_box(bm, center=(55.0, 0.0, 0.03), size=(18.0, 24.0, 0.06), mat_index=idx_adoquin, uv_scale=0.6)
-add_solid_box(bm, center=(-43.5, 0.0, 0.03), size=(11.0, 16.0, 0.06), mat_index=idx_adoquin, uv_scale=0.6)
 
 
 # ==============================================================================
@@ -522,7 +537,7 @@ add_solid_box(bm, center=(hid_x, hid_y - 0.14, 2.86), size=(0.26, 0.08, 0.22), m
 # MONUMENTO 2: ESTATUA DE DON BENITO JUÁREZ (Sector Noreste)
 # Orientado hacia la esquina Noreste (Av. Juárez y Ortiz Rubio, rot_z = -45°)
 # ------------------------------------------------------------------------------
-bj_x, bj_y = 32.0, 23.0
+bj_x, bj_y = 44.0, 32.5
 bj_rot = math.radians(135.0) # Apunta hacia la esquina exterior Noreste (+X, +Y)
 ca_bj, sa_bj = math.cos(bj_rot), math.sin(bj_rot)
 
@@ -607,7 +622,7 @@ add_truncated_pyramid(bm, center=rot_bj(cas_lx, cas_ly, 2.80), base_s=(2.60, 2.2
 # MONUMENTO 3: MONUMENTO A DON LÁZARO CÁRDENAS (Sector Suroeste)
 # Orientado hacia la esquina Suroeste (Cárdenas y Libertad, rot_z = 135°)
 # ------------------------------------------------------------------------------
-lc_x, lc_y = -36.0, -25.0
+lc_x, lc_y = -45.0, -34.0
 lc_rot = math.radians(-45.0) # Apunta hacia la esquina exterior Suroeste (-X, -Y)
 ca_lc, sa_lc = math.cos(lc_rot), math.sin(lc_rot)
 
@@ -668,7 +683,7 @@ add_solid_cylinder(bm, center=rot_lc(0.0, -1.20, 0.10), radius=2.20, height=0.18
 # ------------------------------------------------------------------------------
 # MONUMENTO 4: OBELISCO CONMEMORATIVO DE CANTERA (Sector Este)
 # ------------------------------------------------------------------------------
-ob_x, ob_y = 38.0, -10.0
+ob_x, ob_y = 45.0, -10.0
 add_solid_box(bm, center=(ob_x, ob_y, 0.08), size=(4.20, 4.20, 0.16), mat_index=idx_cantera)
 add_solid_box(bm, center=(ob_x, ob_y, 0.24), size=(3.40, 3.40, 0.16), mat_index=idx_cantera)
 add_solid_box(bm, center=(ob_x, ob_y, 0.40), size=(2.60, 2.60, 0.16), mat_index=idx_cantera)
@@ -776,13 +791,15 @@ def add_tree_with_planter(bm, center_xy, r_ext=1.60, r_int=1.25, height=0.38):
 # Lista única de alcorques elevados con árbol acoplado (ubicados en bordes de andadores)
 alcorques_specs = [
     # Andador Norte (costados)
-    (-3.4, 22.0), (3.4, 22.0), (-3.4, 30.0), (3.4, 30.0),
+    (-3.4, 20.0), (3.4, 20.0), (-3.4, 28.0), (3.4, 28.0),
     # Andador Sur (costados)
-    (-3.4, -15.0), (3.4, -15.0), (-3.4, -29.0), (3.4, -29.0),
+    (-3.4, -15.0), (3.4, -15.0), (-3.4, -30.0), (3.4, -30.0),
     # Andador Este (costados)
-    (20.0, 3.6), (20.0, -3.6), (32.0, 3.6), (32.0, -5.5),
+    (20.0, 3.6), (20.0, -3.6), (34.0, 3.6), (34.0, -3.6), (46.0, 3.6), (46.0, -3.6),
     # Andador Poniente (costados)
-    (-18.0, 3.5), (-18.0, -3.5),
+    (-18.0, 3.5), (-18.0, -3.5), (-32.0, 3.5), (-32.0, -3.5), (-44.0, 3.5), (-44.0, -3.5),
+    # Andador Noreste (costados hacia Benito Juárez, fuera del gálibo peatonal)
+    (18.0, 19.5), (28.5, 17.0),
     # Plaza de la Fuente (borde exterior, según panorama real)
     (-24.5, 14.5)
 ]
@@ -791,14 +808,14 @@ for apos in alcorques_specs:
 
 # Árboles monumentales de sombra ÚNICAMENTE dentro de las praderas interiores de césped:
 monumental_trees_in_gardens = [
-    # Cuadrante Noreste
-    (14.0, 14.0), (20.0, 10.0), (12.0, 26.0), (24.0, 16.0),
-    # Cuadrante Sureste (despejados del andador diagonal SE que va hacia 34, -24)
-    (18.0, -5.5), (26.0, -7.0), (14.0, -23.0), (22.0, -27.0),
-    # Cuadrante Suroeste
-    (-14.0, -14.0), (-20.0, -10.0), (-20.0, -20.0), (-26.0, -16.0),
+    # Cuadrante Noreste (ampliado hacia Juárez y Ortiz Rubio, sin solapar con andador NE)
+    (12.0, 22.0), (22.0, 28.0), (32.0, 28.0), (28.0, 10.0), (36.0, 12.0),
+    # Cuadrante Sureste (ampliado hacia Ortiz Rubio y Libertad)
+    (18.0, -8.0), (30.0, -14.0), (14.0, -23.0), (24.0, -25.0), (38.0, -22.0),
+    # Cuadrante Suroeste (ampliado hacia Cárdenas y Libertad)
+    (-16.0, -14.0), (-26.0, -12.0), (-36.0, -14.0), (-20.0, -22.0), (-32.0, -24.0),
     # Cuadrante Noroeste (lejos de la casetita blanca y de la fuente)
-    (-12.0, 24.0), (-18.0, 6.0), (-26.0, 6.0)
+    (-14.0, 24.0), (-24.0, 26.0), (-22.0, 6.0), (-36.0, 6.0)
 ]
 for mt in monumental_trees_in_gardens:
     add_organic_tree(bm, mt, trunk_h=4.2, trunk_r=0.50, crown_r=4.5, crown_h=6.5)
@@ -847,12 +864,16 @@ benches_specs = [
     ((18.0, -2.10), 0.0),      # Sur viendo al Norte (+Y)
     ((30.0, 2.10), math.pi),
     ((30.0, -2.10), 0.0),
+    ((42.0, 2.10), math.pi),
+    ((42.0, -2.10), 0.0),
 
     # Andador Poniente (y=0, ancho 5.0m -> bancas en y=±2.00m viendo al centro y=0)
     ((-18.0, 2.00), math.pi),
     ((-18.0, -2.00), 0.0),
     ((-30.0, 2.00), math.pi),
     ((-30.0, -2.00), 0.0),
+    ((-42.0, 2.00), math.pi),
+    ((-42.0, -2.00), 0.0),
 
     # Glorieta Central (R=10.5m viendo hacia el interior del Kiosko)
     ((10.5 * math.cos(math.radians(25)), 10.5 * math.sin(math.radians(25))), math.atan2(10.5 * math.cos(math.radians(25)), -10.5 * math.sin(math.radians(25)))),
@@ -866,7 +887,11 @@ benches_specs = [
 
     # Dos bancas coloniales frente a la casetita blanca (media_1790444944727.jpg)
     (rot_cw(-1.5, -2.8, 0.0)[:2], cas_rot + math.pi),
-    (rot_cw(1.5, -2.8, 0.0)[:2], cas_rot + math.pi)
+    (rot_cw(1.5, -2.8, 0.0)[:2], cas_rot + math.pi),
+
+    # Andador Noreste (hacia Benito Juárez, bancas en costados mirando hacia el centro del andador)
+    ((19.29, 17.54), -2.547), # Costado NO mirando al centro del andador
+    ((30.85, 21.86), 0.595)   # Costado SE mirando al centro del andador
 ]
 for bp, bang in benches_specs:
     add_ornamental_bench(bm, bp, bang)
@@ -891,13 +916,15 @@ lamp_positions = [
     # Esquinas de chaflán de la glorieta central
     (-9.5, 9.5), (9.5, 9.5), (-9.5, -9.5), (9.5, -9.5),
     # Andador Norte (costados)
-    (-2.15, 23.0), (2.15, 31.0),
+    (-2.15, 20.0), (2.15, 28.0),
     # Andador Sur (costados)
     (-2.15, -16.0), (2.15, -31.0),
     # Andador Este (costados)
-    (22.0, 2.30), (32.0, -2.30),
+    (22.0, 2.30), (34.0, -2.30), (46.0, 2.30),
     # Andador Poniente (costados)
-    (-19.0, 2.20), (-29.0, -2.20)
+    (-19.0, 2.20), (-31.0, -2.20), (-43.0, 2.20),
+    # Andador Noreste (costados, paso libre)
+    (23.87, 21.48), (37.87, 25.76)
 ]
 for lp in lamp_positions:
     add_triple_colonial_lamp(bm, lp)
@@ -914,7 +941,7 @@ def add_chess_table(bm, pos_xy):
         add_solid_box(bm, center=(tx + bx, ty + by, 0.22), size=(0.90, 0.32, 0.44), mat_index=idx_cantera)
 
 # Mesas de ajedrez / picnic de concreto en la explanada Este (media_1790414528108.jpg)
-for cp in [(44.0, 4.5), (44.0, 8.0), (48.0, 4.5), (48.0, 8.0)]:
+for cp in [(40.0, 4.5), (40.0, 8.0), (44.0, 4.5), (44.0, 8.0)]:
     add_chess_table(bm, cp)
 
 # Botes de basura de forja cilíndricos
@@ -938,8 +965,12 @@ for bdp in blue_drum_positions:
 
 
 # ==============================================================================
-# 8. FINALIZACIÓN DE MALLA Y EXPORTACIÓN GLTF
+# 8. FINALIZACIÓN DE MALLA Y EXPORTACIÓN GLTF CON PENDIENTE TOPOGRÁFICA
 # ==============================================================================
+print("[PARQUE HIDALGO] Aplicando deformación topográfica 3D afín (caída real de 2.69m de Noreste a Suroeste)...")
+for v in bm.verts:
+    v.co.z += get_terrain_elevation(v.co.x, v.co.y)
+
 print("[PARQUE HIDALGO] Calculando normales y finalizando BMesh...")
 bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
 bm.to_mesh(mesh_parque)
@@ -966,12 +997,30 @@ bpy.ops.wm.save_as_mainfile(filepath=BLEND_OUT_PATH)
 print(f"[PARQUE HIDALGO] Archivo .blend guardado en {BLEND_OUT_PATH}")
 
 # ==============================================================================
-# 9. GENERACIÓN DE ESCENA GODOT 4 (.TSCN) CON COLISIONES ANALÍTICAS
-# Sincronización canónica: Z_godot = -Y_blender
+# 9. GENERACIÓN DE ESCENA GODOT 4 (.TSCN) CON COLISIONES ANALÍTICAS TOPOGRÁFICAS
+# Sincronización canónica: Z_godot = -Y_blender, Y_godot = Z_local + elev(X_godot, -Z_godot)
 # ==============================================================================
 print(f"[PARQUE HIDALGO] Escribiendo escena Godot con colisiones analíticas en {TSCN_OUT_PATH}...")
 
-tscn_content = f"""[gd_scene load_steps=13 format=3 uid="uid://b8parquehidalgo2009"]
+# Cotas topográficas para colisiones en Godot:
+elev_center = get_terrain_elevation(park_cx, park_cy)
+elev_n = get_terrain_elevation(0.0, 23.85)
+elev_s = get_terrain_elevation(0.0, -24.20)
+elev_e = get_terrain_elevation(33.6, 0.0)
+elev_w = get_terrain_elevation(-34.25, 0.0)
+elev_ne = get_terrain_elevation(26.25, 20.50)
+elev_se = get_terrain_elevation(30.25, -18.75)
+elev_sw = get_terrain_elevation(-25.75, -20.50)
+elev_nw1 = get_terrain_elevation(-16.80, 10.83)
+elev_nw2 = get_terrain_elevation(-46.78, 23.18)
+
+elev_bj = get_terrain_elevation(bj_x, bj_y)
+elev_hid = get_terrain_elevation(hid_x, hid_y)
+elev_ob = get_terrain_elevation(ob_x, ob_y)
+elev_lc = get_terrain_elevation(lc_x, lc_y)
+elev_cas = get_terrain_elevation(cas_w_x, cas_w_y)
+
+tscn_content = f"""[gd_scene load_steps=18 format=3 uid="uid://b8parquehidalgo2009"]
 
 [ext_resource type="PackedScene" path="res://assets/parque_miguel_hidalgo.glb" id="1_mesh"]
 
@@ -979,16 +1028,31 @@ tscn_content = f"""[gd_scene load_steps=13 format=3 uid="uid://b8parquehidalgo20
 size = Vector3({park_w:.1f}, 1.5, {park_d:.1f})
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Norte"]
-size = Vector3(5.0, 0.4, 34.5)
+size = Vector3(5.0, 0.4, 24.0)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Sur"]
-size = Vector3(5.0, 0.4, 29.5)
+size = Vector3(5.0, 0.4, 25.0)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Este"]
-size = Vector3(52.0, 0.4, 5.5)
+size = Vector3(43.5, 0.4, 5.5)
 
 [sub_resource type="BoxShape3D" id="Shape_Andador_Oeste"]
-size = Vector3(37.0, 0.4, 5.2)
+size = Vector3(44.5, 0.4, 5.2)
+
+[sub_resource type="BoxShape3D" id="Shape_Andador_Noreste"]
+size = Vector3(43.0, 0.4, 4.2)
+
+[sub_resource type="BoxShape3D" id="Shape_Andador_Sureste"]
+size = Vector3(48.0, 0.4, 4.2)
+
+[sub_resource type="BoxShape3D" id="Shape_Andador_Suroeste"]
+size = Vector3(42.0, 0.4, 4.2)
+
+[sub_resource type="BoxShape3D" id="Shape_Andador_Noroeste_1"]
+size = Vector3(17.5, 0.4, 4.2)
+
+[sub_resource type="BoxShape3D" id="Shape_Andador_Noroeste_2"]
+size = Vector3(18.5, 0.4, 4.0)
 
 [sub_resource type="BoxShape3D" id="Shape_Podio_Juarez"]
 size = Vector3(7.0, 0.7, 5.5)
@@ -1025,61 +1089,83 @@ collision_mask = 0
 
 # 1. Plataforma basal enterrada transitable
 [node name="Col_Plataforma" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {park_cx:.2f}, -0.75, {-park_cy:.2f})
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {park_cx:.2f}, {-0.75 + elev_center:.2f}, {-park_cy:.2f})
 shape = SubResource("Shape_Plataforma_General")
 
-# 2. Andadores principales transitables
+# 2. Andadores principales transitables ortogonales y diagonales
 [node name="Col_Andador_N" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, -29.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, {0.20 + elev_n:.2f}, -23.85)
 shape = SubResource("Shape_Andador_Norte")
 
 [node name="Col_Andador_S" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.2, 26.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, {0.20 + elev_s:.2f}, 24.20)
 shape = SubResource("Shape_Andador_Sur")
 
 [node name="Col_Andador_E" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.0, 0.2, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.60, {0.20 + elev_e:.2f}, 0.0)
 shape = SubResource("Shape_Andador_Este")
 
 [node name="Col_Andador_W" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.5, 0.2, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.25, {0.20 + elev_w:.2f}, 0.0)
 shape = SubResource("Shape_Andador_Oeste")
 
-# 3. Colisiones del Monumento a Benito Juárez (Noreste)
+# 3. Andador Noreste (Hacia Monumento a Benito Juárez)
+[node name="Col_Andador_NE" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(0.8284, 0, 0.5601, 0, 1, 0, -0.5601, 0, 0.8284, 26.25, {0.20 + elev_ne:.2f}, -20.50)
+shape = SubResource("Shape_Andador_Noreste")
+
+# 4. Andadores diagonales restantes
+[node name="Col_Andador_SE" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(0.9046, 0, -0.4262, 0, 1, 0, 0.4262, 0, 0.9046, 30.25, {0.20 + elev_se:.2f}, 18.75)
+shape = SubResource("Shape_Andador_Sureste")
+
+[node name="Col_Andador_SW" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(-0.8208, 0, -0.5712, 0, 1, 0, 0.5712, 0, -0.8208, -25.75, {0.20 + elev_sw:.2f}, 20.50)
+shape = SubResource("Shape_Andador_Suroeste")
+
+[node name="Col_Andador_NW_1" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(-0.9631, 0, 0.2691, 0, 1, 0, -0.2691, 0, -0.9631, -16.80, {0.20 + elev_nw1:.2f}, -10.83)
+shape = SubResource("Shape_Andador_Noroeste_1")
+
+[node name="Col_Andador_NW_2" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(-0.9063, 0, 0.4226, 0, 1, 0, -0.4226, 0, -0.9063, -46.78, {0.20 + elev_nw2:.2f}, -23.18)
+shape = SubResource("Shape_Andador_Noroeste_2")
+
+# 5. Colisiones del Monumento a Benito Juárez (Noreste)
 [node name="Col_Podio_Juarez" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(-0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, {bj_x:.1f}, 0.35, {-bj_y:.1f})
+transform = Transform3D(-0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, {bj_x:.1f}, {0.35 + elev_bj:.2f}, {-bj_y:.1f})
 shape = SubResource("Shape_Podio_Juarez")
 
 [node name="Col_Pedestal_Juarez" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(-0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, {bj_x:.1f}, 1.65, {-bj_y:.1f})
+transform = Transform3D(-0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, {bj_x:.1f}, {1.65 + elev_bj:.2f}, {-bj_y:.1f})
 shape = SubResource("Shape_Pedestal_Juarez")
 
-# 4. Colisiones del Monumento a Miguel Hidalgo (Sur)
+# 6. Colisiones del Monumento a Miguel Hidalgo (Sur)
 [node name="Col_Medallon_Hidalgo" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {hid_x:.1f}, 0.1, {-hid_y:.1f})
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {hid_x:.1f}, {0.10 + elev_hid:.2f}, {-hid_y:.1f})
 shape = SubResource("Shape_Medallon_Hidalgo")
 
 [node name="Col_Pedestal_Hidalgo" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {hid_x:.1f}, 1.2, {-hid_y:.1f})
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {hid_x:.1f}, {1.20 + elev_hid:.2f}, {-hid_y:.1f})
 shape = SubResource("Shape_Pedestal_Hidalgo")
 
-# 5. Colisiones del Obelisco Conmemorativo (Este)
+# 7. Colisiones del Obelisco Conmemorativo (Este)
 [node name="Col_Obelisco_Base" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {ob_x:.1f}, 0.3, {-ob_y:.1f})
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {ob_x:.1f}, {0.30 + elev_ob:.2f}, {-ob_y:.1f})
 shape = SubResource("Shape_Obelisco_Base")
 
 [node name="Col_Obelisco_Fuste" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {ob_x:.1f}, 3.2, {-ob_y:.1f})
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {ob_x:.1f}, {3.20 + elev_ob:.2f}, {-ob_y:.1f})
 shape = SubResource("Shape_Obelisco_Fuste")
 
-# 6. Colisiones del Monumento a Lázaro Cárdenas (Suroeste)
+# 8. Colisiones del Monumento a Lázaro Cárdenas (Suroeste)
 [node name="Col_Muro_Cardenas" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, {lc_x:.1f}, 0.75, {-lc_y:.1f})
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, {lc_x:.1f}, {0.75 + elev_lc:.2f}, {-lc_y:.1f})
 shape = SubResource("Shape_Muro_Cardenas")
 
-# 7. Colisiones de la Casetita Blanca Conmemorativa (Noroeste)
+# 9. Colisiones de la Casetita Blanca Conmemorativa (Noroeste)
 [node name="Col_Caseta_Blanca" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(0.961262, 0, -0.275637, 0, 1, 0, 0.275637, 0, 0.961262, {cas_w_x:.1f}, 1.3, {-cas_w_y:.1f})
+transform = Transform3D(0.961262, 0, -0.275637, 0, 1, 0, 0.275637, 0, 0.961262, {cas_w_x:.1f}, {1.30 + elev_cas:.2f}, {-cas_w_y:.1f})
 shape = SubResource("Shape_Caseta_Blanca")
 """
 
@@ -1129,60 +1215,62 @@ cameras_specs = [
     {
         "name": "Cam_01_Cenital_Top",
         "loc": (park_cx, park_cy, 110.0),
-        "target": (park_cx, park_cy, 0.0),
+        "target": (park_cx, park_cy, elev_center),
         "lens": 28.0,
         "filename": "parque_01_cenital_top.png"
     },
     {
         "name": "Cam_02_Acceso_Norte_Juarez",
-        "loc": (0.0, 42.0, 2.5),
-        "target": (0.0, 10.0, 1.5),
+        "loc": (0.0, 42.0, 2.5 + get_terrain_elevation(0.0, 42.0)),
+        "target": (0.0, 10.0, 1.5 + get_terrain_elevation(0.0, 10.0)),
         "lens": 28.0,
         "filename": "parque_02_acceso_norte_juarez.png"
     },
     {
+        # Vista frontal a Don Miguel Hidalgo: cámara colocada al norte mirando al sur de frente al rostro
         "name": "Cam_03_Busto_Hidalgo_Sur",
-        "loc": (0.0, -28.0, 1.8),
-        "target": (hid_x, hid_y, 2.2),
+        "loc": (0.0, -16.5, 1.8 + get_terrain_elevation(0.0, -16.5)),
+        "target": (hid_x, hid_y, 2.2 + elev_hid),
         "lens": 32.0,
         "filename": "parque_03_busto_hidalgo_sur.png"
     },
     {
         # Vista frontal a Juárez: cámara colocada hacia la esquina Noreste mirando de frente a la estatua
         "name": "Cam_04_Monumento_Juarez_NE",
-        "loc": (bj_x + 5.8, bj_y + 5.8, 2.2),
-        "target": (bj_x, bj_y, 3.0),
+        "loc": (bj_x + 5.8, bj_y + 5.8, 2.2 + get_terrain_elevation(bj_x + 5.8, bj_y + 5.8)),
+        "target": (bj_x, bj_y, 3.0 + elev_bj),
         "lens": 32.0,
         "filename": "parque_04_monumento_juarez_ne.png"
     },
     {
         # Vista frontal a Cárdenas: cámara colocada hacia la esquina Suroeste mirando de frente al muro y busto
         "name": "Cam_05_Monumento_Cardenas_SO",
-        "loc": (lc_x - 5.5, lc_y - 5.5, 1.8),
-        "target": (lc_x, lc_y, 1.6),
+        "loc": (lc_x - 5.5, lc_y - 5.5, 1.8 + get_terrain_elevation(lc_x - 5.5, lc_y - 5.5)),
+        "target": (lc_x, lc_y, 1.6 + elev_lc),
         "lens": 32.0,
         "filename": "parque_05_monumento_cardenas_so.png"
     },
     {
+        # Vista al Obelisco de cantera y mesas de ajedrez desde el andador Este
         "name": "Cam_06_Obelisco_Cantera_E",
-        "loc": (46.0, -10.0, 2.8),
-        "target": (ob_x, ob_y, 3.0),
+        "loc": (45.0, -3.5, 2.0 + get_terrain_elevation(45.0, -3.5)),
+        "target": (ob_x, ob_y, 2.8 + elev_ob),
         "lens": 32.0,
         "filename": "parque_06_obelisco_cantera_e.png"
     },
     {
         # Vista peatonal sobre el andador mostrando las bancas y farolas en los costados
         "name": "Cam_07_Peatonal_Andador_Bancas",
-        "loc": (0.80, 33.0, 1.65),
-        "target": (0.0, 10.0, 1.2),
+        "loc": (0.80, 33.0, 1.65 + get_terrain_elevation(0.80, 33.0)),
+        "target": (0.0, 10.0, 1.2 + get_terrain_elevation(0.0, 10.0)),
         "lens": 30.0,
         "filename": "parque_07_peatonal_andador_bancas.png"
     },
     {
         # Vista hacia la Casetita Blanca en el borde del andador Noroeste (media_1790444944727.jpg)
         "name": "Cam_08_Casetita_Blanca_NW",
-        "loc": (-19.2, 8.0, 2.1),
-        "target": (-17.0, 14.5, 1.35),
+        "loc": (-19.2, 8.0, 2.1 + get_terrain_elevation(-19.2, 8.0)),
+        "target": (-17.0, 14.5, 1.35 + elev_cas),
         "lens": 28.0,
         "filename": "parque_08_casetita_blanca_nw.png"
     }
