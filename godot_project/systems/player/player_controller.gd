@@ -72,6 +72,21 @@ var bone_lowerleg_l: int = -1
 var bone_lowerleg_r: int = -1
 var bone_chest: int = -1
 
+# Rotaciones base de reposo de cada hueso para composición canónica
+var _base_rot_upperarm_l: Quaternion = Quaternion.IDENTITY
+var _base_rot_upperarm_r: Quaternion = Quaternion.IDENTITY
+var _base_rot_forearm_l: Quaternion = Quaternion.IDENTITY
+var _base_rot_forearm_r: Quaternion = Quaternion.IDENTITY
+var _base_rot_upperleg_l: Quaternion = Quaternion.IDENTITY
+var _base_rot_upperleg_r: Quaternion = Quaternion.IDENTITY
+var _base_rot_lowerleg_l: Quaternion = Quaternion.IDENTITY
+var _base_rot_lowerleg_r: Quaternion = Quaternion.IDENTITY
+var _base_rot_chest: Quaternion = Quaternion.IDENTITY
+
+# Banderas de estado de teclas continuas para alta fidelidad en vuelo
+var _is_space_held: bool = false
+var _is_shift_held: bool = false
+
 # Ciclo de locomoción biomecánico de extremidades
 var locomotion_phase: float = 0.0
 
@@ -175,6 +190,17 @@ func _initialize_humanoid_rig() -> void:
 		bone_lowerleg_l = skeleton.find_bone("LowerLeg.L")
 		bone_lowerleg_r = skeleton.find_bone("LowerLeg.R")
 		bone_chest = skeleton.find_bone("Chest")
+
+		if bone_upperarm_l != -1: _base_rot_upperarm_l = skeleton.get_bone_pose_rotation(bone_upperarm_l)
+		if bone_upperarm_r != -1: _base_rot_upperarm_r = skeleton.get_bone_pose_rotation(bone_upperarm_r)
+		if bone_forearm_l != -1: _base_rot_forearm_l = skeleton.get_bone_pose_rotation(bone_forearm_l)
+		if bone_forearm_r != -1: _base_rot_forearm_r = skeleton.get_bone_pose_rotation(bone_forearm_r)
+		if bone_upperleg_l != -1: _base_rot_upperleg_l = skeleton.get_bone_pose_rotation(bone_upperleg_l)
+		if bone_upperleg_r != -1: _base_rot_upperleg_r = skeleton.get_bone_pose_rotation(bone_upperleg_r)
+		if bone_lowerleg_l != -1: _base_rot_lowerleg_l = skeleton.get_bone_pose_rotation(bone_lowerleg_l)
+		if bone_lowerleg_r != -1: _base_rot_lowerleg_r = skeleton.get_bone_pose_rotation(bone_lowerleg_r)
+		if bone_chest != -1: _base_rot_chest = skeleton.get_bone_pose_rotation(bone_chest)
+
 		foot_ik.setup(self, skeleton)
 
 	if camera_director:
@@ -232,6 +258,12 @@ func toggle_f1_photo_mode() -> void:
 		print("[PlayerController] Modo Screenshot [F1] DESACTIVADO: HUD y avatar restaurados, inputs reactivados.")
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey:
+		if event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE:
+			_is_space_held = event.pressed
+		elif event.keycode == KEY_SHIFT or event.physical_keycode == KEY_SHIFT:
+			_is_shift_held = event.pressed
+
 	if event is InputEventKey and event.pressed and not event.is_echo():
 		# Modo Screenshot (F1): Oculta HUD y avatar, suspende inputs
 		if event.keycode == KEY_F1:
@@ -257,24 +289,20 @@ func _input(event: InputEvent) -> void:
 		if not input_enabled:
 			return
 
-		# Doble pulsación de barra espaciadora para alternar vuelo
-		if event.keycode == KEY_SPACE or event.is_action_pressed("ui_accept"):
+		# Barra espaciadora: doble tap en el suelo/aire inicia vuelo; en vuelo, impulsa ascenso vertical inmediato
+		if event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE or event.is_action_pressed("ui_accept"):
 			var current_time = Time.get_ticks_msec() / 1000.0
 			if not is_flying:
 				if (current_time - space_press_timer) < DOUBLE_TAP_WINDOW:
 					is_flying = true
-					velocity.y = fly_vertical_speed * 0.6 # Impulso de despegue
+					velocity.y = fly_vertical_speed * 0.6 # Impulso inicial de despegue
+					floor_snap_length = 0.0
 					space_press_timer = 0.0
 				else:
 					space_press_timer = current_time
 			else:
-				# Si ya está volando, doble tap para aterrizar solo si no está en pleno ascenso vertical
-				if (current_time - space_press_timer) < 0.28 and abs(velocity.y) < 2.0:
-					is_flying = false
-					velocity = Vector3.ZERO
-					space_press_timer = 0.0
-				else:
-					space_press_timer = current_time
+				# Estando en vuelo, presionar barra espaciadora siempre añade elevación inmediata
+				velocity.y = maxf(velocity.y + 8.0, fly_vertical_speed)
 
 	if is_f1_photo_mode or not input_enabled:
 		return
@@ -360,11 +388,15 @@ func _process_walking(delta: float) -> void:
 		camera_director.update_head_bob(delta, spd_ratio, is_on_floor())
 
 func _process_flying(delta: float) -> void:
-	if is_on_floor() and Input.is_key_pressed(KEY_SHIFT):
+	floor_snap_length = 0.0
+
+	# Aterrizaje suave al descender hasta tocar el piso
+	if is_on_floor() and (_is_shift_held or Input.is_key_pressed(KEY_SHIFT) or Input.is_physical_key_pressed(KEY_SHIFT)):
 		is_flying = false
+		floor_snap_length = DEFAULT_SNAP_LENGTH
 		return
 
-	var is_sprint = Input.is_key_pressed(KEY_CTRL) or Input.is_action_pressed("ui_focus_next")
+	var is_sprint = Input.is_key_pressed(KEY_CTRL) or Input.is_physical_key_pressed(KEY_CTRL) or Input.is_action_pressed("ui_focus_next")
 	var active_h_speed = fly_sprint_speed if is_sprint else fly_speed
 	var active_v_speed = fly_vertical_speed * 1.8 if is_sprint else fly_vertical_speed
 
@@ -374,16 +406,26 @@ func _process_flying(delta: float) -> void:
 	var move_dir = (forward * -input_dir.y + right * input_dir.x).normalized()
 
 	var vert_input = 0.0
-	# Mantener barra espaciadora para ascender continuamente con fuerza
-	if Input.is_key_pressed(KEY_SPACE) or Input.is_action_pressed("ui_accept"):
+	# Barra espaciadora: Ascenso constante y potente
+	var space_pressed = _is_space_held or Input.is_key_pressed(KEY_SPACE) or Input.is_physical_key_pressed(KEY_SPACE) or Input.is_action_pressed("ui_accept")
+	if space_pressed:
 		vert_input += 1.0
-	# Shift o C para descender
-	if Input.is_key_pressed(KEY_SHIFT) or Input.is_key_pressed(KEY_C) or Input.is_action_pressed("ui_select"):
+
+	# Shift o C: Descenso controlado
+	var down_pressed = _is_shift_held or Input.is_key_pressed(KEY_SHIFT) or Input.is_physical_key_pressed(KEY_SHIFT) or Input.is_action_pressed("ui_select")
+	if down_pressed:
 		vert_input -= 1.0
 
-	var target_velocity = move_dir * active_h_speed
-	target_velocity.y = vert_input * active_v_speed
-	velocity = velocity.lerp(target_velocity, 12.0 * delta)
+	var target_h_vel = move_dir * active_h_speed
+	velocity.x = lerp(velocity.x, target_h_vel.x, 14.0 * delta)
+	velocity.z = lerp(velocity.z, target_h_vel.z, 14.0 * delta)
+
+	if vert_input != 0.0:
+		var target_v_vel = vert_input * active_v_speed
+		velocity.y = move_toward(velocity.y, target_v_vel, active_v_speed * 5.0 * delta)
+	else:
+		velocity.y = move_toward(velocity.y, 0.0, 24.0 * delta)
+
 	move_and_slide()
 
 func _get_input_direction() -> Vector2:
@@ -456,31 +498,30 @@ func _update_procedural_animations(delta: float) -> void:
 
 	# 1. Animación de Brazos (cabeceo hacia adelante/atrás en eje X sin desvío lateral)
 	if bone_upperarm_l != -1:
-		skeleton.set_bone_pose_rotation(bone_upperarm_l, Quaternion(Vector3(1, 0, 0), arm_angle_l - hand_raise))
+		skeleton.set_bone_pose_rotation(bone_upperarm_l, _base_rot_upperarm_l * Quaternion(Vector3(1, 0, 0), arm_angle_l - hand_raise))
 	if bone_upperarm_r != -1:
-		skeleton.set_bone_pose_rotation(bone_upperarm_r, Quaternion(Vector3(1, 0, 0), arm_angle_r - hand_raise))
+		skeleton.set_bone_pose_rotation(bone_upperarm_r, _base_rot_upperarm_r * Quaternion(Vector3(1, 0, 0), arm_angle_r - hand_raise))
 	if bone_forearm_l != -1:
-		skeleton.set_bone_pose_rotation(bone_forearm_l, Quaternion(Vector3(1, 0, 0), elbow_flex_l))
+		skeleton.set_bone_pose_rotation(bone_forearm_l, _base_rot_forearm_l * Quaternion(Vector3(1, 0, 0), elbow_flex_l))
 	if bone_forearm_r != -1:
-		skeleton.set_bone_pose_rotation(bone_forearm_r, Quaternion(Vector3(1, 0, 0), elbow_flex_r))
+		skeleton.set_bone_pose_rotation(bone_forearm_r, _base_rot_forearm_r * Quaternion(Vector3(1, 0, 0), elbow_flex_r))
 
-	# 2. Animación de Piernas (zancada cruzada y flexión de rodilla)
+	# 2. Animación de Piernas (zancada cruzada y flexión anatómica de rodilla hacia atrás)
 	if bone_upperleg_l != -1:
-		skeleton.set_bone_pose_rotation(bone_upperleg_l, Quaternion(Vector3(1, 0, 0), leg_angle_l))
+		skeleton.set_bone_pose_rotation(bone_upperleg_l, _base_rot_upperleg_l * Quaternion(Vector3(1, 0, 0), leg_angle_l))
 	if bone_upperleg_r != -1:
-		skeleton.set_bone_pose_rotation(bone_upperleg_r, Quaternion(Vector3(1, 0, 0), leg_angle_r))
+		skeleton.set_bone_pose_rotation(bone_upperleg_r, _base_rot_upperleg_r * Quaternion(Vector3(1, 0, 0), leg_angle_r))
 	if bone_lowerleg_l != -1:
-		skeleton.set_bone_pose_rotation(bone_lowerleg_l, Quaternion(Vector3(1, 0, 0), knee_flex_l))
+		skeleton.set_bone_pose_rotation(bone_lowerleg_l, _base_rot_lowerleg_l * Quaternion(Vector3(1, 0, 0), -knee_flex_l))
 	if bone_lowerleg_r != -1:
-		skeleton.set_bone_pose_rotation(bone_lowerleg_r, Quaternion(Vector3(1, 0, 0), knee_flex_r))
+		skeleton.set_bone_pose_rotation(bone_lowerleg_r, _base_rot_lowerleg_r * Quaternion(Vector3(1, 0, 0), -knee_flex_r))
 
 	# 3. Inclinación del tórax hacia adelante al ascender pendientes
 	if bone_chest != -1:
 		var lean_angle = 0.0
 		if current_slope_angle > 5.0 and is_moving:
 			lean_angle = deg_to_rad(clampf(current_slope_angle * 0.5, 0.0, 15.0))
-		var q_chest = Quaternion(Vector3(1, 0, 0), -lean_angle)
-		skeleton.set_bone_pose_rotation(bone_chest, q_chest)
+		skeleton.set_bone_pose_rotation(bone_chest, _base_rot_chest * Quaternion(Vector3(1, 0, 0), -lean_angle))
 
 func _update_telemetry(delta: float) -> void:
 	current_speed_kmh = Vector2(velocity.x, velocity.z).length() * 3.6

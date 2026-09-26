@@ -205,6 +205,68 @@ func _process(_delta):
 		assert(hud.visible == true, "El HUD debe restaurarse al salir de F1")
 		print("✓ Modo F1 desactivado: HUD y avatar restaurados, control restablecido.")
 
+	elif _frames == 12:
+		# Validar Composición de Rotaciones de Huesos (Brazos abajo, Piernas en piso)
+		print("\n--- 4. Validación Anatómica de Extremidades Rigged ---")
+		var skel = _player.skeleton
+		var b_hand_l = skel.find_bone("Hand.L")
+		var b_foot_l = skel.find_bone("Foot.L")
+		
+		# Simular actualización de animación procedural de marcha
+		_player.locomotion_phase = 0.5 # Fase intermedia de zancada
+		_player._update_procedural_animations(0.016)
+		skel.force_update_all_bone_transforms()
+		
+		var hand_pos = skel.get_bone_global_pose(b_hand_l).origin
+		var foot_pos = skel.get_bone_global_pose(b_foot_l).origin
+		print("  Mano L pose global Y=", hand_pos.y, " Z=", hand_pos.z)
+		print("  Pie L pose global Y=", foot_pos.y, " Z=", foot_pos.z)
+		
+		# La mano debe colgar a la altura de la cintura/muslo (~0.90 - 1.05m), NUNCA hacia el cielo (>1.30m)
+		assert(hand_pos.y < 1.15, "La mano no debe apuntar hacia el cielo ni levantarse por encima del hombro")
+		assert(hand_pos.y > 0.75, "La mano debe mantenerse a la altura de la cadera/muslo")
+		# El pie debe estar cerca del suelo (~0.05 - 0.25m), NUNCA dentro del torso (>0.50m)
+		assert(foot_pos.y < 0.35, "El pie no debe colapsar hacia el torso ni doblarse al revés")
+		assert(foot_pos.y >= 0.04, "El pie debe mantenerse sobre la superficie del suelo")
+		print("✓ Extremidades validadas: Brazos orientados hacia abajo y piernas en suelo natural.")
+
+		# Validar Ascenso de Vuelo con Barra Espaciadora
+		print("\n--- 5. Validación de Vuelo y Ascenso con Barra Espaciadora ---")
+		_player.global_position.y += 30.0 # Situar en el aire
+		_player.is_flying = true
+		_player.velocity = Vector3.ZERO
+		
+		# Pulsar barra espaciadora en vuelo
+		var ev_space = InputEventKey.new()
+		ev_space.keycode = KEY_SPACE
+		ev_space.pressed = true
+		_player._input(ev_space)
+		
+		assert(_player.is_flying == true, "La barra espaciadora NUNCA debe desactivar el vuelo")
+		assert(_player.velocity.y >= _player.fly_vertical_speed, "Pulsar espacio debe otorgar impulso vertical ascendente")
+		
+		# Mantener barra espaciadora para elevación continua
+		_player._is_space_held = true
+		_player._process_flying(0.05)
+		assert(_player.is_flying == true, "El vuelo debe mantenerse activo durante el ascenso")
+		assert(_player.velocity.y > 15.0, "La velocidad de ascenso en vuelo debe ser potente")
+		
+		# Descenso con Shift en el aire
+		_player._is_space_held = false
+		_player._is_shift_held = true
+		_player.velocity.y = 0.0 # Probar aceleración hacia abajo desde reposo
+		for step in range(10):
+			_player._process_flying(0.05)
+		assert(_player.velocity.y < 0.0, "Mantener Shift en vuelo debe permitir descender")
+		
+		# Alternancia con tecla F
+		var ev_f = InputEventKey.new()
+		ev_f.keycode = KEY_F
+		ev_f.pressed = true
+		_player._input(ev_f)
+		assert(_player.is_flying == false, "Tecla F debe permitir alternar el vuelo libre")
+		print("✓ Dinámica de vuelo validada: Barra espaciadora eleva continuamente y tecla F alterna.")
+
 	elif _frames >= 16:
 		if _frames > 16:
 			return

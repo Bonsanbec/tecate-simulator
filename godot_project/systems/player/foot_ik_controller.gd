@@ -22,6 +22,13 @@ var bone_foot_r: int = -1
 var bone_toe_l: int = -1
 var bone_toe_r: int = -1
 
+# Poses base originales del rig para respetar la longitud de las piernas
+var _base_pos_hips: Vector3 = Vector3(0.0, 0.95, 0.0)
+var _base_pos_foot_l: Vector3 = Vector3(0.0, 0.41, 0.0)
+var _base_pos_foot_r: Vector3 = Vector3(0.0, 0.41, 0.0)
+var _base_rot_foot_l: Quaternion = Quaternion.IDENTITY
+var _base_rot_foot_r: Quaternion = Quaternion.IDENTITY
+
 # Estados de compensación calculados
 var left_foot_ik_offset: float = 0.0
 var right_foot_ik_offset: float = 0.0
@@ -45,6 +52,14 @@ func setup(p_character: CharacterBody3D, p_skeleton: Skeleton3D) -> void:
 	bone_foot_r = skeleton.find_bone("Foot.R")
 	bone_toe_l = skeleton.find_bone("Toes.L")
 	bone_toe_r = skeleton.find_bone("Toes.R")
+
+	if bone_hips != -1: _base_pos_hips = skeleton.get_bone_pose_position(bone_hips)
+	if bone_foot_l != -1:
+		_base_pos_foot_l = skeleton.get_bone_pose_position(bone_foot_l)
+		_base_rot_foot_l = skeleton.get_bone_pose_rotation(bone_foot_l)
+	if bone_foot_r != -1:
+		_base_pos_foot_r = skeleton.get_bone_pose_position(bone_foot_r)
+		_base_rot_foot_r = skeleton.get_bone_pose_rotation(bone_foot_r)
 
 	_create_raycasts()
 
@@ -125,34 +140,38 @@ func _apply_bone_poses() -> void:
 
 	# 1. Aplicar descenso pélvico al hueso Hips
 	if bone_hips != -1:
-		var hips_pose = skeleton.get_bone_pose_position(bone_hips)
-		hips_pose.y = 0.95 + current_pelvic_drop
+		var hips_pose = _base_pos_hips
+		hips_pose.y += current_pelvic_drop
 		skeleton.set_bone_pose_position(bone_hips, hips_pose)
 
 	# 2. Ajuste vertical y rotación del pie izquierdo
 	if bone_foot_l != -1:
-		var foot_l_pos = skeleton.get_bone_pose_position(bone_foot_l)
-		foot_l_pos.y = 0.08 + (left_foot_ik_offset - current_pelvic_drop)
+		var foot_l_pos = _base_pos_foot_l
+		foot_l_pos.y += (left_foot_ik_offset - current_pelvic_drop)
 		skeleton.set_bone_pose_position(bone_foot_l, foot_l_pos)
 
-		if align_foot_to_normal and left_foot_normal.is_normalized():
+		if align_foot_to_normal and left_foot_normal.is_normalized() and absf(left_foot_ik_offset) > 0.01:
 			var char_basis = character_body.global_transform.basis
 			var local_norm = char_basis.inverse() * left_foot_normal
 			var pitch = -atan2(local_norm.z, local_norm.y)
 			var roll = atan2(local_norm.x, local_norm.y)
-			var q_align = Quaternion.from_euler(Vector3(clampf(pitch, -0.6, 0.6), 0.0, clampf(roll, -0.4, 0.4)))
-			skeleton.set_bone_pose_rotation(bone_foot_l, q_align)
+			var q_align = Quaternion.from_euler(Vector3(clampf(pitch, -0.4, 0.4), 0.0, clampf(roll, -0.3, 0.3)))
+			skeleton.set_bone_pose_rotation(bone_foot_l, _base_rot_foot_l * q_align)
+		else:
+			skeleton.set_bone_pose_rotation(bone_foot_l, _base_rot_foot_l)
 
 	# 3. Ajuste vertical y rotación del pie derecho
 	if bone_foot_r != -1:
-		var foot_r_pos = skeleton.get_bone_pose_position(bone_foot_r)
-		foot_r_pos.y = 0.08 + (right_foot_ik_offset - current_pelvic_drop)
+		var foot_r_pos = _base_pos_foot_r
+		foot_r_pos.y += (right_foot_ik_offset - current_pelvic_drop)
 		skeleton.set_bone_pose_position(bone_foot_r, foot_r_pos)
 
-		if align_foot_to_normal and right_foot_normal.is_normalized():
+		if align_foot_to_normal and right_foot_normal.is_normalized() and absf(right_foot_ik_offset) > 0.01:
 			var char_basis = character_body.global_transform.basis
 			var local_norm = char_basis.inverse() * right_foot_normal
 			var pitch = -atan2(local_norm.z, local_norm.y)
 			var roll = atan2(local_norm.x, local_norm.y)
-			var q_align = Quaternion.from_euler(Vector3(clampf(pitch, -0.6, 0.6), 0.0, clampf(roll, -0.4, 0.4)))
-			skeleton.set_bone_pose_rotation(bone_foot_r, q_align)
+			var q_align = Quaternion.from_euler(Vector3(clampf(pitch, -0.4, 0.4), 0.0, clampf(roll, -0.3, 0.3)))
+			skeleton.set_bone_pose_rotation(bone_foot_r, _base_rot_foot_r * q_align)
+		else:
+			skeleton.set_bone_pose_rotation(bone_foot_r, _base_rot_foot_r)
