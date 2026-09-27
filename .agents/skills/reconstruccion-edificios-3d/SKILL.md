@@ -50,8 +50,9 @@ Antes de generar código o ejecutar cómputo, consulta los estándares universal
    - Inspeccionar obligatoriamente las imágenes con `view_file` antes de certificar la volumetría.
 
 5. **Fase 5: Exportación a Godot 4**:
-   - Exportar archivo `.glb` limpio (sin incluir banquetas, cordones ni asfalto).
-   - Generar programáticamente la escena `.tscn` con colisionadores analíticos `BoxShape3D` transitables, invirtiendo obligatoriamente el eje de profundidad ($Z_{\text{godot}} = -Y_{\text{blender}}$).
+   - Exportar archivo `.glb` limpio (sin incluir banquetas, cordones ni asfalto) con submallas nombradas semánticamente (`*Muro*`, `*Puerta*`, `*Escalon*` vs `*Txt_*`, `*Texto_*`).
+   - Las colisiones físicas se derivan estáticamente en tiempo de importación mediante `res://tools/building_post_import.gd`.
+   - Queda prohibido generar cadenas de texto `.tscn` con listas de cajas manuales `BoxShape3D`. La escena `.tscn` sirve como envoltura limpia del `.glb`.
 
 6. **Fase 6: Integración Urbana**:
    - Instanciar en `main.tscn` heredando la matriz de rotación e inclinación topográfica (`Transform3D`) calibrada del corredor vial correspondiente (ej. Lázaro Cárdenas, Juárez, Hidalgo) para asegurar continuidad milimétrica entre manzanas colindantes.
@@ -94,7 +95,7 @@ El edificio o complejo a reconstruir como asset 3D se ubica aproximadamente en:
    - No se aceptarán trabajos mediocres ni pruebas de concepto. El asset final debe mantenerse fotorrealista.
    - Prohibición de banquetas embebidas en el `.glb` (pertenecen a capas GIS).
    - Zócalo basal enterrado continuo a $Z \le -1.20\text{ m}$ para absorber la topografía de las calles sin flotar.
-   - Colisiones analíticas descompuestas (`BoxShape3D`) con inversión canónica glTF ($Z_{\text{godot}} = -Y_{\text{blender}}$).
+   - Colisiones estáticas automáticas en tiempo de importación (`building_post_import.gd`), prohibido redactar cajas manuales BoxShape3D en .tscn.
    - Validación closed-loop mediante batería perimetral de 8 cámaras en Cycles CPU inspeccionadas con `view_file`.
    - /plan previo obligatorio antes de codificar en Python.
 ```

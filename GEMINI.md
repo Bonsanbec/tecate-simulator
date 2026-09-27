@@ -21,8 +21,8 @@ Siempre que se te solicite crear, modificar, auditar o integrar un modelo 3D, ed
 4. **Zócalo Basal Enterrado Obligatorio**:
    - Todo muro perimetral debe descender subterráneamente a $Z \le -1.20\text{ m}$ para absorber la pendiente topográfica de las calles sin flotar.
 
-5. **Colisiones Analíticas y Cero Paredes Invisibles**:
-   - Prohibido el uso de mallas de colisión envolventes globales (*Convex Hull*). Usa cuerpos `BoxShape3D` descompuestos, retranqueados en accesos y con escalones transitables ($\le 0.18\text{ m}$).
+5. **Colisiones Estáticas en Tiempo de Importación y Cero Paredes Invisibles**:
+   - Prohibido el uso de mallas de colisión envolventes globales (*Convex Hull*) o macro-cajas manuales monolíticas que sellen vanos. Las colisiones deben derivarse en tiempo de importación mediante `res://tools/building_post_import.gd` a partir de las submallas estructurales reales del `.glb`.
 
 6. **Desacoplamiento Semántica-Código y Plan Previo**:
    - Redacta y valida primero la especificación de cotas y fenestración en un plan antes de generar código en Python.
@@ -30,6 +30,8 @@ Siempre que se te solicite crear, modificar, auditar o integrar un modelo 3D, ed
 7. **Acentuación Ortográfica Estricta**:
    - Toda documentación, reporte o mensaje al usuario en español debe contar con acentuación ortográfica completa y rigurosa.
 
-8. **Sincronización Canónica de Ejes de Profundidad glTF/Godot**:
-   - Al generar escenas `.tscn` con colisionadores analíticos para mallas exportadas vía glTF/GLB, es obligatorio aplicar la inversión de profundidad canónica $Z_{\text{godot}} = -Y_{\text{blender}}$.
-   - Verifica siempre el *bounding box* binario del archivo `.glb` exportado para certificar que los centros y extensiones de los cuerpos `BoxShape3D` coincidan milimétricamente con la geometría visual.
+8. **Prohibición de Cajas Manuales en Archivos `.tscn`**:
+   - Queda terminantemente prohibido redactar listas manuales de colisionadores `BoxShape3D` en cadenas de texto de escenas `.tscn`.
+   - Las colisiones físicas deben generarse automáticamente en tiempo de importación a partir de las submallas estructurales del archivo `.glb`.
+   - Las submallas decorativas y rótulos tipográficos (`Txt_`, `Texto_`) deben excluirse de colisión para garantizar caminabilidad peatonal fluida y permitir al jugador aproximarse a escasos centímetros de las fachadas y escaparates sin obstáculos invisibles.
+

@@ -251,40 +251,30 @@ Antes de dar por finalizada la generación, el agente debe inspeccionar cada ren
 
 ## 6. Fase 5: Arquitectura del Asset para el Motor de Videojuegos (Godot 4)
 
-### A. Desacoplamiento de Archivos
-- **`edificio_nombre.glb`**: Malla 3D física limpia del edificio, optimizada en escala 1:1 métrica, con materiales PBR y normales calculadas.
-- **`edificio_nombre.tscn`**: Escena instanciable con la jerarquía de colisiones analíticas.
+### A. Estándar Universal: Colisiones Estáticas en Tiempo de Importación
+Queda **estrictamente prohibido** redactar archivos de escena `.tscn` en Python con listas de cajas manuales `BoxShape3D` y fórmulas manuales de inversión cartesiana. Dichas cajas macroscópicas generan desajustes de ejes, sellan puertas con paredes invisibles e impiden al jugador acercarse a menos de medio metro de los escaparates para apreciar detalles arquitectónicos.
 
-### B. Generación Programática del Archivo `.tscn`
-El script procedural debe escribir directamente el archivo de escena de Godot en formato texto:
+En su lugar, Tecate Simulator emplea el **pipeline estático de post-importación oficial (`EditorScenePostImport`)**:
+1. El archivo `.glb` exportado desde Blender contiene las submallas nombradas semánticamente.
+2. Durante la importación en Godot, el script universal `res://tools/building_post_import.gd` procesa el modelo:
+   - **Mallas Estructurales** (muros, fachadas, losas, columnas, pilastras, escalones, zócalos, puertas, antepechos, cristales de escaparates): Se les genera automáticamente un `StaticBody3D` con colisionador trimesh cóncavo (`ConcavePolygonShape3D`) a partir de la geometría visual idéntica ($1:1$).
+   - **Mallas Cosméticas Excluidas** (rótulos tipográficos `Txt_`, `Texto_`, botellas, exhibidores de revistas, cortinas, ductos de azotea y faroles): Quedan exentas de colisión para evitar que el avatar se atasque al rozar la pared.
+3. El archivo `.tscn` resultante es una envoltura limpia y minimalista:
 ```godot
-[gd_scene load_steps=N format=3 uid="uid://edificio_nombre_001"]
+[gd_scene format=3 uid="uid://edificio_nombre_001"]
 
 [ext_resource type="PackedScene" path="res://assets/buildings/edificio_nombre.glb" id="1_mesh"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_cuerpo_principal"]
-size = Vector3(22.0, 8.5, 16.0)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_escalon_1"]
-size = Vector3(0.40, 0.18, 2.30)
-
-[node name="Edificio_Nombre" type="StaticBody3D"]
+[node name="Edificio_Nombre" type="Node3D"]
 
 [node name="ModelInstance" parent="." instance=ExtResource("1_mesh")]
-
-[node name="Col_Principal" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.0, 3.05, -8.0)
-shape = SubResource("BoxShape3D_cuerpo_principal")
-
-[node name="Col_Escalon_1" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.40, 0.09, -27.0)
-shape = SubResource("BoxShape3D_escalon_1")
 ```
 
-### C. Estrategia de Colisión Analítica para Prevención de Paredes Invisibles
-1. **Retranqueo en Accesos Peatonales**: El colisionador del muro frontal no debe cruzar el vano de la puerta. Se divide en dos cajas (`Col_Muro_Izq`, `Col_Muro_Der`) y una caja de dintel superior (`Col_Dintel`).
-2. **Escalinatas Transitables**: Cada peldaño debe tener un `BoxShape3D` con altura igual a la huella ($0.15\text{ a }0.18\text{ m}$) para que el componente `CharacterBody3D` del jugador pueda subirlo automáticamente mediante la propiedad `floor_max_angle` o `step_up` sin rebotar.
-3. **Muros Curvos**: No intentar usar colisionadores cóncavos complejos en StaticBody3D estáticos; aproximar la curvatura con 2 o 3 cajas anguladas tangentes de espesor suficiente ($0.40\text{ m}$).
+### B. Ventajas Técnicas y Rendimiento
+1. **Cero Desfase de Ejes**: Al derivarse la colisión directamente de la malla en espacio local, no existe riesgo de invertir signos o rotaciones.
+2. **Invarianza Transformacional**: Cuando el edificio se traslada, rota o escala en `main.tscn` para fines geoespaciales, la colisión física y la malla visual se transforman juntas con la misma matriz matemática.
+3. **Cero Coste en Runtime**: La física queda horneada estáticamente en el recurso importado en disco (`.godot/imported/`). En tiempo de ejecución no se ejecuta ningún cálculo ni adición dinámica de nodos.
+4. **Caminabilidad Fluida y Proximidad**: Los vanos de puertas quedan abiertos de forma natural; las escaleras se pueden subir peldaño por peldaño; y el jugador puede acercarse a escasos centímetros de las vitrinas.
 
 ---
 
