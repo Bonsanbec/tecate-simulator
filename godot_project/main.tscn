@@ -22,6 +22,8 @@
 [ext_resource type="PackedScene" path="res://systems/environment/sky_system.tscn" id="18_sky_system"]
 [ext_resource type="PackedScene" path="res://ui/start_screen.tscn" id="19_start_screen"]
 [ext_resource type="PackedScene" path="res://assets/parque_miguel_hidalgo.tscn" id="23_parque_hidalgo"]
+[ext_resource type="Script" path="res://systems/network/network_client.gd" id="24_network_client"]
+[ext_resource type="Script" path="res://systems/network/multiplayer_manager.gd" id="25_multiplayer_mgr"]
 
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
@@ -96,3 +98,9 @@ shape = SubResource("CapsuleShape3D_player")
 [node name="Camera3D" type="Camera3D" parent="Player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
 far = 16000.0
+
+[node name="NetworkClient" type="Node" parent="."]
+script = ExtResource("24_network_client")
+
+[node name="MultiplayerManager" type="Node" parent="."]
+script = ExtResource("25_multiplayer_mgr")

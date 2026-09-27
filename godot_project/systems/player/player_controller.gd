@@ -55,6 +55,13 @@ var foot_ik: FootIKClass
 var hud: PlayerHUDClass
 var network_sync: PlayerNetworkSyncClass
 
+# Conexión de Red Multijugador TKT/1
+var network_client: NetworkClient
+var multiplayer_manager: MultiplayerManager
+var _net_tick: int = 0
+var _net_tick_timer: float = 0.0
+const NET_TICK_RATE: float = 30.0
+
 # Nodos del avatar 3D rigged
 var humanoid_scene: Node3D
 var skeleton: Skeleton3D
@@ -164,6 +171,19 @@ func _initialize_submodules() -> void:
 		add_child(hud)
 		camera_director.perspective_changed.connect(_on_perspective_changed)
 
+	# 5. Localizar y vincular NetworkClient y MultiplayerManager
+	if get_parent():
+		network_client = get_parent().find_child("NetworkClient", true, false) as NetworkClient
+		multiplayer_manager = get_parent().find_child("MultiplayerManager", true, false) as MultiplayerManager
+
+	if network_client:
+		network_client.connected_to_server.connect(_on_net_connected)
+		network_client.disconnected_from_server.connect(_on_net_disconnected)
+		network_client.latency_updated.connect(_on_net_latency_updated)
+		if hud:
+			hud.update_network_status("TKT/1: CONECTANDO...", false)
+		network_client.start_connection()
+
 func _initialize_humanoid_rig() -> void:
 	# Cargar e instanciar el modelo humanoide rigged
 	var model_res = load("res://assets/characters/humanoid_player.glb")
@@ -215,6 +235,22 @@ func _on_perspective_changed(mode: int) -> void:
 			mode_name = "2P - Observador Frontal"
 	if hud:
 		hud.set_perspective_badge(mode_name)
+
+func _on_net_connected(sess_id: int, p_id: int) -> void:
+	print("[PlayerController] Red TKT/1 conectada: Sesión=%d, Jugador=%d" % [sess_id, p_id])
+	if hud:
+		var p_count = multiplayer_manager.get_player_count() if multiplayer_manager else 1
+		hud.update_network_status("● EN LÍNEA  |  %s  |  %d Jug." % [network_client.server_host, p_count], true)
+
+func _on_net_disconnected(reason: String) -> void:
+	print("[PlayerController] Red TKT/1 desconectada: ", reason)
+	if hud:
+		hud.update_network_status("○ FUERA DE LÍNEA", false)
+
+func _on_net_latency_updated(ping_ms: float) -> void:
+	if hud and network_client and network_client.state == NetworkClient.ConnectionState.CONNECTED:
+		var p_count = multiplayer_manager.get_player_count() if multiplayer_manager else 1
+		hud.update_network_status("● EN LÍNEA  |  %d ms  |  %d Jug." % [int(ping_ms), p_count], true)
 
 func set_input_enabled(enabled: bool) -> void:
 	input_enabled = enabled
@@ -328,6 +364,20 @@ func _physics_process(delta: float) -> void:
 
 	# Actualizar telemetría y HUD
 	_update_telemetry(delta)
+
+	# Transmitir estado biomecánico a la red TKT/1 (~30 Hz)
+	if network_client and network_client.state == NetworkClient.ConnectionState.CONNECTED:
+		_net_tick_timer += delta
+		if _net_tick_timer >= (1.0 / NET_TICK_RATE):
+			_net_tick_timer = 0.0
+			_net_tick += 1
+			var flags = 0
+			if is_on_floor(): flags |= 1
+			if Input.is_key_pressed(KEY_SHIFT): flags |= 2
+			if is_flying: flags |= 4
+			var yaw = rotation_degrees.y
+			var pitch = camera_director.rot_pitch if camera_director else 0.0
+			network_client.send_player_input(_net_tick, global_position, yaw, pitch, velocity, flags)
 
 func _process_walking(delta: float) -> void:
 	# 1. Detección de pendiente del terreno de Tecate

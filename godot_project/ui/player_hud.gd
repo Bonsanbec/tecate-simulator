@@ -13,11 +13,20 @@ extends CanvasLayer
 @onready var mode_badge: Label = $BottomRight/ModeBadge
 @onready var reticle: Control = $CenterReticle
 @onready var axes_gizmo: CompassAxesGizmo = $AxesGizmo
+@onready var network_label: Label = get_node_or_null("TopLeft/NetworkLabel") as Label
 
 var _badge_fade_timer: float = 3.0
 
 func _ready():
 	visible = false
+
+func update_network_status(status_text: String, is_connected: bool = false) -> void:
+	if network_label:
+		network_label.text = status_text
+		if is_connected:
+			network_label.modulate = Color(0.55, 0.95, 0.65, 1.0)
+		else:
+			network_label.modulate = Color(0.85, 0.88, 0.92, 0.75)
 
 func show_hud() -> void:
 	visible = true

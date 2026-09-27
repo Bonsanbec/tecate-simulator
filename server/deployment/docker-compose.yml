@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  tecate-server:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: tecate-game-server
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    ports:
+      - "52665:52665/udp"
