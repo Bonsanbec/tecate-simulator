@@ -50,19 +50,17 @@ static func _parse_env_file(path: String, out_dict: Dictionary) -> void:
 			# Mapeo de variables de server/.env a convención TECATE_*
 			if key == "SERVER_BIND_HOST" or key == "PUBLIC_HOST":
 				if not out_dict.get("TECATE_LOCAL_DEV", false):
-					out_dict["TECATE_SERVER_HOST"] = val
-			elif key == "SERVER_PORT":
+					out_dict["TECATE_SERVER_HOST"] = str(val)
+			elif key == "SERVER_PORT" or key == "TECATE_SERVER_PORT":
 				out_dict["TECATE_SERVER_PORT"] = int(val)
-			elif key == "TICK_RATE":
+			elif key == "TICK_RATE" or key == "TECATE_TICK_RATE":
 				out_dict["TECATE_TICK_RATE"] = int(val)
 			elif key == "TECATE_SERVER_HOST":
-				out_dict["TECATE_SERVER_HOST"] = val
-			elif key == "TECATE_SERVER_PORT":
-				out_dict["TECATE_SERVER_PORT"] = int(val)
+				out_dict["TECATE_SERVER_HOST"] = str(val)
 			elif key == "TECATE_LOCAL_DEV":
-				out_dict["TECATE_LOCAL_DEV"] = val.to_lower() in ["true", "1", "yes"]
+				out_dict["TECATE_LOCAL_DEV"] = str(val).to_lower() in ["true", "1", "yes"]
 			elif key == "TECATE_DEBUG_NET":
-				out_dict["TECATE_DEBUG_NET"] = val.to_lower() in ["true", "1", "yes"]
+				out_dict["TECATE_DEBUG_NET"] = str(val).to_lower() in ["true", "1", "yes"]
 			else:
 				out_dict[key] = val
 	f.close()
