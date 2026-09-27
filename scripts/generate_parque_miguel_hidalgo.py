@@ -352,12 +352,12 @@ PARK_PERIMETER_POLYGON = [
     (-32.00, -38.80),
     # Ochava Suroeste (Pdte. Lázaro Cárdenas y Callejón Libertad)
     (-38.00, -36.50),
-    (-42.50, -32.50),
+    (-38.522105, -32.50),
     # Borde Poniente (Pdte. Lázaro Cárdenas, margen de 3m tras la circunferencia de la fuente)
-    (-43.50, -15.00),
-    (-43.80, 0.00),
-    (-42.80, 15.20),   # 3m exactos al oeste de la circunferencia de la fuente (-39.82m)
-    (-41.50, 31.60),   # Esquina Noroeste (Av. Benito Juárez y Pdte. Cárdenas)
+    (-40.806313, -15.00),
+    (-42.764206, 0.00),
+    (-44.748204, 15.20),   # 3m exactos al oeste de la circunferencia de la fuente (-39.82m)
+    (-46.888834, 31.60),   # Esquina Noroeste (Av. Benito Juárez y Pdte. Cárdenas)
     # Borde Norte (Av. Benito Juárez - de Oeste a Este)
     (-20.00, 33.70),
     (0.00, 35.70),    # Acceso Norte (Eje Av. Benito Juárez)
