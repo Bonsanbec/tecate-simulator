@@ -45,10 +45,10 @@ transform = Transform3D(0.84277856, 0, 0, 0, 0.84277856, 0, 0, 0, 0.84277856, 28
 [node name="Bridges" parent="." instance=ExtResource("7_bridges")]
 
 [node name="Kiosko" parent="." instance=ExtResource("10_kiosko")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6844, 400.0132, 2.6878)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6844, 400.2132, 2.6878)
 
 [node name="Fuente_Parque_Hidalgo" parent="." instance=ExtResource("15_fuente_hidalgo")]
-transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, -39.0, 400.2432, -12.5)
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, -39.0, 401.2432, -12.5)
 
 [node name="Parque_Miguel_Hidalgo" parent="." instance=ExtResource("23_parque_hidalgo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6844, 400.3132, 2.6878)

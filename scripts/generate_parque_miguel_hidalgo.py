@@ -349,7 +349,7 @@ PARK_PERIMETER_POLYGON = [
     (18.00, -34.80),
     (0.00, -36.40),   # Acceso Sur (Eje Callejón Libertad)
     (-20.00, -38.00),
-    (-32.00, -38.80),
+    (-37.80, -38.80),
     # Ochava Suroeste (Pdte. Lázaro Cárdenas y Callejón Libertad)
     (-38.00, -36.50),
     (-38.522105, -32.50),
