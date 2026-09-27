@@ -608,10 +608,10 @@ add_solid_box(bm, center=rot_bj(-0.17, stat_ly, stat_z + 2.18), size=(0.04, 0.08
 add_solid_box(bm, center=rot_bj(0.17, stat_ly, stat_z + 2.18), size=(0.04, 0.08, 0.10), rot_z=bj_rot, mat_index=idx_bronce)
 
 # 4. Caseta CROC tradicional verde detrás del podio
-cas_lx, cas_ly = 1.80, 4.00
-add_solid_box(bm, center=rot_bj(cas_lx, cas_ly, 1.25), size=(2.20, 1.80, 2.50), rot_z=bj_rot, mat_index=idx_caseta_verde)
-add_solid_box(bm, center=rot_bj(cas_lx, cas_ly - 0.91, 1.30), size=(0.80, 0.04, 1.20), rot_z=bj_rot, mat_index=idx_forja)
-add_truncated_pyramid(bm, center=rot_bj(cas_lx, cas_ly, 2.80), base_s=(2.60, 2.20), top_s=(2.20, 0.20), height=0.60, rot_z=bj_rot, mat_index=idx_teja_roja)
+cas_lx, cas_ly = 10.00, 4.00
+add_solid_box(bm, center=rot_bj(cas_lx, cas_ly, 1.25), size=(2.20, 1.80, 2.50), rot_z=0, mat_index=idx_caseta_verde)
+add_solid_box(bm, center=rot_bj(cas_lx, cas_ly - 0.91, 1.30), size=(0.80, 0.04, 1.20), rot_z=0, mat_index=idx_forja)
+add_truncated_pyramid(bm, center=rot_bj(cas_lx, cas_ly, 2.80), base_s=(2.60, 2.20), top_s=(2.20, 0.20), height=0.60, rot_z=0, mat_index=idx_teja_roja)
 
 # ------------------------------------------------------------------------------
 # MONUMENTO 3: MONUMENTO A DON LÁZARO CÁRDENAS (Sector Suroeste)
@@ -1204,61 +1204,61 @@ cameras_specs = [
         "lens": 28.0,
         "filename": "parque_01_cenital_top.png"
     },
-    {
-        "name": "Cam_02_Acceso_Norte_Juarez",
-        "loc": (0.0, 42.0, 2.5 + get_terrain_elevation(0.0, 42.0)),
-        "target": (0.0, 10.0, 1.5 + get_terrain_elevation(0.0, 10.0)),
-        "lens": 28.0,
-        "filename": "parque_02_acceso_norte_juarez.png"
-    },
-    {
-        # Vista frontal a Don Miguel Hidalgo: cámara colocada al norte mirando al sur de frente al rostro
-        "name": "Cam_03_Busto_Hidalgo_Sur",
-        "loc": (0.0, -16.5, 1.8 + get_terrain_elevation(0.0, -16.5)),
-        "target": (hid_x, hid_y, 2.2 + elev_hid),
-        "lens": 32.0,
-        "filename": "parque_03_busto_hidalgo_sur.png"
-    },
-    {
-        # Vista frontal a Juárez: cámara colocada hacia la esquina Noreste mirando de frente a la estatua
-        "name": "Cam_04_Monumento_Juarez_NE",
-        "loc": (bj_x + 5.8, bj_y + 5.8, 2.2 + get_terrain_elevation(bj_x + 5.8, bj_y + 5.8)),
-        "target": (bj_x, bj_y, 3.0 + elev_bj),
-        "lens": 32.0,
-        "filename": "parque_04_monumento_juarez_ne.png"
-    },
-    {
-        # Vista frontal a Cárdenas: cámara colocada hacia la esquina Suroeste mirando de frente al muro y busto
-        "name": "Cam_05_Monumento_Cardenas_SO",
-        "loc": (lc_x - 5.5, lc_y - 5.5, 1.8 + get_terrain_elevation(lc_x - 5.5, lc_y - 5.5)),
-        "target": (lc_x, lc_y, 1.6 + elev_lc),
-        "lens": 32.0,
-        "filename": "parque_05_monumento_cardenas_so.png"
-    },
-    {
-        # Vista al Obelisco de cantera y mesas de ajedrez desde el andador Este
-        "name": "Cam_06_Obelisco_Cantera_E",
-        "loc": (45.0, -3.5, 2.0 + get_terrain_elevation(45.0, -3.5)),
-        "target": (ob_x, ob_y, 2.8 + elev_ob),
-        "lens": 32.0,
-        "filename": "parque_06_obelisco_cantera_e.png"
-    },
-    {
-        # Vista peatonal sobre el andador mostrando las bancas y farolas en los costados
-        "name": "Cam_07_Peatonal_Andador_Bancas",
-        "loc": (0.80, 33.0, 1.65 + get_terrain_elevation(0.80, 33.0)),
-        "target": (0.0, 10.0, 1.2 + get_terrain_elevation(0.0, 10.0)),
-        "lens": 30.0,
-        "filename": "parque_07_peatonal_andador_bancas.png"
-    },
-    {
-        # Vista hacia la Casetita Blanca en el borde del andador Noroeste (media_1790444944727.jpg)
-        "name": "Cam_08_Casetita_Blanca_NW",
-        "loc": (-19.2, 8.0, 2.1 + get_terrain_elevation(-19.2, 8.0)),
-        "target": (-17.0, 14.5, 1.35 + elev_cas),
-        "lens": 28.0,
-        "filename": "parque_08_casetita_blanca_nw.png"
-    }
+    # {
+    #     "name": "Cam_02_Acceso_Norte_Juarez",
+    #     "loc": (0.0, 42.0, 2.5 + get_terrain_elevation(0.0, 42.0)),
+    #     "target": (0.0, 10.0, 1.5 + get_terrain_elevation(0.0, 10.0)),
+    #     "lens": 28.0,
+    #     "filename": "parque_02_acceso_norte_juarez.png"
+    # },
+    # {
+    #     # Vista frontal a Don Miguel Hidalgo: cámara colocada al norte mirando al sur de frente al rostro
+    #     "name": "Cam_03_Busto_Hidalgo_Sur",
+    #     "loc": (0.0, -16.5, 1.8 + get_terrain_elevation(0.0, -16.5)),
+    #     "target": (hid_x, hid_y, 2.2 + elev_hid),
+    #     "lens": 32.0,
+    #     "filename": "parque_03_busto_hidalgo_sur.png"
+    # },
+    # {
+    #     # Vista frontal a Juárez: cámara colocada hacia la esquina Noreste mirando de frente a la estatua
+    #     "name": "Cam_04_Monumento_Juarez_NE",
+    #     "loc": (bj_x + 5.8, bj_y + 5.8, 2.2 + get_terrain_elevation(bj_x + 5.8, bj_y + 5.8)),
+    #     "target": (bj_x, bj_y, 3.0 + elev_bj),
+    #     "lens": 32.0,
+    #     "filename": "parque_04_monumento_juarez_ne.png"
+    # },
+    # {
+    #     # Vista frontal a Cárdenas: cámara colocada hacia la esquina Suroeste mirando de frente al muro y busto
+    #     "name": "Cam_05_Monumento_Cardenas_SO",
+    #     "loc": (lc_x - 5.5, lc_y - 5.5, 1.8 + get_terrain_elevation(lc_x - 5.5, lc_y - 5.5)),
+    #     "target": (lc_x, lc_y, 1.6 + elev_lc),
+    #     "lens": 32.0,
+    #     "filename": "parque_05_monumento_cardenas_so.png"
+    # },
+    # {
+    #     # Vista al Obelisco de cantera y mesas de ajedrez desde el andador Este
+    #     "name": "Cam_06_Obelisco_Cantera_E",
+    #     "loc": (45.0, -3.5, 2.0 + get_terrain_elevation(45.0, -3.5)),
+    #     "target": (ob_x, ob_y, 2.8 + elev_ob),
+    #     "lens": 32.0,
+    #     "filename": "parque_06_obelisco_cantera_e.png"
+    # },
+    # {
+    #     # Vista peatonal sobre el andador mostrando las bancas y farolas en los costados
+    #     "name": "Cam_07_Peatonal_Andador_Bancas",
+    #     "loc": (0.80, 33.0, 1.65 + get_terrain_elevation(0.80, 33.0)),
+    #     "target": (0.0, 10.0, 1.2 + get_terrain_elevation(0.0, 10.0)),
+    #     "lens": 30.0,
+    #     "filename": "parque_07_peatonal_andador_bancas.png"
+    # },
+    # {
+    #     # Vista hacia la Casetita Blanca en el borde del andador Noroeste (media_1790444944727.jpg)
+    #     "name": "Cam_08_Casetita_Blanca_NW",
+    #     "loc": (-19.2, 8.0, 2.1 + get_terrain_elevation(-19.2, 8.0)),
+    #     "target": (-17.0, 14.5, 1.35 + elev_cas),
+    #     "lens": 28.0,
+    #     "filename": "parque_08_casetita_blanca_nw.png"
+    # }
 ]
 
 for cam_info in cameras_specs:
