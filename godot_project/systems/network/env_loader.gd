@@ -6,7 +6,7 @@ extends RefCounted
 
 static func load_env() -> Dictionary:
 	var env_data: Dictionary = {
-		"TECATE_SERVER_HOST": "api.tecate.bonsanbec.dev",
+		"TECATE_SERVER_HOST": "127.0.0.1",
 		"TECATE_SERVER_PORT": 52665,
 		"TECATE_LOCAL_DEV": false,
 		"TECATE_TICK_RATE": 30,

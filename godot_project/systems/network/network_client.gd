@@ -2,7 +2,7 @@ class_name NetworkClient
 extends Node
 
 ## Cliente de Red UDP para Tecate Simulator (Protocolo TKT/1).
-## Conecta de forma no bloqueante con el servidor VPS (api.tecate.bonsanbec.dev:52665).
+## Conecta de forma no bloqueante con el servidor.
 
 signal connected_to_server(session_id: int, player_entity_id: int)
 signal disconnected_from_server(reason: String)
@@ -18,10 +18,10 @@ enum ConnectionState {
 }
 
 var state: ConnectionState = ConnectionState.DISCONNECTED
-var peer: PacketPeerUDP
+var peer: PacketPeerUDP = PacketPeerUDP.new()
 
 # Configuración de Red
-var server_host: String = "api.tecate.bonsanbec.dev"
+var server_host: String = ""
 var server_port: int = 52665
 var tick_rate: int = 30
 var is_local_dev: bool = false
@@ -44,34 +44,56 @@ const PING_INTERVAL: float = 2.0
 const CONNECTION_TIMEOUT: float = 8.0
 const HELLO_RETRY_INTERVAL: float = 1.0
 
-func _ready():
-	_load_configuration()
+func _init():
 	peer = PacketPeerUDP.new()
+	_load_configuration()
+
+func _ready():
+	# Si ya fue inicializado en _init(), asegurar que la configuración esté cargada
+	if server_host.is_empty():
+		_load_configuration()
 
 func _load_configuration() -> void:
 	var env = EnvLoader.load_env()
-	server_host = env.get("TECATE_SERVER_HOST", "api.tecate.bonsanbec.dev")
-	server_port = env.get("TECATE_SERVER_PORT", 52665)
-	tick_rate = env.get("TECATE_TICK_RATE", 30)
-	is_local_dev = env.get("TECATE_LOCAL_DEV", false)
-	debug_logging = env.get("TECATE_DEBUG_NET", false)
+	server_host = str(env.get("TECATE_SERVER_HOST", "127.0.0.1"))
+	server_port = int(env.get("TECATE_SERVER_PORT", 52665))
+	tick_rate = int(env.get("TECATE_TICK_RATE", 30))
+	is_local_dev = bool(env.get("TECATE_LOCAL_DEV", false))
+	debug_logging = bool(env.get("TECATE_DEBUG_NET", false))
 	print("[NetworkClient] Configuración cargada: %s:%d (DevLocal=%s)" % [server_host, server_port, is_local_dev])
 
 func start_connection() -> void:
 	if state == ConnectionState.CONNECTED or state == ConnectionState.CONNECTING:
 		return
 
-	print("[NetworkClient] Iniciando conexión con %s:%d..." % [server_host, server_port])
-	state = ConnectionState.CONNECTING
-	_connect_retry_timer = 0.0
-	_last_received_time = Time.get_ticks_msec() / 1000.0
+	if peer == null:
+		peer = PacketPeerUDP.new()
 
-	var err = peer.connect_to_host(server_host, server_port)
-	if err != OK:
-		print("[NetworkClient] Error al asociar socket UDP con el host: ", err)
+	print("[NetworkClient] Iniciando conexión con %s:%d..." % [server_host, server_port])
+
+	# Resolver DNS si es un nombre de dominio
+	var target_ip = server_host
+	if not server_host.is_valid_ip_address():
+		var resolved = IP.resolve_hostname(server_host, IP.TYPE_IPV4)
+		if resolved.is_valid_ip_address():
+			target_ip = resolved
+			print("[NetworkClient] Host '%s' resuelto exitosamente a IP: %s" % [server_host, target_ip])
+		else:
+			print("[NetworkClient] Advertencia: No se pudo resolver DNS para '%s'. Se operará en modo fuera de línea hasta que el host esté disponible." % server_host)
+			state = ConnectionState.DISCONNECTED
+			disconnected_from_server.emit("Host no resoluble (DNS offline)")
+			return
+
+	var err = peer.connect_to_host(target_ip, server_port)
+	if err != OK or not peer.is_socket_connected():
+		print("[NetworkClient] Error al asociar socket UDP con %s:%d (código: %s)" % [target_ip, server_port, err])
 		state = ConnectionState.DISCONNECTED
 		disconnected_from_server.emit("Fallo de socket UDP")
 		return
+
+	state = ConnectionState.CONNECTING
+	_connect_retry_timer = 0.0
+	_last_received_time = Time.get_ticks_msec() / 1000.0
 
 	_send_hello()
 
@@ -84,17 +106,18 @@ func disconnect_client(reason: String = "Desconexión manual") -> void:
 	state = ConnectionState.DISCONNECTED
 	session_id = 0
 	player_entity_id = 0
-	peer.close()
+	if peer and peer.is_socket_connected():
+		peer.close()
 	disconnected_from_server.emit(reason)
 
 func _exit_tree():
 	if state == ConnectionState.CONNECTED:
 		_send_goodbye()
-	if peer:
+	if peer and peer.is_socket_connected():
 		peer.close()
 
 func _physics_process(delta: float) -> void:
-	if state == ConnectionState.DISCONNECTED:
+	if state == ConnectionState.DISCONNECTED or peer == null or not peer.is_socket_connected():
 		return
 
 	_poll_incoming_packets()
@@ -127,6 +150,9 @@ func _physics_process(delta: float) -> void:
 			disconnected_from_server.emit("Servidor inactivo (timeout)")
 
 func _poll_incoming_packets() -> void:
+	if peer == null or not peer.is_socket_connected():
+		return
+
 	while peer.get_available_packet_count() > 0:
 		var pkt = peer.get_packet()
 		if pkt.is_empty():
@@ -202,6 +228,9 @@ func _next_seq() -> int:
 	return sequence_out
 
 func _send_hello() -> void:
+	if peer == null or not peer.is_socket_connected():
+		return
+
 	var hello_payload = TKTCodec.encode_hello("1.0", "")
 	var hdr = TKTCodec.Header.new()
 	hdr.message_type = TKTCodec.MessageType.HELLO
@@ -213,7 +242,7 @@ func _send_hello() -> void:
 	peer.put_packet(packet)
 
 func send_player_input(tick: int, pos: Vector3, yaw: float, pitch: float, vel: Vector3, flags: int) -> void:
-	if state != ConnectionState.CONNECTED:
+	if state != ConnectionState.CONNECTED or peer == null or not peer.is_socket_connected():
 		return
 
 	var input_payload = TKTCodec.encode_input(tick, pos, yaw, pitch, vel, flags)
@@ -227,6 +256,9 @@ func send_player_input(tick: int, pos: Vector3, yaw: float, pitch: float, vel: V
 	peer.put_packet(packet)
 
 func _send_ping() -> void:
+	if peer == null or not peer.is_socket_connected():
+		return
+
 	var ping_id = int(randi()) & 0x7FFFFFFF
 	var now_ms = Time.get_ticks_msec()
 	_pending_pings[ping_id] = now_ms
@@ -246,7 +278,7 @@ func _send_ping() -> void:
 	peer.put_packet(packet)
 
 func send_chat_message(channel: int, message: String) -> void:
-	if state != ConnectionState.CONNECTED:
+	if state != ConnectionState.CONNECTED or peer == null or not peer.is_socket_connected():
 		return
 
 	var chat_payload = TKTCodec.encode_chat(channel, message)
@@ -261,6 +293,9 @@ func send_chat_message(channel: int, message: String) -> void:
 	peer.put_packet(packet)
 
 func _send_goodbye() -> void:
+	if peer == null or not peer.is_socket_connected():
+		return
+
 	var bye_payload = TKTCodec.encode_goodbye(0)
 	var hdr = TKTCodec.Header.new()
 	hdr.message_type = TKTCodec.MessageType.GOODBYE
