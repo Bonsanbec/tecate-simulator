@@ -759,8 +759,6 @@ def build_modulo_5_esquina_bienes_raices(mats, col):
     # Estructura reticular metálica en azotea (X: 22.5 a 25.5 m, Y: 1.0 a 3.5 m)
     add_box(bm_billboard, 22.80, 22.90, 1.20, 1.30, 4.40, 6.80)
     add_box(bm_billboard, 25.20, 25.30, 1.20, 1.30, 4.40, 6.80)
-    add_box(bm_billboard, 22.80, 22.90, 3.20, 3.30, 4.40, 5.80)
-    add_box(bm_billboard, 25.20, 25.30, 3.20, 3.30, 4.40, 5.80)
     # Tirantes diagonales
     add_box(bm_billboard, 22.80, 25.30, 1.20, 1.28, 5.30, 5.38)
     add_box(bm_billboard, 22.80, 25.30, 1.20, 1.28, 6.70, 6.78)
@@ -867,95 +865,7 @@ def setup_lighting_and_render(col):
     return cams
 
 # ---------------------------------------------------------------------------
-# 5. Generador Programático de Escena Godot 4 (.tscn)
-# ---------------------------------------------------------------------------
-
-def generate_godot_tscn(tscn_path, glb_path):
-    """Escribe la escena de Godot 4 con colisionadores analíticos BoxShape3D sin paredes invisibles."""
-    tscn_content = f"""[gd_scene load_steps=12 format=3 uid="uid://edificio_continuo_la_panza_2009"]
-
-[ext_resource type="PackedScene" path="{glb_path}" id="1_glb"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_saldos_telas"]
-size = Vector3(4.75, 4.70, 0.50)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_electronica"]
-size = Vector3(4.60, 4.70, 0.50)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_lp_izq"]
-size = Vector3(3.50, 4.70, 0.50)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_lp_machon"]
-size = Vector3(0.35, 4.70, 0.50)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_lp_der"]
-size = Vector3(3.50, 4.70, 0.50)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_conchita"]
-size = Vector3(4.30, 4.70, 0.50)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_bienes_raices_este"]
-size = Vector3(4.80, 4.70, 0.50)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_libertad_norte"]
-size = Vector3(0.50, 4.70, 14.50)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_muro_posterior"]
-size = Vector3(26.00, 4.35, 0.50)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_medianera_sur"]
-size = Vector3(0.50, 4.70, 14.50)
-
-[node name="Edificio_Continuo_LaPanza" type="StaticBody3D"]
-
-[node name="ModelInstance" parent="." instance=ExtResource("1_glb")]
-
-[node name="Col_SaldosTelas" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.375, 2.35, -0.10)
-shape = SubResource("BoxShape3D_saldos_telas")
-
-[node name="Col_Electronica" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.05, 2.35, -0.10)
-shape = SubResource("BoxShape3D_electronica")
-
-[node name="Col_LP_BahiaIzq" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.10, 2.35, -0.10)
-shape = SubResource("BoxShape3D_lp_izq")
-
-[node name="Col_LP_MachonCentral" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.025, 2.35, -0.10)
-shape = SubResource("BoxShape3D_lp_machon")
-
-[node name="Col_LP_BahiaDer" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.95, 2.35, -0.10)
-shape = SubResource("BoxShape3D_lp_der")
-
-[node name="Col_LoncheriaConchita" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.05, 2.35, -0.10)
-shape = SubResource("BoxShape3D_conchita")
-
-[node name="Col_BienesRaices_Este" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.60, 2.35, -0.10)
-shape = SubResource("BoxShape3D_bienes_raices_este")
-
-[node name="Col_Libertad_Norte" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.85, 2.35, -7.25)
-shape = SubResource("BoxShape3D_libertad_norte")
-
-[node name="Col_Muro_Posterior" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.00, 2.175, -14.35)
-shape = SubResource("BoxShape3D_muro_posterior")
-
-[node name="Col_Medianera_Sur" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.125, 2.35, -7.25)
-shape = SubResource("BoxShape3D_medianera_sur")
-"""
-    with open(tscn_path, "w", encoding="utf-8") as f:
-        f.write(tscn_content)
-    print(f"--> Escena Godot generada con éxito: {tscn_path}")
-
-# ---------------------------------------------------------------------------
-# 6. Orquestación Principal
+# 5. Orquestación Principal
 # ---------------------------------------------------------------------------
 
 def main():
@@ -1011,7 +921,6 @@ def main():
 
     # 7. Generar Escena Godot 4 (.tscn)
     tscn_path = "godot_project/assets/buildings/edificio_continuo_la_panza.tscn"
-    generate_godot_tscn(tscn_path, "res://assets/buildings/edificio_continuo_la_panza.glb")
 
     # 8. Batería de Renders Técnicos de Validación Cycles CPU
     scene = bpy.context.scene
