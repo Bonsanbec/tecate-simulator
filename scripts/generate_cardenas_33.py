@@ -890,70 +890,7 @@ def setup_lighting_and_cameras(col):
     return cams
 
 # ---------------------------------------------------------------------------
-# 8. Generación de Escena Godot 4 (.tscn) con Colisión de Ochava a 45º
-# ---------------------------------------------------------------------------
-
-def generate_godot_tscn(tscn_path, glb_path_rel):
-    """
-    Genera la escena de Godot 4 con colisionadores BoxShape3D analíticos.
-    Incluye un colisionador rotado 45º en la ochava para caminabilidad fluida.
-    """
-    tscn_content = f"""[gd_scene load_steps=9 format=3 uid="uid://cardenas_33_locales_001"]
-
-[ext_resource type="PackedScene" path="{glb_path_rel}" id="1_mesh"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_libreria"]
-size = Vector3(16.5, 4.5, 4.8)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_diana"]
-size = Vector3(16.5, 4.5, 4.5)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_anita"]
-size = Vector3(16.5, 4.5, 5.2)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_party"]
-size = Vector3(16.5, 4.5, 5.5)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_orquidea_ochava"]
-size = Vector3(5.7, 6.8, 1.2)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_curiel"]
-size = Vector3(12.5, 4.5, 4.5)
-
-[node name="Edificio_Cardenas_33" type="StaticBody3D"]
-
-[node name="ModelInstance" parent="." instance=ExtResource("1_mesh")]
-
-[node name="Col_Libreria" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 2.25, -2.40)
-shape = SubResource("BoxShape3D_libreria")
-
-[node name="Col_Diana" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 2.25, -7.05)
-shape = SubResource("BoxShape3D_diana")
-
-[node name="Col_Anita" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 2.25, -11.90)
-shape = SubResource("BoxShape3D_anita")
-
-[node name="Col_Party" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 2.25, -17.25)
-shape = SubResource("BoxShape3D_party")
-
-[node name="Col_Orquidea_Ochava" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 2.00, 3.40, -22.50)
-shape = SubResource("BoxShape3D_orquidea_ochava")
-
-[node name="Col_Curiel" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.25, 2.25, -22.25)
-shape = SubResource("BoxShape3D_curiel")
-"""
-    with open(tscn_path, "w", encoding="utf-8") as f:
-        f.write(tscn_content)
-    print(f"[OK] Escena Godot generada: {tscn_path}")
-
-# ---------------------------------------------------------------------------
-# 9. Función Principal de Ejecución
+# 8. Función Principal de Ejecución
 # ---------------------------------------------------------------------------
 
 def main():
@@ -994,8 +931,6 @@ def main():
         export_yup=True
     )
     print(f"[OK] Runtime GLB exportado: {glb_path}")
-
-    generate_godot_tscn(tscn_path, "res://assets/buildings/edificio_cardenas_33.glb")
 
     scene = bpy.context.scene
     for cam_name, cam_obj in cams.items():

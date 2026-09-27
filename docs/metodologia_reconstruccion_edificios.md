@@ -147,7 +147,6 @@ def main():
     cams = setup_lighting_and_render(root_col)
     save_master_blend(blend_path)
     export_production_glb(glb_path, exclude_list=[])
-    generate_godot_tscn(tscn_path, glb_path)
     execute_validation_renders(cams)
 ```
 

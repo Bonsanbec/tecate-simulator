@@ -970,129 +970,7 @@ def build_rooftops_and_services(mats, col):
     create_mesh_object("Instalaciones_Azoteas_HVAC", bm_tech, mats["acero_galvanizado"], col)
 
 # ---------------------------------------------------------------------------
-# 5. Exportador Godot .tscn con Colisiones Analíticas BoxShape3D
-# ---------------------------------------------------------------------------
-def generate_godot_tscn(tscn_path, glb_path):
-    """Escribe escena Godot 4 con colisionadores analíticos y sincronización canónica Z_godot = -Y_blender."""
-    content = f"""[gd_scene load_steps=17 format=3 uid="uid://edificio_juarez_235_prod_v4"]
-
-[ext_resource type="PackedScene" path="{glb_path}" id="1_mesh"]
-
-[sub_resource type="BoxShape3D" id="Box_Baratero_Frontal"]
-size = Vector3(26.50, 7.50, 16.00)
-
-[sub_resource type="BoxShape3D" id="Box_Baratero_Nave"]
-size = Vector3(26.50, 9.40, 20.00)
-
-[sub_resource type="BoxShape3D" id="Box_Darce"]
-size = Vector3(10.50, 4.30, 14.50)
-
-[sub_resource type="BoxShape3D" id="Box_Local_Blanco"]
-size = Vector3(4.50, 3.80, 12.00)
-
-[sub_resource type="BoxShape3D" id="Box_La_Fuente"]
-size = Vector3(8.00, 4.30, 14.00)
-
-[sub_resource type="BoxShape3D" id="Box_Rodeo_Bar"]
-size = Vector3(13.50, 4.65, 16.00)
-
-[sub_resource type="BoxShape3D" id="Box_Hing_Kang"]
-size = Vector3(13.00, 4.65, 15.00)
-
-[sub_resource type="BoxShape3D" id="Box_SKY"]
-size = Vector3(6.50, 4.10, 12.00)
-
-[sub_resource type="BoxShape3D" id="Box_Arco_Tradicional"]
-size = Vector3(8.00, 4.20, 12.00)
-
-[sub_resource type="BoxShape3D" id="Box_Joyeria"]
-size = Vector3(5.00, 3.90, 11.00)
-
-[sub_resource type="BoxShape3D" id="Box_Michoacana"]
-size = Vector3(10.50, 4.30, 7.50)
-
-[sub_resource type="BoxShape3D" id="Box_Beauty_Salon"]
-size = Vector3(8.50, 3.90, 6.00)
-
-[sub_resource type="BoxShape3D" id="Box_Cerrajeria"]
-size = Vector3(8.50, 3.60, 8.50)
-
-[sub_resource type="BoxShape3D" id="Box_Barda_Norte_1"]
-size = Vector3(37.00, 2.50, 0.40)
-
-[sub_resource type="BoxShape3D" id="Box_Barda_Norte_2"]
-size = Vector3(33.00, 2.50, 0.40)
-
-[node name="Edificio_Juarez_235" type="StaticBody3D"]
-
-[node name="ModelInstance" parent="." instance=ExtResource("1_mesh")]
-
-[node name="Col_Baratero_Frontal" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.25, 3.75, -8.00)
-shape = SubResource("Box_Baratero_Frontal")
-
-[node name="Col_Baratero_Nave" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.25, 4.70, -26.00)
-shape = SubResource("Box_Baratero_Nave")
-
-[node name="Col_Darce" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.75, 2.15, -7.25)
-shape = SubResource("Box_Darce")
-
-[node name="Col_Local_Blanco" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.25, 1.90, -6.00)
-shape = SubResource("Box_Local_Blanco")
-
-[node name="Col_La_Fuente" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.50, 2.15, -7.00)
-shape = SubResource("Box_La_Fuente")
-
-[node name="Col_Rodeo_Bar" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56.25, 2.32, -8.00)
-shape = SubResource("Box_Rodeo_Bar")
-
-[node name="Col_Hing_Kang" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76.00, 2.32, -7.50)
-shape = SubResource("Box_Hing_Kang")
-
-[node name="Col_SKY" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85.75, 2.05, -6.00)
-shape = SubResource("Box_SKY")
-
-[node name="Col_Arco_Tradicional" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 93.00, 2.10, -6.00)
-shape = SubResource("Box_Arco_Tradicional")
-
-[node name="Col_Joyeria" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 99.50, 1.95, -5.50)
-shape = SubResource("Box_Joyeria")
-
-[node name="Col_Michoacana" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 107.25, 2.15, -3.75)
-shape = SubResource("Box_Michoacana")
-
-[node name="Col_Beauty_Salon" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 108.25, 1.95, -10.50)
-shape = SubResource("Box_Beauty_Salon")
-
-[node name="Col_Cerrajeria" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 108.25, 1.80, -17.75)
-shape = SubResource("Box_Cerrajeria")
-
-[node name="Col_Barda_Norte_1" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.00, 1.25, -36.00)
-shape = SubResource("Box_Barda_Norte_1")
-
-[node name="Col_Barda_Norte_2" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85.50, 1.25, -36.00)
-shape = SubResource("Box_Barda_Norte_2")
-"""
-    with open(tscn_path, "w", encoding="utf-8") as f:
-        f.write(content)
-    print(f"Escena Godot .tscn generada con éxito: {tscn_path}")
-
-# ---------------------------------------------------------------------------
-# 6. Suite de 8 Cámaras Técnicas y Renderizado Closed-Loop
+# 5. Suite de 8 Cámaras Técnicas y Renderizado Closed-Loop
 # ---------------------------------------------------------------------------
 def setup_lighting_and_cameras(col):
     scene = bpy.context.scene
@@ -1203,9 +1081,6 @@ def main():
         export_image_format='AUTO'
     )
     print(f"Modelo glTF de producción exportado: {GLB_PATH}")
-
-    # Generar escena Godot .tscn
-    generate_godot_tscn(TSCN_PATH, "res://assets/buildings/edificio_juarez_235.glb")
 
     # Ejecutar suite de validación visual
     render_validation_suite(cams)

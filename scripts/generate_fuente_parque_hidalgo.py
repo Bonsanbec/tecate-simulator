@@ -804,101 +804,6 @@ def add_faceted_sphere(bm, center, radius, mat_idx, uv_lay):
 
 
 # ==============================================================================
-# 4. GENERACIÓN DE ESCENA GODOT (.TSCN) CON FÍSICA ANALÍTICA
-# ==============================================================================
-
-def generate_godot_tscn(tscn_path, glb_res_path):
-    pts = generate_perimeter_points(samples_per_seg=6)
-    n = len(pts)
-    step = 5
-    sampled_indices = list(range(0, n, step))
-
-    col_nodes = []
-    sub_resources = []
-    
-    initial_sub_res = '''[sub_resource type="CylinderShape3D" id="CylinderShape3D_nucleo_base"]
-height = 0.65
-radius = 2.35
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_cascada_cuerpo"]
-height = 1.05
-radius = 1.65
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_copa_superior"]
-height = 0.75
-radius = 0.75
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_fondo_estanque"]
-size = Vector3(11.5, 0.20, 11.5)
-'''
-
-    for c_idx, i in enumerate(sampled_indices):
-        j = (i + step) % n
-        p1 = pts[i]
-        p2 = pts[j]
-        mx = (p1[0] + p2[0]) * 0.5
-        my = (p1[1] + p2[1]) * 0.5
-        dx = p2[0] - p1[0]
-        dy = p2[1] - p1[1]
-        seg_len = math.hypot(dx, dy)
-        yaw = math.atan2(dx, dy)
-
-        gx = mx
-        gy = 0.25 # Z_blender = 0.25 m (centro de la banca)
-        gz = -my  # Z_godot = -Y_blender
-
-        sub_res = f'''[sub_resource type="BoxShape3D" id="BoxShape3D_banca_{c_idx}"]
-size = Vector3(0.44, 0.52, {seg_len + 0.08:.3f})
-'''
-        sub_resources.append(sub_res)
-
-        cos_y = math.cos(yaw)
-        sin_y = math.sin(yaw)
-        t_matrix = f"{cos_y:.6f}, 0, {sin_y:.6f}, 0, 1, 0, {-sin_y:.6f}, 0, {cos_y:.6f}, {gx:.3f}, {gy:.3f}, {gz:.3f}"
-        node_str = f'''[node name="Col_Banca_{c_idx}" type="CollisionShape3D" parent="."]
-transform = Transform3D({t_matrix})
-shape = SubResource("BoxShape3D_banca_{c_idx}")
-'''
-        col_nodes.append(node_str)
-
-    central_nodes = '''
-[node name="Col_Nucleo_Base" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0)
-shape = SubResource("CylinderShape3D_nucleo_base")
-
-[node name="Col_Cascada_Cuerpo" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.28, 0)
-shape = SubResource("CylinderShape3D_cascada_cuerpo")
-
-[node name="Col_Copa_Superior" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.15, 0)
-shape = SubResource("CylinderShape3D_copa_superior")
-
-[node name="Col_Fondo_Estanque" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
-shape = SubResource("BoxShape3D_fondo_estanque")
-'''
-
-    body_header = '''
-[node name="Fuente_Parque_Hidalgo" type="StaticBody3D"]
-
-[node name="Fuente_Model" parent="." instance=ExtResource("1_mesh")]
-'''
-
-    total_steps = len(sub_resources) + 4 + 1 + 1 # banca + 4 centrales + 1 ext_res + 1 escena
-    header = f'''[gd_scene load_steps={total_steps} format=3 uid="uid://fuente_parque_hidalgo_2009"]
-
-[ext_resource type="PackedScene" path="{glb_res_path}" id="1_mesh"]
-
-'''
-    full_content = header + initial_sub_res + "".join(sub_resources) + body_header + "".join(col_nodes) + central_nodes
-    os.makedirs(os.path.dirname(os.path.abspath(tscn_path)), exist_ok=True)
-    with open(tscn_path, "w", encoding="utf-8") as f:
-        f.write(full_content)
-    print(f"[TSCN] Escena analítica generada exitosamente en: {tscn_path}")
-
-
-# ==============================================================================
 # 5. CÁMARAS DE VALIDACIÓN Y RENDERIZADO CYCLES
 # ==============================================================================
 
@@ -1003,7 +908,6 @@ def main():
     print(f"[GLTF] Runtime exportado exitosamente en: {glb_path}")
 
     print(">>> 5. Generando escena Godot (.tscn) con colisionadores analíticos coordinados 1:1...")
-    generate_godot_tscn(tscn_path, "res://assets/fuente_parque_hidalgo.glb")
 
     print(">>> 6. Configurando batería de validación y renderizando cámaras Cycles...")
     cams = setup_lighting_and_cameras(col)
