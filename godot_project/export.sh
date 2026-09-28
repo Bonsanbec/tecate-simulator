@@ -9,6 +9,21 @@ export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}"
 export ANDROID_NDK_ROOT="${ANDROID_NDK_ROOT}"
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 11)}"
 
+# Prompt for Android keystore information if not already set
+if [[ -z "${ANDROID_KEYSTORE_PATH:-}" ]]; then
+  read -p "Path to Android keystore file: " ANDROID_KEYSTORE_PATH
+fi
+if [[ -z "${ANDROID_KEYSTORE_ALIAS:-}" ]]; then
+  read -p "Android keystore alias: " ANDROID_KEYSTORE_ALIAS
+fi
+if [[ -z "${ANDROID_KEYSTORE_PASSWORD:-}" ]]; then
+  read -s -p "Android keystore password: " ANDROID_KEYSTORE_PASSWORD
+  echo
+fi
+
+# Export the variables so Godot can use them
+export ANDROID_KEYSTORE_PATH ANDROID_KEYSTORE_ALIAS ANDROID_KEYSTORE_PASSWORD
+
 # -------------------------------------------------
 # 1) Compilar (opcional) – Godot‑Mono necesita generar los ensamblados .dll,
 #    aunque el proyecto no tenga C#.  Esto se hace con --script.
