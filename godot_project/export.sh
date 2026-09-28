@@ -6,7 +6,7 @@ set -euo pipefail
 # -------------------------------------------------
 export GODOT_PATH="${GODOT_PATH:-$(which godot-mono)}"
 export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}"
-export ANDROID_NDK_ROOT="${ANDROID_NDK_ROOT}"
+export ANDROID_NDK_ROOT="${ANDROID_NDK_ROOT:-}"
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 11)}"
 
 # Prompt for Android keystore information if not already set
