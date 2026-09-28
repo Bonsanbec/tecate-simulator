@@ -99,7 +99,7 @@ echo "=== Generando ensamblados Mono ==="
 # -------------------------------------------------
 # 3) Exportar macOS
 # -------------------------------------------------
-mkdir -p build/android
+mkdir -p build/macos
 echo "=== Exportando a macOS ==="
 "$GODOT_PATH" \
   --headless \
