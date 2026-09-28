@@ -76,36 +76,46 @@ export ANDROID_NDK_ROOT
 echo "=== Generando ensamblados Mono ==="
 "$GODOT_PATH" --headless --path "$(pwd)" --no-window --quit || true
 
+# # -------------------------------------------------
+# # 2) Exportar Android
+# # -------------------------------------------------
+# mkdir -p build/android
+# echo "=== Exportando a Android (APK) ==="
+# "$GODOT_PATH" \
+#   --headless \
+#   --path "$(pwd)" \
+#   --export-release "Android"
+
+# # -------------------------------------------------
+# # 3) Exportar iOS (Xcode project)
+# # -------------------------------------------------
+# mkdir -p build/ios
+# echo "=== Exportando a iOS (Xcode project) ==="
+# "$GODOT_PATH" \
+#   --headless \
+#   --path "$(pwd)" \
+#   --export-release "iOS"
+
 # -------------------------------------------------
-# 2) Exportar Android
+# 3) Exportar macOS
 # -------------------------------------------------
 mkdir -p build/android
-echo "=== Exportando a Android (APK) ==="
+echo "=== Exportando a macOS ==="
 "$GODOT_PATH" \
   --headless \
   --path "$(pwd)" \
-  --export-release "Android"
+  --export-release "macOS"
 
-# -------------------------------------------------
-# 3) Exportar iOS (Xcode project)
-# -------------------------------------------------
-mkdir -p build/ios
-echo "=== Exportando a iOS (Xcode project) ==="
-"$GODOT_PATH" \
-  --headless \
-  --path "$(pwd)" \
-  --export-release "iOS"
-
-# -------------------------------------------------
-# 4) Compilar el proyecto Xcode (iOS) desde la CLI
-# -------------------------------------------------
-if command -v xcodebuild >/dev/null; then
-  echo "=== Compilando el proyecto Xcode (modo Release) ==="
-  pushd "build/ios/tecate.xcodeproj"
-  xcodebuild -scheme "tecate" -configuration Release -sdk iphoneos clean build
-  popd
-else
-  echo "⚠️  xcodebuild no está disponible – solo se generó el proyecto Xcode."
-fi
+# # -------------------------------------------------
+# # 4) Compilar el proyecto Xcode (iOS) desde la CLI
+# # -------------------------------------------------
+# if command -v xcodebuild >/dev/null; then
+#   echo "=== Compilando el proyecto Xcode (modo Release) ==="
+#   pushd "build/ios/tecate.xcodeproj"
+#   xcodebuild -scheme "tecate" -configuration Release -sdk iphoneos clean build
+#   popd
+# else
+#   echo "⚠️  xcodebuild no está disponible – solo se generó el proyecto Xcode."
+# fi
 
 echo "✅ Exportaciones completadas."
