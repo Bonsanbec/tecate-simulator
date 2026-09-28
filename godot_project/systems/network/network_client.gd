@@ -51,11 +51,12 @@ func _ready():
 	_load_configuration()
 
 func _load_configuration() -> void:
-	## Lee desde el Autoload NetworkConfig (cargado por Godot al arrancar).
-	## NetworkConfig lee a su vez de ProjectSettings + override opcional de .env local.
+	## Lee desde el Autoload NetworkConfig (nodo en /root/NetworkConfig).
+	## En Godot 4, los Autoloads son nodos del árbol de escena, NO Engine singletons.
+	## NetworkConfig lee de ProjectSettings + override opcional de .env local.
 	## Esto funciona en TODOS los targets de exportación sin configuración adicional.
-	if Engine.has_singleton("NetworkConfig"):
-		var cfg = Engine.get_singleton("NetworkConfig")
+	var cfg: Node = get_node_or_null("/root/NetworkConfig")
+	if cfg != null:
 		server_host = cfg.server_host
 		server_port = cfg.server_port
 		tick_rate = cfg.tick_rate
@@ -63,8 +64,8 @@ func _load_configuration() -> void:
 		debug_logging = cfg.debug_net
 	else:
 		## Fallback de emergencia: valores de producción hardcodeados.
-		## Este bloque solo se ejecuta si el Autoload no está disponible (p. ej. pruebas unitarias aisladas).
-		push_warning("[NetworkClient] Autoload 'NetworkConfig' no disponible. Usando defaults de emergencia.")
+		## Solo se ejecuta si el Autoload no está en el árbol (p. ej. pruebas unitarias aisladas).
+		push_warning("[NetworkClient] Autoload 'NetworkConfig' no encontrado en /root/. Usando defaults de emergencia.")
 		server_host = "api.tecate.bonsanbec.dev"
 		server_port = 52665
 		tick_rate = 30
@@ -83,8 +84,8 @@ func start_connection() -> void:
 
 	# Resolver DNS (reutilizar el resultado del Autoload si ya está disponible)
 	var target_ip: String = server_host
-	if Engine.has_singleton("NetworkConfig"):
-		var cfg = Engine.get_singleton("NetworkConfig")
+	var cfg: Node = get_node_or_null("/root/NetworkConfig")
+	if cfg != null:
 		target_ip = cfg.resolve_host()
 		if target_ip.is_empty():
 			print("[NetworkClient] Sin conexión al servidor. El juego continuará en modo fuera de línea.")
