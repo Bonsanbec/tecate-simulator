@@ -1,0 +1,166 @@
+[gd_scene load_steps=10 format=3 uid="uid://c8ar1placeholder01"]
+
+[ext_resource type="Script" path="res://systems/vehicles/controllers/drivable_vehicle_controller.gd" id="1_drivable"]
+[ext_resource type="Script" path="res://systems/vehicles/core/vehicle_seat.gd" id="2_seat"]
+[ext_resource type="Script" path="res://systems/vehicles/core/surface_detector.gd" id="3_surface"]
+[ext_resource type="Script" path="res://systems/vehicles/core/fuel_system.gd" id="4_fuel"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_chassis"]
+albedo_color = Color(0.18, 0.35, 0.65, 1)
+metallic = 0.8
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_chassis"]
+material = SubResource("StandardMaterial3D_chassis")
+size = Vector3(1.8, 1.1, 4.3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tire"]
+albedo_color = Color(0.12, 0.12, 0.13, 1)
+roughness = 0.9
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_wheel"]
+material = SubResource("StandardMaterial3D_tire")
+top_radius = 0.35
+bottom_radius = 0.35
+height = 0.24
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_body"]
+size = Vector3(1.8, 1.2, 4.2)
+
+[node name="Car_Placeholder" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 3
+script = ExtResource("1_drivable")
+vehicle_name = "Sedán Compacto Tecate"
+vehicle_type = 0
+mass_kg = 1350.0
+max_speed_kmh = 95.0
+engine_acceleration = 8.5
+brake_deceleration = 16.0
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="ChassisMesh" type="MeshInstance3D" parent="VisualRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+mesh = SubResource("BoxMesh_chassis")
+
+[node name="WheelsVisual" type="Node3D" parent="VisualRoot"]
+
+[node name="Wheel_FL" type="MeshInstance3D" parent="VisualRoot/WheelsVisual"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, -0.92, 0.35, -1.35)
+mesh = SubResource("CylinderMesh_wheel")
+
+[node name="Wheel_FR" type="MeshInstance3D" parent="VisualRoot/WheelsVisual"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0.92, 0.35, -1.35)
+mesh = SubResource("CylinderMesh_wheel")
+
+[node name="Wheel_RL" type="MeshInstance3D" parent="VisualRoot/WheelsVisual"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, -0.92, 0.35, 1.35)
+mesh = SubResource("CylinderMesh_wheel")
+
+[node name="Wheel_RR" type="MeshInstance3D" parent="VisualRoot/WheelsVisual"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0.92, 0.35, 1.35)
+mesh = SubResource("CylinderMesh_wheel")
+
+[node name="CollisionRoot" type="Node3D" parent="."]
+
+[node name="BodyCollision" type="CollisionShape3D" parent="CollisionRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+shape = SubResource("BoxShape3D_body")
+
+[node name="Suspension" type="Node3D" parent="."]
+
+[node name="Ray_FL" type="RayCast3D" parent="Suspension"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, 0.5, -1.35)
+target_position = Vector3(0, -1.6, 0)
+
+[node name="Ray_FR" type="RayCast3D" parent="Suspension"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 0.5, -1.35)
+target_position = Vector3(0, -1.6, 0)
+
+[node name="Ray_RL" type="RayCast3D" parent="Suspension"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, 0.5, 1.35)
+target_position = Vector3(0, -1.6, 0)
+
+[node name="Ray_RR" type="RayCast3D" parent="Suspension"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 0.5, 1.35)
+target_position = Vector3(0, -1.6, 0)
+
+[node name="Seats" type="Node3D" parent="."]
+
+[node name="Seat_Driver" type="Node3D" parent="Seats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 0.65, -0.15)
+script = ExtResource("2_seat")
+seat_type = 0
+seat_name = "Conductor"
+
+[node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Driver"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, -0.4, 0)
+
+[node name="Seat_Passenger_0" type="Node3D" parent="Seats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 0.65, -0.15)
+script = ExtResource("2_seat")
+seat_type = 1
+seat_index = 1
+seat_name = "Copiloto"
+
+[node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, -0.4, 0)
+
+[node name="Seat_Passenger_1" type="Node3D" parent="Seats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 0.65, 0.85)
+script = ExtResource("2_seat")
+seat_type = 1
+seat_index = 2
+seat_name = "Pasajero Trasero Izquierdo"
+
+[node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, -0.4, 0)
+
+[node name="Seat_Passenger_2" type="Node3D" parent="Seats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 0.65, 0.85)
+script = ExtResource("2_seat")
+seat_type = 1
+seat_index = 3
+seat_name = "Pasajero Trasero Derecho"
+
+[node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, -0.4, 0)
+
+[node name="Cameras" type="Node3D" parent="."]
+
+[node name="Mount_1P" type="Marker3D" parent="Cameras"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.15, -0.15)
+
+[node name="Mount_3P" type="Marker3D" parent="Cameras"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 4.6)
+
+[node name="Lights" type="Node3D" parent="."]
+
+[node name="Headlights" type="Node3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -2.15)
+
+[node name="Light_L" type="SpotLight3D" parent="Lights/Headlights"]
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, -0.65, 0, 0)
+light_color = Color(1, 0.95, 0.85, 1)
+light_energy = 3.5
+spot_range = 45.0
+spot_angle = 38.0
+
+[node name="Light_R" type="SpotLight3D" parent="Lights/Headlights"]
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0.65, 0, 0)
+light_color = Color(1, 0.95, 0.85, 1)
+light_energy = 3.5
+spot_range = 45.0
+spot_angle = 38.0
+
+[node name="Taillights" type="Node3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 2.15)
+
+[node name="SurfaceDetector" type="Node3D" parent="."]
+script = ExtResource("3_surface")
+
+[node name="FuelSystem" type="Node" parent="."]
+script = ExtResource("4_fuel")
+capacity_liters = 50.0
+current_liters = 50.0

@@ -15,10 +15,57 @@ extends CanvasLayer
 @onready var axes_gizmo: CompassAxesGizmo = $AxesGizmo
 @onready var network_label: Label = get_node_or_null("TopLeft/NetworkLabel") as Label
 
+var prompt_label: Label = null
 var _badge_fade_timer: float = 3.0
 
 func _ready():
 	visible = false
+	_create_interaction_prompt_ui()
+
+func _create_interaction_prompt_ui() -> void:
+	var prompt_panel = PanelContainer.new()
+	prompt_panel.name = "InteractionPromptPanel"
+	prompt_panel.anchors_preset = Control.PRESET_CENTER_BOTTOM
+	prompt_panel.anchor_left = 0.5
+	prompt_panel.anchor_top = 1.0
+	prompt_panel.anchor_right = 0.5
+	prompt_panel.anchor_bottom = 1.0
+	prompt_panel.offset_left = -160.0
+	prompt_panel.offset_top = -120.0
+	prompt_panel.offset_right = 160.0
+	prompt_panel.offset_bottom = -80.0
+	prompt_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	prompt_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.10, 0.14, 0.85)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	prompt_panel.add_theme_stylebox_override("panel", style)
+
+	prompt_label = Label.new()
+	prompt_label.name = "PromptLabel"
+	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	prompt_label.add_theme_color_override("font_color", Color(1.0, 0.90, 0.35, 1.0))
+	prompt_label.add_theme_font_size_override("font_size", 14)
+	prompt_panel.add_child(prompt_label)
+
+	add_child(prompt_panel)
+	prompt_panel.visible = false
+
+func set_interaction_prompt(prompt_text: String) -> void:
+	if not prompt_label:
+		return
+	var panel = prompt_label.get_parent() as Control
+	if prompt_text.is_empty():
+		if panel: panel.visible = false
+	else:
+		prompt_label.text = prompt_text
+		if panel: panel.visible = true
 
 func update_network_status(status_text: String, is_connected: bool = false) -> void:
 	if network_label:
@@ -67,6 +114,41 @@ func update_hud(
 	# 3. Retícula dinámica: Visible en 1P, discreta
 	if reticle:
 		reticle.visible = is_1p
+
+## Actualiza la telemetría específica al estar a bordo de un vehículo
+func update_vehicle_hud(
+	vehicle_name: String,
+	speed_kmh: float,
+	fuel_pct: float,
+	is_infinite_fuel: bool,
+	surface_name: String,
+	slope_deg: float,
+	is_driver: bool,
+	heading_degrees: float,
+	nearest_street: String = ""
+) -> void:
+	if compass_label:
+		var deg_norm = fposmod(heading_degrees, 360.0)
+		var cardinal = _get_cardinal_direction(deg_norm)
+		var street_hint = _format_street_hint(nearest_street)
+		compass_label.text = "%03d° %s  |  %s" % [int(deg_norm), cardinal, street_hint]
+
+	if telemetry_label:
+		var fuel_str = "∞ (Ruta)" if is_infinite_fuel else ("%3.0f%%" % fuel_pct)
+		var role_str = "CONDUCTOR" if is_driver else "PASAJERO"
+		var slope_sign = "+" if slope_deg > 0.5 else ("-" if slope_deg < -0.5 else "")
+		telemetry_label.text = "[%s - %s]\nVELOCIDAD: %4.1f km/h\nCOMBUSTIBLE: %s\nSUPERFICIE: %s\nPENDIENTE: %s%3.1f°" % [
+			vehicle_name,
+			role_str,
+			speed_kmh,
+			fuel_str,
+			surface_name,
+			slope_sign,
+			abs(slope_deg)
+		]
+
+	if reticle:
+		reticle.visible = false
 
 func update_axes(camera_basis: Basis) -> void:
 	if axes_gizmo:

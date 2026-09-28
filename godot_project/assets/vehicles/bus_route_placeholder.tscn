@@ -1,0 +1,172 @@
+[gd_scene load_steps=10 format=3 uid="uid://bus1routeplace01"]
+
+[ext_resource type="Script" path="res://systems/vehicles/controllers/route_vehicle_controller.gd" id="1_route"]
+[ext_resource type="Script" path="res://systems/vehicles/core/vehicle_seat.gd" id="2_seat"]
+[ext_resource type="Script" path="res://systems/vehicles/core/surface_detector.gd" id="3_surface"]
+[ext_resource type="Script" path="res://systems/vehicles/core/fuel_system.gd" id="4_fuel"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bus"]
+albedo_color = Color(0.95, 0.78, 0.12, 1)
+metallic = 0.2
+roughness = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_bus"]
+material = SubResource("StandardMaterial3D_bus")
+size = Vector3(2.5, 2.6, 9.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tire"]
+albedo_color = Color(0.12, 0.12, 0.13, 1)
+roughness = 0.9
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_bus_wheel"]
+material = SubResource("StandardMaterial3D_tire")
+top_radius = 0.48
+bottom_radius = 0.48
+height = 0.32
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bus_body"]
+size = Vector3(2.5, 2.7, 9.8)
+
+[node name="Bus_Route_Placeholder" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 3
+script = ExtResource("1_route")
+cruise_speed_kmh = 32.0
+station_dwell_time = 5.0
+waypoints = PackedVector3Array(-6.68, 400.2, 15, -6.68, 400.2, 60, -35.0, 400.0, 60, -35.0, 400.0, -25, -6.68, 400.2, -25)
+station_indices = {
+0: "Parada Parque Hidalgo Centro",
+2: "Parada Palacio Municipal"
+}
+vehicle_name = "Autobús Urbano Tecate"
+vehicle_type = 2
+mass_kg = 8500.0
+max_speed_kmh = 55.0
+engine_acceleration = 4.2
+brake_deceleration = 10.0
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="ChassisMesh" type="MeshInstance3D" parent="VisualRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
+mesh = SubResource("BoxMesh_bus")
+
+[node name="WheelsVisual" type="Node3D" parent="VisualRoot"]
+
+[node name="Wheel_FL" type="MeshInstance3D" parent="VisualRoot/WheelsVisual"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, -1.3, 0.48, -3.2)
+mesh = SubResource("CylinderMesh_bus_wheel")
+
+[node name="Wheel_FR" type="MeshInstance3D" parent="VisualRoot/WheelsVisual"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 1.3, 0.48, -3.2)
+mesh = SubResource("CylinderMesh_bus_wheel")
+
+[node name="Wheel_RL" type="MeshInstance3D" parent="VisualRoot/WheelsVisual"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, -1.3, 0.48, 3.2)
+mesh = SubResource("CylinderMesh_bus_wheel")
+
+[node name="Wheel_RR" type="MeshInstance3D" parent="VisualRoot/WheelsVisual"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 1.3, 0.48, 3.2)
+mesh = SubResource("CylinderMesh_bus_wheel")
+
+[node name="CollisionRoot" type="Node3D" parent="."]
+
+[node name="BodyCollision" type="CollisionShape3D" parent="CollisionRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_bus_body")
+
+[node name="Suspension" type="Node3D" parent="."]
+
+[node name="Ray_FL" type="RayCast3D" parent="Suspension"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.6, -3.5)
+target_position = Vector3(0, -2.0, 0)
+
+[node name="Ray_FR" type="RayCast3D" parent="Suspension"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.6, -3.5)
+target_position = Vector3(0, -2.0, 0)
+
+[node name="Ray_RL" type="RayCast3D" parent="Suspension"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.6, 3.5)
+target_position = Vector3(0, -2.0, 0)
+
+[node name="Ray_RR" type="RayCast3D" parent="Suspension"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.6, 3.5)
+target_position = Vector3(0, -2.0, 0)
+
+[node name="Seats" type="Node3D" parent="."]
+
+[node name="Seat_Passenger_0" type="Node3D" parent="Seats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.2, -2.0)
+script = ExtResource("2_seat")
+seat_type = 1
+seat_index = 0
+seat_name = "Pasajero Delantero Izquierdo"
+
+[node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, -0.8, 0)
+
+[node name="Seat_Passenger_1" type="Node3D" parent="Seats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.2, -2.0)
+script = ExtResource("2_seat")
+seat_type = 1
+seat_index = 1
+seat_name = "Pasajero Delantero Derecho"
+
+[node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, -0.8, 0)
+
+[node name="Seat_Passenger_2" type="Node3D" parent="Seats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.2, 0.0)
+script = ExtResource("2_seat")
+seat_type = 1
+seat_index = 2
+seat_name = "Pasajero Central Izquierdo"
+
+[node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, -0.8, 0)
+
+[node name="Seat_Passenger_3" type="Node3D" parent="Seats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.2, 0.0)
+script = ExtResource("2_seat")
+seat_type = 1
+seat_index = 3
+seat_name = "Pasajero Central Derecho"
+
+[node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, -0.8, 0)
+
+[node name="Cameras" type="Node3D" parent="."]
+
+[node name="Mount_1P" type="Marker3D" parent="Cameras"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.8, -2.0)
+
+[node name="Mount_3P" type="Marker3D" parent="Cameras"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 8.5)
+
+[node name="Lights" type="Node3D" parent="."]
+
+[node name="Headlights" type="Node3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, -4.9)
+
+[node name="Light_L" type="SpotLight3D" parent="Lights/Headlights"]
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, -0.9, 0, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 4.5
+spot_range = 55.0
+spot_angle = 42.0
+
+[node name="Light_R" type="SpotLight3D" parent="Lights/Headlights"]
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0.9, 0, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 4.5
+spot_range = 55.0
+spot_angle = 42.0
+
+[node name="SurfaceDetector" type="Node3D" parent="."]
+script = ExtResource("3_surface")
+
+[node name="FuelSystem" type="Node" parent="."]
+script = ExtResource("4_fuel")
+capacity_liters = 220.0
+current_liters = 220.0
+is_infinite_fuel = true

@@ -10,6 +10,16 @@ const CameraDirectorClass = preload("res://systems/player/camera_director.gd")
 const FootIKClass = preload("res://systems/player/foot_ik_controller.gd")
 const PlayerNetworkSyncClass = preload("res://systems/network/player_network_sync.gd")
 const PlayerHUDClass = preload("res://ui/player_hud.gd")
+const VehicleCameraDirectorClass = preload("res://systems/vehicles/camera/vehicle_camera_director.gd")
+
+# Estados de Vehículo e Interacción
+var current_vehicle: VehicleBase = null
+var current_vehicle_seat: VehicleSeat = null
+var vehicle_camera_director: VehicleCameraDirector = null
+var _nearby_vehicle: VehicleBase = null
+var _nearby_seat_type: int = 0
+var _nearby_pump_zone: Node = null
+var _vehicle_scan_timer: float = 0.0
 
 # Parámetros Biomecánicos de Marcha y Carrera
 @export var mass_kg: float = 75.0
@@ -171,7 +181,13 @@ func _initialize_submodules() -> void:
 		add_child(hud)
 		camera_director.perspective_changed.connect(_on_perspective_changed)
 
-	# 5. Localizar y vincular NetworkClient y MultiplayerManager
+	# 5. Director de Cámaras para Vehículos (1P / 3P)
+	vehicle_camera_director = VehicleCameraDirectorClass.new()
+	vehicle_camera_director.name = "VehicleCameraDirector"
+	vehicle_camera_director.mouse_sensitivity = mouse_sensitivity
+	add_child(vehicle_camera_director)
+
+	# 6. Localizar y vincular NetworkClient y MultiplayerManager
 	if get_parent():
 		network_client = get_parent().find_child("NetworkClient", true, false) as NetworkClient
 		multiplayer_manager = get_parent().find_child("MultiplayerManager", true, false) as MultiplayerManager
@@ -322,11 +338,26 @@ func _input(event: InputEvent) -> void:
 				else:
 					Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
-		if not input_enabled:
-			return
+		# Tecla de Interacción [E]: Abordar o Descender de Vehículo
+		if event.keycode == KEY_E:
+			if current_vehicle:
+				dismount_vehicle()
+				get_viewport().set_input_as_handled()
+				return
+			elif _nearby_vehicle:
+				board_vehicle(_nearby_vehicle, _nearby_seat_type)
+				get_viewport().set_input_as_handled()
+				return
+
+		# Tecla de Repostaje [R]: Cargar combustible si está en una estación de servicio
+		if event.keycode == KEY_R and _nearby_pump_zone and current_vehicle:
+			if _nearby_pump_zone.has_method("start_refueling"):
+				_nearby_pump_zone.start_refueling()
+				get_viewport().set_input_as_handled()
+				return
 
 		# Barra espaciadora: doble tap en el suelo/aire inicia vuelo; en vuelo, impulsa ascenso vertical inmediato
-		if event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE or event.is_action_pressed("ui_accept"):
+		if (event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE or event.is_action_pressed("ui_accept")) and not current_vehicle:
 			var current_time = Time.get_ticks_msec() / 1000.0
 			if not is_flying:
 				if (current_time - space_press_timer) < DOUBLE_TAP_WINDOW:
@@ -343,12 +374,20 @@ func _input(event: InputEvent) -> void:
 	if is_f1_photo_mode or not input_enabled:
 		return
 
-	if camera_director:
+	if current_vehicle and vehicle_camera_director:
+		vehicle_camera_director.handle_input(event)
+	elif camera_director:
 		camera_director.handle_input(event)
 
 func _physics_process(delta: float) -> void:
 	if is_f1_photo_mode or not input_enabled:
 		return
+
+	if current_vehicle:
+		_process_riding_vehicle(delta)
+		return
+
+	_scan_nearby_interactive_objects(delta)
 
 	if is_flying:
 		_process_flying(delta)
@@ -612,3 +651,173 @@ func _update_telemetry(delta: float) -> void:
 		# Actualizar gizmo de ejes con la orientación de la cámara activa
 		if camera_director and camera_director.active_camera:
 			hud.update_axes(camera_director.active_camera.global_transform.basis)
+
+# ── Interacción con Vehículos y Estaciones de Servicio ────────────────────────
+
+## Permite al jugador abordar un vehículo en un asiento específico
+func board_vehicle(vehicle: VehicleBase, preferred_type: int = 0) -> bool:
+	if not vehicle or current_vehicle:
+		return false
+
+	var success = vehicle.enter_vehicle(self, preferred_type as VehicleSeat.SeatType)
+	if not success:
+		print("[PlayerController] No hay asientos disponibles en '%s'" % vehicle.vehicle_name)
+		return false
+
+	current_vehicle = vehicle
+	# Localizar el asiento que ocupamos
+	for s in vehicle.seats:
+		if s.occupant == self:
+			current_vehicle_seat = s
+			break
+
+	# Desactivar colisiones peatonales y ocultar avatar
+	set_collision_layer_value(1, false)
+	set_collision_mask_value(1, false)
+	velocity = Vector3.ZERO
+	is_flying = false
+
+	if humanoid_scene:
+		humanoid_scene.visible = false
+
+	# Desactivar cámaras a pie y activar cámaras de vehículo
+	if camera_director and camera_director.active_camera:
+		camera_director.active_camera.current = false
+
+	if vehicle_camera_director:
+		vehicle_camera_director.setup(current_vehicle, current_vehicle_seat)
+		vehicle_camera_director.activate()
+
+	if hud:
+		hud.set_interaction_prompt("[E] Descender")
+
+	print("[PlayerController] Abordado con éxito en '%s' como %s" % [
+		vehicle.vehicle_name,
+		"CONDUCTOR" if (current_vehicle_seat and current_vehicle_seat.is_driver()) else "PASAJERO"
+	])
+	return true
+
+## Permite descender del vehículo actual si la velocidad es segura
+func dismount_vehicle() -> bool:
+	if not current_vehicle:
+		return false
+
+	if current_vehicle.current_speed_kmh > 8.0:
+		print("[PlayerController] Demasiado rápido para descender: %.1f km/h" % current_vehicle.current_speed_kmh)
+		return false
+
+	var exit_pos = global_position
+	if current_vehicle_seat:
+		exit_pos = current_vehicle_seat.get_exit_global_position()
+
+	current_vehicle.exit_vehicle(self)
+	var prev_veh_name = current_vehicle.vehicle_name
+	current_vehicle = null
+	current_vehicle_seat = null
+
+	# Desactivar cámaras de vehículo y reactivar cámaras a pie
+	if vehicle_camera_director:
+		vehicle_camera_director.deactivate()
+
+	if camera_director and camera_director.active_camera:
+		camera_director.active_camera.current = true
+
+	# Restaurar avatar y físicas a pie
+	global_position = exit_pos
+	velocity = Vector3.ZERO
+	set_collision_layer_value(1, true)
+	set_collision_mask_value(1, true)
+
+	if humanoid_scene:
+		humanoid_scene.visible = true
+
+	if hud:
+		hud.set_interaction_prompt("")
+
+	print("[PlayerController] Descendido de '%s'" % prev_veh_name)
+	return true
+
+func _process_riding_vehicle(delta: float) -> void:
+	if not current_vehicle:
+		return
+
+	# Sincronizar posición con el asiento del vehículo
+	if current_vehicle_seat:
+		global_position = current_vehicle_seat.global_position
+	else:
+		global_position = current_vehicle.global_position
+
+	velocity = current_vehicle.velocity
+
+	# Orientación de brújula según vehículo
+	var v_fwd = -current_vehicle.global_transform.basis.z
+	var veh_heading = fposmod(rad_to_deg(atan2(v_fwd.x, -v_fwd.z)), 360.0)
+
+	# Actualizar telemetría de vehículo en el HUD
+	if hud:
+		var fuel_pct = current_vehicle.fuel_system.get_fuel_percentage() if current_vehicle.fuel_system else 100.0
+		var is_inf = current_vehicle.fuel_system.is_infinite_fuel if current_vehicle.fuel_system else false
+		var surf_name = current_vehicle.current_surface_profile.surface_name if current_vehicle.current_surface_profile else "Asfalto"
+		var is_drv = current_vehicle_seat.is_driver() if current_vehicle_seat else false
+
+		hud.update_vehicle_hud(
+			current_vehicle.vehicle_name,
+			current_vehicle.current_speed_kmh,
+			fuel_pct,
+			is_inf,
+			surf_name,
+			current_vehicle.current_slope_angle,
+			is_drv,
+			veh_heading,
+			_cached_street_name
+		)
+
+		if current_vehicle.current_speed_kmh < 8.0:
+			hud.set_interaction_prompt("[E] Descender")
+		else:
+			hud.set_interaction_prompt("")
+
+func _scan_nearby_interactive_objects(delta: float) -> void:
+	_vehicle_scan_timer += delta
+	if _vehicle_scan_timer < 0.15:
+		return
+	_vehicle_scan_timer = 0.0
+
+	_nearby_vehicle = null
+	_nearby_seat_type = 0
+	_nearby_pump_zone = null
+
+	var tree_root = get_tree().root
+	if not tree_root:
+		return
+
+	# Buscar vehículos en un radio de 4.0 metros
+	var search_radius_sq = 16.0 # 4m ^ 2
+	var min_d_sq = search_radius_sq
+	var my_pos = global_position
+
+	for veh in tree_root.find_children("*", "VehicleBase", true, false):
+		if veh is VehicleBase:
+			var d_sq = my_pos.distance_squared_to(veh.global_position)
+			if d_sq < min_d_sq:
+				min_d_sq = d_sq
+				_nearby_vehicle = veh as VehicleBase
+
+	if _nearby_vehicle:
+		var d_seat = _nearby_vehicle.get_driver_seat()
+		if d_seat and not d_seat.is_occupied():
+			_nearby_seat_type = VehicleSeat.SeatType.DRIVER
+			if hud:
+				hud.set_interaction_prompt("[E] Conducir %s" % _nearby_vehicle.vehicle_name)
+		else:
+			var avail_pass = _nearby_vehicle.get_available_passenger_seats()
+			if not avail_pass.is_empty():
+				_nearby_seat_type = VehicleSeat.SeatType.PASSENGER
+				if hud:
+					hud.set_interaction_prompt("[E] Abordar como Pasajero en %s" % _nearby_vehicle.vehicle_name)
+			else:
+				if hud:
+					hud.set_interaction_prompt("%s (Lleno)" % _nearby_vehicle.vehicle_name)
+	else:
+		if hud:
+			hud.set_interaction_prompt("")
