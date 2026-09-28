@@ -17,6 +17,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 config/name="Tecate Simulator Facade MVP"
 run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
+config/icon="res://branding/icon.png"
 
 [dotnet]
 
