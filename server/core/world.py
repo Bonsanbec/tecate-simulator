@@ -8,8 +8,10 @@ from typing import Iterator
 
 from server.core.entity import DynamicEntity
 from server.protocol.codec import EntityStateRecord, SnapshotPayload
+from server.protocol.constants import EntityType, VehicleFlags
 
 logger = logging.getLogger(__name__)
+
 
 
 class SharedWorld:
@@ -109,3 +111,45 @@ class SharedWorld:
             server_time=server_time,
             entities=records,
         )
+
+    def get_vehicle_by_driver(self, driver_id: int) -> DynamicEntity | None:
+        """Encuentra el vehículo conducido por el jugador indicado."""
+        for ent in self._entities.values():
+            if ent.is_vehicle and ent.driver_id == driver_id:
+                return ent
+        return None
+
+    def get_vehicles(self) -> list[DynamicEntity]:
+        """Retorna todas las entidades que son vehículos."""
+        return [ent for ent in self._entities.values() if ent.is_vehicle]
+
+    def spawn_default_vehicles(self) -> None:
+        """Instancia los vehículos iniciales del entorno urbano compartido de Tecate."""
+        # 1. Automóvil urbano conducible en estacionamiento céntrico
+        car = DynamicEntity(
+            entity_id=1001,
+            entity_type=EntityType.VEHICLE,
+            pos_x=-10.0,
+            pos_y=400.0,
+            pos_z=15.0,
+            yaw=0.0,
+            pitch=0.0,
+            flags=VehicleFlags.NONE,
+            properties={"fuel": 80.0, "vehicle_type": "car", "driver_id": None, "passengers": []},
+        )
+        self.upsert_entity(car)
+
+        # 2. Autobús de ruta predefinida (transporte público con combustible infinito)
+        bus = DynamicEntity(
+            entity_id=1002,
+            entity_type=EntityType.VEHICLE,
+            pos_x=20.0,
+            pos_y=400.0,
+            pos_z=-30.0,
+            yaw=90.0,
+            pitch=0.0,
+            flags=VehicleFlags.ROUTE_VEHICLE,
+            properties={"fuel": 999.0, "vehicle_type": "bus_route", "driver_id": None, "passengers": []},
+        )
+        self.upsert_entity(bus)
+

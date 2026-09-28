@@ -404,19 +404,34 @@ func _physics_process(delta: float) -> void:
 	# Actualizar telemetría y HUD
 	_update_telemetry(delta)
 
-	# Transmitir estado biomecánico a la red TKT/1 (~30 Hz)
+	# Transmitir estado biomecánico o vehicular a la red TKT/1 (~30 Hz)
 	if network_client and network_client.state == NetworkClient.ConnectionState.CONNECTED:
 		_net_tick_timer += delta
 		if _net_tick_timer >= (1.0 / NET_TICK_RATE):
 			_net_tick_timer = 0.0
 			_net_tick += 1
 			var flags = 0
-			if is_on_floor(): flags |= 1
-			if Input.is_key_pressed(KEY_SHIFT): flags |= 2
-			if is_flying: flags |= 4
+			var send_pos = global_position
 			var yaw = rotation_degrees.y
 			var pitch = camera_director.rot_pitch if camera_director else 0.0
-			network_client.send_player_input(_net_tick, global_position, yaw, pitch, velocity, flags)
+			var send_vel = velocity
+
+			if current_vehicle:
+				flags |= 0x10 # PlayerFlags.IN_VEHICLE
+				var is_driver = (current_vehicle_seat and current_vehicle_seat.is_driver())
+				if is_driver:
+					flags |= 0x20 # PlayerFlags.DRIVING_VEHICLE
+				send_pos = current_vehicle.global_position
+				yaw = current_vehicle.rotation_degrees.y
+				pitch = current_vehicle.rotation_degrees.x
+				send_vel = current_vehicle.linear_velocity
+			else:
+				if is_on_floor(): flags |= 1
+				if Input.is_key_pressed(KEY_SHIFT): flags |= 2
+				if is_flying: flags |= 4
+
+			network_client.send_player_input(_net_tick, send_pos, yaw, pitch, send_vel, flags)
+
 
 func _process_walking(delta: float) -> void:
 	# 1. Detección de pendiente del terreno de Tecate
@@ -691,6 +706,13 @@ func board_vehicle(vehicle: VehicleBase, preferred_type: int = 0) -> bool:
 	if hud:
 		hud.set_interaction_prompt("[E] Descender")
 
+	# Notificar abordaje a la red TKT/1
+	if network_client and network_client.state == NetworkClient.ConnectionState.CONNECTED:
+		var v_id = vehicle.vehicle_id if "vehicle_id" in vehicle else 1001
+		var seat_idx = current_vehicle_seat.seat_index if current_vehicle_seat else 0
+		var is_drv = current_vehicle_seat.is_driver() if current_vehicle_seat else false
+		network_client.send_vehicle_enter(v_id, seat_idx, is_drv)
+
 	print("[PlayerController] Abordado con éxito en '%s' como %s" % [
 		vehicle.vehicle_name,
 		"CONDUCTOR" if (current_vehicle_seat and current_vehicle_seat.is_driver()) else "PASAJERO"
@@ -706,6 +728,12 @@ func dismount_vehicle() -> bool:
 		print("[PlayerController] Demasiado rápido para descender: %.1f km/h" % current_vehicle.current_speed_kmh)
 		return false
 
+	# Notificar descenso a la red TKT/1
+	if network_client and network_client.state == NetworkClient.ConnectionState.CONNECTED:
+		var v_id = current_vehicle.vehicle_id if "vehicle_id" in current_vehicle else 1001
+		var seat_idx = current_vehicle_seat.seat_index if current_vehicle_seat else 0
+		network_client.send_vehicle_exit(v_id, seat_idx)
+
 	var exit_pos = global_position
 	if current_vehicle_seat:
 		exit_pos = current_vehicle_seat.get_exit_global_position()
@@ -714,6 +742,7 @@ func dismount_vehicle() -> bool:
 	var prev_veh_name = current_vehicle.vehicle_name
 	current_vehicle = null
 	current_vehicle_seat = null
+
 
 	# Desactivar cámaras de vehículo y reactivar cámaras a pie
 	if vehicle_camera_director:

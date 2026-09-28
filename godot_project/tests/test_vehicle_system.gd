@@ -37,9 +37,11 @@ func _run_tests() -> void:
 	test_player_boarding_and_dismounting()
 	test_topography_slope_response()
 	test_route_vehicle_navigation()
+	test_remote_vehicle_network_representation()
 
 	_print_summary()
 	quit(0 if tests_failed == 0 else 1)
+
 
 func assert_true(condition: bool, test_name: String) -> void:
 	if condition:
@@ -243,7 +245,58 @@ func test_route_vehicle_navigation() -> void:
 
 	bus.free()
 
+func test_remote_vehicle_network_representation() -> void:
+	print(INFO_COLOR + "--- Prueba 9: Representación y Anclaje en RemoteVehicle (Multijugador) ---" + RESET_COLOR)
+	var remote_veh_script = preload("res://systems/network/remote_vehicle.gd")
+	var tkt_codec_script = preload("res://systems/network/tkt_codec.gd")
+
+	# 1. Instanciación y setup de automóvil particular
+	var rv_car = Node3D.new()
+	rv_car.set_script(remote_veh_script)
+	rv_car.setup(1001, false)
+	assert_true(rv_car.entity_id == 1001, "RemoteVehicle: Entity ID asignado correctamente")
+	assert_true(not rv_car.is_route_vehicle, "RemoteVehicle: Reconoce que no es autobús de ruta")
+	assert_true(rv_car.seat_mounts.size() == 4, "RemoteVehicle (Auto): Dispone de 4 puntos de anclaje de asientos")
+
+	# 2. Ingesta de snapshot y actualización de cinemática
+	var rec1 = tkt_codec_script.EntityRecord.new()
+	rec1.entity_id = 1001
+	rec1.entity_type = tkt_codec_script.EntityType.VEHICLE
+	rec1.position = Vector3(10, 400, 20)
+	rec1.yaw = 90.0
+	rec1.pitch = -5.0
+	rec1.velocity = Vector3(5, 0, 0)
+	rv_car.push_snapshot_record(rec1, 1000)
+
+	assert_true(rv_car.snapshot_history.size() == 1, "RemoteVehicle: Registro de snapshot almacenado")
+	rv_car._physics_process(0.016)
+	assert_true(is_equal_approx(rv_car.position.x, 10.0), "RemoteVehicle: Posición refleja snapshot (X=10)")
+
+	# 3. Anclaje de pasajero o conductor remoto
+	var mock_player = Node3D.new()
+	mock_player.name = "MockRemotePlayer_42"
+	rv_car.mount_passenger(42, 0, mock_player) # Conductor
+	assert_true(rv_car.seated_passengers.has(42), "RemoteVehicle: Pasajero ID 42 montado en asiento")
+	assert_true(mock_player.get_parent() == rv_car.seat_mounts[0], "MockPlayer es hijo del marcador de asiento 0")
+
+	# 4. Descenso de pasajero remoto
+	var unmounted = rv_car.unmount_passenger(42)
+	assert_true(unmounted == mock_player, "RemoteVehicle: Pasajero desmontado con éxito")
+	assert_true(not rv_car.seated_passengers.has(42), "RemoteVehicle: Pasajero ID 42 removido del diccionario")
+
+	mock_player.free()
+	rv_car.free()
+
+	# 5. Instanciación y setup de autobús de ruta
+	var rv_bus = Node3D.new()
+	rv_bus.set_script(remote_veh_script)
+	rv_bus.setup(1002, true)
+	assert_true(rv_bus.is_route_vehicle, "RemoteVehicle (Bus): Reconoce modo de ruta predefinida")
+	assert_true(rv_bus.wheel_nodes.size() == 6, "RemoteVehicle (Bus): Construye 6 ruedas procedimentales")
+	rv_bus.free()
+
 func _print_summary() -> void:
+
 	print("\n========================================================")
 	print(" RESUMEN DE PRUEBAS DEL SISTEMA DE VEHÍCULOS")
 	print("========================================================")

@@ -4,6 +4,7 @@ import unittest
 from server.protocol.codec import (
     ChatPayload,
     EntityStateRecord,
+    EventPayload,
     GoodbyePayload,
     HelloPayload,
     InputPayload,
@@ -15,7 +16,8 @@ from server.protocol.codec import (
     decode_packet,
     encode_packet,
 )
-from server.protocol.constants import HEADER_SIZE, MAGIC_BYTES, MessageType, PacketFlags
+from server.protocol.constants import HEADER_SIZE, MAGIC_BYTES, EventCode, MessageType, PacketFlags
+
 
 
 class TestTKTCodec(unittest.TestCase):
@@ -168,6 +170,57 @@ class TestTKTCodec(unittest.TestCase):
         with self.assertRaises(ValueError):
             decode_packet(bytes(encoded))
 
+    def test_event_vehicle_roundtrip(self):
+        import struct
+        # 1. VEHICLE_ENTER
+        data_enter = struct.pack("<IBB", 1001, 0, 1) # vehicle 1001, seat 0, driver role
+        event_enter = EventPayload(
+            event_id=1,
+            event_code=EventCode.VEHICLE_ENTER,
+            entity_id=5,
+            timestamp=12345,
+            data=data_enter,
+        )
+        raw = event_enter.pack()
+        unpacked = EventPayload.unpack(raw)
+        self.assertEqual(unpacked.event_id, 1)
+        self.assertEqual(unpacked.event_code, EventCode.VEHICLE_ENTER)
+        self.assertEqual(unpacked.entity_id, 5)
+        self.assertEqual(unpacked.timestamp, 12345)
+        v_id, seat, role = unpacked.unpack_vehicle_enter()
+        self.assertEqual(v_id, 1001)
+        self.assertEqual(seat, 0)
+        self.assertEqual(role, 1)
+
+        # 2. VEHICLE_EXIT
+        data_exit = struct.pack("<IB", 1001, 0)
+        event_exit = EventPayload(
+            event_id=2,
+            event_code=EventCode.VEHICLE_EXIT,
+            entity_id=5,
+            timestamp=12400,
+            data=data_exit,
+        )
+        unpacked_exit = EventPayload.unpack(event_exit.pack())
+        v_id, seat = unpacked_exit.unpack_vehicle_exit()
+        self.assertEqual(v_id, 1001)
+        self.assertEqual(seat, 0)
+
+        # 3. VEHICLE_REFUEL
+        data_refuel = struct.pack("<If", 1001, 75.5)
+        event_refuel = EventPayload(
+            event_id=3,
+            event_code=EventCode.VEHICLE_REFUEL,
+            entity_id=5,
+            timestamp=12500,
+            data=data_refuel,
+        )
+        unpacked_refuel = EventPayload.unpack(event_refuel.pack())
+        v_id, fuel = unpacked_refuel.unpack_vehicle_refuel()
+        self.assertEqual(v_id, 1001)
+        self.assertAlmostEqual(fuel, 75.5, places=2)
+
 
 if __name__ == "__main__":
     unittest.main()
+

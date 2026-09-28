@@ -91,5 +91,66 @@ func _init():
 	assert(full_pkt.size() == 28 + chat_bytes.size(), "Paquete completo debe sumar cabecera + payload")
 	print("✓ Paquete completo y cálculo de checksum verificados.")
 
+	# 7. Prueba de EVENT y VEHICLE_ENTER
+	var enter_data = TKTCodec.encode_vehicle_enter_data(1001, 1, true)
+	assert(enter_data.size() == 6, "VEHICLE_ENTER data debe medir 6 bytes")
+	var dec_enter = TKTCodec.decode_vehicle_enter_data(enter_data)
+	assert(dec_enter["vehicle_id"] == 1001, "Vehicle ID debe ser 1001")
+	assert(dec_enter["seat_index"] == 1, "Seat index debe ser 1")
+	assert(dec_enter["role"] == 1, "Role debe ser 1 (conductor)")
+
+	var ev_bytes = TKTCodec.encode_event(55, TKTCodec.EventCode.VEHICLE_ENTER, 10, 8888, enter_data)
+	assert(ev_bytes.size() == 16 + 6, "Payload EVENT debe medir 22 bytes")
+	var dec_ev = TKTCodec.decode_event(ev_bytes)
+	assert(dec_ev["event_id"] == 55, "Event ID debe coincidir")
+	assert(dec_ev["event_code"] == TKTCodec.EventCode.VEHICLE_ENTER, "Event code debe ser VEHICLE_ENTER")
+	assert(dec_ev["entity_id"] == 10, "Entity ID debe ser 10")
+	var inner_enter = TKTCodec.decode_vehicle_enter_data(dec_ev["data"])
+	assert(inner_enter["vehicle_id"] == 1001, "Inner vehicle ID debe ser 1001")
+	print("✓ Payload EVENT (VEHICLE_ENTER) verificado.")
+
+	# 8. Prueba de VEHICLE_EXIT y VEHICLE_REFUEL
+	var exit_data = TKTCodec.encode_vehicle_exit_data(1001, 1)
+	assert(exit_data.size() == 5, "VEHICLE_EXIT data debe medir 5 bytes")
+	var dec_exit = TKTCodec.decode_vehicle_exit_data(exit_data)
+	assert(dec_exit["vehicle_id"] == 1001, "Vehicle ID debe ser 1001")
+	assert(dec_exit["seat_index"] == 1, "Seat index debe ser 1")
+	print("✓ Payload VEHICLE_EXIT verificado.")
+
+	var refuel_data = TKTCodec.encode_vehicle_refuel_data(1001, 65.5)
+	assert(refuel_data.size() == 8, "VEHICLE_REFUEL data debe medir 8 bytes")
+	var dec_refuel = TKTCodec.decode_vehicle_refuel_data(refuel_data)
+	assert(dec_refuel["vehicle_id"] == 1001, "Vehicle ID debe ser 1001")
+	assert(is_equal_approx(dec_refuel["fuel_amount"], 65.5), "Fuel amount debe ser 65.5")
+	print("✓ Payload VEHICLE_REFUEL verificado.")
+
+	# 9. Prueba de SNAPSHOT con entidad de tipo VEHICLE
+	var sp_v = StreamPeerBuffer.new()
+	sp_v.big_endian = false
+	sp_v.put_u32(60)   # server_tick
+	sp_v.put_u32(3000) # server_time
+	sp_v.put_u16(1)    # count = 1
+	sp_v.put_u32(1002) # entity_id
+	sp_v.put_u8(TKTCodec.EntityType.VEHICLE) # entity_type = 2
+	sp_v.put_u8(TKTCodec.VehicleFlags.ROUTE_VEHICLE) # flags
+	sp_v.put_float(50.0) # pos.x
+	sp_v.put_float(400.0) # pos.y
+	sp_v.put_float(-20.0) # pos.z
+	sp_v.put_float(180.0) # yaw
+	sp_v.put_float(-4.0) # pitch
+	sp_v.put_float(10.0) # vel.x
+	sp_v.put_float(0.0) # vel.y
+	sp_v.put_float(0.0) # vel.z
+
+	var snap_v = TKTCodec.decode_snapshot(sp_v.data_array)
+	assert(snap_v["entities"].size() == 1, "Snapshot debe contener 1 entidad")
+	var v_rec: TKTCodec.EntityRecord = snap_v["entities"][0]
+	assert(v_rec.entity_id == 1002, "Entity ID debe ser 1002")
+	assert(v_rec.entity_type == TKTCodec.EntityType.VEHICLE, "Entity type debe ser VEHICLE")
+	assert((v_rec.flags & TKTCodec.VehicleFlags.ROUTE_VEHICLE) != 0, "Debe tener flag ROUTE_VEHICLE")
+	assert(is_equal_approx(v_rec.pitch, -4.0), "Pitch topográfico debe ser -4.0")
+	print("✓ Payload SNAPSHOT con EntityType.VEHICLE verificado.")
+
 	print("=== TODAS LAS PRUEBAS DE TKT_CODEC EN GODOT COMPLETADAS EXITOSAMENTE ===")
 	quit(0)
+

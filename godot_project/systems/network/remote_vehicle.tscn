@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bvy5km4y2c1t"]
+
+[ext_resource type="Script" path="res://systems/network/remote_vehicle.gd" id="1_remote_veh"]
+
+[node name="RemoteVehicle" type="Node3D"]
+script = ExtResource("1_remote_veh")

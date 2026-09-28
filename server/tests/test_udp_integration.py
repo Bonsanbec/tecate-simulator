@@ -5,6 +5,7 @@ from server.config import ServerConfig
 from server.core.entity import DynamicEntity
 from server.network.udp_server import TKTGameServer
 from server.protocol.codec import (
+    EventPayload,
     HelloPayload,
     InputPayload,
     PacketHeader,
@@ -14,7 +15,8 @@ from server.protocol.codec import (
     decode_packet,
     encode_packet,
 )
-from server.protocol.constants import MessageType, PacketFlags
+from server.protocol.constants import EntityType, EventCode, MessageType, PacketFlags, PlayerFlags, VehicleFlags
+
 
 
 class MockDatagramTransport:
@@ -110,13 +112,97 @@ class TestUDPProtocolIntegration(unittest.TestCase):
         pong = PingPongPayload.unpack(payload_pong)
         self.assertEqual(pong.ping_id, 42)
 
-        # 5. Generar SNAPSHOT para un segundo jugador y verificar presencia de la entidad
+        # 5. Generar SNAPSHOT para un segundo jugador y verificar presencia de la entidad jugador y vehículos
         client2_addr = ("192.168.1.101", 61235)
         s2 = self.server.session_manager.create_or_renew_session(client2_addr)
         snap = self.server.world.build_snapshot_for_player(s2.player_entity_id, 1, 100)
-        self.assertEqual(len(snap.entities), 1)
-        self.assertEqual(snap.entities[0].entity_id, player_id)
+        # Snapshot debe contener el jugador 1 + 2 vehículos por defecto (1001 y 1002)
+        self.assertGreaterEqual(len(snap.entities), 3)
+        entity_ids = {e.entity_id: e for e in snap.entities}
+        self.assertIn(player_id, entity_ids)
+        self.assertIn(1001, entity_ids)
+        self.assertIn(1002, entity_ids)
+        self.assertEqual(entity_ids[1001].entity_type, EntityType.VEHICLE)
+        self.assertEqual(entity_ids[1002].entity_type, EntityType.VEHICLE)
+
+        # 6. Simular EVENT de abordaje a vehículo (VEHICLE_ENTER) como conductor
+        import struct
+        enter_payload = EventPayload(
+            event_id=1,
+            event_code=EventCode.VEHICLE_ENTER,
+            entity_id=player_id,
+            timestamp=6000,
+            data=struct.pack("<IBB", 1001, 0, 1), # vehicle 1001, seat 0, driver
+        )
+        enter_hdr = PacketHeader(
+            message_type=MessageType.EVENT,
+            session_id=session_id,
+            sequence=4,
+        )
+        self.server.handle_packet(enter_hdr, enter_payload.pack(), self.client_addr)
+
+        # Verificar que el vehículo 1001 ahora tiene a player_id como conductor
+        v1001 = self.server.world.get_entity(1001)
+        self.assertIsNotNone(v1001)
+        self.assertEqual(v1001.driver_id, player_id)
+        self.assertTrue(v1001.flags & VehicleFlags.HAS_DRIVER)
+
+        # Verificar que el segundo cliente recibió la retransmisión del evento fiable
+        # Buscamos paquetes enviados a client2_addr
+        c2_packets = [pkt for pkt in self.mock_transport.sent_packets if pkt[1] == client2_addr]
+        self.assertGreaterEqual(len(c2_packets), 1)
+        c2_hdr, c2_payload = decode_packet(c2_packets[-1][0])
+        self.assertEqual(c2_hdr.message_type, MessageType.EVENT)
+        c2_event = EventPayload.unpack(c2_payload)
+        self.assertEqual(c2_event.event_code, EventCode.VEHICLE_ENTER)
+        v_id, seat, role = c2_event.unpack_vehicle_enter()
+        self.assertEqual(v_id, 1001)
+        self.assertEqual(role, 1)
+
+        # 7. Simular INPUT de conducción y verificar que la cinemática del vehículo se actualiza
+        drive_inp = InputPayload(
+            tick=20,
+            pos_x=15.5,
+            pos_y=400.1,
+            pos_z=30.0,
+            yaw=45.0,
+            pitch=-3.5,
+            vel_x=12.0,
+            vel_y=0.0,
+            vel_z=10.0,
+            flags=(PlayerFlags.IN_VEHICLE | PlayerFlags.DRIVING_VEHICLE),
+        )
+        drive_hdr = PacketHeader(
+            message_type=MessageType.INPUT,
+            session_id=session_id,
+            sequence=5,
+        )
+        self.server.handle_packet(drive_hdr, drive_inp.pack(), self.client_addr)
+
+        # El vehículo 1001 debe haber adoptado la posición y orientación de la cinemática
+        self.assertAlmostEqual(v1001.pos_x, 15.5, places=1)
+        self.assertAlmostEqual(v1001.yaw, 45.0, places=1)
+        self.assertAlmostEqual(v1001.pitch, -3.5, places=1)
+        self.assertAlmostEqual(v1001.vel_x, 12.0, places=1)
+
+        # 8. Simular EVENT de descenso (VEHICLE_EXIT)
+        exit_payload = EventPayload(
+            event_id=2,
+            event_code=EventCode.VEHICLE_EXIT,
+            entity_id=player_id,
+            timestamp=7000,
+            data=struct.pack("<IB", 1001, 0),
+        )
+        exit_hdr = PacketHeader(
+            message_type=MessageType.EVENT,
+            session_id=session_id,
+            sequence=6,
+        )
+        self.server.handle_packet(exit_hdr, exit_payload.pack(), self.client_addr)
+        self.assertIsNone(v1001.driver_id)
+        self.assertFalse(v1001.flags & VehicleFlags.HAS_DRIVER)
 
 
 if __name__ == "__main__":
     unittest.main()
+

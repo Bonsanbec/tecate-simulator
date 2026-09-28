@@ -50,3 +50,24 @@ class DynamicEntity:
             vel_y=self.vel_y,
             vel_z=self.vel_z,
         )
+
+    @property
+    def is_vehicle(self) -> bool:
+        return self.entity_type == EntityType.VEHICLE
+
+    @property
+    def driver_id(self) -> int | None:
+        return self.properties.get("driver_id")
+
+    @driver_id.setter
+    def driver_id(self, val: int | None) -> None:
+        self.properties["driver_id"] = val
+
+    @property
+    def fuel(self) -> float:
+        return float(self.properties.get("fuel", 100.0))
+
+    @fuel.setter
+    def fuel(self, val: float) -> None:
+        self.properties["fuel"] = float(val)
+

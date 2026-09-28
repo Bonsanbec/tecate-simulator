@@ -49,13 +49,41 @@ class EntityType(IntEnum):
 
 
 class PlayerFlags(IntEnum):
-    """Banderas de estado biomecánico del jugador."""
+    """Banderas de estado biomecánico y ocupación del jugador."""
 
     NONE = 0x00
     GROUNDED = 0x01
     SPRINTING = 0x02
     FLYING = 0x04
     SLIDING = 0x08
+    IN_VEHICLE = 0x10
+    DRIVING_VEHICLE = 0x20
+
+
+class VehicleFlags(IntEnum):
+    """Banderas de estado operativo de un vehículo."""
+
+    NONE = 0x00
+    ENGINE_RUNNING = 0x01
+    HEADLIGHTS = 0x02
+    HORN = 0x04
+    ROUTE_VEHICLE = 0x08
+    HAS_DRIVER = 0x10
+
+
+class EventCode(IntEnum):
+    """Códigos de eventos discretos en TKT/1."""
+
+    PLAYER_JOIN = 1
+    PLAYER_LEAVE = 2
+    ENTITY_CREATE = 3
+    ENTITY_DESTROY = 4
+    ENTITY_ACTION = 5
+    ENTITY_INTERACT = 6
+    PROPERTY_CHANGED = 7
+    VEHICLE_ENTER = 8
+    VEHICLE_EXIT = 9
+    VEHICLE_REFUEL = 10
 
 
 class ChatChannel(IntEnum):
@@ -65,3 +93,4 @@ class ChatChannel(IntEnum):
     LOCAL = 1
     PRIVATE = 2
     SYSTEM = 3
+

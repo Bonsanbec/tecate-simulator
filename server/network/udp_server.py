@@ -14,6 +14,7 @@ from server.core.session_manager import SessionManager
 from server.core.world import SharedWorld
 from server.protocol.codec import (
     ChatPayload,
+    EventPayload,
     GoodbyePayload,
     HelloPayload,
     InputPayload,
@@ -24,7 +25,8 @@ from server.protocol.codec import (
     decode_packet,
     encode_packet,
 )
-from server.protocol.constants import ChatChannel, MessageType, PacketFlags
+from server.protocol.constants import ChatChannel, EventCode, MessageType, PacketFlags, PlayerFlags, VehicleFlags
+
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +74,9 @@ class TKTGameServer:
             cell_size=self.config.spatial_cell_size,
             broadcast_radius=self.config.broadcast_radius_cells,
         )
+        self.world.spawn_default_vehicles()
         self.protocol: TKTServerProtocol | None = None
+
         self.transport: asyncio.DatagramTransport | None = None
         self._is_running = False
         self._tick_task: asyncio.Task[None] | None = None
@@ -142,8 +146,11 @@ class TKTGameServer:
 
         if header.message_type == MessageType.INPUT:
             self._handle_input(session, payload_bytes)
+        elif header.message_type == MessageType.EVENT:
+            self._handle_event(session, payload_bytes)
         elif header.message_type == MessageType.PING:
             self._handle_ping(session, payload_bytes)
+
         elif header.message_type == MessageType.PONG:
             self._handle_pong(session, payload_bytes)
         elif header.message_type == MessageType.CHAT:
@@ -227,7 +234,110 @@ class TKTGameServer:
 
         self.world.upsert_entity(entity)
 
+        # Si el jugador está al volante de un vehículo, sincronizar la cinemática del vehículo
+        if inp.flags & PlayerFlags.DRIVING_VEHICLE:
+            vehicle = self.world.get_vehicle_by_driver(session.player_entity_id)
+            if vehicle:
+                vehicle.pos_x = inp.pos_x
+                vehicle.pos_y = inp.pos_y
+                vehicle.pos_z = inp.pos_z
+                vehicle.yaw = inp.yaw
+                vehicle.pitch = inp.pitch
+                vehicle.vel_x = inp.vel_x
+                vehicle.vel_y = inp.vel_y
+                vehicle.vel_z = inp.vel_z
+                vehicle.flags |= VehicleFlags.HAS_DRIVER
+                vehicle.last_update_tick = inp.tick
+                vehicle.last_update_time = time.time()
+                self.world.upsert_entity(vehicle)
+
+    def _handle_event(self, session: ClientSession, payload_bytes: bytes) -> None:
+        try:
+            event = EventPayload.unpack(payload_bytes)
+        except Exception as exc:
+            logger.debug("Error al desempaquetar EVENT de sesión %d: %s", session.session_id, exc)
+            return
+
+        # El servidor fuerza la autoría de la entidad origen
+        event.entity_id = session.player_entity_id
+
+        if event.event_code == EventCode.VEHICLE_ENTER:
+            try:
+                vehicle_id, seat_idx, role = event.unpack_vehicle_enter()
+                vehicle = self.world.get_entity(vehicle_id)
+                player_ent = self.world.get_entity(session.player_entity_id)
+                if vehicle and vehicle.is_vehicle:
+                    if role == 1:  # Rol Conductor
+                        vehicle.driver_id = session.player_entity_id
+                        vehicle.flags |= VehicleFlags.HAS_DRIVER
+                        if player_ent:
+                            player_ent.flags |= (PlayerFlags.IN_VEHICLE | PlayerFlags.DRIVING_VEHICLE)
+                    else:  # Rol Pasajero
+                        if player_ent:
+                            player_ent.flags |= PlayerFlags.IN_VEHICLE
+                            player_ent.flags &= ~PlayerFlags.DRIVING_VEHICLE
+                    logger.info(
+                        "[Vehículo] Jugador %d abordó vehículo %d (asiento=%d, conductor=%s)",
+                        session.player_entity_id,
+                        vehicle_id,
+                        seat_idx,
+                        role == 1,
+                    )
+            except Exception as exc:
+                logger.warning("Error procesando VEHICLE_ENTER: %s", exc)
+
+        elif event.event_code == EventCode.VEHICLE_EXIT:
+            try:
+                vehicle_id, seat_idx = event.unpack_vehicle_exit()
+                vehicle = self.world.get_entity(vehicle_id)
+                if vehicle and vehicle.is_vehicle:
+                    if vehicle.driver_id == session.player_entity_id:
+                        vehicle.driver_id = None
+                        vehicle.flags &= ~VehicleFlags.HAS_DRIVER
+                player_ent = self.world.get_entity(session.player_entity_id)
+                if player_ent:
+                    player_ent.flags &= ~(PlayerFlags.IN_VEHICLE | PlayerFlags.DRIVING_VEHICLE)
+                logger.info(
+                    "[Vehículo] Jugador %d descendió del vehículo %d (asiento=%d)",
+                    session.player_entity_id,
+                    vehicle_id,
+                    seat_idx,
+                )
+            except Exception as exc:
+                logger.warning("Error procesando VEHICLE_EXIT: %s", exc)
+
+        elif event.event_code == EventCode.VEHICLE_REFUEL:
+            try:
+                vehicle_id, fuel_amount = event.unpack_vehicle_refuel()
+                vehicle = self.world.get_entity(vehicle_id)
+                if vehicle and vehicle.is_vehicle:
+                    vehicle.fuel = fuel_amount
+                    logger.info(
+                        "[Vehículo] Vehículo %d reabastecido a %.1fL por jugador %d",
+                        vehicle_id,
+                        fuel_amount,
+                        session.player_entity_id,
+                    )
+            except Exception as exc:
+                logger.warning("Error procesando VEHICLE_REFUEL: %s", exc)
+
+        # Retransmitir evento fiable a todas las demás sesiones conectadas
+        event_bytes = event.pack()
+        now_ms = self.get_server_time_ms()
+        for other_session in self.session_manager:
+            if other_session.session_id == session.session_id:
+                continue
+            hdr = PacketHeader(
+                message_type=MessageType.EVENT,
+                flags=PacketFlags.RELIABLE,
+                session_id=other_session.session_id,
+                sequence=other_session.next_sequence(),
+                timestamp=now_ms,
+            )
+            self.send_to(encode_packet(hdr, event_bytes), other_session.addr)
+
     def _handle_ping(self, session: ClientSession, payload_bytes: bytes) -> None:
+
         try:
             ping = PingPongPayload.unpack(payload_bytes)
         except Exception:
@@ -281,6 +391,10 @@ class TKTGameServer:
             self.send_to(encode_packet(hdr, chat_bytes), other_session.addr)
 
     def _handle_goodbye(self, session: ClientSession, payload_bytes: bytes) -> None:
+        v = self.world.get_vehicle_by_driver(session.player_entity_id)
+        if v:
+            v.driver_id = None
+            v.flags &= ~VehicleFlags.HAS_DRIVER
         self.world.remove_entity(session.player_entity_id)
         self.session_manager.remove_session(session.session_id)
         logger.info("Cliente %s:%d finalizó sesión explícitamente (GOODBYE)", session.addr[0], session.addr[1])
@@ -298,8 +412,13 @@ class TKTGameServer:
                 self._last_purge_time = time.time()
                 timed_out = self.session_manager.purge_timed_out(self.config.session_timeout)
                 for s in timed_out:
+                    v = self.world.get_vehicle_by_driver(s.player_entity_id)
+                    if v:
+                        v.driver_id = None
+                        v.flags &= ~VehicleFlags.HAS_DRIVER
                     self.world.remove_entity(s.player_entity_id)
                     logger.info("Sesión %d expirada por inactividad", s.session_id)
+
 
             # Despachar SNAPSHOT a cada sesión conectada
             for session in self.session_manager:

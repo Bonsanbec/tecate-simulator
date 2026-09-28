@@ -26,8 +26,10 @@ enum VehicleType {
 }
 
 @export_group("Identidad y Clasificación")
+@export var vehicle_id: int = 1001
 @export var vehicle_name: String = "Vehículo Genérico"
 @export var vehicle_type: VehicleType = VehicleType.CAR
+
 
 @export_group("Física y Rendimiento")
 @export var mass_kg: float = 1400.0

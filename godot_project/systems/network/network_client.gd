@@ -9,6 +9,8 @@ signal disconnected_from_server(reason: String)
 signal latency_updated(ping_ms: float)
 signal snapshot_received(server_tick: int, entities: Array[TKTCodec.EntityRecord])
 signal chat_received(sender_id: int, channel: int, message: String)
+signal event_received(event_data: Dictionary)
+
 
 enum ConnectionState {
 	DISCONNECTED,
@@ -193,10 +195,21 @@ func _handle_incoming_packet(data: PackedByteArray) -> void:
 			_process_welcome(payload)
 		TKTCodec.MessageType.SNAPSHOT:
 			_process_snapshot(payload)
+		TKTCodec.MessageType.EVENT:
+			_process_event(payload)
 		TKTCodec.MessageType.PONG:
 			_process_pong(payload)
 		TKTCodec.MessageType.CHAT:
 			_process_chat(payload)
+
+func _process_event(payload: PackedByteArray) -> void:
+	var ev = TKTCodec.decode_event(payload)
+	if ev.is_empty():
+		return
+	if debug_logging:
+		print("[NetworkClient] EVENT recibido: code=%d, entity_id=%d" % [ev["event_code"], ev["entity_id"]])
+	event_received.emit(ev)
+
 
 func _process_welcome(payload: PackedByteArray) -> void:
 	var welcome = TKTCodec.decode_welcome(payload)
@@ -323,3 +336,40 @@ func _send_goodbye() -> void:
 
 	var packet = TKTCodec.encode_packet(hdr, bye_payload)
 	peer.put_packet(packet)
+
+func send_event(event_code: int, data: PackedByteArray = PackedByteArray()) -> void:
+	if state != ConnectionState.CONNECTED or peer == null or not peer.is_socket_connected():
+		return
+
+	var event_id = int(randi()) & 0x7FFFFFFF
+	var now_ms = Time.get_ticks_msec()
+	var ev_payload = TKTCodec.encode_event(event_id, event_code, player_entity_id, now_ms, data)
+
+	var hdr = TKTCodec.Header.new()
+	hdr.message_type = TKTCodec.MessageType.EVENT
+	hdr.flags = TKTCodec.PacketFlags.RELIABLE
+	hdr.session_id = session_id
+	hdr.sequence = _next_seq()
+	hdr.timestamp = now_ms
+
+	var packet = TKTCodec.encode_packet(hdr, ev_payload)
+	peer.put_packet(packet)
+
+func send_vehicle_enter(vehicle_id: int, seat_index: int, is_driver: bool) -> void:
+	var data = TKTCodec.encode_vehicle_enter_data(vehicle_id, seat_index, is_driver)
+	send_event(TKTCodec.EventCode.VEHICLE_ENTER, data)
+	if debug_logging:
+		print("[NetworkClient] Enviado VEHICLE_ENTER: vehicle_id=%d, seat=%d, is_driver=%s" % [vehicle_id, seat_index, is_driver])
+
+func send_vehicle_exit(vehicle_id: int, seat_index: int) -> void:
+	var data = TKTCodec.encode_vehicle_exit_data(vehicle_id, seat_index)
+	send_event(TKTCodec.EventCode.VEHICLE_EXIT, data)
+	if debug_logging:
+		print("[NetworkClient] Enviado VEHICLE_EXIT: vehicle_id=%d, seat=%d" % [vehicle_id, seat_index])
+
+func send_vehicle_refuel(vehicle_id: int, fuel_amount: float) -> void:
+	var data = TKTCodec.encode_vehicle_refuel_data(vehicle_id, fuel_amount)
+	send_event(TKTCodec.EventCode.VEHICLE_REFUEL, data)
+	if debug_logging:
+		print("[NetworkClient] Enviado VEHICLE_REFUEL: vehicle_id=%d, fuel=%.1f" % [vehicle_id, fuel_amount])
+

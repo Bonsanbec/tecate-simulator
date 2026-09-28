@@ -363,6 +363,57 @@ class ChatPayload:
         return cls(channel=channel, sender_id=sender_id, message=msg)
 
 
+@dataclass
+class EventPayload:
+    """Evento discreto en TKT/1 (ej. VEHICLE_ENTER, VEHICLE_EXIT, PROPERTY_CHANGED)."""
+
+    event_id: int = 0
+    event_code: int = 0
+    entity_id: int = 0
+    timestamp: int = 0
+    data: bytes = field(default_factory=bytes)
+
+    def pack(self) -> bytes:
+        data_len = len(self.data)
+        base = struct.pack("<IHIIH", self.event_id, self.event_code, self.entity_id, self.timestamp, data_len)
+        return base + self.data
+
+    @classmethod
+    def unpack(cls, payload: bytes) -> EventPayload:
+        if len(payload) < 16:
+            raise ValueError(f"Payload insuficiente para EVENT ({len(payload)} < 16 bytes)")
+        event_id, event_code, entity_id, timestamp, data_len = struct.unpack("<IHIIH", payload[:16])
+        data = payload[16 : 16 + data_len]
+        return cls(
+            event_id=event_id,
+            event_code=event_code,
+            entity_id=entity_id,
+            timestamp=timestamp,
+            data=data,
+        )
+
+    def unpack_vehicle_enter(self) -> tuple[int, int, int]:
+        """Retorna (vehicle_id, seat_index, role) desde data."""
+        if len(self.data) < 6:
+            raise ValueError(f"Datos insuficientes para VEHICLE_ENTER ({len(self.data)} < 6 bytes)")
+        v_id, seat_idx, role = struct.unpack("<IBB", self.data[:6])
+        return (v_id, seat_idx, role)
+
+    def unpack_vehicle_exit(self) -> tuple[int, int]:
+        """Retorna (vehicle_id, seat_index) desde data."""
+        if len(self.data) < 5:
+            raise ValueError(f"Datos insuficientes para VEHICLE_EXIT ({len(self.data)} < 5 bytes)")
+        v_id, seat_idx = struct.unpack("<IB", self.data[:5])
+        return (v_id, seat_idx)
+
+    def unpack_vehicle_refuel(self) -> tuple[int, float]:
+        """Retorna (vehicle_id, fuel_amount) desde data."""
+        if len(self.data) < 8:
+            raise ValueError(f"Datos insuficientes para VEHICLE_REFUEL ({len(self.data)} < 8 bytes)")
+        v_id, fuel = struct.unpack("<If", self.data[:8])
+        return (v_id, fuel)
+
+
 # =============================================================================
 # FUNCIONES DE ALTO NIVEL PARA ARMAR / DESARMAR PAQUETES COMPLETOS
 # =============================================================================

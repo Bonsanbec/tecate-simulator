@@ -28,6 +28,47 @@ enum PacketFlags {
 	RESEND = 0x04
 }
 
+enum EntityType {
+	PLAYER = 1,
+	VEHICLE = 2,
+	OBJECT = 3,
+	NPC = 4,
+	ITEM = 5
+}
+
+enum PlayerFlags {
+	NONE = 0x00,
+	GROUNDED = 0x01,
+	SPRINTING = 0x02,
+	FLYING = 0x04,
+	SLIDING = 0x08,
+	IN_VEHICLE = 0x10,
+	DRIVING_VEHICLE = 0x20
+}
+
+enum VehicleFlags {
+	NONE = 0x00,
+	ENGINE_RUNNING = 0x01,
+	HEADLIGHTS = 0x02,
+	HORN = 0x04,
+	ROUTE_VEHICLE = 0x08,
+	HAS_DRIVER = 0x10
+}
+
+enum EventCode {
+	PLAYER_JOIN = 1,
+	PLAYER_LEAVE = 2,
+	ENTITY_CREATE = 3,
+	ENTITY_DESTROY = 4,
+	ENTITY_ACTION = 5,
+	ENTITY_INTERACT = 6,
+	PROPERTY_CHANGED = 7,
+	VEHICLE_ENTER = 8,
+	VEHICLE_EXIT = 9,
+	VEHICLE_REFUEL = 10
+}
+
+
 class Header:
 	var magic: PackedByteArray = [0x54, 0x4B, 0x54, 0x31]
 	var protocol_version: int = 1
@@ -246,3 +287,102 @@ static func decode_chat(payload: PackedByteArray) -> Dictionary:
 		"sender_id": sender_id,
 		"message": msg
 	}
+
+# =============================================================================
+# EVENT SERIALIZERS (TKT/1)
+# =============================================================================
+
+static func encode_event(event_id: int, event_code: int, entity_id: int, timestamp: int, data: PackedByteArray = PackedByteArray()) -> PackedByteArray:
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.put_u32(event_id)
+	sp.put_u16(event_code)
+	sp.put_u32(entity_id)
+	sp.put_u32(timestamp)
+	sp.put_u16(data.size())
+	if data.size() > 0:
+		sp.put_data(data)
+	return sp.data_array
+
+static func decode_event(payload: PackedByteArray) -> Dictionary:
+	if payload.size() < 16:
+		return {}
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.data_array = payload
+
+	var event_id = sp.get_u32()
+	var event_code = sp.get_u16()
+	var entity_id = sp.get_u32()
+	var timestamp = sp.get_u32()
+	var data_len = sp.get_u16()
+	var data = PackedByteArray()
+	if data_len > 0 and sp.get_position() + data_len <= payload.size():
+		var read_res = sp.get_data(data_len)
+		if read_res[0] == OK:
+			data = read_res[1]
+
+	return {
+		"event_id": event_id,
+		"event_code": event_code,
+		"entity_id": entity_id,
+		"timestamp": timestamp,
+		"data": data
+	}
+
+static func encode_vehicle_enter_data(vehicle_id: int, seat_index: int, is_driver: bool) -> PackedByteArray:
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.put_u32(vehicle_id)
+	sp.put_u8(seat_index)
+	sp.put_u8(1 if is_driver else 0)
+	return sp.data_array
+
+static func decode_vehicle_enter_data(data: PackedByteArray) -> Dictionary:
+	if data.size() < 6:
+		return {}
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.data_array = data
+	return {
+		"vehicle_id": sp.get_u32(),
+		"seat_index": sp.get_u8(),
+		"role": sp.get_u8()
+	}
+
+static func encode_vehicle_exit_data(vehicle_id: int, seat_index: int) -> PackedByteArray:
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.put_u32(vehicle_id)
+	sp.put_u8(seat_index)
+	return sp.data_array
+
+static func decode_vehicle_exit_data(data: PackedByteArray) -> Dictionary:
+	if data.size() < 5:
+		return {}
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.data_array = data
+	return {
+		"vehicle_id": sp.get_u32(),
+		"seat_index": sp.get_u8()
+	}
+
+static func encode_vehicle_refuel_data(vehicle_id: int, fuel_amount: float) -> PackedByteArray:
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.put_u32(vehicle_id)
+	sp.put_float(fuel_amount)
+	return sp.data_array
+
+static func decode_vehicle_refuel_data(data: PackedByteArray) -> Dictionary:
+	if data.size() < 8:
+		return {}
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.data_array = data
+	return {
+		"vehicle_id": sp.get_u32(),
+		"fuel_amount": sp.get_float()
+	}
+
