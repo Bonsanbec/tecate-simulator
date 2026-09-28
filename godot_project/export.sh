@@ -18,57 +18,57 @@ export GODOT_PATH="${GODOT_PATH:-$(which godot-mono)}"
 export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}"
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 11 2>/dev/null || echo /usr)}"
 
-# -------------------------------------------------
-# Solicitar credenciales de Android si no están definidas.
-# Godot 4 reconoce estas variables de entorno de forma nativa
-# y sobreescribe los valores de export_presets.cfg sin tocarlo:
-#
-#   GODOT_ANDROID_KEYSTORE_DEBUG_PATH
-#   GODOT_ANDROID_KEYSTORE_DEBUG_USER
-#   GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD
-#   GODOT_ANDROID_KEYSTORE_RELEASE_PATH
-#   GODOT_ANDROID_KEYSTORE_RELEASE_USER
-#   GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD
-#
-# El archivo export_presets.cfg NUNCA se modifica.
-# -------------------------------------------------
+# # -------------------------------------------------
+# # Solicitar credenciales de Android si no están definidas.
+# # Godot 4 reconoce estas variables de entorno de forma nativa
+# # y sobreescribe los valores de export_presets.cfg sin tocarlo:
+# #
+# #   GODOT_ANDROID_KEYSTORE_DEBUG_PATH
+# #   GODOT_ANDROID_KEYSTORE_DEBUG_USER
+# #   GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD
+# #   GODOT_ANDROID_KEYSTORE_RELEASE_PATH
+# #   GODOT_ANDROID_KEYSTORE_RELEASE_USER
+# #   GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD
+# #
+# # El archivo export_presets.cfg NUNCA se modifica.
+# # -------------------------------------------------
 
-# Ruta al keystore
-if [[ -z "${GODOT_ANDROID_KEYSTORE_RELEASE_PATH:-}" ]]; then
-  if [[ -n "${ANDROID_KEYSTORE_PATH:-}" ]]; then
-    export GODOT_ANDROID_KEYSTORE_RELEASE_PATH="$ANDROID_KEYSTORE_PATH"
-  else
-    read -rp "Path to Android keystore file: " GODOT_ANDROID_KEYSTORE_RELEASE_PATH
-  fi
-fi
-export GODOT_ANDROID_KEYSTORE_DEBUG_PATH="${GODOT_ANDROID_KEYSTORE_DEBUG_PATH:-$GODOT_ANDROID_KEYSTORE_RELEASE_PATH}"
+# # Ruta al keystore
+# if [[ -z "${GODOT_ANDROID_KEYSTORE_RELEASE_PATH:-}" ]]; then
+#   if [[ -n "${ANDROID_KEYSTORE_PATH:-}" ]]; then
+#     export GODOT_ANDROID_KEYSTORE_RELEASE_PATH="$ANDROID_KEYSTORE_PATH"
+#   else
+#     read -rp "Path to Android keystore file: " GODOT_ANDROID_KEYSTORE_RELEASE_PATH
+#   fi
+# fi
+# export GODOT_ANDROID_KEYSTORE_DEBUG_PATH="${GODOT_ANDROID_KEYSTORE_DEBUG_PATH:-$GODOT_ANDROID_KEYSTORE_RELEASE_PATH}"
 
-# Alias
-if [[ -z "${GODOT_ANDROID_KEYSTORE_RELEASE_USER:-}" ]]; then
-  if [[ -n "${ANDROID_KEYSTORE_ALIAS:-}" ]]; then
-    export GODOT_ANDROID_KEYSTORE_RELEASE_USER="$ANDROID_KEYSTORE_ALIAS"
-  else
-    read -rp "Android keystore alias: " GODOT_ANDROID_KEYSTORE_RELEASE_USER
-  fi
-fi
-export GODOT_ANDROID_KEYSTORE_DEBUG_USER="${GODOT_ANDROID_KEYSTORE_DEBUG_USER:-$GODOT_ANDROID_KEYSTORE_RELEASE_USER}"
+# # Alias
+# if [[ -z "${GODOT_ANDROID_KEYSTORE_RELEASE_USER:-}" ]]; then
+#   if [[ -n "${ANDROID_KEYSTORE_ALIAS:-}" ]]; then
+#     export GODOT_ANDROID_KEYSTORE_RELEASE_USER="$ANDROID_KEYSTORE_ALIAS"
+#   else
+#     read -rp "Android keystore alias: " GODOT_ANDROID_KEYSTORE_RELEASE_USER
+#   fi
+# fi
+# export GODOT_ANDROID_KEYSTORE_DEBUG_USER="${GODOT_ANDROID_KEYSTORE_DEBUG_USER:-$GODOT_ANDROID_KEYSTORE_RELEASE_USER}"
 
-# Contraseña
-if [[ -z "${GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD:-}" ]]; then
-  if [[ -n "${ANDROID_KEYSTORE_PASSWORD:-}" ]]; then
-    export GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD="$ANDROID_KEYSTORE_PASSWORD"
-  else
-    read -rs -p "Android keystore password: " GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD
-    echo
-  fi
-fi
-export GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD="${GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD:-$GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD}"
+# # Contraseña
+# if [[ -z "${GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD:-}" ]]; then
+#   if [[ -n "${ANDROID_KEYSTORE_PASSWORD:-}" ]]; then
+#     export GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD="$ANDROID_KEYSTORE_PASSWORD"
+#   else
+#     read -rs -p "Android keystore password: " GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD
+#     echo
+#   fi
+# fi
+# export GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD="${GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD:-$GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD}"
 
-# NDK
-if [[ -z "${ANDROID_NDK_ROOT:-}" ]]; then
-  read -rp "Path to Android NDK: " ANDROID_NDK_ROOT
-fi
-export ANDROID_NDK_ROOT
+# # NDK
+# if [[ -z "${ANDROID_NDK_ROOT:-}" ]]; then
+#   read -rp "Path to Android NDK: " ANDROID_NDK_ROOT
+# fi
+# export ANDROID_NDK_ROOT
 
 # -------------------------------------------------
 # 1) Generar ensamblados Mono
