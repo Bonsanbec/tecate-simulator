@@ -46,21 +46,31 @@ const HELLO_RETRY_INTERVAL: float = 1.0
 
 func _init():
 	peer = PacketPeerUDP.new()
-	_load_configuration()
 
 func _ready():
-	# Si ya fue inicializado en _init(), asegurar que la configuración esté cargada
-	if server_host.is_empty():
-		_load_configuration()
+	_load_configuration()
 
 func _load_configuration() -> void:
-	var env = EnvLoader.load_env()
-	server_host = str(env.get("TECATE_SERVER_HOST", "127.0.0.1"))
-	server_port = int(env.get("TECATE_SERVER_PORT", 52665))
-	tick_rate = int(env.get("TECATE_TICK_RATE", 30))
-	is_local_dev = bool(env.get("TECATE_LOCAL_DEV", false))
-	debug_logging = bool(env.get("TECATE_DEBUG_NET", false))
-	print("[NetworkClient] Configuración cargada: %s:%d (DevLocal=%s)" % [server_host, server_port, is_local_dev])
+	## Lee desde el Autoload NetworkConfig (cargado por Godot al arrancar).
+	## NetworkConfig lee a su vez de ProjectSettings + override opcional de .env local.
+	## Esto funciona en TODOS los targets de exportación sin configuración adicional.
+	if Engine.has_singleton("NetworkConfig"):
+		var cfg = Engine.get_singleton("NetworkConfig")
+		server_host = cfg.server_host
+		server_port = cfg.server_port
+		tick_rate = cfg.tick_rate
+		is_local_dev = cfg.is_local_dev
+		debug_logging = cfg.debug_net
+	else:
+		## Fallback de emergencia: valores de producción hardcodeados.
+		## Este bloque solo se ejecuta si el Autoload no está disponible (p. ej. pruebas unitarias aisladas).
+		push_warning("[NetworkClient] Autoload 'NetworkConfig' no disponible. Usando defaults de emergencia.")
+		server_host = "api.tecate.bonsanbec.dev"
+		server_port = 52665
+		tick_rate = 30
+	print("[NetworkClient] Configuración cargada: %s:%d | TickRate=%d | LocalDev=%s" % [
+		server_host, server_port, tick_rate, is_local_dev
+	])
 
 func start_connection() -> void:
 	if state == ConnectionState.CONNECTED or state == ConnectionState.CONNECTING:
@@ -71,15 +81,22 @@ func start_connection() -> void:
 
 	print("[NetworkClient] Iniciando conexión con %s:%d..." % [server_host, server_port])
 
-	# Resolver DNS si es un nombre de dominio
-	var target_ip = server_host
-	if not server_host.is_valid_ip_address():
+	# Resolver DNS (reutilizar el resultado del Autoload si ya está disponible)
+	var target_ip: String = server_host
+	if Engine.has_singleton("NetworkConfig"):
+		var cfg = Engine.get_singleton("NetworkConfig")
+		target_ip = cfg.resolve_host()
+		if target_ip.is_empty():
+			print("[NetworkClient] Sin conexión al servidor. El juego continuará en modo fuera de línea.")
+			state = ConnectionState.DISCONNECTED
+			disconnected_from_server.emit("Host no alcanzable (DNS offline)")
+			return
+	elif not server_host.is_valid_ip_address():
 		var resolved = IP.resolve_hostname(server_host, IP.TYPE_IPV4)
 		if resolved.is_valid_ip_address():
 			target_ip = resolved
-			print("[NetworkClient] Host '%s' resuelto exitosamente a IP: %s" % [server_host, target_ip])
 		else:
-			print("[NetworkClient] Advertencia: No se pudo resolver DNS para '%s'. Se operará en modo fuera de línea hasta que el host esté disponible." % server_host)
+			print("[NetworkClient] No se pudo resolver DNS para '%s'. Modo fuera de línea activo." % server_host)
 			state = ConnectionState.DISCONNECTED
 			disconnected_from_server.emit("Host no resoluble (DNS offline)")
 			return

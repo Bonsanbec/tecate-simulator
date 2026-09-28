@@ -40,6 +40,17 @@ environment/defaults/default_clear_color=Color(0.894118, 0.894118, 0.894118, 1)
 
 file_logging/enable_file_logging=false
 
+[network]
+
+tkt/server_host="api.tecate.bonsanbec.dev"
+tkt/server_port=52665
+tkt/tick_rate=30
+tkt/session_timeout=10.0
+tkt/interpolation_delay=0.10
+tkt/local_dev=false
+tkt/debug_net=false
+
 [autoload]
 
 StreetNameLookup="*res://systems/urban/street_name_lookup.gd"
+NetworkConfig="*res://systems/network/network_config.gd"
