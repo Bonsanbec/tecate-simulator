@@ -31,7 +31,7 @@ export ANDROID_KEYSTORE_PATH ANDROID_KEYSTORE_ALIAS ANDROID_KEYSTORE_PASSWORD AN
 # 1) Compilar (opcional) – Godot‑Mono necesita generar los ensamblados .dll,
 #    aunque el proyecto no tenga C#.  Esto se hace con --script.
 # -------------------------------------------------
-echo "=== Generando ensamblados Mono (aunque no haya C#) ==="
+echo "=== Generando ensamblados Mono ==="
 "$GODOT_PATH" --headless --path "$(pwd)" --no-window --quit
 
 # -------------------------------------------------
