@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ -f ".env" ]]; then
+  set -a          # exporta cualquier variable declarada
+  # shellcheck source=/dev/null
+  source ".env"
+  set +a
+fi
+
 # -------------------------------------------------
 # Variables de entorno
 # -------------------------------------------------
