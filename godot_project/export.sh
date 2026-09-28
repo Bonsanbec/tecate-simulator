@@ -42,8 +42,7 @@ echo "=== Exportando a Android (APK) ==="
   --headless \
   --path "$(pwd)" \
   --export-release "Android" \
-  --quiet \
-  --config-file "android_export.cfg"
+  --quiet
 
 # -------------------------------------------------
 # 3) Exportar iOS (Xcode project)
@@ -53,8 +52,7 @@ echo "=== Exportando a iOS (Xcode project) ==="
   --headless \
   --path "$(pwd)" \
   --export-release "iOS" \
-  --quiet \
-  --config-file "ios_export.cfg"
+  --quiet
 
 # -------------------------------------------------
 # 4) Compilar el proyecto Xcode (iOS) desde la CLI
