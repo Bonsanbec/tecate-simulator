@@ -6,7 +6,6 @@ set -euo pipefail
 # -------------------------------------------------
 export GODOT_PATH="${GODOT_PATH:-$(which godot-mono)}"
 export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}"
-export ANDROID_NDK_ROOT="${ANDROID_NDK_ROOT:-}"
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 11)}"
 
 # Prompt for Android keystore information if not already set
@@ -21,8 +20,12 @@ if [[ -z "${ANDROID_KEYSTORE_PASSWORD:-}" ]]; then
   echo
 fi
 
+if [[ -z "${ANDROID_NDK_ROOT:-}" ]]; then
+  read -p "Path to Android NDK: " ANDROID_NDK_ROOT
+fi
+
 # Export the variables so Godot can use them
-export ANDROID_KEYSTORE_PATH ANDROID_KEYSTORE_ALIAS ANDROID_KEYSTORE_PASSWORD
+export ANDROID_KEYSTORE_PATH ANDROID_KEYSTORE_ALIAS ANDROID_KEYSTORE_PASSWORD ANDROID_NDK_ROOT
 
 # -------------------------------------------------
 # 1) Compilar (opcional) – Godot‑Mono necesita generar los ensamblados .dll,
