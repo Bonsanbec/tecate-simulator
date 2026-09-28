@@ -4,10 +4,10 @@ set -euo pipefail
 # -------------------------------------------------
 # Cargar variables desde .env (si existe)
 # -------------------------------------------------
-if [[ -f "../.env" ]]; then
+if [[ -f "./.env" ]]; then
   set -a
   # shellcheck source=/dev/null
-  source "../.env"
+  source "./.env"
   set +a
 fi
 
