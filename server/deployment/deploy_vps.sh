@@ -4,7 +4,6 @@
 # ==============================================================================
 
 set -euo pipefail
-cd "$(dirname "$0")"
 
 echo "===== INICIANDO DESPLIEGUE DE TECATE SIMULATOR SERVER (TKT/1) ====="
 
@@ -33,7 +32,7 @@ if [ ! -f "${TARGET_DIR}/server/.env" ]; then
 fi
 
 # 5. Instalar servicio systemd
-SERVICE_FILE="deployment/tecate-server.service"
+SERVICE_FILE="${TARGET_DIR}/server/deployment/tecate-server.service"
 if [ -f "${SERVICE_FILE}" ]; then
     echo "[VPS] Instalando unidad de servicio systemd..."
     sudo cp "${SERVICE_FILE}" /etc/systemd/system/tecate-server.service
