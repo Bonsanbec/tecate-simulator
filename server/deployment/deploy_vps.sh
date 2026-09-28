@@ -17,13 +17,15 @@ PORT="${SERVER_PORT:-52665}"
 # 3. Preparar directorio de ejecución
 TARGET_DIR="/opt/tecate-simulator"
 echo "[VPS] Sincronizando archivos a ${TARGET_DIR}..."
-sudo mkdir -p "${TARGET_DIR}"
-sudo chown -R www-data:www-data "${TARGET_DIR}"
-sudo -u www-data git clone --no-checkout https://github.com/Bonsanbec/tecate-simulator "${TARGET_DIR}"
-cd ${TARGET_DIR}
-sudo -u www-data git sparse-checkout init
-sudo -u www-data git sparse-checkout set server
-sudo -u www-data git checkout master
+if [ ! -f "${TARGET_DIR}" ]; then
+    sudo mkdir -p "${TARGET_DIR}"
+    sudo chown -R www-data:www-data "${TARGET_DIR}"
+    sudo -u www-data git clone --no-checkout https://github.com/Bonsanbec/tecate-simulator "${TARGET_DIR}"
+    cd ${TARGET_DIR}
+    sudo -u www-data git sparse-checkout init
+    sudo -u www-data git sparse-checkout set server
+    sudo -u www-data git checkout master
+fi
 
 # 4. Asegurar existencia de archivo .env
 if [ ! -f "${TARGET_DIR}/server/.env" ]; then
