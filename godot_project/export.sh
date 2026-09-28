@@ -97,7 +97,7 @@ echo "=== Generando ensamblados Mono ==="
 #   --export-release "iOS"
 
 # -------------------------------------------------
-# 3) Exportar macOS
+# 4) Exportar macOS
 # -------------------------------------------------
 mkdir -p build/macos
 echo "=== Exportando a macOS ==="
@@ -106,8 +106,18 @@ echo "=== Exportando a macOS ==="
   --path "$(pwd)" \
   --export-release "macOS"
 
+# -------------------------------------------------
+# 5) Exportar macOS
+# -------------------------------------------------
+mkdir -p build/windows
+echo "=== Exportando a Windows ==="
+"$GODOT_PATH" \
+  --headless \
+  --path "$(pwd)" \
+  --export-release "Windows"
+
 # # -------------------------------------------------
-# # 4) Compilar el proyecto Xcode (iOS) desde la CLI
+# # n) Compilar el proyecto Xcode (iOS) desde la CLI
 # # -------------------------------------------------
 # if command -v xcodebuild >/dev/null; then
 #   echo "=== Compilando el proyecto Xcode (modo Release) ==="
