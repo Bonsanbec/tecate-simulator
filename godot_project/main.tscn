@@ -24,6 +24,7 @@
 [ext_resource type="PackedScene" path="res://assets/parque_miguel_hidalgo.tscn" id="23_parque_hidalgo"]
 [ext_resource type="Script" path="res://systems/network/network_client.gd" id="24_network_client"]
 [ext_resource type="Script" path="res://systems/network/multiplayer_manager.gd" id="25_multiplayer_mgr"]
+[ext_resource type="PackedScene" path="res://assets/vehicles/bus_hongo.tscn" id="26_bus_hongo"]
 
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
@@ -104,3 +105,7 @@ script = ExtResource("24_network_client")
 
 [node name="MultiplayerManager" type="Node" parent="."]
 script = ExtResource("25_multiplayer_mgr")
+
+[node name="Bus_El_Hongo" parent="." instance=ExtResource("26_bus_hongo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10760.3, 169.8, 4126.8)
+
