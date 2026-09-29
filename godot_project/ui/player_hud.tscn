@@ -87,7 +87,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
 [node name="TelemetryLabel" type="Label" parent="BottomLeft"]
 layout_mode = 2
 text = "VELOCIDAD:  0.0 km/h
-ALTITUD:   540.0 m snm
+ALTITUD:   0.0 msnm
 PENDIENTE:  0.0°"
 label_settings = SubResource("LabelSettings_telemetry")
 vertical_alignment = 1

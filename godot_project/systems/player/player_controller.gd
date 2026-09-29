@@ -629,7 +629,7 @@ func _update_procedural_animations(delta: float) -> void:
 
 func _update_telemetry(delta: float) -> void:
 	current_speed_kmh = Vector2(velocity.x, velocity.z).length() * 3.6
-	current_altitude_msnm = 540.0 + global_position.y # Cota base aproximada de Tecate
+	current_altitude_msnm = global_position.y # Cota base aproximada de Tecate
 
 	# Cálculo analítico del rumbo cartográfico (Heading Azimuth):
 	var forward := -global_transform.basis.z
