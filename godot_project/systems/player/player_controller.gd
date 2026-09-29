@@ -51,7 +51,7 @@ const DEFAULT_SNAP_LENGTH: float = 0.30
 var current_slope_angle: float = 0.0
 var current_heading_deg: float = 0.0
 var current_speed_kmh: float = 0.0
-var current_altitude_msnm: float = 540.0
+var current_altitude_msnm: float = 0.0
 var _street_update_timer: float = 0.0
 var _cached_street_name: String = ""
 
