@@ -19,7 +19,7 @@ signal route_station_departed(station_name: String)
 ## Índices de waypoints que corresponden a paradas obligatorias con su nombre
 @export var station_indices: Dictionary = {} # int -> String (ej: { 2: "Parada Parque Hidalgo", 6: "Parada Presidencia" })
 
-var current_waypoint_index: int = 0
+@export var current_waypoint_index: int = 0
 var is_at_station: bool = false
 var _station_timer: float = 0.0
 var _target_speed: float = 0.0
@@ -36,6 +36,15 @@ func _ready() -> void:
 	_update_lights_visual()
 
 	_target_speed = cruise_speed_kmh / 3.6
+
+	# Alinear orientación inicial hacia el siguiente waypoint de la ruta
+	if not waypoints.is_empty() and current_waypoint_index < waypoints.size():
+		var next_idx = (current_waypoint_index + 1) % waypoints.size()
+		var target_pt = waypoints[next_idx]
+		var forward_dir = (target_pt - global_position)
+		forward_dir.y = 0.0
+		if forward_dir.length_squared() > 0.01:
+			look_at(global_position + forward_dir.normalized(), Vector3.UP)
 
 ## Sobrescribe la entrada al vehículo para forzar siempre plaza de pasajero
 func enter_vehicle(player: Node3D, _preferred_type: int = 1) -> bool:

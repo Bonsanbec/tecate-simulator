@@ -15,57 +15,17 @@ extends CanvasLayer
 @onready var axes_gizmo: CompassAxesGizmo = $AxesGizmo
 @onready var network_label: Label = get_node_or_null("TopLeft/NetworkLabel") as Label
 
-var prompt_label: Label = null
+var _cached_camera_mode: String = "1P - Vista Subjetiva"
+var _current_interaction_prompt: String = ""
 var _badge_fade_timer: float = 3.0
 
 func _ready():
 	visible = false
-	_create_interaction_prompt_ui()
-
-func _create_interaction_prompt_ui() -> void:
-	var prompt_panel = PanelContainer.new()
-	prompt_panel.name = "InteractionPromptPanel"
-	prompt_panel.anchors_preset = Control.PRESET_CENTER_BOTTOM
-	prompt_panel.anchor_left = 0.5
-	prompt_panel.anchor_top = 1.0
-	prompt_panel.anchor_right = 0.5
-	prompt_panel.anchor_bottom = 1.0
-	prompt_panel.offset_left = -160.0
-	prompt_panel.offset_top = -120.0
-	prompt_panel.offset_right = 160.0
-	prompt_panel.offset_bottom = -80.0
-	prompt_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	prompt_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.10, 0.14, 0.85)
-	style.set_corner_radius_all(6)
-	style.content_margin_left = 12
-	style.content_margin_right = 12
-	style.content_margin_top = 6
-	style.content_margin_bottom = 6
-	prompt_panel.add_theme_stylebox_override("panel", style)
-
-	prompt_label = Label.new()
-	prompt_label.name = "PromptLabel"
-	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	prompt_label.add_theme_color_override("font_color", Color(1.0, 0.90, 0.35, 1.0))
-	prompt_label.add_theme_font_size_override("font_size", 14)
-	prompt_panel.add_child(prompt_label)
-
-	add_child(prompt_panel)
-	prompt_panel.visible = false
+	_refresh_mode_badge()
 
 func set_interaction_prompt(prompt_text: String) -> void:
-	if not prompt_label:
-		return
-	var panel = prompt_label.get_parent() as Control
-	if prompt_text.is_empty():
-		if panel: panel.visible = false
-	else:
-		prompt_label.text = prompt_text
-		if panel: panel.visible = true
+	_current_interaction_prompt = prompt_text
+	_refresh_mode_badge()
 
 func update_network_status(status_text: String, is_connected: bool = false) -> void:
 	if network_label:
@@ -155,16 +115,32 @@ func update_axes(camera_basis: Basis) -> void:
 		axes_gizmo.set_camera_basis(camera_basis)
 
 func set_perspective_badge(mode_name: String) -> void:
-	if mode_badge:
-		mode_badge.text = "[F5] %s" % mode_name
+	_cached_camera_mode = mode_name
+	_badge_fade_timer = 2.5
+	_refresh_mode_badge()
+
+func _refresh_mode_badge() -> void:
+	if not mode_badge:
+		return
+	if not _current_interaction_prompt.is_empty():
+		mode_badge.text = "[F5] %s   |   %s" % [_cached_camera_mode, _current_interaction_prompt]
 		mode_badge.modulate.a = 1.0
-		_badge_fade_timer = 2.5
+	else:
+		mode_badge.text = "[F5] %s" % _cached_camera_mode
+		if _badge_fade_timer <= 0.0:
+			mode_badge.modulate.a = 0.35
+		else:
+			mode_badge.modulate.a = 1.0
 
 func _process(delta: float) -> void:
-	if mode_badge and _badge_fade_timer > 0.0:
+	if not mode_badge:
+		return
+	if not _current_interaction_prompt.is_empty():
+		mode_badge.modulate.a = 1.0
+	elif _badge_fade_timer > 0.0:
 		_badge_fade_timer -= delta
 		if _badge_fade_timer <= 1.0:
-			mode_badge.modulate.a = clampf(_badge_fade_timer, 0.25, 1.0)
+			mode_badge.modulate.a = clampf(_badge_fade_timer * 0.65 + 0.35, 0.35, 1.0)
 
 func _get_cardinal_direction(deg: float) -> String:
 	if deg >= 337.5 or deg < 22.5: return "N"

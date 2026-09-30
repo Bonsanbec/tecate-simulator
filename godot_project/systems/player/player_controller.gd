@@ -817,20 +817,37 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 	_nearby_pump_zone = null
 
 	var tree_root = get_tree().root
-	if not tree_root:
-		return
+	# Buscar vehículos registrados en el grupo 'vehicles' o nodos derivados de VehicleBase
+	var vehicles = get_tree().get_nodes_in_group("vehicles")
+	if vehicles.is_empty():
+		for n in tree_root.find_children("*", "CharacterBody3D", true, false):
+			if n is VehicleBase:
+				vehicles.append(n)
 
-	# Buscar vehículos en un radio de 4.0 metros
-	var search_radius_sq = 16.0 # 4m ^ 2
+	var search_radius_sq = 36.0 # Radio de 6.0 metros
 	var min_d_sq = search_radius_sq
 	var my_pos = global_position
 
-	for veh in tree_root.find_children("*", "VehicleBase", true, false):
-		if veh is VehicleBase:
-			var d_sq = my_pos.distance_squared_to(veh.global_position)
-			if d_sq < min_d_sq:
-				min_d_sq = d_sq
+	for veh in vehicles:
+		if veh is VehicleBase and veh.is_inside_tree():
+			var veh_dist_sq = my_pos.distance_squared_to(veh.global_position)
+			var min_entry_dist_sq = veh_dist_sq
+			for s in veh.seats:
+				if s and s is Node3D and s.is_inside_tree():
+					var s_d_sq = my_pos.distance_squared_to(s.global_position)
+					if s_d_sq < min_entry_dist_sq:
+						min_entry_dist_sq = s_d_sq
+			if min_entry_dist_sq < min_d_sq:
+				min_d_sq = min_entry_dist_sq
 				_nearby_vehicle = veh as VehicleBase
+
+	# Buscar estaciones de servicio en proximidad (para tecla [R])
+	for pz in tree_root.find_children("*", "Area3D", true, false):
+		if pz.has_method("start_refueling") or pz.name.contains("PumpZone"):
+			var d_sq = my_pos.distance_squared_to(pz.global_position)
+			if d_sq < 25.0:
+				_nearby_pump_zone = pz
+				break
 
 	if _nearby_vehicle:
 		var d_seat = _nearby_vehicle.get_driver_seat()

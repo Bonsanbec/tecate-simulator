@@ -95,6 +95,7 @@ var taillights_root: Node3D = null
 var default_gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity", 9.8)
 
 func _ready() -> void:
+	add_to_group("vehicles")
 	var _fs = fuel_system # Dispara inicialización
 	_discover_seats()
 	_discover_suspension_rays()

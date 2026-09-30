@@ -95,9 +95,9 @@ func test_seating_and_passenger_contract() -> void:
 	var scene_res = load("res://assets/vehicles/bus_hongo.tscn")
 	var bus = scene_res.instantiate()
 
-	assert_true(bus.get_driver_seat() == null, "El autobús NO cuenta con plaza de conductor para el jugador")
+	assert_true(bus.get_driver_seat() != null, "El autobús cuenta con asiento físico del chofer modelado en cabina")
 	var passengers = bus.get_available_passenger_seats()
-	assert_true(passengers.size() >= 4, "Cuenta con múltiples asientos de pasajero interactivos")
+	assert_true(passengers.size() == 30, "Cuenta con exactamente 30 asientos reglamentarios de pasajeros (Obtenidos: %d)" % passengers.size())
 
 	# Simular intento de abordaje por el jugador
 	var mock_player = Node3D.new()
@@ -144,9 +144,10 @@ func test_route_geographic_waypoints_and_stations() -> void:
 	var wps: PackedVector3Array = bus.waypoints
 	assert_true(wps.size() > 500, "Ruta contiene circuito de alta densidad (>500 waypoints, total: %d)" % wps.size())
 
-	# 1. Borde Oeste: Carretera libre Tecate-Tijuana (min X < -10000)
+	# 1. Borde Sur: Carretera Libre Tecate-Tijuana (max Z >= 5800 m, min X >= -6400 m)
 	var min_x = 999999.0
 	var max_x = -999999.0
+	var max_z = -999999.0
 	var found_hidalgo = false
 	var found_central = false
 	var found_rodriguez = false
@@ -154,6 +155,7 @@ func test_route_geographic_waypoints_and_stations() -> void:
 	for pt in wps:
 		min_x = minf(min_x, pt.x)
 		max_x = maxf(max_x, pt.x)
+		max_z = maxf(max_z, pt.z)
 		# Cruce Av. Hidalgo
 		if absf(pt.x - (-1604.9)) < 60.0 and absf(pt.z - 303.6) < 60.0:
 			found_hidalgo = true
@@ -164,7 +166,8 @@ func test_route_geographic_waypoints_and_stations() -> void:
 		if absf(pt.x - 143.0) < 30.0 and absf(pt.z - (-18.1)) < 30.0:
 			found_central = true
 
-	assert_true(min_x <= -10700.0, "Extremo oeste alcanza el borde del mapa en Carretera Libre Tijuana (X = %.1f m)" % min_x)
+	assert_true(max_z >= 5800.0, "Extremo sur alcanza el límite en Carretera Libre Tijuana (Z = %.1f m)" % max_z)
+	assert_true(min_x >= -6400.0, "Autopista de cuota excluida correctamente (min X = %.1f m >= -6400 m)" % min_x)
 	assert_true(found_hidalgo, "Ruta recorre la conexión con Avenida Hidalgo")
 	assert_true(found_rodriguez, "Ruta dobla hacia el norte en Calle Presidente Abelardo L. Rodríguez")
 	assert_true(found_central, "Ruta ingresa al patio y dársena de la Central de Autobuses de Tecate")
