@@ -50,12 +50,29 @@ func _ready():
 	elif camera_node:
 		print("[ApplyShader] Snapping Camera3D to terrain...")
 		_snap_camera(camera_node)
+
+	# 5b. Snap local vehicles to terrain
+	_snap_scene_vehicles()
 		
 	# 6. Create colliders for baked building meshes only (skipping sky powerlines, etc.)
 	if geometry_node:
 		_hide_replaced_buildings(geometry_node)
 		print("[ApplyShader] Creating collision shapes for building meshes...")
 		_create_building_colliders_recursive(geometry_node)
+
+func _snap_scene_vehicles() -> void:
+	var space_state = get_world_3d().direct_space_state
+	if not space_state:
+		return
+	for veh in get_tree().get_nodes_in_group("vehicles"):
+		if veh is CharacterBody3D and veh.is_inside_tree():
+			var from = Vector3(veh.global_position.x, veh.global_position.y + 100.0, veh.global_position.z)
+			var to = Vector3(veh.global_position.x, veh.global_position.y - 200.0, veh.global_position.z)
+			var query = PhysicsRayQueryParameters3D.create(from, to, 1)
+			var result = space_state.intersect_ray(query)
+			if result:
+				veh.global_position.y = result.position.y + 0.05
+				print("[ApplyShader] Snapped vehicle '%s' to height: %f" % [veh.name, veh.global_position.y])
 
 func _hide_replaced_buildings(node: Node):
 	if node is MeshInstance3D:

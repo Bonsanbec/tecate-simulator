@@ -8,14 +8,20 @@ signal player_count_changed(count: int)
 
 @export var remote_player_scene: PackedScene = preload("res://systems/network/remote_player.tscn")
 @export var remote_vehicle_scene: PackedScene = preload("res://systems/network/remote_vehicle.tscn")
+@export var remote_npc_scene: PackedScene = preload("res://systems/network/remote_npc.tscn")
+
+const RemoteNPCClass = preload("res://systems/network/remote_npc.gd")
 
 var network_client: NetworkClient
 var remote_entities_container: Node3D
 var active_remote_players: Dictionary = {}  # entity_id -> RemotePlayer
 var active_remote_vehicles: Dictionary = {} # entity_id -> RemoteVehicle
+var active_remote_npcs: Dictionary = {}     # entity_id -> Node3D (RemoteNPC)
 var _entity_last_seen: Dictionary = {}      # entity_id -> float (timestamp)
 
 const ENTITY_TIMEOUT: float = 3.0
+
+var offline_fallback_container: Node3D = null
 
 func _ready():
 	# Crear contenedor para entidades remotas en la escena
@@ -28,6 +34,11 @@ func _ready():
 	if not network_client and get_parent():
 		network_client = get_parent().find_child("NetworkClient", true, false) as NetworkClient
 
+	# Localizar contenedor de transporte local fuera de línea
+	offline_fallback_container = get_node_or_null("../OfflineTransitFallback") as Node3D
+	if not offline_fallback_container and get_parent():
+		offline_fallback_container = get_parent().find_child("OfflineTransitFallback", true, false) as Node3D
+
 	if network_client:
 		_bind_network_signals()
 
@@ -37,11 +48,18 @@ func _bind_network_signals() -> void:
 	network_client.disconnected_from_server.connect(_on_disconnected)
 	network_client.connected_to_server.connect(_on_connected)
 
+func _set_offline_fallback_active(active: bool) -> void:
+	if offline_fallback_container:
+		offline_fallback_container.visible = active
+		offline_fallback_container.process_mode = Node.PROCESS_MODE_INHERIT if active else Node.PROCESS_MODE_DISABLED
+
 func _on_connected(_session_id: int, _player_id: int) -> void:
+	_set_offline_fallback_active(false)
 	player_count_changed.emit(get_player_count())
 
 func _on_disconnected(_reason: String) -> void:
 	_clear_all_remote_entities()
+	_set_offline_fallback_active(true)
 	player_count_changed.emit(1)
 
 func _on_snapshot_received(_server_tick: int, entities: Array[TKTCodec.EntityRecord]) -> void:
@@ -79,6 +97,20 @@ func _on_snapshot_received(_server_tick: int, entities: Array[TKTCodec.EntityRec
 			remote_p.push_snapshot_record(rec, Time.get_ticks_msec())
 			_entity_last_seen[rec.entity_id] = now
 
+		elif rec.entity_type == TKTCodec.EntityType.NPC:
+			var remote_npc: Node3D = active_remote_npcs.get(rec.entity_id)
+			if not remote_npc:
+				remote_npc = remote_npc_scene.instantiate() as Node3D
+				remote_entities_container.add_child(remote_npc)
+				if remote_npc.has_method("setup"):
+					remote_npc.setup(rec.entity_id)
+				active_remote_npcs[rec.entity_id] = remote_npc
+				print("[MultiplayerManager] Nuevo NPC remoto avistado: ID=%d" % rec.entity_id)
+
+			if remote_npc.has_method("push_snapshot_record"):
+				remote_npc.push_snapshot_record(rec, Time.get_ticks_msec())
+			_entity_last_seen[rec.entity_id] = now
+
 	# Purgar entidades que dejaron de reportarse
 	var to_remove_players: Array[int] = []
 	for eid in active_remote_players.keys():
@@ -97,6 +129,15 @@ func _on_snapshot_received(_server_tick: int, entities: Array[TKTCodec.EntityRec
 
 	for vid in to_remove_vehicles:
 		_remove_remote_vehicle(vid)
+
+	var to_remove_npcs: Array[int] = []
+	for nid in active_remote_npcs.keys():
+		var last_seen = _entity_last_seen.get(nid, 0.0)
+		if (now - last_seen) > ENTITY_TIMEOUT:
+			to_remove_npcs.append(nid)
+
+	for nid in to_remove_npcs:
+		_remove_remote_npc(nid)
 
 func _on_event_received(ev: Dictionary) -> void:
 	var code = ev.get("event_code", 0)
@@ -144,6 +185,14 @@ func _remove_remote_vehicle(entity_id: int) -> void:
 		_entity_last_seen.erase(entity_id)
 		print("[MultiplayerManager] Vehículo remoto removido: ID=%d" % entity_id)
 
+func _remove_remote_npc(entity_id: int) -> void:
+	var remote_npc = active_remote_npcs.get(entity_id)
+	if remote_npc:
+		remote_npc.queue_free()
+		active_remote_npcs.erase(entity_id)
+		_entity_last_seen.erase(entity_id)
+		print("[MultiplayerManager] NPC remoto removido: ID=%d" % entity_id)
+
 func _clear_all_remote_entities() -> void:
 	for remote_p in active_remote_players.values():
 		if is_instance_valid(remote_p):
@@ -154,6 +203,11 @@ func _clear_all_remote_entities() -> void:
 		if is_instance_valid(remote_v):
 			remote_v.queue_free()
 	active_remote_vehicles.clear()
+
+	for remote_npc in active_remote_npcs.values():
+		if is_instance_valid(remote_npc):
+			remote_npc.queue_free()
+	active_remote_npcs.clear()
 
 	_entity_last_seen.clear()
 

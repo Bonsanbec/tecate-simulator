@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import logging
+import os
 from collections import defaultdict
 from typing import Iterator
 
+from server.core.controllers.free_vehicle import FreeVehicleController
+from server.core.controllers.npc_pedestrian import NPCPedestrianController
+from server.core.controllers.route_vehicle import RouteVehicleController
 from server.core.entity import DynamicEntity
+from server.core.simulation import SimulationManager
 from server.protocol.codec import EntityStateRecord, SnapshotPayload
-from server.protocol.constants import EntityType, VehicleFlags
+from server.protocol.constants import EntityType, PlayerFlags, VehicleFlags
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +30,8 @@ class SharedWorld:
         self._grid: dict[tuple[int, int], set[int]] = defaultdict(set)
         # Mapeo inverso entity_id -> (cell_x, cell_z)
         self._entity_cells: dict[int, tuple[int, int]] = {}
+        # Gestor de simulación autoritativa para todas las entidades
+        self.simulation_manager = SimulationManager()
 
     def __len__(self) -> int:
         return len(self._entities)
@@ -59,6 +66,8 @@ class SharedWorld:
                 self._grid[cell].discard(entity_id)
                 if not self._grid[cell]:
                     del self._grid[cell]
+            # Desregistrar controlador de simulación si existe
+            self.simulation_manager.unregister_controller(entity_id)
         return entity
 
     def get_relevant_entities(
@@ -124,7 +133,11 @@ class SharedWorld:
         return [ent for ent in self._entities.values() if ent.is_vehicle]
 
     def spawn_default_vehicles(self) -> None:
-        """Instancia los vehículos iniciales del entorno urbano compartido de Tecate."""
+        """Instancia los vehículos y entidades iniciales del entorno urbano compartido de Tecate."""
+        self.spawn_default_world_entities()
+
+    def spawn_default_world_entities(self) -> None:
+        """Instancia la flota autoritativa de transporte público, vehículos libres y NPCs."""
         # 1. Automóvil urbano conducible en estacionamiento céntrico
         car = DynamicEntity(
             entity_id=1001,
@@ -138,18 +151,113 @@ class SharedWorld:
             properties={"fuel": 80.0, "vehicle_type": "car", "driver_id": None, "passengers": []},
         )
         self.upsert_entity(car)
+        car_ctrl = FreeVehicleController(car, max_fuel=80.0)
+        self.simulation_manager.register_controller(car_ctrl)
 
-        # 2. Autobús de ruta predefinida (transporte público con combustible infinito)
-        bus = DynamicEntity(
-            entity_id=1002,
-            entity_type=EntityType.VEHICLE,
-            pos_x=20.0,
+        # 2. Flota autoritativa de autobuses "El Hongo"
+        route_path = self._resolve_route_json_path()
+        if route_path and os.path.exists(route_path):
+            bus_fleet_configs = [
+                (1002, 133, "Autobús El Hongo (Unidad 24)"),
+                (2001, 269, "Autobús El Hongo (Unidad 18)"),
+                (2002, 401, "Autobús El Hongo (Unidad 23)"),
+                (2003, 540, "Autobús El Hongo (Unidad 07)"),
+                (2004, 3, "Autobús El Hongo (Unidad 12)"),
+            ]
+            for entity_id, initial_wp, bus_name in bus_fleet_configs:
+                bus = DynamicEntity(
+                    entity_id=entity_id,
+                    entity_type=EntityType.VEHICLE,
+                    flags=(VehicleFlags.ROUTE_VEHICLE | VehicleFlags.ENGINE_RUNNING | VehicleFlags.HEADLIGHTS),
+                    properties={
+                        "fuel": 999.0,
+                        "vehicle_type": "bus_route",
+                        "vehicle_name": bus_name,
+                        "driver_id": None,
+                        "passengers": [],
+                    },
+                )
+                bus_ctrl = RouteVehicleController.from_route_json(
+                    entity=bus,
+                    route_json_path=route_path,
+                    initial_waypoint_index=initial_wp,
+                    cruise_speed_kmh=36.8,
+                    max_passengers=30,
+                )
+                self.upsert_entity(bus)
+                self.simulation_manager.register_controller(bus_ctrl)
+            logger.info("Flota autoritativa de autobuses instanciada (%d unidades).", len(bus_fleet_configs))
+        else:
+            logger.warning("No se encontró bus_hongo_route.json en '%s'. Usando autobús de respaldo estático.", route_path)
+            # Autobús de respaldo si no se encuentra el archivo JSON
+            bus = DynamicEntity(
+                entity_id=2001,
+                entity_type=EntityType.VEHICLE,
+                pos_x=152.0,
+                pos_y=402.17,
+                pos_z=-32.0,
+                yaw=0.0,
+                pitch=0.0,
+                flags=VehicleFlags.ROUTE_VEHICLE | VehicleFlags.ENGINE_RUNNING,
+                properties={"fuel": 999.0, "vehicle_type": "bus_route", "passengers": []},
+            )
+            self.upsert_entity(bus)
+
+        # 3. Peatones y NPCs del centro urbano (Parque Miguel Hidalgo y Presidencia)
+        npc1 = DynamicEntity(
+            entity_id=3001,
+            entity_type=EntityType.NPC,
+            pos_x=-15.0,
             pos_y=400.0,
-            pos_z=-30.0,
-            yaw=90.0,
-            pitch=0.0,
-            flags=VehicleFlags.ROUTE_VEHICLE,
-            properties={"fuel": 999.0, "vehicle_type": "bus_route", "driver_id": None, "passengers": []},
+            pos_z=20.0,
+            flags=PlayerFlags.GROUNDED,
+            properties={"name": "Don Miguel (Transeúnte)"},
         )
-        self.upsert_entity(bus)
+        self.upsert_entity(npc1)
+        npc1_ctrl = NPCPedestrianController(
+            entity=npc1,
+            patrol_points=[
+                (-15.0, 400.0, 20.0),
+                (-5.0, 400.0, 25.0),
+                (10.0, 400.0, 15.0),
+                (-10.0, 400.0, 5.0),
+            ],
+            walk_speed=1.30,
+            name="Don Miguel (Transeúnte)",
+        )
+        self.simulation_manager.register_controller(npc1_ctrl)
+
+        npc2 = DynamicEntity(
+            entity_id=3002,
+            entity_type=EntityType.NPC,
+            pos_x=-30.0,
+            pos_y=400.0,
+            pos_z=-10.0,
+            flags=PlayerFlags.GROUNDED,
+            properties={"name": "Doña Rosa (Comerciante)"},
+        )
+        self.upsert_entity(npc2)
+        npc2_ctrl = NPCPedestrianController(
+            entity=npc2,
+            patrol_points=[
+                (-30.0, 400.0, -10.0),
+                (-10.0, 400.0, -15.0),
+                (-15.0, 400.0, -5.0),
+            ],
+            walk_speed=1.15,
+            name="Doña Rosa (Comerciante)",
+        )
+        self.simulation_manager.register_controller(npc2_ctrl)
+
+    def _resolve_route_json_path(self) -> str | None:
+        """Localiza de forma robusta la ruta al archivo bus_hongo_route.json."""
+        candidates = [
+            os.path.join(os.path.dirname(__file__), "..", "..", "godot_project", "assets", "vehicles", "bus_hongo_route.json"),
+            os.path.join("godot_project", "assets", "vehicles", "bus_hongo_route.json"),
+            os.path.abspath("godot_project/assets/vehicles/bus_hongo_route.json"),
+        ]
+        for c in candidates:
+            if os.path.exists(c):
+                return c
+        return None
 

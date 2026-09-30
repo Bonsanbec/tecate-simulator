@@ -35,11 +35,11 @@ brake_deceleration = 11.0
 
 [node name="BusModel" parent="VisualRoot" instance=ExtResource("5_mesh")]
 
-[node name="CollisionRoot" type="Node3D" parent="."]
-
-[node name="BodyCollision" type="CollisionShape3D" parent="CollisionRoot"]
+[node name="BodyCollision" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 shape = SubResource("BoxShape3D_chassis")
+
+[node name="CollisionRoot" type="Node3D" parent="."]
 
 [node name="Suspension" type="Node3D" parent="."]
 

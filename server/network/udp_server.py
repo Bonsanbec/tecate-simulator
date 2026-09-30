@@ -321,6 +321,24 @@ class TKTGameServer:
             except Exception as exc:
                 logger.warning("Error procesando VEHICLE_REFUEL: %s", exc)
 
+        # Despachar al SimulationManager para que los controladores actualicen su estado autoritativo
+        target_entity_id = 0
+        if event.event_code in (EventCode.VEHICLE_ENTER, EventCode.VEHICLE_EXIT, EventCode.VEHICLE_REFUEL):
+            try:
+                target_entity_id = struct.unpack("<I", event.data[:4])[0]
+            except Exception:
+                pass
+        elif event.event_code in (EventCode.ENTITY_INTERACT, EventCode.ENTITY_ACTION):
+            try:
+                target_entity_id = struct.unpack("<I", event.data[:4])[0] if len(event.data) >= 4 else event.entity_id
+            except Exception:
+                target_entity_id = event.entity_id
+
+        if target_entity_id > 0:
+            self.world.simulation_manager.handle_event(
+                event.event_code, event.data, target_entity_id, session.player_entity_id, self.world
+            )
+
         # Retransmitir evento fiable a todas las demás sesiones conectadas
         event_bytes = event.pack()
         now_ms = self.get_server_time_ms()
@@ -406,6 +424,9 @@ class TKTGameServer:
             start_tick = time.monotonic()
             self.current_tick += 1
             now_ms = self.get_server_time_ms()
+
+            # 1. Avanzar la simulación autoritativa de entidades (vehículos de ruta, vehículos libres, NPCs)
+            self.world.simulation_manager.update(interval, self.world)
 
             # Purgar sesiones inactivas cada segundo
             if (time.time() - self._last_purge_time) >= 1.0:

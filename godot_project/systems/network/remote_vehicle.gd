@@ -89,33 +89,25 @@ func _build_car_mesh() -> void:
 	_add_wheel(Vector3(0.95, 0.35, -1.3))
 
 func _build_route_bus_mesh() -> void:
-	# Carrocería de autobús
-	var body = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(2.6, 2.8, 8.5)
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.85, 0.2, 0.15, 1.0) # Rojo Transporte
-	mat.roughness = 0.5
-	body.mesh = box
-	body.material_override = mat
-	body.position = Vector3(0, 1.6, 0)
-	vehicle_mesh_root.add_child(body)
+	var bus_glb = load("res://assets/vehicles/bus_hongo.glb")
+	if bus_glb:
+		var bus_model = bus_glb.instantiate()
+		bus_model.name = "BusModel"
+		vehicle_mesh_root.add_child(bus_model)
+	else:
+		# Respaldo si no estuviera disponible el recurso GLB
+		var body = MeshInstance3D.new()
+		var box = BoxMesh.new()
+		box.size = Vector3(2.6, 2.8, 8.5)
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.85, 0.2, 0.15, 1.0) # Rojo Transporte
+		mat.roughness = 0.5
+		body.mesh = box
+		body.material_override = mat
+		body.position = Vector3(0, 1.6, 0)
+		vehicle_mesh_root.add_child(body)
 
-	# Letrero de ruta
-	var sign_mesh = MeshInstance3D.new()
-	var sign_box = BoxMesh.new()
-	sign_box.size = Vector3(1.8, 0.4, 0.1)
-	var s_mat = StandardMaterial3D.new()
-	s_mat.albedo_color = Color(0.05, 0.05, 0.05, 1.0)
-	s_mat.emission_enabled = true
-	s_mat.emission = Color(1.0, 0.8, 0.1, 1.0)
-	s_mat.emission_energy_multiplier = 1.2
-	sign_mesh.mesh = sign_box
-	sign_mesh.material_override = s_mat
-	sign_mesh.position = Vector3(0, 2.7, 4.3)
-	vehicle_mesh_root.add_child(sign_mesh)
-
-	# 6 Ruedas de autobús
+	# 6 ruedas de autobús para cinemática procedural de rotación
 	_add_wheel(Vector3(-1.35, 0.45, 2.6), 0.45)
 	_add_wheel(Vector3(1.35, 0.45, 2.6), 0.45)
 	_add_wheel(Vector3(-1.35, 0.45, -1.8), 0.45)
@@ -141,11 +133,23 @@ func _add_wheel(pos: Vector3, radius: float = 0.35) -> void:
 
 func _create_seat_mounts() -> void:
 	if is_route_vehicle:
-		# Conductor + 4 asientos de muestra
-		_add_seat_marker(Vector3(-0.7, 1.2, 3.2))  # Conductor
-		_add_seat_marker(Vector3(0.7, 1.2, 2.0))   # Pasajero 1
-		_add_seat_marker(Vector3(-0.7, 1.2, 0.5))  # Pasajero 2
-		_add_seat_marker(Vector3(0.7, 1.2, -1.0))  # Pasajero 3
+		# Asiento 0: Puesto del conductor
+		_add_seat_marker(Vector3(-0.75, 1.25, 3.65))
+
+		# Asientos 1..30 reglamentarios de pasajeros (8 filas dobles y bancada trasera)
+		var z_rows_left = [2.75, 1.85, 0.95, 0.05, -0.85, -1.75, -2.65]
+		for z in z_rows_left:
+			_add_seat_marker(Vector3(-1.0, 1.25, z))   # Ventanilla Izq
+			_add_seat_marker(Vector3(-0.55, 1.25, z))  # Pasillo Izq
+
+		var z_rows_right = [1.85, 0.95, 0.05, -0.85, -1.75, -2.65]
+		for z in z_rows_right:
+			_add_seat_marker(Vector3(0.55, 1.25, z))   # Pasillo Der
+			_add_seat_marker(Vector3(1.0, 1.25, z))    # Ventanilla Der
+
+		# Fila trasera (4 plazas)
+		for x in [-0.9, -0.3, 0.3, 0.9]:
+			_add_seat_marker(Vector3(x, 1.25, -3.55))
 	else:
 		# Conductor + Copiloto + 2 traseros
 		_add_seat_marker(Vector3(-0.45, 0.7, 0.1))  # Conductor

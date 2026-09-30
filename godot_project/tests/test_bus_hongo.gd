@@ -76,9 +76,12 @@ func test_visual_mesh_and_materials() -> void:
 	var model = visual_root.get_node_or_null("BusModel")
 	assert_true(model != null, "Subnodo BusModel instanciado desde bus_hongo.glb")
 
-	var collision_shape = bus.get_node_or_null("CollisionRoot/BodyCollision")
-	assert_true(collision_shape != null, "BodyCollision presente en CollisionRoot")
+	var collision_shape = bus.get_node_or_null("BodyCollision")
+	if not collision_shape:
+		collision_shape = bus.get_node_or_null("CollisionRoot/BodyCollision")
+	assert_true(collision_shape != null, "BodyCollision presente en la jerarquía del autobús")
 	assert_true(collision_shape.shape is BoxShape3D, "Colisionador principal es BoxShape3D")
+	assert_true(bus.get_shape_owners().size() > 0, "El autobús tiene forma de colisión registrada en físicas (shape_owners > 0)")
 
 	# Raycasts de suspensión (al menos 4)
 	var suspension = bus.get_node_or_null("Suspension")

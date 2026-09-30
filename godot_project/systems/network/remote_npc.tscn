@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://remote_npc_tkt_001"]
+
+[ext_resource type="Script" path="res://systems/network/remote_npc.gd" id="1_remote_npc"]
+
+[node name="RemoteNPC" type="Node3D"]
+script = ExtResource("1_remote_npc")
