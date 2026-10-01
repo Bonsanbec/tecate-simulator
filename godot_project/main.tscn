@@ -108,13 +108,23 @@ script = ExtResource("25_multiplayer_mgr")
 
 [node name="OfflineTransitFallback" type="Node3D" parent="."]
 
-[node name="Bus_El_Hongo_01" parent="OfflineTransitFallback" instance=ExtResource("26_bus_hongo")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 164.0, 402.25, -32.0)
-current_waypoint_index = 133
-vehicle_name = "Autobús El Hongo (Unidad 24)"
+[node name="Bus_El_Hongo_Central" parent="OfflineTransitFallback" instance=ExtResource("26_bus_hongo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 143.0, 402.17, -18.1)
+current_waypoint_index = 304
+vehicle_name = "Autobús El Hongo (Unidad 24 - Central)"
 
 [node name="Bus_El_Hongo_Centro" parent="OfflineTransitFallback" instance=ExtResource("26_bus_hongo")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.8, 397.62, 111.5)
-current_waypoint_index = 122
-vehicle_name = "Autobús El Hongo (Unidad 07 - Centro)"
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1023.6, 401.5, 227.2)
+current_waypoint_index = 1610
+vehicle_name = "Autobús El Hongo (Unidad 01 - Centro Hidalgo)"
+
+[node name="Bus_El_Hongo_Federal2" parent="OfflineTransitFallback" instance=ExtResource("26_bus_hongo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10349.9, 532.58, 1172.5)
+current_waypoint_index = 456
+vehicle_name = "Autobús El Hongo (Unidad 23 - Carretera Fed 2)"
+
+[node name="Bus_El_Hongo_LibreSW" parent="OfflineTransitFallback" instance=ExtResource("26_bus_hongo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8521.7, 400.33, 8659.4)
+current_waypoint_index = 1766
+vehicle_name = "Autobús El Hongo (Unidad 14 - Libre Tijuana)"
 

@@ -170,12 +170,12 @@ func test_route_geographic_waypoints_and_stations() -> void:
 		if absf(pt.x - 143.0) < 30.0 and absf(pt.z - (-18.1)) < 30.0:
 			found_central = true
 
-	assert_true(max_z >= 5800.0, "Extremo sur alcanza el límite en Carretera Libre Tijuana (Z = %.1f m)" % max_z)
-	assert_true(min_x >= -6400.0, "Autopista de cuota excluida correctamente (min X = %.1f m >= -6400 m)" % min_x)
+	assert_true(max_z >= 12000.0, "Extremo sur alcanza el viraje en Carretera Libre Tijuana (Z = %.1f m >= 12000.0 m)" % max_z)
+	assert_true(min_x <= -17000.0, "Extremo suroeste alcanza viraje seguro hacia Tijuana (min X = %.1f m <= -17000 m)" % min_x)
 	assert_true(found_hidalgo, "Ruta recorre la conexión con Avenida Hidalgo")
 	assert_true(found_rodriguez, "Ruta dobla hacia el norte en Calle Presidente Abelardo L. Rodríguez")
 	assert_true(found_central, "Ruta ingresa al patio y dársena de la Central de Autobuses de Tecate")
-	assert_true(max_x >= 12100.0, "Extremo este alcanza La Rumorosa por la carretera libre (X = %.1f m)" % max_x)
+	assert_true(max_x >= 54000.0, "Extremo este alcanza el poblado de La Rumorosa por la carretera libre (X = %.1f m >= 54000 m)" % max_x)
 
 	# 2. Verificación de paradas obligatorias
 	var stations: Dictionary = bus.station_indices
@@ -183,7 +183,8 @@ func test_route_geographic_waypoints_and_stations() -> void:
 	var has_central_stop = false
 	var has_rumorosa_stop = false
 	for idx in stations.keys():
-		var st_name: String = stations[idx]
+		var val = stations[idx]
+		var st_name: String = str(val.get("name", val)) if val is Dictionary else str(val)
 		if "Central de Autobuses" in st_name:
 			has_central_stop = true
 		if "Rumorosa" in st_name:

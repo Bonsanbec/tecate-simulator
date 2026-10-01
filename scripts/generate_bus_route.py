@@ -1,13 +1,18 @@
 """
-GENERADOR DE RUTA, FLOTA EQUIDISTANTE Y ESCENA DEL AUTOBÚS EL HONGO DE TECATE
-Genera la secuencia completa de waypoints 3D (ida y vuelta) desde el extremo
-occidental de la carretera libre a Tijuana (-10760.3, 4126.8), avanzando por
-Av. Hidalgo, ingresando a la Central de Autobuses, saliendo por Av. Juárez
-hacia el este por la carretera libre hasta La Rumorosa (12118.1, 636.4),
-y retornando en circuito cerrado.
+GENERADOR DE RUTA EXTENDIDA, FLOTA EQUIDISTANTE Y ESCENA DEL AUTOBÚS EL HONGO DE TECATE
+Genera la secuencia completa de waypoints 3D (ida y vuelta) cubriendo:
+1. Extremo Suroeste de la Carretera Libre hacia Tijuana (-17300.0, 12146.0).
+2. Corredor Carretera Libre Tijuana a 82 km/h hasta la entrada poniente de Tecate.
+3. Avenida Hidalgo a 30 km/h (zona de ascenso/descenso denso de pasajeros en el centro).
+4. Acceso e ingreso a la Central de Autobuses de Tecate (12-15 km/h) con detención de 2 minutos (120 s).
+5. Salida norte a Av. Juárez y Paseo Morelos (40-55 km/h).
+6. Carretera Federal 2 Libre a 85 km/h pasando por El Hongo hasta La Rumorosa.
+7. Retorno en La Rumorosa (55014.5, 2233.9) [aprox. 32.553169, -116.040088].
+8. Recorrido inverso cerrado con parada de 2 minutos en la Central Camionera de retorno.
 
-Calcula la flota requerida para mantener una frecuencia exacta de 1 unidad
-cada 15 minutos en cualquier punto, y distribuye las unidades equidistantemente.
+Calcula la flota requerida para mantener una frecuencia exacta de 1 unidad cada 5 minutos
+en cualquier punto de cada semiruta en el mismo sentido, distribuyendo las unidades
+equidistantemente en el tiempo de ciclo.
 """
 
 import struct
@@ -20,6 +25,7 @@ import os
 ROADWAYS_GLB = "godot_project/assets/roadways_baked.glb"
 STREETS_JSON = "godot_project/assets/street_segments.json"
 ROUTE_JSON = "godot_project/assets/vehicles/bus_hongo_route.json"
+SERVER_ROUTE_JSON = "server/routes/bus_hongo_route.json"
 BUS_TSCN_PATH = "godot_project/assets/vehicles/bus_hongo.tscn"
 
 def load_road_elevations():
@@ -48,7 +54,7 @@ def load_road_elevations():
                 all_pts.append(pts)
 
     all_pts = np.vstack(all_pts)
-    cell_size = 30.0
+    cell_size = 35.0
     xs = all_pts[:, 0]
     ys = all_pts[:, 1]
     zs = all_pts[:, 2]
@@ -74,7 +80,7 @@ def load_road_elevations():
                     if d < best_d:
                         best_d = d
                         best_y = ys[idx]
-        return float(best_y) + 0.15 # 15cm sobre pavimento para contacto perfecto
+        return float(best_y) + 0.15 # 15cm sobre pavimento para contacto visual perfecto
 
     return get_elevation
 
@@ -84,7 +90,7 @@ def build_road_graph():
         data = json.load(f)
     segments = data.get('segments', [])
 
-    cell_size = 12.0
+    cell_size = 15.0
     nodes = []
     grid = {}
 
@@ -95,7 +101,7 @@ def build_road_graph():
             for dz in (-1, 0, 1):
                 for idx in grid.get((cx + dx, cz + dz), []):
                     nx, nz = nodes[idx]
-                    if (x - nx)**2 + (z - nz)**2 < 36.0: # < 6m
+                    if (x - nx)**2 + (z - nz)**2 < 64.0: # < 8m
                         return idx
         idx = len(nodes)
         nodes.append((x, z))
@@ -104,7 +110,7 @@ def build_road_graph():
 
     adj = {}
     for s in segments:
-        name = s.get('name', '').lower()
+        name = (s.get('name') or '').lower()
         # Excluir autopistas de cuota, libramientos de peaje y accesos fronterizos restringidos
         if 'cuota' in name or 'toll' in name or 'border' in name or 'carretera tecate–tijuana' in name:
             continue
@@ -147,7 +153,7 @@ def build_road_graph():
 
     return get_path
 
-def subsample_path(pts, target_dist=25.0):
+def subsample_path(pts, target_dist=35.0):
     if not pts:
         return []
     res = [pts[0]]
@@ -164,30 +170,40 @@ def main():
     get_elev = load_road_elevations()
     get_path = build_road_graph()
 
-    print("[3/5] Trazando la ruta completa del Autobús El Hongo...")
-    # Puntos Clave de la Ruta:
-    # 1. Extremo Sur de la Carretera Libre Tecate-Tijuana (Segmento Sur libre, límite sur de calzada)
-    P_LIBRE_SUR_IDA = (-6309.9, 5838.1)
-    # 2. Entronque con Av. Hidalgo
+    print("[3/5] Trazando la ruta completa extendida del Autobús El Hongo...")
+    # Puntos Clave de la Ruta Extendida:
+    # 1. Viraje seguro en el extremo suroeste de la Carretera Libre Tijuana
+    P_SW_IDA = (-17300.0, 12146.0)
+    P_SW_RET = (-17315.0, 12155.0)
+
+    # 2. Entronque con Av. Hidalgo (inicio zona urbana poniente de Tecate)
     P_HIDALGO_INICIO = (-1604.9, 303.6)
-    # 3. Intersección Av. Hidalgo con Pdte. Abelardo L. Rodríguez
+
+    # 3. Intersección Av. Hidalgo con Pdte. Abelardo L. Rodríguez (frente a Parque Hidalgo)
     P_CRUCE_RODRIGUEZ = (189.2, 88.6)
+
     # 4. Portón Lateral Este de la Central de Autobuses
     P_PORTON_CENTRAL = (175.7, 2.7)
-    # 5. Dársena Interior de la Central de Autobuses (Parada de abordaje)
+
+    # 5. Dársena Interior de la Central de Autobuses (Parada oficial de 2 minutos)
     P_DARSENA_CENTRAL = (143.0, -18.1)
+
     # 6. Salida Norte de la Central de Autobuses (incorporación a Av. Juárez)
     P_SALIDA_JUAREZ = (167.7, -47.5)
-    # 7. Extremo Oriental: Terminal El Hongo (Carretera Libre Mexicali - Tijuana en el poblado de El Hongo)
-    P_RUMOROSA = (31047.7, 6605.9)
-    # 8. Retorno Sur de la Carretera Libre Tecate-Tijuana (calzada paralela poniente)
-    P_LIBRE_SUR_RET = (-6321.8, 5833.8)
+
+    # 7. La Rumorosa (32.553169, -116.040088 -> X=55014.5, Z=2233.9)
+    P_RUMOROSA_IDA = (54998.6, 2213.6)
+    P_RUMOROSA_RET = (55014.5, 2233.9)
 
     # ------------------ IDA (Hacia el Este) ------------------
-    # Tramo 1: Carretera Libre Sur (hacia Tecate) hasta Av. Hidalgo
-    t1 = subsample_path(get_path(P_LIBRE_SUR_IDA, P_HIDALGO_INICIO), 35.0)
-    # Tramo 2: Av. Hidalgo hasta Pdte. Abelardo L. Rodríguez (frente a Parque Hidalgo)
-    t2 = subsample_path(get_path(P_HIDALGO_INICIO, P_CRUCE_RODRIGUEZ), 25.0)
+    # Tramo 1: Carretera Libre Suroeste (desde frontera Tijuana hasta entrada Tecate)
+    raw_t1 = get_path(P_SW_IDA, P_HIDALGO_INICIO)
+    t1 = subsample_path(raw_t1, 40.0)
+
+    # Tramo 2: Av. Hidalgo (zona de ascenso/descenso frecuente de pasajeros en el centro)
+    raw_t2 = get_path(P_HIDALGO_INICIO, P_CRUCE_RODRIGUEZ)
+    t2 = subsample_path(raw_t2, 25.0)
+
     # Tramo 3: Abelardo L. Rodríguez hasta Portón Lateral Central
     t3 = [
         (189.2, 88.6),
@@ -196,31 +212,43 @@ def main():
         (182.0, 5.0),
         P_PORTON_CENTRAL
     ]
+
     # Tramo 4: Entrada al patio interior y dársena
     t4 = [
         P_PORTON_CENTRAL,
         (160.0, -6.0),
         P_DARSENA_CENTRAL
     ]
-    # Tramo 5: Salida norte hacia Av. Juárez
+
+    # Tramo 5: Salida norte hacia Av. Juárez y Paseo Morelos
     t5 = [
         P_DARSENA_CENTRAL,
         (152.0, -32.0),
         P_SALIDA_JUAREZ
     ]
-    # Tramo 6: Av. Juárez al este hasta La Rumorosa / Carretera Libre
-    t6 = subsample_path(get_path(P_SALIDA_JUAREZ, P_RUMOROSA), 35.0)
 
-    # ------------------ RETORNO (Hacia el Oeste y Sur) ------------------
-    # Tramo 7: Retorno en La Rumorosa y recorrido inverso por la carretera libre hasta Tecate
+    # Tramo 6: Av. Juárez y Paseo Morelos hacia Carretera Federal 2 hasta La Rumorosa
+    raw_t6 = get_path(P_SALIDA_JUAREZ, P_RUMOROSA_IDA)
+    t6 = subsample_path(raw_t6, 40.0)
+
+    # Conexión y viraje en La Rumorosa hacia calzada de retorno
+    t_rumorosa_turn = [
+        P_RUMOROSA_IDA,
+        P_RUMOROSA_RET
+    ]
+
+    # ------------------ RETORNO (Hacia el Poniente) ------------------
+    # Tramo 7: Retorno en La Rumorosa por Carretera Federal 2 hasta Tecate
     t7 = list(reversed(t6))
-    # Tramo 8: Entrada a la Central de Autobuses por el acceso norte
+
+    # Tramo 8: Entrada a la Central de Autobuses por acceso norte
     t8 = [
         P_SALIDA_JUAREZ,
         (152.0, -32.0),
         P_DARSENA_CENTRAL
     ]
-    # Tramo 9: Salida por el portón este hacia Abelardo L. Rodríguez
+
+    # Tramo 9: Salida por portón lateral hacia Abelardo L. Rodríguez
     t9 = [
         P_DARSENA_CENTRAL,
         (160.0, -6.0),
@@ -229,52 +257,85 @@ def main():
         (186.0, 50.0),
         P_CRUCE_RODRIGUEZ
     ]
+
     # Tramo 10: Retorno por Av. Hidalgo hacia el poniente
     t10 = list(reversed(t2))
-    # Tramo 11: Retorno por Carretera Libre hacia el sur hasta la terminal sur
-    t11 = subsample_path(get_path(P_HIDALGO_INICIO, P_LIBRE_SUR_RET), 35.0)
-    # Tramo 12: Conexión suave entre calzadas para cerrar el ciclo continuo
+
+    # Tramo 11: Retorno por Carretera Libre hacia el suroeste hasta viraje de Tijuana
+    raw_t11 = get_path(P_HIDALGO_INICIO, P_SW_RET)
+    t11 = subsample_path(raw_t11, 40.0)
+
+    # Tramo 12: Viraje suave en SW para cerrar el bucle
     t12 = [
-        (-6315.0, 5836.0),
-        P_LIBRE_SUR_IDA
+        P_SW_RET,
+        P_SW_IDA
     ]
 
     all_2d_points = []
+    waypoint_speeds = []
     station_indices = {}
 
-    def add_points(pts_list):
+    def add_segment_points(pts_list, speed_kmh):
         for p in pts_list:
-            if not all_2d_points or math.hypot(p[0] - all_2d_points[-1][0], p[1] - all_2d_points[-1][1]) > 4.0:
+            if not all_2d_points or math.hypot(p[0] - all_2d_points[-1][0], p[1] - all_2d_points[-1][1]) > 3.0:
                 all_2d_points.append(p)
+                waypoint_speeds.append(speed_kmh)
 
-    add_points(t1)
-    add_points(t2)
-    add_points(t3)
+    # Ensamblaje con perfiles de velocidad por roadway
+    # 1. SW -> Hidalgo (Carretera libre interurbana a 82 km/h)
+    add_segment_points(t1, 82.0)
 
-    idx_central_ida = len(all_2d_points) + len(t4) - 1
-    add_points(t4)
-    station_indices[idx_central_ida] = "Central de Autobuses Tecate (Ida)"
+    # 2. Av. Hidalgo (zona urbana de ascenso y descenso a 30 km/h)
+    add_segment_points(t2, 30.0)
 
-    add_points(t5)
+    # 3. Acceso hacia Central (18 km/h)
+    add_segment_points(t3, 18.0)
 
-    idx_rumorosa = len(all_2d_points) + len(t6) - 1
-    add_points(t6)
-    station_indices[idx_rumorosa] = "Terminal La Rumorosa"
+    # 4. Patio y dársena Central (12 km/h)
+    add_segment_points(t4, 12.0)
+    idx_central_ida = len(all_2d_points) - 1
+    station_indices[idx_central_ida] = {
+        "name": "Central de Autobuses Tecate (Ida)",
+        "dwell_time": 120.0 # Parada fija de 2 minutos
+    }
 
-    add_points(t7)
+    # 5. Salida hacia Av. Juárez (40 km/h)
+    add_segment_points(t5, 40.0)
 
-    idx_central_vuelta = len(all_2d_points) + len(t8) - 1
-    add_points(t8)
-    station_indices[idx_central_vuelta] = "Central de Autobuses Tecate (Retorno)"
+    # 6. Carretera Federal 2 a La Rumorosa (85 km/h)
+    add_segment_points(t6, 85.0)
+    add_segment_points(t_rumorosa_turn, 20.0)
+    idx_rumorosa = len(all_2d_points) - 1
+    station_indices[idx_rumorosa] = {
+        "name": "Terminal La Rumorosa",
+        "dwell_time": 45.0
+    }
 
-    add_points(t9)
-    add_points(t10)
+    # 7. Retorno Carretera Federal 2 (85 km/h)
+    add_segment_points(t7, 85.0)
 
-    idx_sur = len(all_2d_points) + len(t11) - 1
-    add_points(t11)
-    station_indices[idx_sur] = "Terminal Carretera Libre Tijuana (Sur)"
+    # 8. Entrada a Central de retorno (15 km/h)
+    add_segment_points(t8, 15.0)
+    idx_central_vuelta = len(all_2d_points) - 1
+    station_indices[idx_central_vuelta] = {
+        "name": "Central de Autobuses Tecate (Retorno)",
+        "dwell_time": 120.0 # Parada fija de 2 minutos
+    }
 
-    add_points(t12)
+    # 9. Salida de Central hacia Abelardo L. Rodríguez (15 km/h)
+    add_segment_points(t9, 15.0)
+
+    # 10. Retorno Av. Hidalgo (30 km/h)
+    add_segment_points(t10, 30.0)
+
+    # 11. Carretera Libre Retorno a Tijuana (82 km/h)
+    add_segment_points(t11, 82.0)
+    add_segment_points(t12, 20.0)
+    idx_sw_term = len(all_2d_points) - 1
+    station_indices[idx_sw_term] = {
+        "name": "Terminal Carretera Libre Tijuana (Suroeste)",
+        "dwell_time": 45.0
+    }
 
     print(f"[4/5] Muestreando elevaciones 3D para {len(all_2d_points)} waypoints...")
     waypoints_3d = []
@@ -282,55 +343,66 @@ def main():
         y = get_elev(x, z)
         waypoints_3d.append((round(x, 2), round(y, 2), round(z, 2)))
 
-    # Cálculo acumulativo de longitudes de arco
+    # Cálculo acumulativo de longitudes y tiempos de recorrido
     arc_lengths = [0.0]
+    cumulative_times = [0.0]
+
     for i in range(len(waypoints_3d) - 1):
         p1 = waypoints_3d[i]
         p2 = waypoints_3d[i+1]
         d = math.hypot(p2[0] - p1[0], p2[2] - p1[2])
         arc_lengths.append(arc_lengths[-1] + d)
 
-    total_loop_length = arc_lengths[-1]
+        v_ms = max(5.0, waypoint_speeds[i] / 3.6)
+        dt = d / v_ms
+        if i in station_indices:
+            dt += station_indices[i]["dwell_time"]
+        cumulative_times.append(cumulative_times[-1] + dt)
 
-    # Cálculo de Flota para Headway exacto de 15 minutos (900 s)
-    HEADWAY_TARGET_SEC = 900.0 # 15 minutos
-    CRUISE_SPEED_KMH = 42.0
-    cruise_speed_ms = CRUISE_SPEED_KMH / 3.6
-    station_dwell_time = 8.0 # Segundos de espera por parada
-    total_dwell_sec = len(station_indices) * station_dwell_time
-    pure_travel_time_sec = total_loop_length / cruise_speed_ms
-    total_cycle_time_sec = pure_travel_time_sec + total_dwell_sec
+    d_close = math.hypot(waypoints_3d[0][0] - waypoints_3d[-1][0], waypoints_3d[0][2] - waypoints_3d[-1][2])
+    v_close = max(5.0, waypoint_speeds[-1] / 3.6)
+    dt_close = d_close / v_close
+    if (len(waypoints_3d) - 1) in station_indices:
+        dt_close += station_indices[len(waypoints_3d) - 1]["dwell_time"]
 
-    # Número de unidades de la flota (5 unidades para ciclo de 75 min a 15 min de intervalo)
-    num_units = 5
+    total_loop_length = arc_lengths[-1] + d_close
+    total_cycle_time_sec = cumulative_times[-1] + dt_close
 
-    # Ajustar velocidad crucero de operación para que el tiempo de ciclo sea exactamente num_units * 900s
-    calibrated_travel_time = (num_units * HEADWAY_TARGET_SEC) - total_dwell_sec
-    calibrated_speed_ms = total_loop_length / calibrated_travel_time
-    calibrated_speed_kmh = round(calibrated_speed_ms * 3.6, 1)
+    HEADWAY_TARGET_SEC = 300.0  # Exactamente 5 minutos
+    num_units = int(math.ceil(total_cycle_time_sec / HEADWAY_TARGET_SEC))
+
+    # Velocidad promedio ponderada global de la operación
+    mean_speed_ms = total_loop_length / (total_cycle_time_sec - sum(st["dwell_time"] for st in station_indices.values()))
+    calibrated_speed_kmh = round(mean_speed_ms * 3.6, 1)
 
     print(f"\n=======================================================")
-    print(f"CÁLCULO DE FLOTA Y FRECUENCIA (Punto 9):")
+    print(f"CÁLCULO DE FLOTA Y FRECUENCIA:")
     print(f"Longitud total de ruta cerrada: {total_loop_length/1000.0:.2f} km")
     print(f"Tiempo de ciclo nominal: {total_cycle_time_sec/60.0:.1f} min ({total_cycle_time_sec:.0f} s)")
-    print(f"Unidades requeridas para paso cada 15 min: {num_units} autobuses")
-    print(f"Velocidad crucero calibrada: {calibrated_speed_kmh} km/h")
+    print(f"Unidades requeridas para paso cada 5 min: {num_units} autobuses")
+    print(f"Velocidad crucero ponderada: {calibrated_speed_kmh} km/h")
     print(f"=======================================================\n")
 
-    # Calcular posiciones y waypoints iniciales equidistantes para cada unidad
+    # Calcular posiciones y waypoints iniciales equidistantes TEMPORALMENTE para cada unidad
     # Referenciamos la Unidad 1 en la estación Central de Autobuses de Tecate (idx_central_ida)
     # para que esté presente y abordable de inmediato en el centro urbano.
     fleet_units = []
-    unit_numbers = ["24", "18", "23", "07", "12", "15", "03", "09"]
+    unit_numbers = [
+        "24", "18", "23", "07", "12", "15", "03", "09", "31", "42",
+        "05", "11", "16", "22", "27", "33", "38", "44", "49", "52",
+        "01", "08", "14", "19", "25", "30", "36", "41", "47", "50",
+    ]
     base_station_idx = idx_central_ida
-    base_s = arc_lengths[base_station_idx]
+    base_time = cumulative_times[base_station_idx]
+    total_time = total_cycle_time_sec
+
     for k in range(num_units):
-        target_s = (base_s + k * (total_loop_length / float(num_units))) % total_loop_length
-        # Localizar el índice del waypoint más cercano
+        target_t = (base_time + k * (total_time / float(num_units))) % total_time
+        # Localizar el índice del waypoint más cercano en tiempo
         wp_idx = 0
         min_diff = 1e9
-        for i, s in enumerate(arc_lengths):
-            diff = abs(s - target_s)
+        for i, t in enumerate(cumulative_times):
+            diff = abs(t - target_t)
             if diff < min_diff:
                 min_diff = diff
                 wp_idx = i
@@ -338,101 +410,110 @@ def main():
         spawn_pt = waypoints_3d[wp_idx]
         u_num = unit_numbers[k % len(unit_numbers)]
         unit_info = {
-            "unit_id": k + 1,
+            "unit_id": 2001 + k,
             "unit_number": u_num,
             "vehicle_name": f"Autobús El Hongo (Unidad {u_num})",
             "start_waypoint_index": wp_idx,
             "spawn_position": [spawn_pt[0], spawn_pt[1], spawn_pt[2]],
-            "arc_length_m": round(target_s, 1)
+            "arc_length_m": round(arc_lengths[wp_idx], 1),
+            "target_speed_kmh": waypoint_speeds[wp_idx],
         }
         fleet_units.append(unit_info)
-        print(f"Unidad {unit_info['unit_id']} ({unit_info['vehicle_name']}): Waypoint {wp_idx} -> Pos: {spawn_pt}")
+        print(f"Unidad {unit_info['unit_id']} ({unit_info['vehicle_name']}): WP {wp_idx:4d} | Vel: {unit_info['target_speed_kmh']:.0f} km/h -> Pos: {spawn_pt}")
 
-    # Guardar waypoints y flota en JSON
+    # Guardar waypoints y flota en JSON para Godot y Servidor
     wp_data = {
         "waypoints": waypoints_3d,
+        "waypoint_speeds": waypoint_speeds,
         "station_indices": {str(k): v for k, v in station_indices.items()},
         "total_distance_km": round(total_loop_length / 1000.0, 2),
+        "total_cycle_time_minutes": round(total_cycle_time_sec / 60.0, 2),
         "fleet_configuration": {
-            "headway_minutes": 15.0,
+            "headway_minutes": 5.0,
             "num_units": num_units,
             "calibrated_cruise_speed_kmh": calibrated_speed_kmh,
-            "station_dwell_time_seconds": station_dwell_time,
             "units": fleet_units
         }
     }
+
+    # Guardar en godot_project
+    os.makedirs(os.path.dirname(ROUTE_JSON), exist_ok=True)
     with open(ROUTE_JSON, "w", encoding="utf-8") as f:
         json.dump(wp_data, f, indent=2)
-    print(f"-> Guardado JSON de ruta y flota: {ROUTE_JSON}")
+    print(f"-> Guardado JSON de ruta y flota en Godot: {ROUTE_JSON}")
 
-    # Generar la escena Godot 4: bus_hongo.tscn con los 30 ASIENTOS COMPLETOS
+    # Guardar en server
+    os.makedirs(os.path.dirname(SERVER_ROUTE_JSON), exist_ok=True)
+    with open(SERVER_ROUTE_JSON, "w", encoding="utf-8") as f:
+        json.dump(wp_data, f, indent=2)
+    print(f"-> Guardado JSON de ruta y flota en Servidor: {SERVER_ROUTE_JSON}")
+
+    # Generar la escena Godot 4: bus_hongo.tscn
     print("[5/5] Generando plantilla canónica de escena Godot 4: bus_hongo.tscn...")
     packed_vecs = ", ".join([f"{p[0]}, {p[1]}, {p[2]}" for p in waypoints_3d])
+    packed_speeds = ", ".join([f"{s:.1f}" for s in waypoint_speeds])
     st_dict_str = "{\n"
-    for idx, name in station_indices.items():
-        st_dict_str += f'{idx}: "{name}",\n'
+    for idx, info in station_indices.items():
+        st_dict_str += f'{idx}: {{"name": "{info["name"]}", "dwell_time": {info["dwell_time"]}}},\n'
     st_dict_str = st_dict_str.rstrip(",\n") + "\n}"
 
-    # Construir definiciones de los 30 asientos de pasajeros
-    seats_tscn = ""
-    # Puesto del chofer
-    seats_tscn += """
+    # Asientos orientados a -Z (dirección canónica frontal en Godot 4)
+    seats_tscn = """
 [node name="Seat_Driver" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.25, 3.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.25, -3.65)
 script = ExtResource("2_seat")
 seat_type = 0
 seat_index = 0
 seat_name = "Puesto del Conductor"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Driver"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.85, -0.8, 0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.2, -3.2)
 """
 
     passenger_seat_idx = 1
     # 1. Costado Izquierdo (7 filas dobles = 14 asientos)
-    seat_rows_y = [2.75, 1.85, 0.95, 0.05, -0.85, -1.75, -2.65]
-    for r_idx, sy in enumerate(seat_rows_y):
+    seat_rows_z = [-2.75, -1.85, -0.95, -0.05, 0.85, 1.75, 2.65]
+    for r_idx, sz in enumerate(seat_rows_z):
         for sx, s_side in [(-1.00, "Ventanilla Izq"), (-0.55, "Pasillo Izq")]:
             seats_tscn += f"""
 [node name="Seat_Passenger_{passenger_seat_idx}" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {sx}, 1.25, {sy})
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {sx}, 1.25, {sz})
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = {passenger_seat_idx}
 seat_name = "Fila {r_idx+1} {s_side}"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_{passenger_seat_idx}"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.2, -3.2)
 """
             passenger_seat_idx += 1
 
-    # 2. Costado Derecho (5 filas dobles + 1 individual = 11 asientos)
-    # Asiento individual delantero
+    # 2. Costado Derecho (1 preferencial delantero + 5 filas dobles = 11 asientos)
     seats_tscn += f"""
 [node name="Seat_Passenger_{passenger_seat_idx}" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.25, 2.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.25, -2.75)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = {passenger_seat_idx}
 seat_name = "Fila 1 Preferencial Der"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_{passenger_seat_idx}"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, -0.8, 0.8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.2, -3.2)
 """
     passenger_seat_idx += 1
 
-    for r_idx, sy in enumerate([1.85, 0.95, 0.05, -0.85, -1.75]):
+    for r_idx, sz in enumerate([-1.85, -0.95, -0.05, 0.85, 1.75]):
         for sx, s_side in [(0.55, "Pasillo Der"), (1.00, "Ventanilla Der")]:
             seats_tscn += f"""
 [node name="Seat_Passenger_{passenger_seat_idx}" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {sx}, 1.25, {sy})
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {sx}, 1.25, {sz})
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = {passenger_seat_idx}
 seat_name = "Fila {r_idx+2} {s_side}"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_{passenger_seat_idx}"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, -0.8, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.2, -3.2)
 """
             passenger_seat_idx += 1
 
@@ -440,7 +521,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, -0.8, 0)
     for b_idx, sx in enumerate([-0.92, -0.46, 0.00, 0.46, 0.92]):
         seats_tscn += f"""
 [node name="Seat_Passenger_{passenger_seat_idx}" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {sx}, 1.25, -4.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {sx}, 1.25, 4.35)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = {passenger_seat_idx}
@@ -467,15 +548,16 @@ collision_layer = 2
 collision_mask = 3
 script = ExtResource("1_route")
 cruise_speed_kmh = {calibrated_speed_kmh}
-station_dwell_time = {station_dwell_time}
+station_dwell_time = 8.0
 waypoint_reach_threshold = 5.0
 loop_route = true
 waypoints = PackedVector3Array({packed_vecs})
+waypoint_speeds = PackedFloat32Array({packed_speeds})
 station_indices = {st_dict_str}
 vehicle_name = "Autobús El Hongo (Unidad 24)"
 vehicle_type = 2
 mass_kg = 9200.0
-max_speed_kmh = 65.0
+max_speed_kmh = 95.0
 engine_acceleration = 4.5
 brake_deceleration = 11.0
 
@@ -492,19 +574,19 @@ shape = SubResource("BoxShape3D_chassis")
 [node name="Suspension" type="Node3D" parent="."]
 
 [node name="Ray_FL" type="RayCast3D" parent="Suspension"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.6, 2.6)
-target_position = Vector3(0, -2.0, 0)
-
-[node name="Ray_FR" type="RayCast3D" parent="Suspension"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.6, 2.6)
-target_position = Vector3(0, -2.0, 0)
-
-[node name="Ray_RL" type="RayCast3D" parent="Suspension"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.6, -2.6)
 target_position = Vector3(0, -2.0, 0)
 
-[node name="Ray_RR" type="RayCast3D" parent="Suspension"]
+[node name="Ray_FR" type="RayCast3D" parent="Suspension"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.6, -2.6)
+target_position = Vector3(0, -2.0, 0)
+
+[node name="Ray_RL" type="RayCast3D" parent="Suspension"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.6, 2.6)
+target_position = Vector3(0, -2.0, 0)
+
+[node name="Ray_RR" type="RayCast3D" parent="Suspension"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.6, 2.6)
 target_position = Vector3(0, -2.0, 0)
 
 [node name="Seats" type="Node3D" parent="."]
@@ -513,25 +595,25 @@ target_position = Vector3(0, -2.0, 0)
 [node name="Cameras" type="Node3D" parent="."]
 
 [node name="Mount_1P" type="Marker3D" parent="Cameras"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.8, 3.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.8, -3.65)
 
 [node name="Mount_3P" type="Marker3D" parent="Cameras"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, -8.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 8.5)
 
 [node name="Lights" type="Node3D" parent="."]
 
 [node name="Headlights" type="Node3D" parent="Lights"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 4.8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, -4.8)
 
 [node name="Light_L" type="SpotLight3D" parent="Lights/Headlights"]
-transform = Transform3D(1, 0, 0, 0, 0.984808, -0.173648, 0, 0.173648, 0.984808, -0.9, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, -0.9, 0, 0)
 light_color = Color(1, 0.96, 0.88, 1)
 light_energy = 5.0
 spot_range = 65.0
 spot_angle = 45.0
 
 [node name="Light_R" type="SpotLight3D" parent="Lights/Headlights"]
-transform = Transform3D(1, 0, 0, 0, 0.984808, -0.173648, 0, 0.173648, 0.984808, 0.9, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0.9, 0, 0)
 light_color = Color(1, 0.96, 0.88, 1)
 light_energy = 5.0
 spot_range = 65.0

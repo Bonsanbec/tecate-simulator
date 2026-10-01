@@ -16,8 +16,11 @@ signal route_station_departed(station_name: String)
 ## Lista de waypoints en coordenadas globales
 @export var waypoints: PackedVector3Array = PackedVector3Array()
 
-## Índices de waypoints que corresponden a paradas obligatorias con su nombre
-@export var station_indices: Dictionary = {} # int -> String (ej: { 2: "Parada Parque Hidalgo", 6: "Parada Presidencia" })
+## Velocidades crucero asignadas por waypoint en km/h (si está poblado, anula a cruise_speed_kmh)
+@export var waypoint_speeds: PackedFloat32Array = PackedFloat32Array()
+
+## Índices de waypoints que corresponden a paradas obligatorias con su nombre o diccionario {name, dwell_time}
+@export var station_indices: Dictionary = {} # int -> String | Dictionary
 
 @export var current_waypoint_index: int = 0
 var is_at_station: bool = false
@@ -112,9 +115,13 @@ func _physics_process(delta: float) -> void:
 	var max_yaw_delta = deg_to_rad(45.0) * delta
 	rotate_y(clampf(angle_diff, -max_yaw_delta, max_yaw_delta))
 
-	# Reducir velocidad si la curva es cerrada
+	# Reducir velocidad si la curva es cerrada y usar velocidad de tramo si existe
+	var current_cruise_kmh = cruise_speed_kmh
+	if not waypoint_speeds.is_empty() and current_waypoint_index < waypoint_speeds.size():
+		current_cruise_kmh = waypoint_speeds[current_waypoint_index]
+
 	var speed_curve_factor = clampf(current_forward.dot(desired_heading), 0.35, 1.0)
-	var effective_max = (cruise_speed_kmh / 3.6) * speed_curve_factor * (surf_profile.max_speed_factor if surf_profile else 1.0)
+	var effective_max = (current_cruise_kmh / 3.6) * speed_curve_factor * (surf_profile.max_speed_factor if surf_profile else 1.0)
 
 	# Desaceleración previa si nos aproximamos a una parada
 	if station_indices.has(current_waypoint_index) and dist_to_target < 15.0:
@@ -134,23 +141,34 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	current_speed_kmh = Vector2(velocity.x, velocity.z).length() * 3.6
 
+func _get_station_info(wp_idx: int) -> Dictionary:
+	if not station_indices.has(wp_idx):
+		return {"name": "Parada", "dwell_time": station_dwell_time}
+	var val = station_indices[wp_idx]
+	if val is Dictionary:
+		return {
+			"name": str(val.get("name", "Parada")),
+			"dwell_time": float(val.get("dwell_time", station_dwell_time))
+		}
+	return {"name": str(val), "dwell_time": station_dwell_time}
+
 func _on_waypoint_reached() -> void:
 	if station_indices.has(current_waypoint_index):
 		is_at_station = true
 		_station_timer = 0.0
-		var st_name = station_indices[current_waypoint_index]
-		route_station_arrived.emit(st_name, station_dwell_time)
-		print("[RouteVehicle] '%s' llegó a parada: %s (Espera: %.1f s)" % [vehicle_name, st_name, station_dwell_time])
+		var info = _get_station_info(current_waypoint_index)
+		route_station_arrived.emit(info["name"], info["dwell_time"])
+		print("[RouteVehicle] '%s' llegó a parada: %s (Espera: %.1f s)" % [vehicle_name, info["name"], info["dwell_time"]])
 	else:
 		_advance_waypoint()
 
 func _process_station_dwell(delta: float) -> void:
 	_station_timer += delta
-	if _station_timer >= station_dwell_time:
+	var info = _get_station_info(current_waypoint_index)
+	if _station_timer >= info["dwell_time"]:
 		is_at_station = false
-		var st_name = station_indices.get(current_waypoint_index, "Parada")
-		route_station_departed.emit(st_name)
-		print("[RouteVehicle] '%s' reanuda marcha desde %s" % [vehicle_name, st_name])
+		route_station_departed.emit(info["name"])
+		print("[RouteVehicle] '%s' reanuda marcha desde %s" % [vehicle_name, info["name"]])
 		_advance_waypoint()
 
 func _advance_waypoint() -> void:
@@ -182,7 +200,11 @@ func _process_distant_kinematics(delta: float) -> void:
 		_on_waypoint_reached()
 		return
 
-	var desired_speed = cruise_speed_kmh / 3.6
+	var current_cruise = cruise_speed_kmh
+	if not waypoint_speeds.is_empty() and current_waypoint_index < waypoint_speeds.size():
+		current_cruise = waypoint_speeds[current_waypoint_index]
+
+	var desired_speed = current_cruise / 3.6
 	var step_dist = desired_speed * delta
 
 	if dist_h > 0.001:
@@ -192,4 +214,4 @@ func _process_distant_kinematics(delta: float) -> void:
 		global_position.y = move_toward(global_position.y, target_pt.y + 0.1, 5.0 * delta)
 		look_at(global_position + dir_h, Vector3.UP)
 
-	current_speed_kmh = cruise_speed_kmh
+	current_speed_kmh = current_cruise

@@ -121,9 +121,9 @@ class TestUDPProtocolIntegration(unittest.TestCase):
         entity_ids = {e.entity_id: e for e in snap.entities}
         self.assertIn(player_id, entity_ids)
         self.assertIn(1001, entity_ids)
-        self.assertIn(1002, entity_ids)
+        self.assertIn(2001, entity_ids)
         self.assertEqual(entity_ids[1001].entity_type, EntityType.VEHICLE)
-        self.assertEqual(entity_ids[1002].entity_type, EntityType.VEHICLE)
+        self.assertEqual(entity_ids[2001].entity_type, EntityType.VEHICLE)
 
         # 6. Simular EVENT de abordaje a vehículo (VEHICLE_ENTER) como conductor
         import struct

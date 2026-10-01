@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 from collections import defaultdict
@@ -166,22 +167,52 @@ class SharedWorld:
         # 2. Flota autoritativa de autobuses "El Hongo"
         route_path = self._resolve_route_json_path()
         if route_path and os.path.exists(route_path):
-            bus_fleet_configs = [
-                (1002, 133, "Autobús El Hongo (Unidad 24)"), # Central Camionera
-                (2001, 120, "Autobús El Hongo (Unidad 18)"), # Arribando a Centro / Parque Hidalgo
-                (2002, 145, "Autobús El Hongo (Unidad 23)"), # Blvd. Defensores hacia carretera
-                (2003, 180, "Autobús El Hongo (Unidad 07)"), # Carretera Libre Este
-                (2004, 990, "Autobús El Hongo (Unidad 12)"), # Retorno hacia Centro
-            ]
-            for entity_id, initial_wp, bus_name in bus_fleet_configs:
+            with open(route_path, "r", encoding="utf-8") as f:
+                route_meta = json.load(f)
+            fleet_cfg = route_meta.get("fleet_configuration", {})
+            configured_units = fleet_cfg.get("units", [])
+            calibrated_cruise = float(fleet_cfg.get("calibrated_cruise_speed_kmh", 80.0))
+
+            if configured_units:
+                for u in configured_units:
+                    entity_id = int(u.get("unit_id", 1000))
+                    initial_wp = int(u.get("start_waypoint_index", 0))
+                    bus_name = u.get("vehicle_name", f"Autobús El Hongo (Unidad {entity_id})")
+                    bus = DynamicEntity(
+                        entity_id=entity_id,
+                        entity_type=EntityType.VEHICLE,
+                        flags=(VehicleFlags.ROUTE_VEHICLE | VehicleFlags.ENGINE_RUNNING | VehicleFlags.HEADLIGHTS),
+                        properties={
+                            "fuel": 999.0,
+                            "vehicle_type": "bus_route",
+                            "vehicle_name": bus_name,
+                            "driver_id": None,
+                            "passengers": [],
+                        },
+                    )
+                    bus_ctrl = RouteVehicleController.from_route_json(
+                        entity=bus,
+                        route_json_path=route_path,
+                        initial_waypoint_index=initial_wp,
+                        cruise_speed_kmh=calibrated_cruise,
+                        max_passengers=30,
+                    )
+                    self.upsert_entity(bus)
+                    self.simulation_manager.register_controller(bus_ctrl)
+                logger.info(
+                    "Flota autoritativa de autobuses instanciada (%d unidades para frecuencia de %.1f min).",
+                    len(configured_units),
+                    float(fleet_cfg.get("headway_minutes", 5.0)),
+                )
+            else:
                 bus = DynamicEntity(
-                    entity_id=entity_id,
+                    entity_id=1001,
                     entity_type=EntityType.VEHICLE,
                     flags=(VehicleFlags.ROUTE_VEHICLE | VehicleFlags.ENGINE_RUNNING | VehicleFlags.HEADLIGHTS),
                     properties={
                         "fuel": 999.0,
                         "vehicle_type": "bus_route",
-                        "vehicle_name": bus_name,
+                        "vehicle_name": "Autobús El Hongo (Unidad 24)",
                         "driver_id": None,
                         "passengers": [],
                     },
@@ -189,13 +220,13 @@ class SharedWorld:
                 bus_ctrl = RouteVehicleController.from_route_json(
                     entity=bus,
                     route_json_path=route_path,
-                    initial_waypoint_index=initial_wp,
-                    cruise_speed_kmh=36.8,
+                    initial_waypoint_index=0,
+                    cruise_speed_kmh=calibrated_cruise,
                     max_passengers=30,
                 )
                 self.upsert_entity(bus)
                 self.simulation_manager.register_controller(bus_ctrl)
-            logger.info("Flota autoritativa de autobuses instanciada (%d unidades).", len(bus_fleet_configs))
+                logger.info("Flota autoritativa instanciada con unidad única de respaldo.")
         else:
             logger.warning("No se encontró bus_hongo_route.json en '%s'. Usando circuito urbano procedural activo de emergencia.", route_path)
             fallback_waypoints = [

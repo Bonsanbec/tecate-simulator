@@ -173,8 +173,8 @@ class TestSimulationArchitecture(unittest.TestCase):
     def test_world_spawn_default_entities(self):
         self.world.spawn_default_world_entities()
 
-        # Debe haber 5 autobuses de ruta autoritativos (1002, 2001, 2002, 2003, 2004)
-        for bus_id in [1002, 2001, 2002, 2003, 2004]:
+        # Debe haber 28 autobuses de ruta autoritativos (2001 a 2028)
+        for bus_id in range(2001, 2029):
             bus = self.world.get_entity(bus_id)
             self.assertIsNotNone(bus, f"Autobús {bus_id} debe existir en SharedWorld")
             self.assertTrue(bus.flags & VehicleFlags.ROUTE_VEHICLE)
@@ -195,6 +195,25 @@ class TestSimulationArchitecture(unittest.TestCase):
         self.world.simulation_manager.update(0.033, self.world)
         snap = self.world.build_snapshot_for_player(player_entity_id=999, server_tick=1, server_time=100)
         self.assertGreater(len(snap.entities), 0)
+
+    def test_route_vehicle_from_route_json_extended(self):
+        route_path = "server/routes/bus_hongo_route.json"
+        if not os.path.exists(route_path):
+            route_path = "godot_project/assets/vehicles/bus_hongo_route.json"
+        self.assertTrue(os.path.exists(route_path))
+
+        ent = DynamicEntity(entity_id=2001, entity_type=EntityType.VEHICLE)
+        bus_ctrl = RouteVehicleController.from_route_json(
+            entity=ent,
+            route_json_path=route_path,
+            initial_waypoint_index=304,
+            max_passengers=30,
+        )
+        self.assertGreater(len(bus_ctrl.waypoints), 1800)
+        self.assertGreater(len(bus_ctrl.waypoint_speeds), 1800)
+        # Verificar que la estación de la Central Camionera tenga 120s de espera
+        has_120s_station = any(st.get("dwell_time") == 120.0 for st in bus_ctrl.station_indices.values())
+        self.assertTrue(has_120s_station, "Debe existir al menos una estación con dwell_time de 120.0 s (Central Camionera)")
 
 
 if __name__ == "__main__":

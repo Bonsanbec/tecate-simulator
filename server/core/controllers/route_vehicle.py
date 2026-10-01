@@ -38,6 +38,7 @@ class RouteVehicleController(EntityController):
         waypoints: list[tuple[float, float, float]],
         station_indices: dict[int, dict[str, Any]] | None = None,
         cruise_speed_kmh: float = 36.0,
+        waypoint_speeds: list[float] | None = None,
         waypoint_reach_threshold: float = 4.5,
         loop_route: bool = True,
         initial_waypoint_index: int = 0,
@@ -47,6 +48,7 @@ class RouteVehicleController(EntityController):
         self.waypoints = waypoints
         self.station_indices = station_indices or {}
         self.cruise_speed_kmh = cruise_speed_kmh
+        self.waypoint_speeds = waypoint_speeds or []
         self.waypoint_reach_threshold = waypoint_reach_threshold
         self.loop_route = loop_route
         self.current_waypoint_index = initial_waypoint_index
@@ -87,14 +89,17 @@ class RouteVehicleController(EntityController):
         cruise_speed_kmh: float = 36.0,
         max_passengers: int = 30,
     ) -> RouteVehicleController:
-        """Instancia un controlador cargando waypoints y estaciones desde un archivo JSON."""
+        """Instancia un controlador cargando waypoints, velocidades y estaciones desde un archivo JSON."""
         with open(route_json_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         raw_waypoints = data.get("waypoints", [])
         waypoints = [(float(pt[0]), float(pt[1]), float(pt[2])) for pt in raw_waypoints]
 
-        raw_stations = data.get("stations", {})
+        raw_speeds = data.get("waypoint_speeds", [])
+        waypoint_speeds = [float(s) for s in raw_speeds] if raw_speeds else None
+
+        raw_stations = data.get("station_indices") or data.get("stations") or {}
         station_indices: dict[int, dict[str, Any]] = {}
         for k, v in raw_stations.items():
             idx = int(k)
@@ -111,6 +116,7 @@ class RouteVehicleController(EntityController):
             waypoints=waypoints,
             station_indices=station_indices,
             cruise_speed_kmh=cruise_speed_kmh,
+            waypoint_speeds=waypoint_speeds,
             initial_waypoint_index=initial_waypoint_index,
             max_passengers=max_passengers,
         )
@@ -195,7 +201,12 @@ class RouteVehicleController(EntityController):
         self.entity.pitch += _angle_diff_deg(desired_pitch, self.entity.pitch) * min(1.0, 5.0 * dt)
 
         # 4. Cálculo de velocidad y aceleración
-        target_cruise_speed = self.cruise_speed_kmh / 3.6
+        speed_kmh = (
+            self.waypoint_speeds[self.current_waypoint_index]
+            if self.waypoint_speeds and self.current_waypoint_index < len(self.waypoint_speeds)
+            else self.cruise_speed_kmh
+        )
+        target_cruise_speed = speed_kmh / 3.6
         # Reducir velocidad si el ángulo hacia el objetivo es pronunciado
         turn_factor = max(0.35, math.cos(math.radians(yaw_diff)))
         effective_target_speed = target_cruise_speed * turn_factor
