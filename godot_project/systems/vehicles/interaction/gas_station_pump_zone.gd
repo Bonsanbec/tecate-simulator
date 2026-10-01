@@ -18,6 +18,7 @@ var active_vehicle: VehicleBaseClass = null
 var is_refueling: bool = false
 
 func _ready() -> void:
+	add_to_group("pump_zones")
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 

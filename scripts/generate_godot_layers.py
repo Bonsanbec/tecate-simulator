@@ -1506,6 +1506,62 @@ def generate_bridges(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network=
     print(f"[Bridges] Exported GLB to: {out_glb}")
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Spatial Grid Partitioning Utility (Frustum Culling & Memory Scalability)
+# ─────────────────────────────────────────────────────────────────────────────
+
+GRID_CHUNK_SIZE_METERS = 2500.0
+
+class ChunkedMeshBuilder:
+    """
+    Partitions large regional planar and ribbon geometry into bounded spatial cells (e.g. 2.5 km x 2.5 km).
+    Each cell is instantiated as an independent Blender object / Godot MeshInstance3D with its own AABB,
+    allowing 100% automated Frustum Culling and visibility distance culling without sacrificing any road
+    or urban block in any municipal locality (Tecate Centro, El Hongo, La Rumorosa, Cerro Azul, etc.).
+    """
+    def __init__(self, chunk_size=GRID_CHUNK_SIZE_METERS):
+        self.chunk_size = chunk_size
+        self.chunks = {}  # (cx, cy) -> {"verts": [], "faces": [], "mat_indices": [], "v_count": 0}
+
+    def add_element(self, ref_x, ref_y, elem_verts, elem_faces, elem_mat_indices):
+        if not elem_faces:
+            return
+        cx = int(math.floor(ref_x / self.chunk_size))
+        cy = int(math.floor(ref_y / self.chunk_size))
+        key = (cx, cy)
+        if key not in self.chunks:
+            self.chunks[key] = {"verts": [], "faces": [], "mat_indices": [], "v_count": 0}
+        c = self.chunks[key]
+        base_v = c["v_count"]
+        c["verts"].extend(elem_verts)
+        for f in elem_faces:
+            c["faces"].append((base_v + f[0], base_v + f[1], base_v + f[2]))
+        c["mat_indices"].extend(elem_mat_indices)
+        c["v_count"] += len(elem_verts)
+
+    def create_objects(self, name_prefix, materials):
+        import bpy
+        total_triangles = 0
+        created_objects = []
+        for (cx, cy), data in sorted(self.chunks.items()):
+            if not data["faces"]:
+                continue
+            total_triangles += len(data["faces"])
+            chunk_name = f"{name_prefix}_C_{cx}_{cy}"
+            mesh = bpy.data.meshes.new(f"{chunk_name}_Mesh")
+            mesh.from_pydata(data["verts"], [], data["faces"])
+            for mat in materials:
+                mesh.materials.append(mat)
+            for idx, poly in enumerate(mesh.polygons):
+                if idx < len(data["mat_indices"]):
+                    poly.material_index = data["mat_indices"][idx]
+            mesh.update()
+
+            obj = bpy.data.objects.new(chunk_name, mesh)
+            bpy.context.collection.objects.link(obj)
+            created_objects.append(obj)
+        return total_triangles, created_objects
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 6. Layer Generator 4: Roadways (4-Corner Transverse Sampling & Markings)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -1513,7 +1569,7 @@ def generate_roadways(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network
     import bpy
     import mathutils
 
-    print("\n" + "="*70 + "\nGENERATING ROADWAYS LAYER (4-CORNER TRANSVERSE TERRAIN-SNAPPING &\nMINECRAFT TAXONOMY MARKINGS)\n" + "="*70)
+    print("\n" + "="*70 + "\nGENERATING ROADWAYS LAYER (SPATIAL GRID CHUNKING & ADAPTIVE CURVATURE SAMPLING)\n" + "="*70)
     bpy.ops.wm.read_homefile(use_empty=True)
 
     if prebuilt_network is None:
@@ -1574,8 +1630,7 @@ def generate_roadways(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network
     # 4: M_RoadMarkingYellow
     # 5: M_RoadMarkingWhite
 
-    verts, faces = [], []
-    mat_indices = []
+    builder = ChunkedMeshBuilder(chunk_size=GRID_CHUNK_SIZE_METERS)
 
     for r_way in road_ways:
         pts = r_way["pts"]
@@ -1627,7 +1682,31 @@ def generate_roadways(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network
             nx = -dy / seg_len
             ny =  dx / seg_len
 
-            steps = max(1, int(math.ceil(seg_len / 3.0)))
+            # Subdivisión Adaptativa según Curvatura y Pendiente
+            zg_p1 = get_terrain_z(bvh, p1[0], p1[1])
+            zg_p2 = get_terrain_z(bvh, p2[0], p2[1])
+            mid_px = (p1[0] + p2[0]) * 0.5
+            mid_py = (p1[1] + p2[1]) * 0.5
+            zg_pmid = get_terrain_z(bvh, mid_px, mid_py)
+            h_variation = abs(zg_pmid - (zg_p1 + zg_p2) * 0.5)
+
+            if is_ped:
+                target_step = 3.0
+            elif marking_type in ["calle", "callejón"]:
+                target_step = 3.5 if h_variation > 0.08 else 6.0
+            elif marking_type in ["boulevard", "avenida"]:
+                target_step = 4.0 if h_variation > 0.08 else 8.0
+            elif marking_type == "highway" or is_rural:
+                if h_variation > 0.15:
+                    target_step = 5.0
+                elif h_variation > 0.06:
+                    target_step = 9.0
+                else:
+                    target_step = 16.0
+            else:
+                target_step = 4.0 if h_variation > 0.08 else 7.0
+
+            steps = max(1, int(math.ceil(seg_len / target_step)))
             for s_idx in range(steps):
                 f_a = s_idx / float(steps)
                 f_b = (s_idx + 1) / float(steps)
@@ -1667,71 +1746,75 @@ def generate_roadways(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network
                 z_r2 = zg_r2 + elev_top
                 z_c2 = zg_c2 + elev_top + (0.005 if not is_ped else 0.0)
 
+                sub_verts = []
+                sub_faces = []
+                sub_mat_indices = []
+
                 # 6 vertices for road segment top surface (conforms to camber + transverse slope)
-                v_rd = len(verts)
-                verts.append((l1_x, l1_y, z_l1)) # 0
-                verts.append((c1_x, c1_y, z_c1)) # 1
-                verts.append((r1_x, r1_y, z_r1)) # 2
-                verts.append((l2_x, l2_y, z_l2)) # 3
-                verts.append((c2_x, c2_y, z_c2)) # 4
-                verts.append((r2_x, r2_y, z_r2)) # 5
+                v_rd = len(sub_verts)
+                sub_verts.append((l1_x, l1_y, z_l1)) # 0
+                sub_verts.append((c1_x, c1_y, z_c1)) # 1
+                sub_verts.append((r1_x, r1_y, z_r1)) # 2
+                sub_verts.append((l2_x, l2_y, z_l2)) # 3
+                sub_verts.append((c2_x, c2_y, z_c2)) # 4
+                sub_verts.append((r2_x, r2_y, z_r2)) # 5
 
                 # Left half
-                faces.append((v_rd + 0, v_rd + 1, v_rd + 4))
-                faces.append((v_rd + 0, v_rd + 4, v_rd + 3))
+                sub_faces.append((v_rd + 0, v_rd + 1, v_rd + 4))
+                sub_faces.append((v_rd + 0, v_rd + 4, v_rd + 3))
                 # Right half
-                faces.append((v_rd + 1, v_rd + 2, v_rd + 5))
-                faces.append((v_rd + 1, v_rd + 5, v_rd + 4))
-                mat_indices.extend([base_slot, base_slot, base_slot, base_slot])
+                sub_faces.append((v_rd + 1, v_rd + 2, v_rd + 5))
+                sub_faces.append((v_rd + 1, v_rd + 5, v_rd + 4))
+                sub_mat_indices.extend([base_slot, base_slot, base_slot, base_slot])
 
                 # ── SIDE SKIRTS (-0.20m penetrating into terrain for 0 clipping) ──
-                # Left skirt: from top edge down to bedrock
-                v_sk_l = len(verts)
-                verts.append((l1_x, l1_y, z_l1))
-                verts.append((l2_x, l2_y, z_l2))
-                verts.append((l2_x, l2_y, zg_l2 - 0.20))
-                verts.append((l1_x, l1_y, zg_l1 - 0.20))
-                faces.append((v_sk_l, v_sk_l + 1, v_sk_l + 2))
-                faces.append((v_sk_l, v_sk_l + 2, v_sk_l + 3))
-                mat_indices.extend([base_slot, base_slot])
+                # Left skirt
+                v_sk_l = len(sub_verts)
+                sub_verts.append((l1_x, l1_y, z_l1))
+                sub_verts.append((l2_x, l2_y, z_l2))
+                sub_verts.append((l2_x, l2_y, zg_l2 - 0.20))
+                sub_verts.append((l1_x, l1_y, zg_l1 - 0.20))
+                sub_faces.append((v_sk_l, v_sk_l + 1, v_sk_l + 2))
+                sub_faces.append((v_sk_l, v_sk_l + 2, v_sk_l + 3))
+                sub_mat_indices.extend([base_slot, base_slot])
 
                 # Right skirt
-                v_sk_r = len(verts)
-                verts.append((r1_x, r1_y, z_r1))
-                verts.append((r1_x, r1_y, zg_r1 - 0.20))
-                verts.append((r2_x, r2_y, zg_r2 - 0.20))
-                verts.append((r2_x, r2_y, z_r2))
-                faces.append((v_sk_r, v_sk_r + 1, v_sk_r + 2))
-                faces.append((v_sk_r, v_sk_r + 2, v_sk_r + 3))
-                mat_indices.extend([base_slot, base_slot])
+                v_sk_r = len(sub_verts)
+                sub_verts.append((r1_x, r1_y, z_r1))
+                sub_verts.append((r1_x, r1_y, zg_r1 - 0.20))
+                sub_verts.append((r2_x, r2_y, zg_r2 - 0.20))
+                sub_verts.append((r2_x, r2_y, z_r2))
+                sub_faces.append((v_sk_r, v_sk_r + 1, v_sk_r + 2))
+                sub_faces.append((v_sk_r, v_sk_r + 2, v_sk_r + 3))
+                sub_mat_indices.extend([base_slot, base_slot])
 
                 # ── 2. CONCRETE CURBS (+0.28m platform curb edge, 10cm lip above asphalt) ──
                 if not is_rural and not is_ped and width >= 6.0:
                     curb_w = 0.25
                     curb_elev = 0.28
                     # Left curb top
-                    v_lc = len(verts)
+                    v_lc = len(sub_verts)
                     in_l1_x, in_l1_y = sp1_x - nx * (half_w - curb_w), sp1_y - ny * (half_w - curb_w)
                     in_l2_x, in_l2_y = sp2_x - nx * (half_w - curb_w), sp2_y - ny * (half_w - curb_w)
-                    verts.append((l1_x, l1_y, zg_l1 + curb_elev))
-                    verts.append((in_l1_x, in_l1_y, zg_l1 + curb_elev))
-                    verts.append((in_l2_x, in_l2_y, zg_l2 + curb_elev))
-                    verts.append((l2_x, l2_y, zg_l2 + curb_elev))
-                    faces.append((v_lc, v_lc + 1, v_lc + 2))
-                    faces.append((v_lc, v_lc + 2, v_lc + 3))
-                    mat_indices.extend([3, 3])
+                    sub_verts.append((l1_x, l1_y, zg_l1 + curb_elev))
+                    sub_verts.append((in_l1_x, in_l1_y, zg_l1 + curb_elev))
+                    sub_verts.append((in_l2_x, in_l2_y, zg_l2 + curb_elev))
+                    sub_verts.append((l2_x, l2_y, zg_l2 + curb_elev))
+                    sub_faces.append((v_lc, v_lc + 1, v_lc + 2))
+                    sub_faces.append((v_lc, v_lc + 2, v_lc + 3))
+                    sub_mat_indices.extend([3, 3])
 
                     # Right curb top
-                    v_rc = len(verts)
+                    v_rc = len(sub_verts)
                     in_r1_x, in_r1_y = sp1_x + nx * (half_w - curb_w), sp1_y + ny * (half_w - curb_w)
                     in_r2_x, in_r2_y = sp2_x + nx * (half_w - curb_w), sp2_y + ny * (half_w - curb_w)
-                    verts.append((in_r1_x, in_r1_y, zg_r1 + curb_elev))
-                    verts.append((r1_x, r1_y, zg_r1 + curb_elev))
-                    verts.append((r2_x, r2_y, zg_r2 + curb_elev))
-                    verts.append((in_r2_x, in_r2_y, zg_r2 + curb_elev))
-                    faces.append((v_rc, v_rc + 1, v_rc + 2))
-                    faces.append((v_rc, v_rc + 2, v_rc + 3))
-                    mat_indices.extend([3, 3])
+                    sub_verts.append((in_r1_x, in_r1_y, zg_r1 + curb_elev))
+                    sub_verts.append((r1_x, r1_y, zg_r1 + curb_elev))
+                    sub_verts.append((r2_x, r2_y, zg_r2 + curb_elev))
+                    sub_verts.append((in_r2_x, in_r2_y, zg_r2 + curb_elev))
+                    sub_faces.append((v_rc, v_rc + 1, v_rc + 2))
+                    sub_faces.append((v_rc, v_rc + 2, v_rc + 3))
+                    sub_mat_indices.extend([3, 3])
 
                 # ── 3. MINECRAFT TAXONOMY ROAD MARKINGS ──
                 if not is_rural and not is_ped and not is_near_inter:
@@ -1746,14 +1829,14 @@ def generate_roadways(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network
                         vz_2b = get_terrain_z(bvh, vx_2b, vy_2b) + z_bias
                         vz_2a = get_terrain_z(bvh, vx_2a, vy_2a) + z_bias
 
-                        v_rb = len(verts)
-                        verts.append((vx_1a, vy_1a, vz_1a))
-                        verts.append((vx_1b, vy_1b, vz_1b))
-                        verts.append((vx_2b, vy_2b, vz_2b))
-                        verts.append((vx_2a, vy_2a, vz_2a))
-                        faces.append((v_rb, v_rb + 1, v_rb + 2))
-                        faces.append((v_rb, v_rb + 2, v_rb + 3))
-                        mat_indices.extend([slot, slot])
+                        v_rb = len(sub_verts)
+                        sub_verts.append((vx_1a, vy_1a, vz_1a))
+                        sub_verts.append((vx_1b, vy_1b, vz_1b))
+                        sub_verts.append((vx_2b, vy_2b, vz_2b))
+                        sub_verts.append((vx_2a, vy_2a, vz_2a))
+                        sub_faces.append((v_rb, v_rb + 1, v_rb + 2))
+                        sub_faces.append((v_rb, v_rb + 2, v_rb + 3))
+                        sub_mat_indices.extend([slot, slot])
 
                     is_dash_on = (int(math.floor(dist_a)) % 4 < 2)
 
@@ -1784,26 +1867,16 @@ def generate_roadways(bvh, cache_dir, out_blend, out_glb, bbox, prebuilt_network
                             add_ribbon(-edge_d - 0.15, -edge_d, 5)
                             add_ribbon( edge_d,  edge_d + 0.15, 5)
 
+                mid_step_x = (sp1_x + sp2_x) * 0.5
+                mid_step_y = (sp1_y + sp2_y) * 0.5
+                builder.add_element(mid_step_x, mid_step_y, sub_verts, sub_faces, sub_mat_indices)
+
             cum_len += seg_len
 
-    r_mesh = bpy.data.meshes.new("RoadwaysMesh")
-    r_mesh.from_pydata(verts, [], faces)
-    r_mesh.materials.append(mat_asphalt) # 0
-    r_mesh.materials.append(mat_clean)   # 1
-    r_mesh.materials.append(mat_rural)   # 2
-    r_mesh.materials.append(mat_curb)    # 3
-    r_mesh.materials.append(mat_yellow)  # 4
-    r_mesh.materials.append(mat_white)   # 5
+    materials = [mat_asphalt, mat_clean, mat_rural, mat_curb, mat_yellow, mat_white]
+    total_triangles, created_objects = builder.create_objects("Roadways", materials)
 
-    for idx, poly in enumerate(r_mesh.polygons):
-        if idx < len(mat_indices):
-            poly.material_index = mat_indices[idx]
-    r_mesh.update()
-
-    obj_r = bpy.data.objects.new("Roadways", r_mesh)
-    bpy.context.collection.objects.link(obj_r)
-
-    print(f"[Roadways] Created {len(faces):,} road triangles with 4-corner transverse slope sampling and full Minecraft taxonomy markings.")
+    print(f"[Roadways] Created {len(created_objects)} spatial grid chunks ({total_triangles:,} triangles total) with adaptive curvature sampling and Minecraft taxonomy markings.")
     bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(out_blend))
     print(f"[Roadways] Saved working copy to: {out_blend}")
 
@@ -1895,8 +1968,7 @@ out geom;
         bsdf_g.inputs["Base Color"].default_value = (0.35, 0.52, 0.22, 1.0)
         bsdf_g.inputs["Roughness"].default_value = 0.85
 
-    verts, faces = [], []
-    mat_indices = []
+    builder = ChunkedMeshBuilder(chunk_size=GRID_CHUNK_SIZE_METERS)
 
     # ── 1. OSM Landuse / Leisure Polygons (Parks, Schools, Green Areas) ──
     polygon_candidates = []
@@ -2060,15 +2132,19 @@ out geom;
                     grid_pts.append(mathutils.Vector((gx, gy)))
 
         all_pts = pts + grid_pts
+        m_verts = []
+        m_faces = []
+        m_mat_indices = []
+
         try:
             res = mathutils.geometry.delaunay_2d_cdt(all_pts, edges, [], 0, 1e-4)
             out_pts, out_edges, out_faces, _, _, _ = res
 
-            v_offset = len(verts)
+            v_offset = len(m_verts)
             # Elevation: +0.12m platform height (safely below +0.18m asphalt and +0.28m curb)
             for opt in out_pts:
                 pz = get_terrain_z(bvh, opt.x, opt.y) + 0.12
-                verts.append((opt.x, opt.y, pz))
+                m_verts.append((opt.x, opt.y, pz))
 
             for f in out_faces:
                 cx = (out_pts[f[0]].x + out_pts[f[1]].x + out_pts[f[2]].x) / 3.0
@@ -2076,53 +2152,46 @@ out geom;
                 if point_in_poly(cx, cy, poly_2d):
                     if not is_landuse and is_point_in_landuse(cx, cy):
                         continue
-                    faces.append((v_offset + f[0], v_offset + f[1], v_offset + f[2]))
-                    mat_indices.append(mat_slot)
+                    m_faces.append((v_offset + f[0], v_offset + f[1], v_offset + f[2]))
+                    m_mat_indices.append(mat_slot)
         except Exception:
             # Fallback
             poly_vectors = [mathutils.Vector((px, py, 0.0)) for px, py in poly_2d]
             tri_indices = mathutils.geometry.tessellate_polygon([poly_vectors])
-            v_offset = len(verts)
+            v_offset = len(m_verts)
             for px, py in poly_2d:
                 pz = get_terrain_z(bvh, px, py) + 0.12
-                verts.append((px, py, pz))
+                m_verts.append((px, py, pz))
             for tri in tri_indices:
-                faces.append((v_offset + tri[0], v_offset + tri[1], v_offset + tri[2]))
-                mat_indices.append(mat_slot)
+                m_faces.append((v_offset + tri[0], v_offset + tri[1], v_offset + tri[2]))
+                m_mat_indices.append(mat_slot)
 
         # Perimeter vertical skirt down to -0.25m below terrain (37cm total thickness) to seal edges completely
-        skirt_off = len(verts)
+        skirt_off = len(m_verts)
         for i, (px, py) in enumerate(poly_2d):
             pz = get_terrain_z(bvh, px, py)
-            verts.append((px, py, pz + 0.12))
-            verts.append((px, py, pz - 0.25))
+            m_verts.append((px, py, pz + 0.12))
+            m_verts.append((px, py, pz - 0.25))
             if i > 0:
                 i0 = skirt_off + (i - 1) * 2
                 i1 = skirt_off + i * 2
-                faces.append((i0, i1, i1 + 1))
-                faces.append((i0, i1 + 1, i0 + 1))
-                mat_indices.extend([mat_slot, mat_slot])
+                m_faces.append((i0, i1, i1 + 1))
+                m_faces.append((i0, i1 + 1, i0 + 1))
+                m_mat_indices.extend([mat_slot, mat_slot])
         if len(poly_2d) > 2:
             i_last = skirt_off + (len(poly_2d) - 1) * 2
             i_first = skirt_off
-            faces.append((i_last, i_first, i_first + 1))
-            faces.append((i_last, i_first + 1, i_last + 1))
-            mat_indices.extend([mat_slot, mat_slot])
+            m_faces.append((i_last, i_first, i_first + 1))
+            m_faces.append((i_last, i_first + 1, i_last + 1))
+            m_mat_indices.extend([mat_slot, mat_slot])
 
-    m_mesh = bpy.data.meshes.new("ManzanasMesh")
-    m_mesh.from_pydata(verts, [], faces)
-    m_mesh.materials.append(mat_pave)
-    m_mesh.materials.append(mat_park)
+        poly_cx = (min_x + max_x) * 0.5
+        poly_cy = (min_y + max_y) * 0.5
+        builder.add_element(poly_cx, poly_cy, m_verts, m_faces, m_mat_indices)
 
-    for idx, f in enumerate(m_mesh.polygons):
-        if idx < len(mat_indices):
-            f.material_index = mat_indices[idx]
-    m_mesh.update()
+    total_triangles, created_objects = builder.create_objects("UrbanManzanas", [mat_pave, mat_park])
 
-    obj = bpy.data.objects.new("UrbanManzanas", m_mesh)
-    bpy.context.collection.objects.link(obj)
-
-    print(f"[Manzanas] Created {len(faces):,} dense draped manzana triangles (+0.12m platform, -0.25m physical skirts, 0% clipping).")
+    print(f"[Manzanas] Created {len(created_objects)} spatial grid chunks ({total_triangles:,} triangles total) with Delaunay conformal platforms and skirts.")
     print("[Manzanas] Mountains and rural zones left 100% uncovered to preserve aerial photo.")
     bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(out_blend))
     print(f"[Manzanas] Saved working copy to: {out_blend}")

@@ -14,10 +14,10 @@
             "description": "Continuous asphalt ribbons with lane widths, curbs & sidewalks",
             "blend_file": "blender_assets/roadways_adjusted.blend",
             "glb_file": "godot_project/assets/roadways_baked.glb",
-            "blend_hash": "8efe1d079e23e105fabf4cec106d6661545d24c360aeaa8ae5624a118f90a8f5",
-            "blend_mtime": 1790834878.2597868,
-            "last_bake_utc": "2026-10-01T06:10:36.381588+00:00",
-            "glb_size_bytes": 1364323472
+            "blend_hash": "35291c7dafea0b3c9787710748e79fa3d198cd16a1c60d6ad9a361f004415dcc",
+            "blend_mtime": 1790839493.7358546,
+            "last_bake_utc": "2026-10-01T07:25:40.493091+00:00",
+            "glb_size_bytes": 711982168
         },
         "railways": {
             "description": "Ferrocarril Tijuana-Tecate (3D ballast, timber ties, steel rails)",
@@ -50,11 +50,11 @@
             "description": "Urban lot platforms and sidewalks for developed city blocks",
             "blend_file": "blender_assets/manzanas_adjusted.blend",
             "glb_file": "godot_project/assets/manzanas_baked.glb",
-            "blend_hash": "dc8e9e3793fd353c0773e8f8791a617a450edc2e9d07a3ca6b93f0fcc8fd75ad",
-            "blend_mtime": 1790835000.5163078,
-            "last_bake_utc": "2026-10-01T06:10:36.424019+00:00",
-            "glb_size_bytes": 129949984
+            "blend_hash": "01d934f7f80368b984437bf068061c20eb9ca5fb62083e022b2c1cfd412c5946",
+            "blend_mtime": 1790839447.4435134,
+            "last_bake_utc": "2026-10-01T07:25:43.186534+00:00",
+            "glb_size_bytes": 123547660
         }
     },
-    "last_update_utc": "2026-10-01T06:10:36.424043+00:00"
+    "last_update_utc": "2026-10-01T07:25:43.186627+00:00"
 }

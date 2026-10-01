@@ -60,7 +60,22 @@ func enter_vehicle(player: Node3D, _preferred_type: int = 1) -> bool:
 
 	return false
 
+func _has_any_passenger() -> bool:
+	for s in seats:
+		if s and s.has_method("is_occupied") and s.is_occupied():
+			return true
+	return false
+
 func _physics_process(delta: float) -> void:
+	# Optimización LOD / Distance Culling:
+	# Si el autobús está a más de 220 metros y no lleva al jugador, usar cinemática ligera
+	# evitando 4 raycasts continuos de suspensión y colisiones en cada tick de física.
+	var cam = get_viewport().get_camera_3d() if get_viewport() else null
+	var is_far_away = cam != null and cam.global_position.distance_squared_to(global_position) > (220.0 * 220.0)
+	if is_far_away and not _has_any_passenger():
+		_process_distant_kinematics(delta)
+		return
+
 	# 1. Adaptación continua a la topografía e inclinación del terreno de Tecate
 	var avg_normal = process_terrain_alignment(delta)
 
@@ -150,3 +165,33 @@ func _advance_waypoint() -> void:
 		else:
 			current_waypoint_index = waypoints.size() - 1
 			engine_running = false
+
+func _process_distant_kinematics(delta: float) -> void:
+	if is_at_station:
+		_process_station_dwell(delta)
+		velocity = Vector3.ZERO
+		current_speed_kmh = 0.0
+		return
+
+	if waypoints.is_empty():
+		return
+
+	var target_pt = waypoints[current_waypoint_index]
+	var to_target = target_pt - global_position
+	var dist_h = Vector2(to_target.x, to_target.z).length()
+
+	if dist_h <= waypoint_reach_threshold:
+		_on_waypoint_reached()
+		return
+
+	var desired_speed = cruise_speed_kmh / 3.6
+	var step_dist = desired_speed * delta
+
+	if dist_h > 0.001:
+		var dir_h = Vector3(to_target.x, 0.0, to_target.z).normalized()
+		global_position.x += dir_h.x * minf(step_dist, dist_h)
+		global_position.z += dir_h.z * minf(step_dist, dist_h)
+		global_position.y = move_toward(global_position.y, target_pt.y + 0.1, 5.0 * delta)
+		look_at(global_position + dir_h, Vector3.UP)
+
+	current_speed_kmh = cruise_speed_kmh

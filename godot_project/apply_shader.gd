@@ -35,6 +35,9 @@ func _ready():
 	if bridges_node:
 		print("[ApplyShader] Creating collision shapes for Bridges...")
 		_create_visible_colliders_recursive(bridges_node)
+
+	# 3b. Configurar rangos de visibilidad (LOD / Frustum Culling) en celdas de carreteras y manzanas
+	_configure_lod_visibility_ranges()
 	
 	# 4. Await physics frames so colliders register in the physics world
 	print("[ApplyShader] Waiting for physics server to synchronize...")
@@ -256,4 +259,20 @@ func _ensure_terrain_shaded_pbr(node: Node) -> void:
 					mat.diffuse_mode = BaseMaterial3D.DIFFUSE_BURLEY
 	for child in node.get_children():
 		_ensure_terrain_shaded_pbr(child)
+
+func _configure_lod_visibility_ranges() -> void:
+	var roadways_node = get_node_or_null("Roadways")
+	if roadways_node:
+		_set_visibility_range_recursive(roadways_node, 5500.0, 400.0)
+	var manzanas_node = get_node_or_null("Manzanas")
+	if manzanas_node:
+		_set_visibility_range_recursive(manzanas_node, 4000.0, 300.0)
+
+func _set_visibility_range_recursive(node: Node, max_dist: float, margin: float) -> void:
+	if node is GeometryInstance3D:
+		node.visibility_range_end = max_dist
+		node.visibility_range_end_margin = margin
+		node.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+	for child in node.get_children():
+		_set_visibility_range_recursive(child, max_dist, margin)
 
