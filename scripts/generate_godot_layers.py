@@ -2140,68 +2140,98 @@ out geom;
 # 8. Main Orchestrator
 # ─────────────────────────────────────────────────────────────────────────────
 
+BBOX_FULL_TERRAIN = (32.211873, -116.780761, 32.636077, -115.874121)
+
 def main():
+    import argparse
     t_start = time.time()
     print("="*70)
-    print("TECATE DIGITAL TWIN: GENERATING ALL MODULAR GIS 3D LAYERS")
+    print("TECATE DIGITAL TWIN: GENERATING MODULAR GIS 3D LAYERS (FULL TERRAIN EXTENT)")
+    print(f"Bounding Box: {BBOX_FULL_TERRAIN}")
     print("="*70)
+
+    # Parse arguments if passed via blender --python script.py -- --layer ...
+    target_layer = None
+    argv = sys.argv
+    if "--" in argv:
+        custom_args = argv[argv.index("--") + 1:]
+    else:
+        custom_args = argv[1:]
+
+    parser = argparse.ArgumentParser(description="Modular GIS Layer Generator")
+    parser.add_argument("--layer", type=str, default="all",
+                        choices=["all", "waterways", "railways", "bridges", "roadways", "manzanas"],
+                        help="Specific layer to generate (default: all)")
+    args, _ = parser.parse_known_args(custom_args)
+    target_layer = args.layer
 
     terrain_glb = "godot_project/assets/tecate2.glb"
     cache_dir = "godot_project/assets/osm_cache"
-    bbox = (32.5217, -116.6950, 32.5850, -116.5105)
+    bbox = BBOX_FULL_TERRAIN
+
+    # Canonical authoring and runtime asset paths
+    os.makedirs("blender_assets", exist_ok=True)
+    os.makedirs("godot_project/assets", exist_ok=True)
 
     # 1. Build authoritative terrain BVHTree
     bvh = build_terrain_bvh(terrain_glb)
 
     # 2. Subsystem 1: Waterways
-    generate_waterways(
-        bvh, cache_dir,
-        "godot_project/assets/waterways_adjusted.blend",
-        "godot_project/assets/waterways_baked.glb",
-        bbox
-    )
+    if target_layer in ["all", "waterways"]:
+        generate_waterways(
+            bvh, cache_dir,
+            "blender_assets/waterways_adjusted.blend",
+            "godot_project/assets/waterways_baked.glb",
+            bbox
+        )
 
     # 3. Subsystem 2: Railways
-    generate_railways(
-        bvh, cache_dir,
-        "godot_project/assets/railways_adjusted.blend",
-        "godot_project/assets/railways_baked.glb",
-        bbox
-    )
+    if target_layer in ["all", "railways"]:
+        generate_railways(
+            bvh, cache_dir,
+            "blender_assets/railways_adjusted.blend",
+            "godot_project/assets/railways_baked.glb",
+            bbox
+        )
 
-    # Build unified road network graph (shared between bridges & roadways)
-    print("\n[Network] Building unified road and bridge topological graph...")
-    net = build_unified_road_network(cache_dir, bbox)
-    print(f"[Network] Ready: {len(net['road_ways'])} road ways, {len(net['bridge_ways'])} bridge ways.")
+    # Shared road network graph (required for bridges and roadways)
+    net = None
+    if target_layer in ["all", "bridges", "roadways"]:
+        print("\n[Network] Building unified road and bridge topological graph...")
+        net = build_unified_road_network(cache_dir, bbox)
+        print(f"[Network] Ready: {len(net['road_ways'])} road ways, {len(net['bridge_ways'])} bridge ways.")
 
     # 4. Subsystem 3: Bridges
-    generate_bridges(
-        bvh, cache_dir,
-        "godot_project/assets/bridges_adjusted.blend",
-        "godot_project/assets/bridges_baked.glb",
-        bbox,
-        prebuilt_network=net
-    )
+    if target_layer in ["all", "bridges"]:
+        generate_bridges(
+            bvh, cache_dir,
+            "blender_assets/bridges_adjusted.blend",
+            "godot_project/assets/bridges_baked.glb",
+            bbox,
+            prebuilt_network=net
+        )
 
     # 5. Subsystem 4: Roadways
-    generate_roadways(
-        bvh, cache_dir,
-        "godot_project/assets/roadways_adjusted.blend",
-        "godot_project/assets/roadways_baked.glb",
-        bbox,
-        prebuilt_network=net
-    )
+    if target_layer in ["all", "roadways"]:
+        generate_roadways(
+            bvh, cache_dir,
+            "blender_assets/roadways_adjusted.blend",
+            "godot_project/assets/roadways_baked.glb",
+            bbox,
+            prebuilt_network=net
+        )
 
     # 6. Subsystem 5: Manzanas (Urban lot platforms)
-    generate_manzanas(
-        bvh, cache_dir,
-        "godot_project/assets/manzanas_adjusted.blend",
-        "godot_project/assets/manzanas_baked.glb",
-        bbox
-    )
+    if target_layer in ["all", "manzanas"]:
+        generate_manzanas(
+            bvh, cache_dir,
+            "blender_assets/manzanas_adjusted.blend",
+            "godot_project/assets/manzanas_baked.glb",
+            bbox
+        )
 
     print("\n" + "="*70)
-    print(f"ALL 5 GIS LAYERS GENERATED SUCCESSFULLY IN {time.time() - t_start:.2f}s!")
+    print(f"GIS LAYERS GENERATION (target='{target_layer}') COMPLETED IN {time.time() - t_start:.2f}s!")
     print("="*70)
 
 if __name__ == "__main__":

@@ -178,8 +178,8 @@ def main():
     P_DARSENA_CENTRAL = (143.0, -18.1)
     # 6. Salida Norte de la Central de Autobuses (incorporación a Av. Juárez)
     P_SALIDA_JUAREZ = (167.7, -47.5)
-    # 7. Extremo Oriental (La Rumorosa / Mexicali carretera libre)
-    P_RUMOROSA = (12118.1, 636.4)
+    # 7. Extremo Oriental: Terminal El Hongo (Carretera Libre Mexicali - Tijuana en el poblado de El Hongo)
+    P_RUMOROSA = (31047.7, 6605.9)
     # 8. Retorno Sur de la Carretera Libre Tecate-Tijuana (calzada paralela poniente)
     P_LIBRE_SUR_RET = (-6321.8, 5833.8)
 

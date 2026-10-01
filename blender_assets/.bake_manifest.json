@@ -14,47 +14,47 @@
             "description": "Continuous asphalt ribbons with lane widths, curbs & sidewalks",
             "blend_file": "blender_assets/roadways_adjusted.blend",
             "glb_file": "godot_project/assets/roadways_baked.glb",
-            "blend_hash": "876f519eb6f27697fa3bed8f6fbea0e6f7e999e5161eb276476d465c9c6b5ab2",
-            "blend_mtime": 1789273000.5621738,
-            "last_bake_utc": "2026-09-17T04:11:02.829771+00:00",
-            "glb_size_bytes": 3723272
+            "blend_hash": "8efe1d079e23e105fabf4cec106d6661545d24c360aeaa8ae5624a118f90a8f5",
+            "blend_mtime": 1790834878.2597868,
+            "last_bake_utc": "2026-10-01T06:10:36.381588+00:00",
+            "glb_size_bytes": 1364323472
         },
         "railways": {
             "description": "Ferrocarril Tijuana-Tecate (3D ballast, timber ties, steel rails)",
             "blend_file": "blender_assets/railways_adjusted.blend",
             "glb_file": "godot_project/assets/railways_baked.glb",
-            "blend_hash": "f96e4dffb8c7c66050f4104dd291f875d782e880ca959a4cd72916e22ab18154",
-            "blend_mtime": 1789273000.5579674,
-            "last_bake_utc": "2026-09-17T04:11:03.749743+00:00",
-            "glb_size_bytes": 12616808
+            "blend_hash": "adc3fc25ce846f8c58baf2e19a840693f274028ae33cf98106ec1f055148eef2",
+            "blend_mtime": 1790834795.239108,
+            "last_bake_utc": "2026-10-01T06:10:36.389841+00:00",
+            "glb_size_bytes": 28352928
         },
         "waterways": {
             "description": "Presa Las Auras, lakes, basins & R\u00edo Tecate water surfaces",
             "blend_file": "blender_assets/waterways_adjusted.blend",
             "glb_file": "godot_project/assets/waterways_baked.glb",
-            "blend_hash": "e77ad3ba39ca46a7f6fdd620d946de8c6d0048e99c34dc36dd682ed0fad362ee",
-            "blend_mtime": 1789273000.5645912,
-            "last_bake_utc": "2026-09-17T04:11:04.546609+00:00",
-            "glb_size_bytes": 570644
+            "blend_hash": "e4ab54d9fbcc34e1e3f238b1bd92657cd597d15fa15eb2726fe7e637e190d04a",
+            "blend_mtime": 1790834772.780445,
+            "last_bake_utc": "2026-10-01T06:10:36.397653+00:00",
+            "glb_size_bytes": 30000724
         },
         "bridges": {
             "description": "Elevated bridge decks spanning river valleys with support piers",
             "blend_file": "blender_assets/bridges_adjusted.blend",
             "glb_file": "godot_project/assets/bridges_baked.glb",
-            "blend_hash": "0a92bbca71977ae88aeb92f93e0b414bfff7a44777b58bed42488b3cbc77d4ec",
-            "blend_mtime": 1789273000.5009134,
-            "last_bake_utc": "2026-09-17T04:11:05.344393+00:00",
-            "glb_size_bytes": 61860
+            "blend_hash": "c79c7c6255ddbd2e36469f3b49fe571d37fa3555d5730b504c143fca4dd66425",
+            "blend_mtime": 1790834812.7506716,
+            "last_bake_utc": "2026-10-01T06:10:36.398418+00:00",
+            "glb_size_bytes": 2929824
         },
         "manzanas": {
             "description": "Urban lot platforms and sidewalks for developed city blocks",
             "blend_file": "blender_assets/manzanas_adjusted.blend",
             "glb_file": "godot_project/assets/manzanas_baked.glb",
-            "blend_hash": "466917c11b5e1f3453c65e7f4f4315b718c62909064f340077611f25ebae017e",
-            "blend_mtime": 1789273000.5019221,
-            "last_bake_utc": "2026-09-17T04:11:06.127982+00:00",
-            "glb_size_bytes": 103088
+            "blend_hash": "dc8e9e3793fd353c0773e8f8791a617a450edc2e9d07a3ca6b93f0fcc8fd75ad",
+            "blend_mtime": 1790835000.5163078,
+            "last_bake_utc": "2026-10-01T06:10:36.424019+00:00",
+            "glb_size_bytes": 129949984
         }
     },
-    "last_update_utc": "2026-09-17T04:11:24.000944+00:00"
+    "last_update_utc": "2026-10-01T06:10:36.424043+00:00"
 }
