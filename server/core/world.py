@@ -197,20 +197,40 @@ class SharedWorld:
                 self.simulation_manager.register_controller(bus_ctrl)
             logger.info("Flota autoritativa de autobuses instanciada (%d unidades).", len(bus_fleet_configs))
         else:
-            logger.warning("No se encontró bus_hongo_route.json en '%s'. Usando autobús de respaldo estático.", route_path)
-            # Autobús de respaldo si no se encuentra el archivo JSON
+            logger.warning("No se encontró bus_hongo_route.json en '%s'. Usando circuito urbano procedural activo de emergencia.", route_path)
+            fallback_waypoints = [
+                (164.0, 402.25, -32.0),
+                (167.7, 403.45, -47.5),
+                (250.8, 404.39, -69.2),
+                (368.1, 409.85, -81.2),
+                (189.2, 401.02, 88.6),
+                (99.5, 399.51, 99.6),
+                (32.4, 398.06, 107.5),
+                (-7.8, 397.62, 111.5),
+                (-127.4, 397.9, 126.3),
+                (160.0, 401.99, -6.0),
+            ]
             bus = DynamicEntity(
-                entity_id=2001,
+                entity_id=1002,
                 entity_type=EntityType.VEHICLE,
-                pos_x=164.0,
-                pos_y=402.25,
-                pos_z=-32.0,
-                yaw=0.0,
-                pitch=0.0,
-                flags=VehicleFlags.ROUTE_VEHICLE | VehicleFlags.ENGINE_RUNNING,
-                properties={"fuel": 999.0, "vehicle_type": "bus_route", "passengers": []},
+                flags=(VehicleFlags.ROUTE_VEHICLE | VehicleFlags.ENGINE_RUNNING | VehicleFlags.HEADLIGHTS),
+                properties={
+                    "fuel": 999.0,
+                    "vehicle_type": "bus_route",
+                    "vehicle_name": "Autobús El Hongo (Unidad 24)",
+                    "driver_id": None,
+                    "passengers": [],
+                },
+            )
+            bus_ctrl = RouteVehicleController(
+                entity=bus,
+                waypoints=fallback_waypoints,
+                station_indices={0: {"name": "Central Camionera", "dwell_time": 6.0}},
+                cruise_speed_kmh=36.0,
+                max_passengers=30,
             )
             self.upsert_entity(bus)
+            self.simulation_manager.register_controller(bus_ctrl)
 
         # 3. Peatones y NPCs del centro urbano (Parque Miguel Hidalgo y Presidencia)
         npc1 = DynamicEntity(
@@ -261,6 +281,9 @@ class SharedWorld:
     def _resolve_route_json_path(self) -> str | None:
         """Localiza de forma robusta la ruta al archivo bus_hongo_route.json."""
         candidates = [
+            os.path.join(os.path.dirname(__file__), "..", "routes", "bus_hongo_route.json"),
+            os.path.join("server", "routes", "bus_hongo_route.json"),
+            os.path.abspath("server/routes/bus_hongo_route.json"),
             os.path.join(os.path.dirname(__file__), "..", "..", "godot_project", "assets", "vehicles", "bus_hongo_route.json"),
             os.path.join("godot_project", "assets", "vehicles", "bus_hongo_route.json"),
             os.path.abspath("godot_project/assets/vehicles/bus_hongo_route.json"),
