@@ -65,13 +65,18 @@ class RouteVehicleController(EntityController):
         if "vehicle_name" not in self.entity.properties:
             self.entity.properties["vehicle_name"] = f"Unidad {self.entity.entity_id}"
 
-        # Posicionar inicialmente en el waypoint si la entidad está en el origen
+        # Posicionar inicialmente en el waypoint y orientar hacia el siguiente punto
         if self.waypoints and 0 <= self.current_waypoint_index < len(self.waypoints):
             wp = self.waypoints[self.current_waypoint_index]
-            if self.entity.pos_x == 0.0 and self.entity.pos_z == 0.0:
-                self.entity.pos_x = wp[0]
-                self.entity.pos_y = wp[1]
-                self.entity.pos_z = wp[2]
+            self.entity.pos_x = wp[0]
+            self.entity.pos_y = wp[1]
+            self.entity.pos_z = wp[2]
+            next_idx = (self.current_waypoint_index + 1) % len(self.waypoints)
+            next_wp = self.waypoints[next_idx]
+            dx = next_wp[0] - wp[0]
+            dz = next_wp[2] - wp[2]
+            if dx != 0.0 or dz != 0.0:
+                self.entity.yaw = (math.degrees(math.atan2(dx, -dz)) + 360.0) % 360.0
 
     @classmethod
     def from_route_json(

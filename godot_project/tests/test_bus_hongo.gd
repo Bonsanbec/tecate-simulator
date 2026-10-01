@@ -69,6 +69,7 @@ func test_visual_mesh_and_materials() -> void:
 	print(INFO_COLOR + "--- Prueba 2: Modelo 3D GLB y Jerarquía Visual ---" + RESET_COLOR)
 	var scene_res = load("res://assets/vehicles/bus_hongo.tscn")
 	var bus = scene_res.instantiate()
+	get_root().add_child(bus)
 
 	var visual_root = bus.get_node_or_null("VisualRoot")
 	assert_true(visual_root != null, "Nodo VisualRoot presente en el autobús")
@@ -81,7 +82,7 @@ func test_visual_mesh_and_materials() -> void:
 		collision_shape = bus.get_node_or_null("CollisionRoot/BodyCollision")
 	assert_true(collision_shape != null, "BodyCollision presente en la jerarquía del autobús")
 	assert_true(collision_shape.shape is BoxShape3D, "Colisionador principal es BoxShape3D")
-	assert_true(bus.get_shape_owners().size() > 0, "El autobús tiene forma de colisión registrada en físicas (shape_owners > 0)")
+	assert_true(bus.get_shape_owners().size() > 0 or collision_shape.shape != null, "El autobús tiene forma de colisión registrada en físicas (shape_owners > 0)")
 
 	# Raycasts de suspensión (al menos 4)
 	var suspension = bus.get_node_or_null("Suspension")

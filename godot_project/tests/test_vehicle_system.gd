@@ -251,12 +251,12 @@ func test_remote_vehicle_network_representation() -> void:
 	var tkt_codec_script = preload("res://systems/network/tkt_codec.gd")
 
 	# 1. Instanciación y setup de automóvil particular
-	var rv_car = Node3D.new()
+	var rv_car = CharacterBody3D.new()
 	rv_car.set_script(remote_veh_script)
 	rv_car.setup(1001, false)
 	assert_true(rv_car.entity_id == 1001, "RemoteVehicle: Entity ID asignado correctamente")
 	assert_true(not rv_car.is_route_vehicle, "RemoteVehicle: Reconoce que no es autobús de ruta")
-	assert_true(rv_car.seat_mounts.size() == 4, "RemoteVehicle (Auto): Dispone de 4 puntos de anclaje de asientos")
+	assert_true(rv_car.seats.size() == 4, "RemoteVehicle (Auto): Dispone de 4 plazas de asientos")
 
 	# 2. Ingesta de snapshot y actualización de cinemática
 	var rec1 = tkt_codec_script.EntityRecord.new()
@@ -277,7 +277,7 @@ func test_remote_vehicle_network_representation() -> void:
 	mock_player.name = "MockRemotePlayer_42"
 	rv_car.mount_passenger(42, 0, mock_player) # Conductor
 	assert_true(rv_car.seated_passengers.has(42), "RemoteVehicle: Pasajero ID 42 montado en asiento")
-	assert_true(mock_player.get_parent() == rv_car.seat_mounts[0], "MockPlayer es hijo del marcador de asiento 0")
+	assert_true(mock_player.get_parent() == rv_car.seats[0], "MockPlayer es hijo del asiento 0")
 
 	# 4. Descenso de pasajero remoto
 	var unmounted = rv_car.unmount_passenger(42)
@@ -288,11 +288,11 @@ func test_remote_vehicle_network_representation() -> void:
 	rv_car.free()
 
 	# 5. Instanciación y setup de autobús de ruta
-	var rv_bus = Node3D.new()
+	var rv_bus = CharacterBody3D.new()
 	rv_bus.set_script(remote_veh_script)
 	rv_bus.setup(1002, true)
 	assert_true(rv_bus.is_route_vehicle, "RemoteVehicle (Bus): Reconoce modo de ruta predefinida")
-	assert_true(rv_bus.wheel_nodes.size() == 6, "RemoteVehicle (Bus): Construye 6 ruedas procedimentales")
+	assert_true(rv_bus.seats.size() == 31, "RemoteVehicle (Bus): Construye 31 asientos reglamentarios")
 	rv_bus.free()
 
 func _print_summary() -> void:

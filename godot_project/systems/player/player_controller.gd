@@ -424,7 +424,7 @@ func _physics_process(delta: float) -> void:
 				send_pos = current_vehicle.global_position
 				yaw = current_vehicle.rotation_degrees.y
 				pitch = current_vehicle.rotation_degrees.x
-				send_vel = current_vehicle.linear_velocity
+				send_vel = current_vehicle.velocity
 			else:
 				if is_on_floor(): flags |= 1
 				if Input.is_key_pressed(KEY_SHIFT): flags |= 2

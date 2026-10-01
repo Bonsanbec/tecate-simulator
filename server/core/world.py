@@ -83,6 +83,7 @@ class SharedWorld:
         )
 
         relevant_records: list[EntityStateRecord] = []
+        included_ids: set[int] = set()
         r = self.broadcast_radius
 
         for dx in range(-r, r + 1):
@@ -93,11 +94,19 @@ class SharedWorld:
                     continue
                 for eid in entity_ids:
                     if exclude_entity_id is not None and eid == exclude_entity_id:
-                        # Excluir la propia entidad local del jugador si se desea eco-filtering
                         continue
                     ent = self._entities.get(eid)
-                    if ent is not None:
+                    if ent is not None and eid not in included_ids:
                         relevant_records.append(ent.to_record())
+                        included_ids.add(eid)
+
+        # Flota de transporte público de ruta: siempre visible y sincronizada en toda la red
+        for eid, ent in self._entities.items():
+            if exclude_entity_id is not None and eid == exclude_entity_id:
+                continue
+            if (ent.flags & VehicleFlags.ROUTE_VEHICLE) and eid not in included_ids:
+                relevant_records.append(ent.to_record())
+                included_ids.add(eid)
 
         return relevant_records
 
@@ -138,13 +147,13 @@ class SharedWorld:
 
     def spawn_default_world_entities(self) -> None:
         """Instancia la flota autoritativa de transporte público, vehículos libres y NPCs."""
-        # 1. Automóvil urbano conducible en estacionamiento céntrico
+        # 1. Automóvil urbano conducible en estacionamiento sobre Calle Ortiz Rubio
         car = DynamicEntity(
             entity_id=1001,
             entity_type=EntityType.VEHICLE,
-            pos_x=-10.0,
-            pos_y=400.0,
-            pos_z=15.0,
+            pos_x=-58.0,
+            pos_y=399.6,
+            pos_z=8.0,
             yaw=0.0,
             pitch=0.0,
             flags=VehicleFlags.NONE,
@@ -158,11 +167,11 @@ class SharedWorld:
         route_path = self._resolve_route_json_path()
         if route_path and os.path.exists(route_path):
             bus_fleet_configs = [
-                (1002, 133, "Autobús El Hongo (Unidad 24)"),
-                (2001, 269, "Autobús El Hongo (Unidad 18)"),
-                (2002, 401, "Autobús El Hongo (Unidad 23)"),
-                (2003, 540, "Autobús El Hongo (Unidad 07)"),
-                (2004, 3, "Autobús El Hongo (Unidad 12)"),
+                (1002, 133, "Autobús El Hongo (Unidad 24)"), # Central Camionera
+                (2001, 120, "Autobús El Hongo (Unidad 18)"), # Arribando a Centro / Parque Hidalgo
+                (2002, 145, "Autobús El Hongo (Unidad 23)"), # Blvd. Defensores hacia carretera
+                (2003, 180, "Autobús El Hongo (Unidad 07)"), # Carretera Libre Este
+                (2004, 990, "Autobús El Hongo (Unidad 12)"), # Retorno hacia Centro
             ]
             for entity_id, initial_wp, bus_name in bus_fleet_configs:
                 bus = DynamicEntity(
@@ -193,8 +202,8 @@ class SharedWorld:
             bus = DynamicEntity(
                 entity_id=2001,
                 entity_type=EntityType.VEHICLE,
-                pos_x=152.0,
-                pos_y=402.17,
+                pos_x=164.0,
+                pos_y=402.25,
                 pos_z=-32.0,
                 yaw=0.0,
                 pitch=0.0,
