@@ -1,0 +1,62 @@
+Godot Engine v4.6.3.stable.mono.official.7d41c59c4 - https://godotengine.org
+
+
+========================================================
+ INICIANDO PRUEBAS: AUTOBÚS 'EL HONGO' (TECATE)
+========================================================
+--- Prueba 1: Carga e Instanciación de bus_hongo.tscn ---
+[PASS] Recurso bus_hongo.tscn cargado en memoria
+[PASS] Instancia de Bus_El_Hongo creada correctamente
+[PASS] El autobús es una instancia canónica de RouteVehicle
+[PASS] Nombre de unidad configurado: Autobús El Hongo (Unidad 24)
+[PASS] Tipo de vehículo clasificado como AUTOBÚS (2)
+--- Prueba 2: Modelo 3D GLB y Jerarquía Visual ---
+[PASS] Nodo VisualRoot presente en el autobús
+[PASS] Subnodo BusModel instanciado desde bus_hongo.glb
+[PASS] BodyCollision presente en la jerarquía del autobús
+[PASS] Colisionador principal es BoxShape3D
+[PASS] El autobús tiene forma de colisión registrada en físicas (shape_owners > 0)
+[PASS] Contenedor de suspensión presente
+[PASS] Dispone de 4 puntos de suspensión (RayCast3D)
+--- Prueba 3: Contrato de Plazas (Solo Pasajeros, No Conductor) ---
+[PASS] El autobús cuenta con asiento físico del chofer modelado en cabina
+[PASS] Cuenta con exactamente 30 asientos reglamentarios de pasajeros (Obtenidos: 30)
+[PASS] Jugador pudo abordar el autobús como pasajero
+[PASS] El autobús mantiene autonomía (has_driver() == false)
+[PASS] Primer asiento de pasajero ocupado por el jugador
+[PASS] Jugador descendió exitosamente del autobús
+[PASS] Asiento liberado tras el descenso
+--- Prueba 4: Combustible Infinito y Parámetros de Ruta ---
+[PASS] FuelSystem presente
+[PASS] Combustible infinito garantizado por contrato
+[PASS] Ruta configurada en bucle infinito continuo (loop_route = true)
+[PASS] Tiempo de espera en estación >= 5.0 segundos
+[PASS] Velocidad crucero de transporte público adecuada (>= 35 km/h)
+--- Prueba 5: Verificación Geográfica de la Ruta Completa ---
+[PASS] Ruta contiene circuito de alta densidad (>500 waypoints, total: 1894)
+[PASS] Extremo sur alcanza el viraje en Carretera Libre Tijuana (Z = 12155.0 m >= 12000.0 m)
+[PASS] Extremo suroeste alcanza viraje seguro hacia Tijuana (min X = -17315.0 m <= -17000 m)
+[PASS] Ruta recorre la conexión con Avenida Hidalgo
+[PASS] Ruta dobla hacia el norte en Calle Presidente Abelardo L. Rodríguez
+[PASS] Ruta ingresa al patio y dársena de la Central de Autobuses de Tecate
+[PASS] Extremo este alcanza el poblado de La Rumorosa por la carretera libre (X = 55014.5 m >= 54000 m)
+[PASS] Cuenta con paradas programadas obligatorias
+[PASS] Parada obligatoria registrada en Central de Autobuses de Tecate
+[PASS] Parada obligatoria registrada en Terminal La Rumorosa
+--- Prueba 6: Simulación de Avance y Llegada a Estación ---
+[RouteVehicle] 'Autobús El Hongo (Unidad 24)' llegó a parada: Parada Terminal Central Simulada (Espera: 0.5 s)
+[PASS] Autobús entró en estado de espera en estación
+[PASS] Señal route_station_arrived emitida correctamente
+[PASS] Nombre de estación validado: Parada Terminal Central Simulada
+[RouteVehicle] 'Autobús El Hongo (Unidad 24)' reanuda marcha desde Parada Terminal Central Simulada
+[PASS] Autobús reanuda la marcha tras cumplir tiempo de espera
+
+========================================================
+ RESUMEN DE PRUEBAS DEL AUTOBÚS EL HONGO
+========================================================
+  Pruebas superadas:  38
+  Pruebas fallidas:   0
+========================================================
+
+[StreetNameLookup] Cargados 31828 segmentos, 6614 celdas
+[NetworkConfig] Servidor: api.tecate.bonsanbec.dev:52665 | TickRate=30 | LocalDev=false | Debug=false

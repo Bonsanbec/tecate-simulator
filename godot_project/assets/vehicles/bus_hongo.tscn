@@ -1,6 +1,6 @@
 [gd_scene load_steps=9 format=3 uid="uid://bus_hongo_tkt_001"]
 
-[ext_resource type="Script" path="res://systems/vehicles/controllers/route_vehicle_controller.gd" id="1_route"]
+[ext_resource type="Script" path="res://systems/vehicles/controllers/bus_hongo_controller.gd" id="1_route"]
 [ext_resource type="Script" path="res://systems/vehicles/core/vehicle_seat.gd" id="2_seat"]
 [ext_resource type="Script" path="res://systems/vehicles/core/surface_detector.gd" id="3_surface"]
 [ext_resource type="Script" path="res://systems/vehicles/core/fuel_system.gd" id="4_fuel"]
@@ -13,6 +13,10 @@ size = Vector3(2.5, 2.7, 9.6)
 collision_layer = 2
 collision_mask = 3
 script = ExtResource("1_route")
+unit_number = "24"
+license_plate = "A-30530-A"
+concession_id = "TKT-A-19-00006"
+route_destination = "TECATE   EL HONGO   LA RUMOROSA"
 cruise_speed_kmh = 80.5
 station_dwell_time = 8.0
 waypoint_reach_threshold = 5.0
@@ -408,3 +412,54 @@ script = ExtResource("4_fuel")
 capacity_liters = 250.0
 current_liters = 250.0
 is_infinite_fuel = true
+
+[node name="ParametricLabels" type="Node3D" parent="."]
+
+[node name="Label_Unit_Left" type="Label3D" parent="ParametricLabels"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -1.265, 0.52, -3.45)
+pixel_size = 0.003
+text = "24"
+font_size = 64
+modulate = Color(0.004, 0.24, 0.31, 1)
+outline_modulate = Color(1, 1, 1, 0)
+
+[node name="Label_Unit_Right" type="Label3D" parent="ParametricLabels"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 1.265, 0.48, -3.70)
+pixel_size = 0.003
+text = "24"
+font_size = 64
+modulate = Color(0.004, 0.24, 0.31, 1)
+outline_modulate = Color(1, 1, 1, 0)
+
+[node name="Label_Unit_Rear" type="Label3D" parent="ParametricLabels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.63, 1.64, 4.86)
+pixel_size = 0.0025
+text = "24"
+font_size = 64
+modulate = Color(0.004, 0.24, 0.31, 1)
+outline_modulate = Color(1, 1, 1, 0)
+
+[node name="Label_Plate_Front" type="Label3D" parent="ParametricLabels"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0.55, -4.91)
+pixel_size = 0.0018
+text = "A-30530-A"
+font_size = 48
+modulate = Color(0.08, 0.08, 0.08, 1)
+outline_modulate = Color(1, 1, 1, 0)
+
+[node name="Label_Plate_Rear" type="Label3D" parent="ParametricLabels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 4.86)
+pixel_size = 0.0018
+text = "A-30530-A"
+font_size = 48
+modulate = Color(0.08, 0.08, 0.08, 1)
+outline_modulate = Color(1, 1, 1, 0)
+
+[node name="Label_Concession_Rear" type="Label3D" parent="ParametricLabels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 4.86)
+pixel_size = 0.0018
+text = "TKT-A-19-00006"
+font_size = 44
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0, 0, 0, 0)
+

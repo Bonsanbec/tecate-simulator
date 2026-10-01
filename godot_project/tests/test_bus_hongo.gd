@@ -28,6 +28,7 @@ func _run_tests() -> void:
 	test_fuel_and_route_configuration()
 	test_route_geographic_waypoints_and_stations()
 	test_bus_navigation_simulation()
+	test_parametric_identity()
 
 	_print_summary()
 	quit(0 if tests_failed == 0 else 1)
@@ -232,6 +233,46 @@ func test_bus_navigation_simulation() -> void:
 	# Simular paso del tiempo de dwell
 	bus._process_station_dwell(0.6)
 	assert_true(not bus.is_at_station, "Autobús reanuda la marcha tras cumplir tiempo de espera")
+
+	bus.free()
+
+# ---------------------------------------------------------------------------
+# Prueba 7: Identidad Paramétrica por Instancia (Unidad, Placas, Concesión)
+# ---------------------------------------------------------------------------
+func test_parametric_identity() -> void:
+	print(INFO_COLOR + "--- Prueba 7: Identidad Paramétrica por Instancia (Unidad, Placas, Concesión) ---" + RESET_COLOR)
+	var scene_res = load("res://assets/vehicles/bus_hongo.tscn")
+	var bus = scene_res.instantiate()
+	get_root().add_child(bus)
+
+	# 1. Verificar valores canónicos iniciales
+	assert_true(bus.get("unit_number") == "24", "Número de unidad canónico inicial: '24'")
+	assert_true(bus.get("license_plate") == "A-30530-A", "Placa oficial de Baja California: 'A-30530-A'")
+	assert_true(bus.get("concession_id") == "TKT-A-19-00006", "Concesión de transporte suburbano: 'TKT-A-19-00006'")
+
+	# 2. Verificar nodos Label3D vinculados
+	var label_unit_l = bus.get_node_or_null("ParametricLabels/Label_Unit_Left") as Label3D
+	var label_unit_r = bus.get_node_or_null("ParametricLabels/Label_Unit_Right") as Label3D
+	var label_unit_rear = bus.get_node_or_null("ParametricLabels/Label_Unit_Rear") as Label3D
+	var label_plate_front = bus.get_node_or_null("ParametricLabels/Label_Plate_Front") as Label3D
+	var label_plate_rear = bus.get_node_or_null("ParametricLabels/Label_Plate_Rear") as Label3D
+	var label_concession = bus.get_node_or_null("ParametricLabels/Label_Concession_Rear") as Label3D
+
+	assert_true(label_unit_l != null and label_unit_l.text == "24", "Label3D unidad lateral izquierdo inicializado en '24'")
+	assert_true(label_unit_r != null and label_unit_r.text == "24", "Label3D unidad lateral derecho inicializado en '24'")
+	assert_true(label_unit_rear != null and label_unit_rear.text == "24", "Label3D unidad posterior inicializado en '24'")
+	assert_true(label_plate_front != null and label_plate_front.text == "A-30530-A", "Label3D placa delantera inicializado")
+	assert_true(label_plate_rear != null and label_plate_rear.text == "A-30530-A", "Label3D placa trasera inicializado")
+	assert_true(label_concession != null and label_concession.text == "TKT-A-19-00006", "Label3D concesión trasera inicializado")
+
+	# 3. Probar reasignación paramétrica reactiva en tiempo de ejecución (ej. Unidad 18)
+	bus.set("unit_number", "18")
+	bus.set("license_plate", "A-30531-A")
+	bus.set("concession_id", "TKT-A-19-00018")
+
+	assert_true(label_unit_l.text == "18", "Actualización dinámica paramétrica: unidad reasignada a '18'")
+	assert_true(label_plate_rear.text == "A-30531-A", "Actualización dinámica paramétrica: placa reasignada a 'A-30531-A'")
+	assert_true(label_concession.text == "TKT-A-19-00018", "Actualización dinámica paramétrica: concesión reasignada a 'TKT-A-19-00018'")
 
 	bus.free()
 
