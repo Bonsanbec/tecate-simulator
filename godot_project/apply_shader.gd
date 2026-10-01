@@ -69,6 +69,9 @@ func _snap_scene_vehicles() -> void:
 		return
 	for veh in get_tree().get_nodes_in_group("vehicles"):
 		if veh is CharacterBody3D and veh.is_inside_tree():
+			# Omitir vehículos de ruta autónoma: su cota de calzada ya está calibrada sobre roadways
+			if "waypoints" in veh and not veh.waypoints.is_empty():
+				continue
 			var from = Vector3(veh.global_position.x, veh.global_position.y + 100.0, veh.global_position.z)
 			var to = Vector3(veh.global_position.x, veh.global_position.y - 200.0, veh.global_position.z)
 			var query = PhysicsRayQueryParameters3D.create(from, to, 1)

@@ -169,27 +169,27 @@ func _create_seats_and_mounts() -> void:
 			c.queue_free()
 
 	if is_route_vehicle:
-		# Asiento 0: Conductor AI (reservado, no conducible por jugador)
-		_create_seat(seats_container, 0, "Conductor (Ruta)", VehicleSeat.SeatType.DRIVER, Vector3(-0.75, 1.25, 3.65), Vector3(1.5, 0.2, 3.65))
+		# Asiento 0: Conductor AI (reservado, frente en -Z)
+		_create_seat(seats_container, 0, "Conductor (Ruta)", VehicleSeat.SeatType.DRIVER, Vector3(-0.75, 1.25, -3.65), Vector3(1.5, 0.2, -3.2))
 
-		# Asientos 1..30 de pasajeros
+		# Asientos 1..30 de pasajeros (filas desde el frente -Z hacia atrás +Z)
 		var seat_idx = 1
-		var z_rows_left = [2.75, 1.85, 0.95, 0.05, -0.85, -1.75, -2.65]
+		var z_rows_left = [-2.75, -1.85, -0.95, -0.05, 0.85, 1.75, 2.65]
 		for z in z_rows_left:
-			_create_seat(seats_container, seat_idx, "Pasajero Izq Ventanilla", VehicleSeat.SeatType.PASSENGER, Vector3(-1.0, 1.25, z), Vector3(1.5, 0.2, 3.2))
+			_create_seat(seats_container, seat_idx, "Pasajero Izq Ventanilla", VehicleSeat.SeatType.PASSENGER, Vector3(-1.0, 1.25, z), Vector3(1.5, 0.2, -3.2))
 			seat_idx += 1
-			_create_seat(seats_container, seat_idx, "Pasajero Izq Pasillo", VehicleSeat.SeatType.PASSENGER, Vector3(-0.55, 1.25, z), Vector3(1.5, 0.2, 3.2))
+			_create_seat(seats_container, seat_idx, "Pasajero Izq Pasillo", VehicleSeat.SeatType.PASSENGER, Vector3(-0.55, 1.25, z), Vector3(1.5, 0.2, -3.2))
 			seat_idx += 1
 
-		var z_rows_right = [1.85, 0.95, 0.05, -0.85, -1.75, -2.65]
+		var z_rows_right = [-1.85, -0.95, -0.05, 0.85, 1.75, 2.65]
 		for z in z_rows_right:
-			_create_seat(seats_container, seat_idx, "Pasajero Der Pasillo", VehicleSeat.SeatType.PASSENGER, Vector3(0.55, 1.25, z), Vector3(1.5, 0.2, 3.2))
+			_create_seat(seats_container, seat_idx, "Pasajero Der Pasillo", VehicleSeat.SeatType.PASSENGER, Vector3(0.55, 1.25, z), Vector3(1.5, 0.2, -3.2))
 			seat_idx += 1
-			_create_seat(seats_container, seat_idx, "Pasajero Der Ventanilla", VehicleSeat.SeatType.PASSENGER, Vector3(1.0, 1.25, z), Vector3(1.5, 0.2, 3.2))
+			_create_seat(seats_container, seat_idx, "Pasajero Der Ventanilla", VehicleSeat.SeatType.PASSENGER, Vector3(1.0, 1.25, z), Vector3(1.5, 0.2, -3.2))
 			seat_idx += 1
 
 		for x in [-0.9, -0.3, 0.3, 0.9]:
-			_create_seat(seats_container, seat_idx, "Pasajero Fila Trasera", VehicleSeat.SeatType.PASSENGER, Vector3(x, 1.25, -3.55), Vector3(1.5, 0.2, 3.2))
+			_create_seat(seats_container, seat_idx, "Pasajero Fila Trasera", VehicleSeat.SeatType.PASSENGER, Vector3(x, 1.25, 4.35), Vector3(1.5, 0.2, -3.2))
 			seat_idx += 1
 	else:
 		# Automóvil: Conductor + Copiloto + 2 traseros
@@ -322,7 +322,7 @@ func _physics_process(delta: float) -> void:
 
 	if snapshot_history.size() == 1:
 		_set_pos(snapshot_history[0]["position"])
-		rotation.y = deg_to_rad(snapshot_history[0]["yaw"])
+		rotation.y = deg_to_rad(-snapshot_history[0]["yaw"])
 		rotation.x = deg_to_rad(snapshot_history[0]["pitch"])
 		current_velocity = snapshot_history[0]["velocity"]
 	else:
@@ -343,14 +343,14 @@ func _physics_process(delta: float) -> void:
 			var t = clampf((render_time - s0["time"]) / span, 0.0, 1.0)
 
 			_set_pos(s0["position"].lerp(s1["position"], t))
-			rotation.y = lerp_angle(deg_to_rad(s0["yaw"]), deg_to_rad(s1["yaw"]), t)
+			rotation.y = lerp_angle(deg_to_rad(-s0["yaw"]), deg_to_rad(-s1["yaw"]), t)
 			rotation.x = lerp_angle(deg_to_rad(s0["pitch"]), deg_to_rad(s1["pitch"]), t)
 			current_velocity = s0["velocity"].lerp(s1["velocity"], t)
 		else:
 			var latest = snapshot_history.back()
 			var current_p = global_position if is_inside_tree() else position
 			_set_pos(current_p.lerp(latest["position"], delta * 15.0))
-			rotation.y = lerp_angle(rotation.y, deg_to_rad(latest["yaw"]), delta * 15.0)
+			rotation.y = lerp_angle(rotation.y, deg_to_rad(-latest["yaw"]), delta * 15.0)
 			rotation.x = lerp_angle(rotation.x, deg_to_rad(latest["pitch"]), delta * 15.0)
 			current_velocity = latest["velocity"]
 

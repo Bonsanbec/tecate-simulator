@@ -44,25 +44,25 @@ shape = SubResource("BoxShape3D_chassis")
 [node name="Suspension" type="Node3D" parent="."]
 
 [node name="Ray_FL" type="RayCast3D" parent="Suspension"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.6, 2.6)
-target_position = Vector3(0, -2.0, 0)
-
-[node name="Ray_FR" type="RayCast3D" parent="Suspension"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.6, 2.6)
-target_position = Vector3(0, -2.0, 0)
-
-[node name="Ray_RL" type="RayCast3D" parent="Suspension"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.6, -2.6)
 target_position = Vector3(0, -2.0, 0)
 
-[node name="Ray_RR" type="RayCast3D" parent="Suspension"]
+[node name="Ray_FR" type="RayCast3D" parent="Suspension"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.6, -2.6)
+target_position = Vector3(0, -2.0, 0)
+
+[node name="Ray_RL" type="RayCast3D" parent="Suspension"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.6, 2.6)
+target_position = Vector3(0, -2.0, 0)
+
+[node name="Ray_RR" type="RayCast3D" parent="Suspension"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.6, 2.6)
 target_position = Vector3(0, -2.0, 0)
 
 [node name="Seats" type="Node3D" parent="."]
 
 [node name="Seat_Driver" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.25, 3.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.25, -3.65)
 script = ExtResource("2_seat")
 seat_type = 0
 seat_index = 0
@@ -72,7 +72,7 @@ seat_name = "Puesto del Conductor"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.85, -0.8, 0.2)
 
 [node name="Seat_Passenger_1" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, 2.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, -2.75)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 1
@@ -82,7 +82,7 @@ seat_name = "Fila 1 Ventanilla Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_2" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, 2.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, -2.75)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 2
@@ -92,7 +92,7 @@ seat_name = "Fila 1 Pasillo Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_3" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, 1.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, -1.85)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 3
@@ -102,7 +102,7 @@ seat_name = "Fila 2 Ventanilla Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_4" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, 1.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, -1.85)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 4
@@ -112,7 +112,7 @@ seat_name = "Fila 2 Pasillo Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_5" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, 0.95)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, -0.95)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 5
@@ -122,7 +122,7 @@ seat_name = "Fila 3 Ventanilla Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_6" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, 0.95)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, -0.95)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 6
@@ -132,7 +132,7 @@ seat_name = "Fila 3 Pasillo Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_7" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, -0.05)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 7
@@ -142,7 +142,7 @@ seat_name = "Fila 4 Ventanilla Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_8" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, -0.05)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 8
@@ -152,7 +152,7 @@ seat_name = "Fila 4 Pasillo Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_9" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, -0.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, 0.85)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 9
@@ -162,7 +162,7 @@ seat_name = "Fila 5 Ventanilla Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_10" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, -0.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, 0.85)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 10
@@ -172,7 +172,7 @@ seat_name = "Fila 5 Pasillo Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_11" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, -1.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, 1.75)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 11
@@ -182,7 +182,7 @@ seat_name = "Fila 6 Ventanilla Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_12" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, -1.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, 1.75)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 12
@@ -192,7 +192,7 @@ seat_name = "Fila 6 Pasillo Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_13" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, -2.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, 2.65)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 13
@@ -202,7 +202,7 @@ seat_name = "Fila 7 Ventanilla Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_14" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, -2.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, 2.65)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 14
@@ -212,7 +212,7 @@ seat_name = "Fila 7 Pasillo Izq"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.8, 0)
 
 [node name="Seat_Passenger_15" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.25, 2.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.25, -2.75)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 15
@@ -222,7 +222,7 @@ seat_name = "Fila 1 Preferencial Der"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, -0.8, 0.8)
 
 [node name="Seat_Passenger_16" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, 1.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, -1.85)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 16
@@ -232,7 +232,7 @@ seat_name = "Fila 2 Pasillo Der"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, -0.8, 0)
 
 [node name="Seat_Passenger_17" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, 1.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, -1.85)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 17
@@ -242,7 +242,7 @@ seat_name = "Fila 2 Ventanilla Der"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, -0.8, 0)
 
 [node name="Seat_Passenger_18" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, 0.95)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, -0.95)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 18
@@ -252,7 +252,7 @@ seat_name = "Fila 3 Pasillo Der"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, -0.8, 0)
 
 [node name="Seat_Passenger_19" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, 0.95)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, -0.95)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 19
@@ -262,7 +262,7 @@ seat_name = "Fila 3 Ventanilla Der"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, -0.8, 0)
 
 [node name="Seat_Passenger_20" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, -0.05)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 20
@@ -272,7 +272,7 @@ seat_name = "Fila 4 Pasillo Der"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, -0.8, 0)
 
 [node name="Seat_Passenger_21" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, -0.05)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 21
@@ -282,7 +282,7 @@ seat_name = "Fila 4 Ventanilla Der"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, -0.8, 0)
 
 [node name="Seat_Passenger_22" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, -0.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, 0.85)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 22
@@ -292,7 +292,7 @@ seat_name = "Fila 5 Pasillo Der"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, -0.8, 0)
 
 [node name="Seat_Passenger_23" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, -0.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, 0.85)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 23
@@ -302,7 +302,7 @@ seat_name = "Fila 5 Ventanilla Der"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, -0.8, 0)
 
 [node name="Seat_Passenger_24" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, -1.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, 1.75)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 24
@@ -312,7 +312,7 @@ seat_name = "Fila 6 Pasillo Der"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, -0.8, 0)
 
 [node name="Seat_Passenger_25" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, -1.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, 1.75)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 25
@@ -322,7 +322,7 @@ seat_name = "Fila 6 Ventanilla Der"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, -0.8, 0)
 
 [node name="Seat_Passenger_26" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.92, 1.25, -4.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.92, 1.25, 4.35)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 26
@@ -332,7 +332,7 @@ seat_name = "Banca Posterior Asiento 1"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, -0.8, 1.2)
 
 [node name="Seat_Passenger_27" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.46, 1.25, -4.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.46, 1.25, 4.35)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 27
@@ -342,7 +342,7 @@ seat_name = "Banca Posterior Asiento 2"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, -0.8, 1.2)
 
 [node name="Seat_Passenger_28" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.25, -4.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.25, 4.35)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 28
@@ -352,7 +352,7 @@ seat_name = "Banca Posterior Asiento 3"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, -0.8, 1.2)
 
 [node name="Seat_Passenger_29" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.46, 1.25, -4.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.46, 1.25, 4.35)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 29
@@ -362,7 +362,7 @@ seat_name = "Banca Posterior Asiento 4"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, -0.8, 1.2)
 
 [node name="Seat_Passenger_30" type="Node3D" parent="Seats"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.92, 1.25, -4.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.92, 1.25, 4.35)
 script = ExtResource("2_seat")
 seat_type = 1
 seat_index = 30
@@ -375,25 +375,25 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, -0.8, 1.2)
 [node name="Cameras" type="Node3D" parent="."]
 
 [node name="Mount_1P" type="Marker3D" parent="Cameras"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.8, 3.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.8, -3.65)
 
 [node name="Mount_3P" type="Marker3D" parent="Cameras"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, -8.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 8.5)
 
 [node name="Lights" type="Node3D" parent="."]
 
 [node name="Headlights" type="Node3D" parent="Lights"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 4.8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, -4.8)
 
 [node name="Light_L" type="SpotLight3D" parent="Lights/Headlights"]
-transform = Transform3D(1, 0, 0, 0, 0.984808, -0.173648, 0, 0.173648, 0.984808, -0.9, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, -0.9, 0, 0)
 light_color = Color(1, 0.96, 0.88, 1)
 light_energy = 5.0
 spot_range = 65.0
 spot_angle = 45.0
 
 [node name="Light_R" type="SpotLight3D" parent="Lights/Headlights"]
-transform = Transform3D(1, 0, 0, 0, 0.984808, -0.173648, 0, 0.173648, 0.984808, 0.9, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0.9, 0, 0)
 light_color = Color(1, 0.96, 0.88, 1)
 light_energy = 5.0
 spot_range = 65.0

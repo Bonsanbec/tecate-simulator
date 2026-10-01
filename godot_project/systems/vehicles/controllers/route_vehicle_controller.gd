@@ -126,12 +126,10 @@ func _physics_process(delta: float) -> void:
 	velocity.x = current_forward.x * new_speed
 	velocity.z = current_forward.z * new_speed
 
-	# Gravedad
-	if not is_on_floor():
-		velocity.y -= default_gravity * delta
-	else:
-		if velocity.y < 0.0:
-			velocity.y = 0.0
+	# Adaptación vertical suave hacia la cota de calzada de la ruta (evita caer a través del asfalto hacia tinMesh)
+	var target_y = target_pt.y
+	var y_error = target_y - global_position.y
+	velocity.y = move_toward(velocity.y, clampf(y_error * 8.0, -15.0, 15.0), 35.0 * delta)
 
 	move_and_slide()
 	current_speed_kmh = Vector2(velocity.x, velocity.z).length() * 3.6
