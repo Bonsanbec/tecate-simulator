@@ -15,6 +15,7 @@ signal vehicle_entered(player: Node3D, seat: VehicleSeatClass)
 signal vehicle_exited(player: Node3D, seat: VehicleSeatClass)
 signal engine_state_changed(is_running: bool)
 signal lights_toggled(is_on: bool)
+signal gear_changed(old_gear: int, new_gear: int)
 
 enum VehicleType {
 	CAR = 0,
@@ -29,6 +30,14 @@ enum VehicleType {
 @export var vehicle_id: int = 1001
 @export var vehicle_name: String = "Vehículo Genérico"
 @export var vehicle_type: VehicleType = VehicleType.CAR
+
+@export_group("Transmisión Mecánica")
+@export var total_gears: int = 6
+@export var gear_speeds_kmh: Array[float] = [0.0, 18.0, 32.0, 48.0, 68.0, 88.0, 115.0]
+var current_gear: int = 1
+var is_shifting: bool = false
+var shift_timer: float = 0.0
+var engine_rpm: float = 800.0
 
 
 @export_group("Física y Rendimiento")
@@ -284,3 +293,41 @@ func _on_out_of_fuel() -> void:
 	engine_running = false
 	engine_state_changed.emit(false)
 	print("[VehicleBase] '%s' se quedó sin combustible. Motor apagado." % vehicle_name)
+
+## Retorna la nomenclatura de la marcha actual ("1ª", "2ª", ..., "6ª", "R", "N")
+func get_gear_name() -> String:
+	if current_gear == 0:
+		return "R"
+	elif current_gear < 0:
+		return "N"
+	return "%dª" % current_gear
+
+## Actualiza la transmisión escalonada de marchas y el régimen de RPM
+func update_transmission(speed_kmh: float, delta: float) -> void:
+	if shift_timer > 0.0:
+		shift_timer -= delta
+		if shift_timer <= 0.0:
+			is_shifting = false
+
+	# Determinar marcha óptima según rango de velocidad
+	var target_gear = 1
+	for g in range(1, gear_speeds_kmh.size()):
+		if speed_kmh >= gear_speeds_kmh[g - 1] * 0.82:
+			target_gear = g
+
+	target_gear = clampi(target_gear, 1, total_gears)
+	if target_gear != current_gear and not is_shifting:
+		var old_gear = current_gear
+		current_gear = target_gear
+		is_shifting = true
+		shift_timer = 0.22 # 220ms de corte transitorio de embrague
+		gear_changed.emit(old_gear, current_gear)
+
+	# Simular RPM de motor pesado diésel (850 a 2350 RPM)
+	var min_g_spd = gear_speeds_kmh[current_gear - 1]
+	var max_g_spd = gear_speeds_kmh[current_gear]
+	var ratio = clampf((speed_kmh - min_g_spd) / maxf(1.0, max_g_spd - min_g_spd), 0.0, 1.0)
+	if is_shifting:
+		engine_rpm = move_toward(engine_rpm, 950.0, 3200.0 * delta)
+	else:
+		engine_rpm = lerpf(1050.0, 2350.0, ratio)

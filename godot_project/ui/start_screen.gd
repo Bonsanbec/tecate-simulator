@@ -31,6 +31,7 @@ signal game_exited
 var player: CharacterBody3D
 var is_menu_active: bool = true
 var _time: float = 0.0
+var _previous_camera: Camera3D = null
 
 func _ready() -> void:
 	# Localizar al jugador
@@ -150,6 +151,11 @@ func _process(delta: float) -> void:
 
 func open_menu(_instant: bool = false) -> void:
 	is_menu_active = true
+	var vp = get_viewport()
+	var current_cam = vp.get_camera_3d() if vp else null
+	if current_cam and current_cam != menu_camera:
+		_previous_camera = current_cam
+
 	if canvas_layer:
 		canvas_layer.visible = true
 	if menu_camera:
@@ -167,14 +173,18 @@ func close_menu() -> void:
 	if canvas_layer:
 		canvas_layer.visible = false
 
-	if player:
-		if player.has_method("set_input_enabled"):
-			player.set_input_enabled(true)
+	if is_instance_valid(_previous_camera):
+		_previous_camera.make_current()
+	elif player:
 		var player_cam = player.camera if ("camera" in player and player.camera) else player.get_node_or_null("Camera3D")
 		if player_cam and player_cam is Camera3D:
 			player_cam.make_current()
 
+	if player and player.has_method("set_input_enabled"):
+		player.set_input_enabled(true)
+
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	_previous_camera = null
 
 func toggle_menu() -> void:
 	if is_menu_active:

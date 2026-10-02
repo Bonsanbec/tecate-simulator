@@ -20,6 +20,9 @@ var occupant: Node3D = null
 ## Puntos de anclaje de posición y descenso
 @onready var exit_point: Marker3D = get_node_or_null("ExitPoint") as Marker3D
 
+func _ready() -> void:
+	add_to_group("seats")
+
 func is_occupied() -> bool:
 	return occupant != null
 
@@ -41,5 +44,6 @@ func vacate() -> Node3D:
 func get_exit_global_position() -> Vector3:
 	if exit_point:
 		return exit_point.global_position
-	# Fallback: 1.5 metros a un costado del asiento
-	return global_position + (global_transform.basis.x * 1.5)
+	# Fallback inteligente: Salir hacia el pasillo central
+	var aisle_dir = 1.0 if position.x < 0.0 else -1.0
+	return global_position + (global_transform.basis.x * aisle_dir * 0.65)

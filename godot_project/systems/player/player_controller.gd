@@ -12,11 +12,23 @@ const PlayerNetworkSyncClass = preload("res://systems/network/player_network_syn
 const PlayerHUDClass = preload("res://ui/player_hud.gd")
 const VehicleCameraDirectorClass = preload("res://systems/vehicles/camera/vehicle_camera_director.gd")
 
-# Estados de Vehículo e Interacción
+# Estados de Vehículo, Asientos e Interacción
+enum PlayerState {
+	NORMAL = 0,
+	FLYING = 1,
+	SITTING = 2
+}
+var player_state: PlayerState = PlayerState.NORMAL
+var is_sitting: bool:
+	get:
+		return player_state == PlayerState.SITTING
+
 var current_vehicle: VehicleBase = null
 var current_vehicle_seat: VehicleSeat = null
+var current_seat: Node = null # VehicleSeat o UrbanSeat
 var vehicle_camera_director: VehicleCameraDirector = null
 var _nearby_vehicle: VehicleBase = null
+var _nearby_seat: Node = null
 var _nearby_seat_type: int = 0
 var _nearby_pump_zone: Node = null
 var _vehicle_scan_timer: float = 0.0
@@ -42,6 +54,7 @@ var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity", 9
 # Estados de control y locomoción
 var input_enabled: bool = true
 var is_f1_photo_mode: bool = false
+var _prev_avatar_visible: bool = true
 var is_flying: bool = false
 var space_press_timer: float = 0.0
 const DOUBLE_TAP_WINDOW: float = 0.35
@@ -299,15 +312,21 @@ func toggle_f1_photo_mode() -> void:
 		velocity = Vector3.ZERO
 		if hud:
 			hud.hide_hud()
+		_prev_avatar_visible = humanoid_scene.visible if humanoid_scene else true
 		if humanoid_scene:
 			humanoid_scene.visible = false
 		print("[PlayerController] Modo Screenshot [F1] ACTIVADO: HUD y avatar ocultos, inputs suspendidos.")
 	else:
 		if humanoid_scene:
-			humanoid_scene.visible = true
+			humanoid_scene.visible = _prev_avatar_visible
 		if hud:
 			hud.show_hud()
 		print("[PlayerController] Modo Screenshot [F1] DESACTIVADO: HUD y avatar restaurados, inputs reactivados.")
+
+func _set_input_handled() -> void:
+	var vp = get_viewport()
+	if vp:
+		vp.set_input_as_handled()
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey:
@@ -320,17 +339,18 @@ func _input(event: InputEvent) -> void:
 		# Modo Screenshot (F1): Oculta HUD y avatar, suspende inputs
 		if event.keycode == KEY_F1:
 			toggle_f1_photo_mode()
-			get_viewport().set_input_as_handled()
+			_set_input_handled()
 			return
 
 		if is_f1_photo_mode:
 			return
 
 		if event.keycode == KEY_ESCAPE:
-			var start_screen = get_tree().root.find_child("StartScreen", true, false)
+			var tree = get_tree()
+			var start_screen = tree.root.find_child("StartScreen", true, false) if (tree and tree.root) else null
 			if start_screen and start_screen.has_method("toggle_menu"):
 				start_screen.toggle_menu()
-				get_viewport().set_input_as_handled()
+				_set_input_handled()
 				return
 			else:
 				if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -338,30 +358,65 @@ func _input(event: InputEvent) -> void:
 				else:
 					Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
-		# Tecla de Interacción [E]: Abordar o Descender de Vehículo
+		# Alternar modo Vuelo Libre [F]
+		if event.keycode == KEY_F and not current_vehicle and not is_sitting:
+			is_flying = !is_flying
+			if is_flying:
+				player_state = PlayerState.FLYING
+				velocity.y = fly_vertical_speed * 0.6
+				floor_snap_length = 0.0
+			else:
+				player_state = PlayerState.NORMAL
+				floor_snap_length = DEFAULT_SNAP_LENGTH
+			_set_input_handled()
+			return
+
+		# Tecla de Interacción [E]: Sentarse, Levantarse, Abordar o Descender
 		if event.keycode == KEY_E:
-			if current_vehicle:
+			if is_sitting:
+				stand_up()
+				_set_input_handled()
+				return
+			elif _nearby_seat:
+				sit_in_seat(_nearby_seat)
+				_set_input_handled()
+				return
+			elif current_vehicle:
 				dismount_vehicle()
-				get_viewport().set_input_as_handled()
+				_set_input_handled()
 				return
 			elif _nearby_vehicle:
 				board_vehicle(_nearby_vehicle, _nearby_seat_type)
-				get_viewport().set_input_as_handled()
+				_set_input_handled()
+				return
+
+		# Tecla de Timbre / Parada [T]: Solicitar descenso en autobús
+		if event.keycode == KEY_T:
+			if _try_request_bus_stop():
+				_set_input_handled()
 				return
 
 		# Tecla de Repostaje [R]: Cargar combustible si está en una estación de servicio
 		if event.keycode == KEY_R and _nearby_pump_zone and current_vehicle:
 			if _nearby_pump_zone.has_method("start_refueling"):
 				_nearby_pump_zone.start_refueling()
-				get_viewport().set_input_as_handled()
+				_set_input_handled()
 				return
 
+		# Barra espaciadora:
+		# Si está sentado, levantarse inmediatamente
+		if (event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE or event.is_action_pressed("ui_accept")) and is_sitting:
+			stand_up()
+			_set_input_handled()
+			return
+
 		# Barra espaciadora: doble tap en el suelo/aire inicia vuelo; en vuelo, impulsa ascenso vertical inmediato
-		if (event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE or event.is_action_pressed("ui_accept")) and not current_vehicle:
+		if (event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE or event.is_action_pressed("ui_accept")) and not current_vehicle and not is_sitting:
 			var current_time = Time.get_ticks_msec() / 1000.0
 			if not is_flying:
 				if (current_time - space_press_timer) < DOUBLE_TAP_WINDOW:
 					is_flying = true
+					player_state = PlayerState.FLYING
 					velocity.y = fly_vertical_speed * 0.6 # Impulso inicial de despegue
 					floor_snap_length = 0.0
 					space_press_timer = 0.0
@@ -374,13 +429,20 @@ func _input(event: InputEvent) -> void:
 	if is_f1_photo_mode or not input_enabled:
 		return
 
-	if current_vehicle and vehicle_camera_director:
+	if current_vehicle and vehicle_camera_director and vehicle_camera_director.is_active:
 		vehicle_camera_director.handle_input(event)
 	elif camera_director:
 		camera_director.handle_input(event)
 
 func _physics_process(delta: float) -> void:
 	if is_f1_photo_mode or not input_enabled:
+		return
+
+	if is_sitting:
+		_process_sitting(delta)
+		_scan_nearby_interactive_objects(delta)
+		_update_procedural_animations(delta)
+		_update_telemetry(delta)
 		return
 
 	if current_vehicle:
@@ -396,7 +458,7 @@ func _physics_process(delta: float) -> void:
 
 	# Actualizar cinemática inversa de pies y adaptación al suelo
 	if foot_ik:
-		foot_ik.update_ik(delta, is_on_floor() and not is_flying)
+		foot_ik.update_ik(delta, is_on_floor() and not is_flying and not is_sitting)
 
 	# Actualizar animación procedural de brazos, piernas y torso
 	_update_procedural_animations(delta)
@@ -569,6 +631,38 @@ func _update_procedural_animations(delta: float) -> void:
 	if not skeleton:
 		return
 
+	if is_sitting:
+		# Pose biomecánica anatómica SITTING:
+		# Muslos a ~85° hacia adelante en X (horizontales sobre el cojín)
+		var sit_thigh_angle = deg_to_rad(85.0)
+		# Rodillas flexionadas 90° hacia atrás en X (pantorrillas verticales hacia el suelo)
+		var sit_knee_angle = deg_to_rad(90.0)
+		# Brazos descansando sobre los muslos
+		var sit_arm_pitch = deg_to_rad(20.0)
+		var sit_elbow_pitch = deg_to_rad(35.0)
+
+		if bone_upperleg_l != -1:
+			skeleton.set_bone_pose_rotation(bone_upperleg_l, _base_rot_upperleg_l * Quaternion(Vector3(1, 0, 0), sit_thigh_angle))
+		if bone_upperleg_r != -1:
+			skeleton.set_bone_pose_rotation(bone_upperleg_r, _base_rot_upperleg_r * Quaternion(Vector3(1, 0, 0), sit_thigh_angle))
+		if bone_lowerleg_l != -1:
+			skeleton.set_bone_pose_rotation(bone_lowerleg_l, _base_rot_lowerleg_l * Quaternion(Vector3(1, 0, 0), -sit_knee_angle))
+		if bone_lowerleg_r != -1:
+			skeleton.set_bone_pose_rotation(bone_lowerleg_r, _base_rot_lowerleg_r * Quaternion(Vector3(1, 0, 0), -sit_knee_angle))
+
+		if bone_upperarm_l != -1:
+			skeleton.set_bone_pose_rotation(bone_upperarm_l, _base_rot_upperarm_l * Quaternion(Vector3(1, 0, 0), sit_arm_pitch))
+		if bone_upperarm_r != -1:
+			skeleton.set_bone_pose_rotation(bone_upperarm_r, _base_rot_upperarm_r * Quaternion(Vector3(1, 0, 0), sit_arm_pitch))
+		if bone_forearm_l != -1:
+			skeleton.set_bone_pose_rotation(bone_forearm_l, _base_rot_forearm_l * Quaternion(Vector3(1, 0, 0), sit_elbow_pitch))
+		if bone_forearm_r != -1:
+			skeleton.set_bone_pose_rotation(bone_forearm_r, _base_rot_forearm_r * Quaternion(Vector3(1, 0, 0), sit_elbow_pitch))
+
+		if bone_chest != -1:
+			skeleton.set_bone_pose_rotation(bone_chest, _base_rot_chest)
+		return
+
 	var h_speed = Vector2(velocity.x, velocity.z).length()
 	var is_moving = h_speed > 0.1 and is_on_floor() and not is_flying
 
@@ -667,91 +761,174 @@ func _update_telemetry(delta: float) -> void:
 		if camera_director and camera_director.active_camera:
 			hud.update_axes(camera_director.active_camera.global_transform.basis)
 
-# ── Interacción con Vehículos y Estaciones de Servicio ────────────────────────
+# ── Interacción con Vehículos, Asientos y Paradas de Autobús ──────────────
 
-## Permite al jugador abordar un vehículo en un asiento específico
-func board_vehicle(vehicle: VehicleBase, preferred_type: int = 0) -> bool:
-	if not vehicle or current_vehicle:
+## Permite al jugador sentarse en cualquier asiento (de vehículo o urbano)
+func sit_in_seat(seat: Node) -> bool:
+	if not seat or is_sitting:
+		return false
+	if seat.has_method("is_occupied") and seat.is_occupied():
+		print("[PlayerController] El asiento '%s' ya está ocupado" % (seat.seat_name if "seat_name" in seat else "Asiento"))
 		return false
 
-	var success = vehicle.enter_vehicle(self, preferred_type as VehicleSeat.SeatType)
-	if not success:
-		print("[PlayerController] No hay asientos disponibles en '%s'" % vehicle.vehicle_name)
-		return false
+	if seat.has_method("occupy"):
+		seat.occupy(self)
 
-	current_vehicle = vehicle
-	# Localizar el asiento que ocupamos
-	for s in vehicle.seats:
-		if s.occupant == self:
-			current_vehicle_seat = s
-			break
-
-	# Desactivar colisiones peatonales y ocultar avatar
-	set_collision_layer_value(1, false)
-	set_collision_mask_value(1, false)
-	velocity = Vector3.ZERO
+	current_seat = seat
+	player_state = PlayerState.SITTING
 	is_flying = false
+	velocity = Vector3.ZERO
 
+	# Si el asiento pertenece a un vehículo, vincular vehículo
+	var veh: VehicleBase = null
+	var parent_node = seat.get_parent()
+	while parent_node:
+		if parent_node is VehicleBase:
+			veh = parent_node as VehicleBase
+			break
+		parent_node = parent_node.get_parent()
+
+	if veh:
+		current_vehicle = veh
+		if seat is VehicleSeat:
+			current_vehicle_seat = seat as VehicleSeat
+			if current_vehicle_seat.is_driver():
+				current_vehicle.engine_running = not current_vehicle.fuel_system.is_empty
+				current_vehicle.engine_state_changed.emit(current_vehicle.engine_running)
+		current_vehicle.vehicle_entered.emit(self, seat)
+
+	# Posicionar y orientar al avatar biomecánicamente sobre el cojín
+	var h_offset: float = 0.45
+	if "sit_height_offset" in seat:
+		h_offset = seat.sit_height_offset
+	global_position = seat.global_position - Vector3(0.0, h_offset, 0.0)
+	rotation_degrees.y = seat.global_rotation_degrees.y
+
+	if camera_director:
+		camera_director.rot_yaw = seat.global_rotation_degrees.y
+
+	# Mantener el avatar visible con su postura de sentado
 	if humanoid_scene:
-		humanoid_scene.visible = false
+		humanoid_scene.visible = true
 
-	# Desactivar cámaras a pie y activar cámaras de vehículo
-	if camera_director and camera_director.active_camera:
-		camera_director.active_camera.current = false
-
-	if vehicle_camera_director:
+	# Configurar cámaras de vehículo si es conductor de vehículo manual
+	if current_vehicle_seat and current_vehicle_seat.is_driver() and vehicle_camera_director:
+		if camera_director and camera_director.active_camera:
+			camera_director.active_camera.current = false
 		vehicle_camera_director.setup(current_vehicle, current_vehicle_seat)
 		vehicle_camera_director.activate()
 
-	if hud:
-		hud.set_interaction_prompt("[E] Descender")
-
-	# Notificar abordaje a la red TKT/1
+	# Notificar abordaje a la red TKT/1 si aplica
 	if network_client and network_client.state == NetworkClient.ConnectionState.CONNECTED:
-		var v_id = vehicle.vehicle_id if "vehicle_id" in vehicle else 1001
+		var v_id = current_vehicle.vehicle_id if (current_vehicle and "vehicle_id" in current_vehicle) else 0
 		var seat_idx = current_vehicle_seat.seat_index if current_vehicle_seat else 0
 		var is_drv = current_vehicle_seat.is_driver() if current_vehicle_seat else false
 		network_client.send_vehicle_enter(v_id, seat_idx, is_drv)
 
-	print("[PlayerController] Abordado con éxito en '%s' como %s" % [
-		vehicle.vehicle_name,
-		"CONDUCTOR" if (current_vehicle_seat and current_vehicle_seat.is_driver()) else "PASAJERO"
-	])
+	var s_name = seat.seat_name if "seat_name" in seat else "Asiento"
+	print("[PlayerController] Sentado con éxito en: %s" % s_name)
 	return true
 
-## Permite descender del vehículo actual si la velocidad es segura
-func dismount_vehicle() -> bool:
-	if not current_vehicle:
+## Permite levantarse de cualquier asiento a la posición de pie sin trabas de velocidad
+func stand_up() -> bool:
+	if not is_sitting:
 		return false
 
-	if current_vehicle.current_speed_kmh > 8.0:
-		print("[PlayerController] Demasiado rápido para descender: %.1f km/h" % current_vehicle.current_speed_kmh)
-		return false
-
-	# Notificar descenso a la red TKT/1
-	if network_client and network_client.state == NetworkClient.ConnectionState.CONNECTED:
-		var v_id = current_vehicle.vehicle_id if "vehicle_id" in current_vehicle else 1001
-		var seat_idx = current_vehicle_seat.seat_index if current_vehicle_seat else 0
-		network_client.send_vehicle_exit(v_id, seat_idx)
-
+	var seat = current_seat
 	var exit_pos = global_position
-	if current_vehicle_seat:
-		exit_pos = current_vehicle_seat.get_exit_global_position()
 
-	current_vehicle.exit_vehicle(self)
-	var prev_veh_name = current_vehicle.vehicle_name
-	current_vehicle = null
-	current_vehicle_seat = null
+	if seat and seat.has_method("get_exit_global_position"):
+		exit_pos = seat.get_exit_global_position()
+	elif seat:
+		var aisle_dir = 1.0 if seat.position.x < 0.0 else -1.0
+		exit_pos = seat.global_position + (seat.global_transform.basis.x * aisle_dir * 0.65)
 
+	if seat and seat.has_method("vacate"):
+		seat.vacate()
 
-	# Desactivar cámaras de vehículo y reactivar cámaras a pie
-	if vehicle_camera_director:
+	# Notificar descenso a la red TKT/1 si aplica
+	if network_client and network_client.state == NetworkClient.ConnectionState.CONNECTED and current_vehicle:
+		var v_id = current_vehicle.vehicle_id if "vehicle_id" in current_vehicle else 0
+		var s_idx = current_vehicle_seat.seat_index if current_vehicle_seat else 0
+		network_client.send_vehicle_exit(v_id, s_idx)
+
+	var prev_veh = current_vehicle
+	if current_vehicle:
+		current_vehicle.exit_vehicle(self)
+		current_vehicle = null
+		current_vehicle_seat = null
+
+	# Desactivar cámaras vehiculares y restaurar cámaras de pie
+	if vehicle_camera_director and vehicle_camera_director.is_active:
 		vehicle_camera_director.deactivate()
 
 	if camera_director and camera_director.active_camera:
 		camera_director.active_camera.current = true
 
-	# Restaurar avatar y físicas a pie
+	current_seat = null
+	player_state = PlayerState.NORMAL
+	global_position = exit_pos
+	velocity = prev_veh.velocity if prev_veh else Vector3.ZERO
+	set_collision_layer_value(1, true)
+	set_collision_mask_value(1, true)
+
+	if humanoid_scene:
+		humanoid_scene.visible = true
+
+	if hud:
+		hud.set_interaction_prompt("")
+
+	print("[PlayerController] Levantado a posición de pie.")
+	return true
+
+## Aborda un vehículo en un asiento preferente
+func board_vehicle(vehicle: VehicleBase, preferred_type: int = 0) -> bool:
+	if not vehicle or is_sitting:
+		return false
+
+	var target_seat: VehicleSeat = null
+	if preferred_type == VehicleSeat.SeatType.DRIVER:
+		var d = vehicle.get_driver_seat()
+		if d and not d.is_occupied():
+			target_seat = d
+		else:
+			var pass_seats = vehicle.get_available_passenger_seats()
+			if not pass_seats.is_empty():
+				target_seat = pass_seats[0]
+	else:
+		var pass_seats = vehicle.get_available_passenger_seats()
+		if not pass_seats.is_empty():
+			target_seat = pass_seats[0]
+		else:
+			var d = vehicle.get_driver_seat()
+			if d and not d.is_occupied():
+				target_seat = d
+
+	if not target_seat:
+		print("[PlayerController] No hay asientos disponibles en '%s'" % vehicle.vehicle_name)
+		return false
+
+	return sit_in_seat(target_seat)
+
+## Desciende o se levanta del vehículo actual
+func dismount_vehicle() -> bool:
+	if is_sitting:
+		return stand_up()
+
+	if not current_vehicle:
+		return false
+
+	# Si está de pie en un vehículo y este viaja rápido por carretera, sugerir parada
+	if current_vehicle.current_speed_kmh > 15.0:
+		print("[PlayerController] Vehículo a alta velocidad (%.1f km/h). Use [T] para solicitar parada." % current_vehicle.current_speed_kmh)
+		if hud:
+			hud.set_interaction_prompt("Vehículo en marcha. [T] Solicitar Parada")
+		return false
+
+	var exit_pos = current_vehicle.global_position + (current_vehicle.global_transform.basis.x * 2.0)
+	current_vehicle.exit_vehicle(self)
+	current_vehicle = null
+	current_vehicle_seat = null
 	global_position = exit_pos
 	velocity = Vector3.ZERO
 	set_collision_layer_value(1, true)
@@ -763,80 +940,129 @@ func dismount_vehicle() -> bool:
 	if hud:
 		hud.set_interaction_prompt("")
 
-	print("[PlayerController] Descendido de '%s'" % prev_veh_name)
+	print("[PlayerController] Descendido del vehículo.")
 	return true
 
-func _process_riding_vehicle(delta: float) -> void:
+## Solicita parada en el próximo cruce para el autobús en el que viaja el jugador
+func _try_request_bus_stop() -> bool:
+	var bus = _get_riding_bus()
+	if bus and bus.has_method("request_stop"):
+		bus.request_stop()
+		if hud:
+			hud.set_interaction_prompt("🔔 Timbre: Parada solicitada para el próximo cruce")
+		print("[PlayerController] Timbre accionado: Parada solicitada en '%s'" % bus.vehicle_name)
+		return true
+	return false
+
+## Localiza el autobús de ruta en el que viaja o se encuentra el jugador
+func _get_riding_bus() -> RouteVehicle:
+	if current_vehicle and current_vehicle is RouteVehicle:
+		return current_vehicle as RouteVehicle
+
+	var tree = get_tree()
+	if not tree:
+		return null
+
+	# Comprobar vehículos registrados en el grupo
+	var vehicles = tree.get_nodes_in_group("vehicles")
+	for v in vehicles:
+		if v is RouteVehicle and v.is_inside_tree():
+			var dist = global_position.distance_to(v.global_position)
+			if dist < 7.5: # Longitud del Marcopolo Boxer
+				return v as RouteVehicle
+	return null
+
+## Procesa la sincronización física del jugador mientras está sentado
+func _process_sitting(_delta: float) -> void:
+	if not is_instance_valid(current_seat):
+		stand_up()
+		return
+
+	var h_offset: float = 0.45
+	if "sit_height_offset" in current_seat:
+		h_offset = current_seat.sit_height_offset
+
+	global_position = current_seat.global_position - Vector3(0.0, h_offset, 0.0)
+	rotation_degrees.y = current_seat.global_rotation_degrees.y
+
+	if current_vehicle:
+		velocity = current_vehicle.velocity
+		# Brújula según vehículo
+		var v_fwd = -current_vehicle.global_transform.basis.z
+		var veh_heading = fposmod(rad_to_deg(atan2(v_fwd.x, -v_fwd.z)), 360.0)
+
+		if hud:
+			var fuel_pct = current_vehicle.fuel_system.get_fuel_percentage() if current_vehicle.fuel_system else 100.0
+			var is_inf = current_vehicle.fuel_system.is_infinite_fuel if current_vehicle.fuel_system else false
+			var surf_name = current_vehicle.current_surface_profile.surface_name if current_vehicle.current_surface_profile else "Asfalto"
+			var is_drv = current_vehicle_seat.is_driver() if current_vehicle_seat else false
+
+			hud.update_vehicle_hud(
+				current_vehicle.vehicle_name,
+				current_vehicle.current_speed_kmh,
+				fuel_pct,
+				is_inf,
+				surf_name,
+				current_vehicle.current_slope_angle,
+				is_drv,
+				veh_heading,
+				_cached_street_name
+			)
+	else:
+		velocity = Vector3.ZERO
+
+func _process_riding_vehicle(_delta: float) -> void:
 	if not current_vehicle:
 		return
 
-	# Sincronizar posición con el asiento del vehículo
-	if current_vehicle_seat:
-		global_position = current_vehicle_seat.global_position
-	else:
-		global_position = current_vehicle.global_position
+	# Si está sentado, se gestiona vía _process_sitting
+	if is_sitting:
+		_process_sitting(_delta)
+		return
 
 	velocity = current_vehicle.velocity
 
-	# Orientación de brújula según vehículo
-	var v_fwd = -current_vehicle.global_transform.basis.z
-	var veh_heading = fposmod(rad_to_deg(atan2(v_fwd.x, -v_fwd.z)), 360.0)
-
-	# Actualizar telemetría de vehículo en el HUD
-	if hud:
-		var fuel_pct = current_vehicle.fuel_system.get_fuel_percentage() if current_vehicle.fuel_system else 100.0
-		var is_inf = current_vehicle.fuel_system.is_infinite_fuel if current_vehicle.fuel_system else false
-		var surf_name = current_vehicle.current_surface_profile.surface_name if current_vehicle.current_surface_profile else "Asfalto"
-		var is_drv = current_vehicle_seat.is_driver() if current_vehicle_seat else false
-
-		hud.update_vehicle_hud(
-			current_vehicle.vehicle_name,
-			current_vehicle.current_speed_kmh,
-			fuel_pct,
-			is_inf,
-			surf_name,
-			current_vehicle.current_slope_angle,
-			is_drv,
-			veh_heading,
-			_cached_street_name
-		)
-
-		if current_vehicle.current_speed_kmh < 8.0:
-			hud.set_interaction_prompt("[E] Descender")
-		else:
-			hud.set_interaction_prompt("")
-
 func _scan_nearby_interactive_objects(delta: float) -> void:
 	_vehicle_scan_timer += delta
-	if _vehicle_scan_timer < 0.15:
+	if _vehicle_scan_timer < 0.12:
 		return
 	_vehicle_scan_timer = 0.0
 
+	_nearby_seat = null
 	_nearby_vehicle = null
 	_nearby_seat_type = 0
 	_nearby_pump_zone = null
 
-	# Buscar vehículos registrados en el grupo 'vehicles'
-	var vehicles = get_tree().get_nodes_in_group("vehicles")
+	var tree = get_tree()
+	if not tree:
+		return
 
-	var search_radius_sq = 36.0 # Radio de 6.0 metros
-	var min_d_sq = search_radius_sq
 	var my_pos = global_position
 
+	# 1. Escaneo de asientos cercanos (grupo 'seats', bancas urbanas y plazas de bus a ≤ 2.2 m)
+	if not is_sitting:
+		var seats = tree.get_nodes_in_group("seats")
+		var min_seat_dist_sq = 4.84 # radio 2.2 m
+		for s in seats:
+			if s is Node3D and s.is_inside_tree():
+				if s.has_method("is_occupied") and s.is_occupied():
+					continue
+				var d_sq = my_pos.distance_squared_to(s.global_position)
+				if d_sq < min_seat_dist_sq:
+					min_seat_dist_sq = d_sq
+					_nearby_seat = s
+
+	# 2. Escaneo de vehículos cercanos (grupo 'vehicles' a ≤ 6.0 m)
+	var vehicles = tree.get_nodes_in_group("vehicles")
+	var min_veh_dist_sq = 36.0 # radio 6.0 m
 	for veh in vehicles:
 		if veh is VehicleBase and veh.is_inside_tree():
-			var veh_dist_sq = my_pos.distance_squared_to(veh.global_position)
-			var min_entry_dist_sq = veh_dist_sq
-			for s in veh.seats:
-				if s and s is Node3D and s.is_inside_tree():
-					var s_d_sq = my_pos.distance_squared_to(s.global_position)
-					if s_d_sq < min_entry_dist_sq:
-						min_entry_dist_sq = s_d_sq
-			if min_entry_dist_sq < min_d_sq:
-				min_d_sq = min_entry_dist_sq
+			var d_sq = my_pos.distance_squared_to(veh.global_position)
+			if d_sq < min_veh_dist_sq:
+				min_veh_dist_sq = d_sq
 				_nearby_vehicle = veh as VehicleBase
 
-	# Buscar estaciones de servicio en proximidad (para tecla [R]) mediante grupo 'pump_zones'
+	# 3. Escaneo de estaciones de servicio (para repostaje [R])
 	for pz in get_tree().get_nodes_in_group("pump_zones"):
 		if pz is Area3D and pz.is_inside_tree():
 			var d_sq = my_pos.distance_squared_to(pz.global_position)
@@ -844,21 +1070,38 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 				_nearby_pump_zone = pz
 				break
 
-	if _nearby_vehicle:
+	# 4. Actualización contextual de indicaciones en el HUD
+	if not hud:
+		return
+
+	if is_sitting:
+		var prompt = "[E] o [Espacio] Levantarse"
+		var bus_on_board = _get_riding_bus()
+		if bus_on_board:
+			prompt += "  |  [T] Solicitar Parada"
+		hud.set_interaction_prompt(prompt)
+	elif _nearby_seat:
+		var s_name = _nearby_seat.seat_name if "seat_name" in _nearby_seat else "Asiento"
+		var prompt = "[E] Sentarse en %s" % s_name
+		var bus_on_board = _get_riding_bus()
+		if bus_on_board:
+			prompt += "  |  [T] Solicitar Parada"
+		hud.set_interaction_prompt(prompt)
+	elif _nearby_vehicle:
 		var d_seat = _nearby_vehicle.get_driver_seat()
 		if d_seat and not d_seat.is_occupied():
 			_nearby_seat_type = VehicleSeat.SeatType.DRIVER
-			if hud:
-				hud.set_interaction_prompt("[E] Conducir %s" % _nearby_vehicle.vehicle_name)
+			hud.set_interaction_prompt("[E] Conducir %s" % _nearby_vehicle.vehicle_name)
 		else:
 			var avail_pass = _nearby_vehicle.get_available_passenger_seats()
 			if not avail_pass.is_empty():
 				_nearby_seat_type = VehicleSeat.SeatType.PASSENGER
-				if hud:
-					hud.set_interaction_prompt("[E] Abordar como Pasajero en %s" % _nearby_vehicle.vehicle_name)
+				hud.set_interaction_prompt("[E] Abordar como Pasajero en %s" % _nearby_vehicle.vehicle_name)
 			else:
-				if hud:
-					hud.set_interaction_prompt("%s (Lleno)" % _nearby_vehicle.vehicle_name)
+				hud.set_interaction_prompt("%s (Lleno)" % _nearby_vehicle.vehicle_name)
 	else:
-		if hud:
+		var bus_on_board = _get_riding_bus()
+		if bus_on_board:
+			hud.set_interaction_prompt("[T] Solicitar Parada")
+		else:
 			hud.set_interaction_prompt("")

@@ -29,6 +29,9 @@ func _run_tests() -> void:
 	test_route_geographic_waypoints_and_stations()
 	test_bus_navigation_simulation()
 	test_parametric_identity()
+	test_right_lane_offset()
+	test_transmission_and_gears()
+	test_crossing_stops_and_debounce()
 
 	_print_summary()
 	quit(0 if tests_failed == 0 else 1)
@@ -78,12 +81,13 @@ func test_visual_mesh_and_materials() -> void:
 	var model = visual_root.get_node_or_null("BusModel")
 	assert_true(model != null, "Subnodo BusModel instanciado desde bus_hongo.glb")
 
-	var collision_shape = bus.get_node_or_null("BodyCollision")
-	if not collision_shape:
-		collision_shape = bus.get_node_or_null("CollisionRoot/BodyCollision")
-	assert_true(collision_shape != null, "BodyCollision presente en la jerarquía del autobús")
-	assert_true(collision_shape.shape is BoxShape3D, "Colisionador principal es BoxShape3D")
-	assert_true(bus.get_shape_owners().size() > 0 or collision_shape.shape != null, "El autobús tiene forma de colisión registrada en físicas (shape_owners > 0)")
+	# Colisiones estructurales generadas en tiempo de importación (Regla 8: Cero cajas manuales en .tscn)
+	var floor_col = bus.find_child("Bus_Interior_Piso_ColBody", true, false)
+	var body_col = bus.find_child("Bus_Carroceria_Roja_ColBody", true, false)
+	assert_true(floor_col != null, "Colisión de piso interior (Bus_Interior_Piso_ColBody) generada vía post-import")
+	assert_true(body_col != null, "Colisión de carrocería (Bus_Carroceria_Roja_ColBody) generada vía post-import")
+	assert_true(floor_col is AnimatableBody3D, "Cuerpo de colisión es AnimatableBody3D para soporte inercial de plataforma")
+	assert_true(bus.get_node_or_null("CollisionRoot") == null, "Regla 8: Cero cajas manuales BoxShape3D en .tscn")
 
 	# Raycasts de suspensión (al menos 4)
 	var suspension = bus.get_node_or_null("Suspension")
@@ -273,6 +277,127 @@ func test_parametric_identity() -> void:
 	assert_true(label_unit_l.text == "18", "Actualización dinámica paramétrica: unidad reasignada a '18'")
 	assert_true(label_plate_rear.text == "A-30531-A", "Actualización dinámica paramétrica: placa reasignada a 'A-30531-A'")
 	assert_true(label_concession.text == "TKT-A-19-00018", "Actualización dinámica paramétrica: concesión reasignada a 'TKT-A-19-00018'")
+
+	bus.free()
+
+# ---------------------------------------------------------------------------
+# Prueba 8: Separación y Carril Derecho (Normativa Mexicana)
+# ---------------------------------------------------------------------------
+func test_right_lane_offset() -> void:
+	print(INFO_COLOR + "--- Prueba 8: Circulación en Carril Derecho en Ambos Sentidos ---" + RESET_COLOR)
+	var scene_res = load("res://assets/vehicles/bus_hongo.tscn")
+	var bus = scene_res.instantiate()
+
+	var wps: PackedVector3Array = bus.waypoints
+	assert_true(wps.size() > 500, "Waypoints disponibles para análisis de carriles")
+
+	# Encontrar un punto en Av. Hidalgo de ida y de retorno (alrededor de X = -453)
+	var ida_pt: Vector3 = Vector3.ZERO
+	var ret_pt: Vector3 = Vector3.ZERO
+	var half_size = wps.size() / 2
+
+	for i in range(half_size):
+		if absf(wps[i].x - (-453.0)) < 30.0:
+			ida_pt = wps[i]
+			break
+
+	for i in range(half_size, wps.size()):
+		if absf(wps[i].x - (-453.0)) < 30.0:
+			ret_pt = wps[i]
+			break
+
+	assert_true(ida_pt != Vector3.ZERO, "Punto de ida en Av. Hidalgo localizado")
+	assert_true(ret_pt != Vector3.ZERO, "Punto de retorno en Av. Hidalgo localizado")
+
+	# En Godot (+X Este, +Z Sur):
+	# De ida (hacia el Este), el carril derecho se desplaza hacia el Sur (+Z).
+	# De retorno (hacia el Poniente), el carril derecho se desplaza hacia el Norte (-Z).
+	# Por ende: ida_pt.z debe ser mayor que ret_pt.z
+	var delta_z = ida_pt.z - ret_pt.z
+	assert_true(delta_z > 2.0, "Separación entre carriles en Av. Hidalgo >= 2.0 m (Obtenido: %.2f m)" % delta_z)
+	assert_true(delta_z < 4.5, "Separación cabe dentro del ancho de calzada (< 4.5 m, Obtenido: %.2f m)" % delta_z)
+
+	# En Carretera Federal 2 (alrededor de X = 25000)
+	var hw_ida: Vector3 = Vector3.ZERO
+	var hw_ret: Vector3 = Vector3.ZERO
+	for i in range(half_size):
+		if absf(wps[i].x - 25000.0) < 150.0:
+			hw_ida = wps[i]
+			break
+	for i in range(half_size, wps.size()):
+		if absf(wps[i].x - 25000.0) < 150.0:
+			hw_ret = wps[i]
+			break
+
+	assert_true(hw_ida != Vector3.ZERO, "Punto carretero de ida localizado")
+	assert_true(hw_ret != Vector3.ZERO, "Punto carretero de retorno localizado")
+	var hw_delta_z = hw_ida.z - hw_ret.z
+	assert_true(hw_delta_z > 3.0, "Separación carretera federal >= 3.0 m (Obtenido: %.2f m)" % hw_delta_z)
+
+	bus.free()
+
+# ---------------------------------------------------------------------------
+# Prueba 9: Transmisión Mecánica de 6 Velocidades y Dinámica de Par
+# ---------------------------------------------------------------------------
+func test_transmission_and_gears() -> void:
+	print(INFO_COLOR + "--- Prueba 9: Transmisión Mecánica de 6 Velocidades ---" + RESET_COLOR)
+	var scene_res = load("res://assets/vehicles/bus_hongo.tscn")
+	var bus = scene_res.instantiate()
+	get_root().add_child(bus)
+
+	assert_true(bus.total_gears == 6, "Transmisión configurada con 6 marchas hacia adelante")
+	assert_true(bus.get_gear_name() == "1ª", "Marcha inicial en reposo es 1ª")
+
+	# Probar escalonamiento de marchas según velocidad
+	bus.update_transmission(25.0, 0.3)
+	assert_true(bus.current_gear == 2, "A 25 km/h selecciona 2ª marcha")
+	assert_true(bus.get_gear_name() == "2ª", "Nomenclatura correcta: 2ª")
+
+	bus.update_transmission(55.0, 0.3)
+	assert_true(bus.current_gear == 4, "A 55 km/h selecciona 4ª marcha")
+
+	bus.update_transmission(95.0, 0.3)
+	assert_true(bus.current_gear == 6, "A 95 km/h selecciona 6ª marcha (sobremarcha crucero)")
+	assert_true(bus.get_gear_name() == "6ª", "Nomenclatura correcta: 6ª")
+	assert_true(bus.is_shifting == true, "Al cambiar de marcha se activa bandera is_shifting")
+	bus.update_transmission(95.0, 0.25)
+	assert_true(bus.is_shifting == false, "Embrague acoplado tras cambio de marcha")
+	assert_true(bus.engine_rpm > 1200.0, "Régimen de RPM diésel activo en marcha alta")
+
+	bus.free()
+
+# ---------------------------------------------------------------------------
+# Prueba 10: Paradas en Cruces con Debounce y Timbre
+# ---------------------------------------------------------------------------
+func test_crossing_stops_and_debounce() -> void:
+	print(INFO_COLOR + "--- Prueba 10: Paradas en Cruces (Debounce 5 min y Timbre) ---" + RESET_COLOR)
+	var scene_res = load("res://assets/vehicles/bus_hongo.tscn")
+	var bus = scene_res.instantiate()
+	get_root().add_child(bus)
+
+	assert_true(bus.crossing_debounce_sec == 300.0, "Debounce de cruces establecido en 300 s (5 minutos)")
+	assert_true(bus.crossing_dwell_time >= 10.0, "Tiempo de espera en cruce >= 10.0 s")
+
+	# Simular solicitud de parada por timbre con contenedor array para mutabilidad en lambda
+	var bell_ack = [false]
+	bus.stop_requested_acknowledged.connect(func(): bell_ack[0] = true)
+	bus.request_stop()
+	assert_true(bus.stop_requested == true, "Timbre de bajada activa bandera stop_requested")
+	assert_true(bell_ack[0] == true, "Señal stop_requested_acknowledged emitida para feedback UI")
+
+	# Configurar un cruce simulado en waypoint 1
+	bus.intersections[1] = {"name": "Av. Hidalgo y Calle Aldrete"}
+	bus.time_since_last_stop = 300.0 # Cumplió debounce
+	bus.current_waypoint_index = 1
+	bus.waypoints = PackedVector3Array([Vector3.ZERO, Vector3(0, 0, 1), Vector3(0, 0, 10)])
+
+	var crossing_arrived_name = [""]
+	bus.crossing_stop_arrived.connect(func(c_name, _t): crossing_arrived_name[0] = c_name)
+	bus._on_waypoint_reached()
+
+	assert_true(bus.is_at_crossing == true, "Autobús entra en estado de parada en cruce")
+	assert_true(crossing_arrived_name[0] == "Av. Hidalgo y Calle Aldrete", "Nombre del cruce reportado correctamente")
+	assert_true(bus.time_since_last_stop == 0.0, "Debounce reiniciado tras iniciar la parada")
 
 	bus.free()
 
