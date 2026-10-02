@@ -64,3 +64,4 @@ blender_assets/*_adjusted.blend
 /godot_project/build
 *.jpeg
 
+*.log
