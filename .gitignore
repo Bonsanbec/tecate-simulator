@@ -65,3 +65,4 @@ blender_assets/*_adjusted.blend
 *.jpeg
 
 *.log
+/scratch/godot_home
