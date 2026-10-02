@@ -698,7 +698,7 @@ station_indices = {st_dict_str}
 vehicle_name = "Autobús El Hongo (Unidad 24)"
 vehicle_type = 2
 mass_kg = 9200.0
-max_speed_kmh = 105.0
+max_speed_kmh = 135.0
 engine_acceleration = 4.5
 brake_deceleration = 11.0
 
