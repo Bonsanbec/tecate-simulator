@@ -31,6 +31,7 @@ var _nearby_vehicle: VehicleBase = null
 var _nearby_seat: Node = null
 var _nearby_seat_type: int = 0
 var _nearby_pump_zone: Node = null
+var _near_exit_door: bool = false
 var _vehicle_scan_timer: float = 0.0
 
 # Parámetros Biomecánicos de Marcha y Carrera
@@ -382,9 +383,10 @@ func _input(event: InputEvent) -> void:
 				_set_input_handled()
 				return
 			elif current_vehicle:
-				dismount_vehicle()
-				_set_input_handled()
-				return
+				if _near_exit_door:
+					dismount_vehicle()
+					_set_input_handled()
+					return
 			elif _nearby_vehicle:
 				board_vehicle(_nearby_vehicle, _nearby_seat_type)
 				_set_input_handled()
@@ -440,18 +442,9 @@ func _physics_process(delta: float) -> void:
 
 	if is_sitting:
 		_process_sitting(delta)
-		_scan_nearby_interactive_objects(delta)
-		_update_procedural_animations(delta)
-		_update_telemetry(delta)
-		return
-
-	if current_vehicle:
+	elif current_vehicle:
 		_process_riding_vehicle(delta)
-		return
-
-	_scan_nearby_interactive_objects(delta)
-
-	if is_flying:
+	elif is_flying:
 		_process_flying(delta)
 	else:
 		_process_walking(delta)
@@ -829,7 +822,7 @@ func sit_in_seat(seat: Node) -> bool:
 	print("[PlayerController] Sentado con éxito en: %s" % s_name)
 	return true
 
-## Permite levantarse de cualquier asiento a la posición de pie sin trabas de velocidad
+## Permite levantarse de cualquier asiento a la posición de pie en el pasillo sin salir del vehículo
 func stand_up() -> bool:
 	if not is_sitting:
 		return false
@@ -846,19 +839,22 @@ func stand_up() -> bool:
 	if seat and seat.has_method("vacate"):
 		seat.vacate()
 
-	# Notificar descenso a la red TKT/1 si aplica
-	if network_client and network_client.state == NetworkClient.ConnectionState.CONNECTED and current_vehicle:
-		var v_id = current_vehicle.vehicle_id if "vehicle_id" in current_vehicle else 0
+	var veh: VehicleBase = current_vehicle
+	if not veh and seat:
+		var p = seat.get_parent()
+		while p:
+			if p is VehicleBase:
+				veh = p as VehicleBase
+				break
+			p = p.get_parent()
+
+	# Notificar descenso de asiento a la red TKT/1 si aplica
+	if network_client and network_client.state == NetworkClient.ConnectionState.CONNECTED and veh:
+		var v_id = veh.vehicle_id if "vehicle_id" in veh else 0
 		var s_idx = current_vehicle_seat.seat_index if current_vehicle_seat else 0
 		network_client.send_vehicle_exit(v_id, s_idx)
 
-	var prev_veh = current_vehicle
-	if current_vehicle:
-		current_vehicle.exit_vehicle(self)
-		current_vehicle = null
-		current_vehicle_seat = null
-
-	# Desactivar cámaras vehiculares y restaurar cámaras de pie
+	# Desactivar cámaras vehiculares de conductor si estaban activas y restaurar cámaras de pie
 	if vehicle_camera_director and vehicle_camera_director.is_active:
 		vehicle_camera_director.deactivate()
 
@@ -866,9 +862,18 @@ func stand_up() -> bool:
 		camera_director.active_camera.current = true
 
 	current_seat = null
+	current_vehicle_seat = null
 	player_state = PlayerState.NORMAL
 	global_position = exit_pos
-	velocity = prev_veh.velocity if prev_veh else Vector3.ZERO
+
+	if veh:
+		# Se levanta en el pasillo y PERMANECE A BORDO viajando a la velocidad del vehículo
+		current_vehicle = veh
+		velocity = veh.velocity
+	else:
+		current_vehicle = null
+		velocity = Vector3.ZERO
+
 	set_collision_layer_value(1, true)
 	set_collision_mask_value(1, true)
 
@@ -878,14 +883,31 @@ func stand_up() -> bool:
 	if hud:
 		hud.set_interaction_prompt("")
 
-	print("[PlayerController] Levantado a posición de pie.")
+	print("[PlayerController] Levantado a posición de pie en el pasillo.")
 	return true
 
-## Aborda un vehículo en un asiento preferente
+## Aborda un vehículo por la puerta de acceso o en un asiento preferente
 func board_vehicle(vehicle: VehicleBase, preferred_type: int = 0) -> bool:
 	if not vehicle or is_sitting:
 		return false
 
+	# Si el vehículo tiene soporte de puertas o es autobús de pasajeros, ingresar a pie al pasillo interior
+	if vehicle.doors.size() > 0 or vehicle.vehicle_type == 2:
+		var entry_pos = vehicle.get_interior_entry_position()
+		global_position = entry_pos
+		current_vehicle = vehicle
+		current_seat = null
+		current_vehicle_seat = null
+		player_state = PlayerState.NORMAL
+		is_flying = false
+		velocity = vehicle.velocity
+		vehicle.vehicle_entered.emit(self, null)
+		print("[PlayerController] Abordado %s por la puerta al pasillo interior." % vehicle.vehicle_name)
+		if hud:
+			hud.set_interaction_prompt("")
+		return true
+
+	# Para vehículos convencionales sin pasillo interior, asignar asiento
 	var target_seat: VehicleSeat = null
 	if preferred_type == VehicleSeat.SeatType.DRIVER:
 		var d = vehicle.get_driver_seat()
@@ -910,7 +932,7 @@ func board_vehicle(vehicle: VehicleBase, preferred_type: int = 0) -> bool:
 
 	return sit_in_seat(target_seat)
 
-## Desciende o se levanta del vehículo actual
+## Desciende del vehículo actual hacia la banqueta exterior
 func dismount_vehicle() -> bool:
 	if is_sitting:
 		return stand_up()
@@ -918,15 +940,21 @@ func dismount_vehicle() -> bool:
 	if not current_vehicle:
 		return false
 
-	# Si está de pie en un vehículo y este viaja rápido por carretera, sugerir parada
+	# Si está en movimiento a alta velocidad por carretera, sugerir parada previa
 	if current_vehicle.current_speed_kmh > 15.0:
-		print("[PlayerController] Vehículo a alta velocidad (%.1f km/h). Use [T] para solicitar parada." % current_vehicle.current_speed_kmh)
+		print("[PlayerController] Vehículo a alta velocidad (%.1f km/h). Use [T] para solicitar parada antes de descender." % current_vehicle.current_speed_kmh)
 		if hud:
 			hud.set_interaction_prompt("Vehículo en marcha. [T] Solicitar Parada")
 		return false
 
-	var exit_pos = current_vehicle.global_position + (current_vehicle.global_transform.basis.x * 2.0)
-	current_vehicle.exit_vehicle(self)
+	var exit_pos = current_vehicle.get_exterior_exit_position()
+	var veh = current_vehicle
+
+	if network_client and network_client.state == NetworkClient.ConnectionState.CONNECTED:
+		var v_id = veh.vehicle_id if "vehicle_id" in veh else 0
+		network_client.send_vehicle_exit(v_id, 0)
+
+	veh.exit_vehicle(self)
 	current_vehicle = null
 	current_vehicle_seat = null
 	global_position = exit_pos
@@ -940,7 +968,7 @@ func dismount_vehicle() -> bool:
 	if hud:
 		hud.set_interaction_prompt("")
 
-	print("[PlayerController] Descendido del vehículo.")
+	print("[PlayerController] Descendido del vehículo hacia la banqueta exterior.")
 	return true
 
 ## Solicita parada en el próximo cruce para el autobús en el que viaja el jugador
@@ -1011,16 +1039,32 @@ func _process_sitting(_delta: float) -> void:
 	else:
 		velocity = Vector3.ZERO
 
-func _process_riding_vehicle(_delta: float) -> void:
+func _process_riding_vehicle(delta: float) -> void:
 	if not current_vehicle:
 		return
 
-	# Si está sentado, se gestiona vía _process_sitting
-	if is_sitting:
-		_process_sitting(_delta)
-		return
+	# Pasajero de pie a bordo del vehículo:
+	# Permitir locomoción peatonal en el pasillo sumando la velocidad inercial del vehículo
+	var input_dir = _get_input_direction()
+	var forward = -global_transform.basis.z
+	var right = global_transform.basis.x
+	var local_move = (forward * -input_dir.y + right * input_dir.x).normalized() * walk_speed
 
-	velocity = current_vehicle.velocity
+	velocity = current_vehicle.velocity + local_move
+
+	if not is_on_floor():
+		velocity.y -= gravity * delta
+	else:
+		if velocity.y < 0.0:
+			velocity.y = 0.0
+
+	move_and_slide()
+
+	# Confinamiento protector en el pasillo del autobús para evitar salir por desincronización
+	var local_pos = current_vehicle.to_local(global_position)
+	if absf(local_pos.x) > 1.35:
+		local_pos.x = clampf(local_pos.x, -1.25, 1.25)
+		global_position = current_vehicle.to_global(local_pos)
 
 func _scan_nearby_interactive_objects(delta: float) -> void:
 	_vehicle_scan_timer += delta
@@ -1032,6 +1076,7 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 	_nearby_vehicle = null
 	_nearby_seat_type = 0
 	_nearby_pump_zone = null
+	_near_exit_door = false
 
 	var tree = get_tree()
 	if not tree:
@@ -1039,28 +1084,61 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 
 	var my_pos = global_position
 
-	# 1. Escaneo de asientos cercanos (grupo 'seats', bancas urbanas y plazas de bus a ≤ 2.2 m)
+	# 1. Escaneo de asientos cercanos (radio estricto ≤ 1.1 m, dist_sq ≤ 1.21)
 	if not is_sitting:
 		var seats = tree.get_nodes_in_group("seats")
-		var min_seat_dist_sq = 4.84 # radio 2.2 m
+		var min_seat_dist_sq = 1.21 # radio 1.1 m
 		for s in seats:
 			if s is Node3D and s.is_inside_tree():
 				if s.has_method("is_occupied") and s.is_occupied():
 					continue
+
+				# Identificar si el asiento pertenece a un vehículo
+				var seat_veh: VehicleBase = null
+				var parent_node = s.get_parent()
+				while parent_node:
+					if parent_node is VehicleBase:
+						seat_veh = parent_node as VehicleBase
+						break
+					parent_node = parent_node.get_parent()
+
+				if current_vehicle == null:
+					# Desde el exterior: PROHIBIDO interactuar con asientos de vehículos
+					if seat_veh != null or s is VehicleSeat:
+						continue
+				else:
+					# A bordo: solo interactuar con asientos de este vehículo
+					if seat_veh != current_vehicle:
+						continue
+
 				var d_sq = my_pos.distance_squared_to(s.global_position)
 				if d_sq < min_seat_dist_sq:
 					min_seat_dist_sq = d_sq
 					_nearby_seat = s
 
-	# 2. Escaneo de vehículos cercanos (grupo 'vehicles' a ≤ 6.0 m)
-	var vehicles = tree.get_nodes_in_group("vehicles")
-	var min_veh_dist_sq = 36.0 # radio 6.0 m
-	for veh in vehicles:
-		if veh is VehicleBase and veh.is_inside_tree():
-			var d_sq = my_pos.distance_squared_to(veh.global_position)
-			if d_sq < min_veh_dist_sq:
-				min_veh_dist_sq = d_sq
-				_nearby_vehicle = veh as VehicleBase
+	# 2. Escaneo de vehículos y puertas
+	if current_vehicle == null:
+		# Exterior: buscar vehículo accesible exclusivamente por la puerta
+		var vehicles = tree.get_nodes_in_group("vehicles")
+		for veh in vehicles:
+			if veh is VehicleBase and veh.is_inside_tree():
+				if veh.doors.size() > 0 or veh.has_method("is_near_boarding_door"):
+					if veh.is_near_boarding_door(my_pos, 1.8):
+						_nearby_vehicle = veh as VehicleBase
+						break
+				else:
+					# Vehículo particular sin puertas modeladas: proximidad estricta (≤ 2.0 m)
+					var d_sq = my_pos.distance_squared_to(veh.global_position)
+					if d_sq < 4.0:
+						_nearby_vehicle = veh as VehicleBase
+						break
+	else:
+		# A bordo: verificar si está junto a una puerta para descender
+		if not is_sitting:
+			if current_vehicle.doors.size() > 0 or current_vehicle.has_method("is_near_boarding_door"):
+				_near_exit_door = current_vehicle.is_near_boarding_door(my_pos, 1.8)
+			else:
+				_near_exit_door = true
 
 	# 3. Escaneo de estaciones de servicio (para repostaje [R])
 	for pz in get_tree().get_nodes_in_group("pump_zones"):
@@ -1080,28 +1158,38 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 		if bus_on_board:
 			prompt += "  |  [T] Solicitar Parada"
 		hud.set_interaction_prompt(prompt)
+	elif current_vehicle != null:
+		if _nearby_seat:
+			var s_name = _nearby_seat.seat_name if "seat_name" in _nearby_seat else "Asiento"
+			var prompt = "[E] Sentarse en %s" % s_name
+			var bus_on_board = _get_riding_bus()
+			if bus_on_board:
+				prompt += "  |  [T] Solicitar Parada"
+			hud.set_interaction_prompt(prompt)
+		elif _near_exit_door:
+			if current_vehicle.current_speed_kmh > 15.0:
+				hud.set_interaction_prompt("Vehículo en marcha (%.0f km/h)  |  [T] Solicitar Parada" % current_vehicle.current_speed_kmh)
+			else:
+				hud.set_interaction_prompt("[E] Descender a la calle  |  [T] Solicitar Parada")
+		else:
+			hud.set_interaction_prompt("[T] Solicitar Parada")
 	elif _nearby_seat:
 		var s_name = _nearby_seat.seat_name if "seat_name" in _nearby_seat else "Asiento"
-		var prompt = "[E] Sentarse en %s" % s_name
-		var bus_on_board = _get_riding_bus()
-		if bus_on_board:
-			prompt += "  |  [T] Solicitar Parada"
-		hud.set_interaction_prompt(prompt)
+		hud.set_interaction_prompt("[E] Sentarse en %s" % s_name)
 	elif _nearby_vehicle:
-		var d_seat = _nearby_vehicle.get_driver_seat()
-		if d_seat and not d_seat.is_occupied():
-			_nearby_seat_type = VehicleSeat.SeatType.DRIVER
-			hud.set_interaction_prompt("[E] Conducir %s" % _nearby_vehicle.vehicle_name)
+		if _nearby_vehicle.doors.size() > 0 or _nearby_vehicle.vehicle_type == 2:
+			hud.set_interaction_prompt("[E] Abordar %s por la puerta" % _nearby_vehicle.vehicle_name)
 		else:
-			var avail_pass = _nearby_vehicle.get_available_passenger_seats()
-			if not avail_pass.is_empty():
-				_nearby_seat_type = VehicleSeat.SeatType.PASSENGER
-				hud.set_interaction_prompt("[E] Abordar como Pasajero en %s" % _nearby_vehicle.vehicle_name)
+			var d_seat = _nearby_vehicle.get_driver_seat()
+			if d_seat and not d_seat.is_occupied():
+				_nearby_seat_type = VehicleSeat.SeatType.DRIVER
+				hud.set_interaction_prompt("[E] Conducir %s" % _nearby_vehicle.vehicle_name)
 			else:
-				hud.set_interaction_prompt("%s (Lleno)" % _nearby_vehicle.vehicle_name)
+				var avail_pass = _nearby_vehicle.get_available_passenger_seats()
+				if not avail_pass.is_empty():
+					_nearby_seat_type = VehicleSeat.SeatType.PASSENGER
+					hud.set_interaction_prompt("[E] Abordar como Pasajero en %s" % _nearby_vehicle.vehicle_name)
+				else:
+					hud.set_interaction_prompt("%s (Lleno)" % _nearby_vehicle.vehicle_name)
 	else:
-		var bus_on_board = _get_riding_bus()
-		if bus_on_board:
-			hud.set_interaction_prompt("[T] Solicitar Parada")
-		else:
-			hud.set_interaction_prompt("")
+		hud.set_interaction_prompt("")

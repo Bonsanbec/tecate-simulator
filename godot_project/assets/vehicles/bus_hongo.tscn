@@ -65,7 +65,7 @@ seat_index = 0
 seat_name = "Puesto del Conductor"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Driver"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.65, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, -0.43, 0.0)
 
 [node name="Seat_Passenger_1" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, -2.75)
@@ -75,7 +75,7 @@ seat_index = 1
 seat_name = "Fila 1 Ventanilla Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_1"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.00, -0.43, 0.0)
 
 [node name="Seat_Passenger_2" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, -2.75)
@@ -85,7 +85,7 @@ seat_index = 2
 seat_name = "Fila 1 Pasillo Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, -0.43, 0.0)
 
 [node name="Seat_Passenger_3" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, -1.85)
@@ -95,7 +95,7 @@ seat_index = 3
 seat_name = "Fila 2 Ventanilla Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_3"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.00, -0.43, 0.0)
 
 [node name="Seat_Passenger_4" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, -1.85)
@@ -105,7 +105,7 @@ seat_index = 4
 seat_name = "Fila 2 Pasillo Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_4"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, -0.43, 0.0)
 
 [node name="Seat_Passenger_5" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, -0.95)
@@ -115,7 +115,7 @@ seat_index = 5
 seat_name = "Fila 3 Ventanilla Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_5"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.00, -0.43, 0.0)
 
 [node name="Seat_Passenger_6" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, -0.95)
@@ -125,7 +125,7 @@ seat_index = 6
 seat_name = "Fila 3 Pasillo Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_6"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, -0.43, 0.0)
 
 [node name="Seat_Passenger_7" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, -0.05)
@@ -135,7 +135,7 @@ seat_index = 7
 seat_name = "Fila 4 Ventanilla Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_7"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.00, -0.43, 0.0)
 
 [node name="Seat_Passenger_8" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, -0.05)
@@ -145,7 +145,7 @@ seat_index = 8
 seat_name = "Fila 4 Pasillo Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_8"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, -0.43, 0.0)
 
 [node name="Seat_Passenger_9" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, 0.85)
@@ -155,7 +155,7 @@ seat_index = 9
 seat_name = "Fila 5 Ventanilla Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_9"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.00, -0.43, 0.0)
 
 [node name="Seat_Passenger_10" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, 0.85)
@@ -165,7 +165,7 @@ seat_index = 10
 seat_name = "Fila 5 Pasillo Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_10"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, -0.43, 0.0)
 
 [node name="Seat_Passenger_11" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, 1.75)
@@ -175,7 +175,7 @@ seat_index = 11
 seat_name = "Fila 6 Ventanilla Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_11"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.00, -0.43, 0.0)
 
 [node name="Seat_Passenger_12" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, 1.75)
@@ -185,7 +185,7 @@ seat_index = 12
 seat_name = "Fila 6 Pasillo Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_12"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, -0.43, 0.0)
 
 [node name="Seat_Passenger_13" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.25, 2.65)
@@ -195,7 +195,7 @@ seat_index = 13
 seat_name = "Fila 7 Ventanilla Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_13"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.00, -0.43, 0.0)
 
 [node name="Seat_Passenger_14" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 1.25, 2.65)
@@ -205,7 +205,7 @@ seat_index = 14
 seat_name = "Fila 7 Pasillo Izq"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_14"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, -0.43, 0.0)
 
 [node name="Seat_Passenger_15" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.25, -2.75)
@@ -215,7 +215,7 @@ seat_index = 15
 seat_name = "Fila 1 Preferencial Der"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_15"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.65, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, -0.43, 0.0)
 
 [node name="Seat_Passenger_16" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, -1.85)
@@ -225,7 +225,7 @@ seat_index = 16
 seat_name = "Fila 2 Pasillo Der"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_16"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, -0.43, 0.0)
 
 [node name="Seat_Passenger_17" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, -1.85)
@@ -235,7 +235,7 @@ seat_index = 17
 seat_name = "Fila 2 Ventanilla Der"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_17"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.00, -0.43, 0.0)
 
 [node name="Seat_Passenger_18" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, -0.95)
@@ -245,7 +245,7 @@ seat_index = 18
 seat_name = "Fila 3 Pasillo Der"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_18"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, -0.43, 0.0)
 
 [node name="Seat_Passenger_19" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, -0.95)
@@ -255,7 +255,7 @@ seat_index = 19
 seat_name = "Fila 3 Ventanilla Der"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_19"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.00, -0.43, 0.0)
 
 [node name="Seat_Passenger_20" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, -0.05)
@@ -265,7 +265,7 @@ seat_index = 20
 seat_name = "Fila 4 Pasillo Der"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_20"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, -0.43, 0.0)
 
 [node name="Seat_Passenger_21" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, -0.05)
@@ -275,7 +275,7 @@ seat_index = 21
 seat_name = "Fila 4 Ventanilla Der"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_21"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.00, -0.43, 0.0)
 
 [node name="Seat_Passenger_22" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, 0.85)
@@ -285,7 +285,7 @@ seat_index = 22
 seat_name = "Fila 5 Pasillo Der"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_22"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, -0.43, 0.0)
 
 [node name="Seat_Passenger_23" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, 0.85)
@@ -295,7 +295,7 @@ seat_index = 23
 seat_name = "Fila 5 Ventanilla Der"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_23"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.00, -0.43, 0.0)
 
 [node name="Seat_Passenger_24" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.25, 1.75)
@@ -305,7 +305,7 @@ seat_index = 24
 seat_name = "Fila 6 Pasillo Der"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_24"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, -0.43, 0.0)
 
 [node name="Seat_Passenger_25" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.25, 1.75)
@@ -315,7 +315,7 @@ seat_index = 25
 seat_name = "Fila 6 Ventanilla Der"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_25"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, -0.40, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.00, -0.43, 0.0)
 
 [node name="Seat_Passenger_26" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.92, 1.25, 4.35)
@@ -325,7 +325,7 @@ seat_index = 26
 seat_name = "Banca Posterior Asiento 1"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_26"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, -0.40, -0.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.92, -0.43, -0.75)
 
 [node name="Seat_Passenger_27" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.46, 1.25, 4.35)
@@ -335,7 +335,7 @@ seat_index = 27
 seat_name = "Banca Posterior Asiento 2"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_27"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, -0.40, -0.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.46, -0.43, -0.75)
 
 [node name="Seat_Passenger_28" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.25, 4.35)
@@ -345,7 +345,7 @@ seat_index = 28
 seat_name = "Banca Posterior Asiento 3"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_28"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, -0.40, -0.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00, -0.43, -0.75)
 
 [node name="Seat_Passenger_29" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.46, 1.25, 4.35)
@@ -355,7 +355,7 @@ seat_index = 29
 seat_name = "Banca Posterior Asiento 4"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_29"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, -0.40, -0.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.46, -0.43, -0.75)
 
 [node name="Seat_Passenger_30" type="Node3D" parent="Seats"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.92, 1.25, 4.35)
@@ -365,7 +365,7 @@ seat_index = 30
 seat_name = "Banca Posterior Asiento 5"
 
 [node name="ExitPoint" type="Marker3D" parent="Seats/Seat_Passenger_30"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, -0.40, -0.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.92, -0.43, -0.75)
 
 
 [node name="Cameras" type="Node3D" parent="."]
@@ -453,3 +453,18 @@ text = "TKT-A-19-00006"
 font_size = 44
 modulate = Color(1, 1, 1, 1)
 outline_modulate = Color(0, 0, 0, 0)
+
+[node name="Doors" type="Node3D" parent="."]
+
+[node name="Door_Front_Right" type="Marker3D" parent="Doors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.35, 0.5, -3.65)
+
+[node name="Door_Rear_Right" type="Marker3D" parent="Doors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.35, 0.5, 3.65)
+
+[node name="Interior_Entry" type="Marker3D" parent="Doors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.82, -3.5)
+
+[node name="Exterior_Exit" type="Marker3D" parent="Doors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.95, 0.0, -3.65)
+

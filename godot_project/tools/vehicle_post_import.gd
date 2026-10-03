@@ -12,11 +12,13 @@ const EXCLUDE_PREFIXES: Array[String] = [
 	"Txt_", "Texto_", "Rotulo_", "Panel_Rotulo_", "Silueta_", 
 	"Letras_", "Bus_Rutero_", "Bus_Limpiaparabrisas", "Bus_Parrilla_Cromos_",
 	"Bus_Tuercas_", "Bus_Calaveras_", "Bus_Faros_", "Bus_Galibo_", 
-	"Bus_Rines_", "Bus_Neumaticos_", "Bus_Interior_Pasamanos", "Bus_Guardafangos_"
+	"Bus_Rines_", "Bus_Neumaticos_", "Bus_Interior_Pasamanos", "Bus_Guardafangos_",
+	"Bus_Interior_Asientos_", "Bus_Techo_Curvo", "Bus_Interior_Tablero_Chofer"
 ]
 
 const EXCLUDE_CONTAINS: Array[String] = [
-	"_Txt_", "_Texto_", "_rotulo_", "_letrero_", "Vidrios", "Parabrisas", "Cristal", "Canceleria", "Textura_"
+	"_Txt_", "_Texto_", "_rotulo_", "_letrero_", "Vidrios", "Parabrisas", "Cristal", "Canceleria", "Textura_",
+	"Asientos", "Techo_Curvo", "Tablero_Chofer"
 ]
 
 func _post_import(scene: Node) -> Object:

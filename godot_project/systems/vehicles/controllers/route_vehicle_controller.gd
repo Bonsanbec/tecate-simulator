@@ -194,7 +194,7 @@ func _physics_process(delta: float) -> void:
 	var boosted_cruise_kmh = minf(max_speed_kmh, base_cruise_kmh * speed_boost_factor)
 	var effective_max_kmh = minf(v_curve_phys_max_kmh, boosted_cruise_kmh)
 
-	var speed_curve_factor = clampf(current_forward.dot(desired_heading), 0.35, 1.0)
+	var speed_curve_factor = clampf(current_forward.dot(desired_heading), 0.70, 1.0)
 	var effective_max_ms = (effective_max_kmh / 3.6) * speed_curve_factor * (surf_profile.max_speed_factor if surf_profile else 1.0)
 
 	# 6. Desaceleración suave ante paradas inminentes (estación o cruce programado)
@@ -207,21 +207,18 @@ func _physics_process(delta: float) -> void:
 	if is_approaching_stop and dist_to_target < 22.0:
 		effective_max_ms = minf(effective_max_ms, maxf(1.8, dist_to_target * 0.38))
 
-	# 7. Modelo de Transmisión de 6 Marchas con micro-corte de embrague (Fase 3)
+	# 7. Modelo de Transmisión de 6 Marchas con micro-corte de embrague
 	update_transmission(current_speed_kmh, delta)
 	var current_h_speed = velocity.dot(current_forward)
 
 	var accel_rate = engine_acceleration
 	if is_shifting:
-		# Micro-corte momentáneo de par motor (0.22 s) característico de cambios pesados
-		accel_rate *= 0.15
+		accel_rate *= 0.50 # Transición suave durante cambio de marcha
 	else:
-		# Empuje diésel enérgico en marchas medias y altas
-		accel_rate *= lerpf(0.65, 1.10, float(current_gear) / float(total_gears))
+		accel_rate *= lerpf(0.75, 1.10, float(current_gear) / float(total_gears))
 
 	var new_speed: float
 	if effective_max_ms < current_h_speed:
-		# Freno motor (downshift) o frenado de servicio
 		var engine_brake = brake_deceleration * (0.45 + 0.1 * (total_gears - current_gear))
 		new_speed = move_toward(current_h_speed, effective_max_ms, engine_brake * delta)
 	else:
@@ -230,17 +227,17 @@ func _physics_process(delta: float) -> void:
 	velocity.x = current_forward.x * new_speed
 	velocity.z = current_forward.z * new_speed
 
-	# 8. Suspensión Reactiva sin Rebotes (Fase 2)
+	# 8. Suspensión Firme con Adherencia Continua al Pavimento (Cero Rebotes)
 	_process_suspension_height(delta, target_pt.y)
 
 	move_and_slide()
 	current_speed_kmh = Vector2(velocity.x, velocity.z).length() * 3.6
 
-	# 9. Rotación Procedural de Ruedas por Distancia Avanzada (Fase 2)
+	# 9. Rotación Procedural de Ruedas por Distancia Avanzada
 	var step_dist = Vector2(velocity.x, velocity.z).length() * delta
 	_wheel_rot_angle += step_dist / WHEEL_RADIUS
 
-## Controlador suave de altura de marcha por raycasts de suspensión (elimina saltos y vuelos)
+## Seguimiento de rasante críticamente amortiguado con adherencia continua sobre el pavimento (cero rebotes)
 func _process_suspension_height(delta: float, fallback_target_y: float) -> void:
 	var ground_hits: Array[float] = []
 	for ray in suspension_rays:
@@ -254,17 +251,11 @@ func _process_suspension_height(delta: float, fallback_target_y: float) -> void:
 			sum_y += gy
 		target_ground_y = sum_y / float(ground_hits.size())
 
-	# Modelo de resorte-amortiguador crítico suave (spring-damper)
-	var y_err = target_ground_y - global_position.y
-	var spring_k = 26.0
-	var damping_c = 10.2
-	var y_accel = (y_err * spring_k) - (velocity.y * damping_c)
-	velocity.y += y_accel * delta
-	velocity.y = clampf(velocity.y, -5.5, 5.5)
-
-	# Adherencia continua sin penetración ni despegues
-	if absf(y_err) < 0.04:
-		global_position.y = move_toward(global_position.y, target_ground_y, 2.0 * delta)
+	# Seguimiento de rasante de primer orden críticamente amortiguado (cero overshoot, neumáticos asentados)
+	var prev_y = global_position.y
+	global_position.y = lerpf(global_position.y, target_ground_y, clampf(14.0 * delta, 0.0, 1.0))
+	velocity.y = (global_position.y - prev_y) / maxf(0.0001, delta)
+	velocity.y = clampf(velocity.y, -6.0, 6.0)
 
 ## Calcula el radio de curvatura local R a partir de los waypoints adelante en el plano XZ
 func _get_path_curvature_radius() -> float:

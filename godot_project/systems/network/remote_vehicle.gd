@@ -12,6 +12,7 @@ var is_route_vehicle: bool = false
 var snapshot_history: Array[Dictionary] = []
 var current_velocity: Vector3 = Vector3.ZERO
 var wheel_rotation_angle: float = 0.0
+var _playback_time: float = -1.0
 
 # Nodos visuales y estructurales
 var vehicle_mesh_root: Node3D
@@ -43,6 +44,14 @@ func setup(id: int, is_route: bool = false) -> void:
 	_create_seats_and_mounts()
 
 func _adjust_chassis_collision() -> void:
+	if is_route_vehicle:
+		# En autobuses de ruta, las colisiones proceden de las submallas estructurales del .glb (piso y carrocería)
+		# evitando macro-cajas monolíticas que sellan el habitáculo interior (Reglas 5 y 8)
+		var existing_col = get_node_or_null("BodyCollision")
+		if existing_col:
+			existing_col.queue_free()
+		return
+
 	var col = get_node_or_null("BodyCollision") as CollisionShape3D
 	if not col:
 		col = CollisionShape3D.new()
@@ -50,12 +59,8 @@ func _adjust_chassis_collision() -> void:
 		add_child(col)
 
 	var box = BoxShape3D.new()
-	if is_route_vehicle:
-		box.size = Vector3(2.5, 2.7, 9.6)
-		col.position = Vector3(0, 1.5, 0)
-	else:
-		box.size = Vector3(1.8, 1.4, 4.2)
-		col.position = Vector3(0, 0.9, 0)
+	box.size = Vector3(1.8, 1.4, 4.2)
+	col.position = Vector3(0, 0.9, 0)
 	col.shape = box
 
 func _create_nameplate() -> void:
@@ -326,12 +331,22 @@ func _physics_process(delta: float) -> void:
 		rotation.x = deg_to_rad(snapshot_history[0]["pitch"])
 		current_velocity = snapshot_history[0]["velocity"]
 	else:
-		var render_time = (Time.get_ticks_msec() / 1000.0) - interpolation_delay
+		var target_render_time = (Time.get_ticks_msec() / 1000.0) - interpolation_delay
+		if _playback_time < 0.0:
+			_playback_time = target_render_time
+		else:
+			# Avance monótono suave hacia el tiempo objetivo (cero retrocesos en el tiempo)
+			var time_diff = target_render_time - _playback_time
+			if absf(time_diff) > 0.5:
+				_playback_time = target_render_time
+			else:
+				_playback_time += delta * clampf(1.0 + (time_diff * 2.0), 0.5, 1.8)
+
 		var prev_idx = -1
 		var next_idx = -1
 
 		for i in range(snapshot_history.size() - 1):
-			if snapshot_history[i]["time"] <= render_time and snapshot_history[i + 1]["time"] >= render_time:
+			if snapshot_history[i]["time"] <= _playback_time and snapshot_history[i + 1]["time"] >= _playback_time:
 				prev_idx = i
 				next_idx = i + 1
 				break
@@ -340,7 +355,7 @@ func _physics_process(delta: float) -> void:
 			var s0 = snapshot_history[prev_idx]
 			var s1 = snapshot_history[next_idx]
 			var span = max(0.0001, s1["time"] - s0["time"])
-			var t = clampf((render_time - s0["time"]) / span, 0.0, 1.0)
+			var t = clampf((_playback_time - s0["time"]) / span, 0.0, 1.0)
 
 			_set_pos(s0["position"].lerp(s1["position"], t))
 			rotation.y = lerp_angle(deg_to_rad(-s0["yaw"]), deg_to_rad(-s1["yaw"]), t)
@@ -349,9 +364,9 @@ func _physics_process(delta: float) -> void:
 		else:
 			var latest = snapshot_history.back()
 			var current_p = global_position if is_inside_tree() else position
-			_set_pos(current_p.lerp(latest["position"], delta * 15.0))
-			rotation.y = lerp_angle(rotation.y, deg_to_rad(-latest["yaw"]), delta * 15.0)
-			rotation.x = lerp_angle(rotation.x, deg_to_rad(latest["pitch"]), delta * 15.0)
+			_set_pos(current_p.lerp(latest["position"], delta * 12.0))
+			rotation.y = lerp_angle(rotation.y, deg_to_rad(-latest["yaw"]), delta * 12.0)
+			rotation.x = lerp_angle(rotation.x, deg_to_rad(latest["pitch"]), delta * 12.0)
 			current_velocity = latest["velocity"]
 
 	# Telemetría de velocidad real

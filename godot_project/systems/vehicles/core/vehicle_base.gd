@@ -96,6 +96,16 @@ var suspension_rays: Array[RayCast3D]:
 	set(val):
 		_internal_suspension_rays = val
 
+# Puertas de abordaje y descenso
+var _internal_doors: Array[Marker3D] = []
+var doors: Array[Marker3D]:
+	get:
+		if _internal_doors.is_empty():
+			_discover_doors()
+		return _internal_doors
+	set(val):
+		_internal_doors = val
+
 # Nodos de iluminación opcionales
 var headlights_root: Node3D = null
 var taillights_root: Node3D = null
@@ -106,6 +116,7 @@ var default_gravity: float = ProjectSettings.get_setting("physics/3d/default_gra
 func _ready() -> void:
 	add_to_group("vehicles")
 	var _fs = fuel_system # Dispara inicialización
+	_discover_doors()
 	_discover_seats()
 	_discover_suspension_rays()
 	_discover_lights()
@@ -118,6 +129,61 @@ func _initialize_components() -> void:
 		surface_detector.name = "SurfaceDetector"
 		add_child(surface_detector)
 	current_surface_profile = SurfaceProfileClass.create_default(SurfaceProfileClass.SurfaceType.ASPHALT)
+
+func _discover_doors() -> void:
+	_internal_doors.clear()
+	var doors_container = get_node_or_null("Doors")
+	if doors_container:
+		for child in doors_container.get_children():
+			if child is Marker3D:
+				_internal_doors.append(child as Marker3D)
+	if _internal_doors.is_empty():
+		for child in find_children("Door_*", "Marker3D", true, false):
+			_internal_doors.append(child as Marker3D)
+
+## Retorna la puerta de abordaje más cercana a una posición global dada
+func get_closest_boarding_door(pos: Vector3) -> Marker3D:
+	if doors.is_empty():
+		_discover_doors()
+	if doors.is_empty():
+		return null
+	var closest: Marker3D = null
+	var min_d_sq = INF
+	for d in doors:
+		var d_sq = pos.distance_squared_to(d.global_position)
+		if d_sq < min_d_sq:
+			min_d_sq = d_sq
+			closest = d
+	return closest
+
+## Verifica si una posición (jugador a pie) se encuentra cerca de una puerta de acceso
+func is_near_boarding_door(pos: Vector3, max_dist: float = 2.2) -> bool:
+	if doors.is_empty():
+		_discover_doors()
+	if doors.is_empty():
+		# Fallback para automóviles genéricos sin puertas marcadas: zona lateral derecha/izquierda
+		var local_p = to_local(pos)
+		return absf(local_p.x) >= 0.8 and absf(local_p.x) <= 2.2 and absf(local_p.z) <= 2.8
+	var d = get_closest_boarding_door(pos)
+	return d != null and pos.distance_to(d.global_position) <= max_dist
+
+## Retorna la posición global del pasillo interior tras abordar por la puerta
+func get_interior_entry_position() -> Vector3:
+	var entry_node = get_node_or_null("Doors/Interior_Entry") as Marker3D
+	if entry_node:
+		return entry_node.global_position
+	# Fallback: frente al acceso delantero sobre el piso (Y=0.82)
+	return to_global(Vector3(0.0, 0.82, -3.2))
+
+## Retorna la posición global de descenso seguro en la banqueta exterior
+func get_exterior_exit_position() -> Vector3:
+	var exit_node = get_node_or_null("Doors/Exterior_Exit") as Marker3D
+	if exit_node:
+		return exit_node.global_position
+	var d = get_closest_boarding_door(global_position)
+	if d:
+		return d.global_position + (global_transform.basis.x * 0.8)
+	return global_position + (global_transform.basis.x * 2.0)
 
 func _discover_seats() -> void:
 	_internal_seats.clear()
@@ -246,7 +312,8 @@ func exit_vehicle(player: Node3D) -> bool:
 					engine_state_changed.emit(false)
 			vehicle_exited.emit(player, s)
 			return true
-	return false
+	vehicle_exited.emit(player, null)
+	return true
 
 ## Física de adaptación topográfica e inclinación con el terreno de Tecate
 func process_terrain_alignment(delta: float) -> Vector3:
@@ -309,18 +376,23 @@ func update_transmission(speed_kmh: float, delta: float) -> void:
 		if shift_timer <= 0.0:
 			is_shifting = false
 
-	# Determinar marcha óptima según rango de velocidad
+	# Determinar marcha óptima según la velocidad con histéresis de reducción
 	var target_gear = 1
-	for g in range(1, gear_speeds_kmh.size()):
-		if speed_kmh >= gear_speeds_kmh[g - 1] * 0.82:
+	for g in range(total_gears, 0, -1):
+		var threshold = gear_speeds_kmh[g - 1]
+		# Margen de histéresis: si se reduce, exigir caer por debajo del umbral con tolerancia
+		if g < current_gear:
+			threshold -= 2.0
+		if speed_kmh >= threshold:
 			target_gear = g
+			break
 
 	target_gear = clampi(target_gear, 1, total_gears)
 	if target_gear != current_gear and not is_shifting:
 		var old_gear = current_gear
 		current_gear = target_gear
 		is_shifting = true
-		shift_timer = 0.22 # 220ms de corte transitorio de embrague
+		shift_timer = 0.18 # 180ms de transición suave
 		gear_changed.emit(old_gear, current_gear)
 
 	# Simular RPM de motor pesado diésel (850 a 2350 RPM)

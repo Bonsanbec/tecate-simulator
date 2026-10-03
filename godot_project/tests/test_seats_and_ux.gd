@@ -120,7 +120,7 @@ func test_player_sitting_posture_and_skeleton() -> void:
 	seat.queue_free()
 
 func test_stand_up_at_high_speed() -> void:
-	print("\n--- Prueba 3: Levantarse Sin Restricción de Velocidad en Carretera ---")
+	print("\n--- Prueba 3: Levantarse Sin Restricción de Velocidad y Permanencia a Bordo ---")
 	var player = PlayerController.new()
 	root.add_child(player)
 	
@@ -132,16 +132,33 @@ func test_stand_up_at_high_speed() -> void:
 	bus.current_speed_kmh = 88.0
 	bus.velocity = Vector3(0, 0, 24.4)
 	
-	# Buscar primer asiento libre
+	# 1. Abordar el autobús por la puerta (ingresa al pasillo de pie)
+	var board_res = player.board_vehicle(bus)
+	assert_true(board_res, "El jugador aborda el autobús por la puerta al pasillo")
+	assert_true(player.current_vehicle == bus, "current_vehicle vinculado al autobús")
+	assert_true(not player.is_sitting, "El jugador ingresa de pie en el pasillo")
+	
+	# 2. Sentarse en una butaca libre del autobús
 	var target_seat = bus.get_available_passenger_seats()[0]
 	player.sit_in_seat(target_seat)
 	assert_true(player.is_sitting, "Jugador sentado en el autobús a 88 km/h")
 	
-	# Levantarse del asiento mientras el autobús va a 88 km/h
+	# 3. Levantarse del asiento mientras el autobús va a 88 km/h
 	var stand_res = player.stand_up()
 	assert_true(stand_res, "El jugador puede levantarse en el pasillo a 88 km/h sin bloqueos")
 	assert_true(not player.is_sitting, "El jugador está de pie")
-	assert_true(player.current_vehicle == null, "current_vehicle desvinculado tras pararse del asiento")
+	assert_true(player.current_vehicle == bus, "El jugador PERMANECE A BORDO del autobús como pasajero de pie en el pasillo")
+	
+	# 4. Descenso: si el autobús viaja a 88 km/h, dismount_vehicle previene caída peligrosa
+	var premature_dismount = player.dismount_vehicle()
+	assert_true(not premature_dismount, "dismount_vehicle bloquea descenso a 88 km/h sugiriendo [T] parada")
+	
+	# 5. Descenso con autobús detenido en estación
+	bus.current_speed_kmh = 0.0
+	bus.velocity = Vector3.ZERO
+	var safe_dismount = player.dismount_vehicle()
+	assert_true(safe_dismount, "El jugador desciende con éxito a la banqueta con el autobús detenido")
+	assert_true(player.current_vehicle == null, "current_vehicle desvinculado tras descender a la calle")
 	
 	player.queue_free()
 	bus.queue_free()
