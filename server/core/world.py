@@ -149,21 +149,6 @@ class SharedWorld:
 
     def spawn_default_world_entities(self) -> None:
         """Instancia la flota autoritativa de transporte público, vehículos libres y NPCs."""
-        # 1. Automóvil urbano conducible en estacionamiento sobre Calle Ortiz Rubio
-        car = DynamicEntity(
-            entity_id=1001,
-            entity_type=EntityType.VEHICLE,
-            pos_x=-58.0,
-            pos_y=399.6,
-            pos_z=8.0,
-            yaw=0.0,
-            pitch=0.0,
-            flags=VehicleFlags.NONE,
-            properties={"fuel": 80.0, "vehicle_type": "car", "driver_id": None, "passengers": []},
-        )
-        self.upsert_entity(car)
-        car_ctrl = FreeVehicleController(car, max_fuel=80.0)
-        self.simulation_manager.register_controller(car_ctrl)
 
         # 2. Flota autoritativa de autobuses "El Hongo"
         route_path = self._resolve_route_json_path()
@@ -228,41 +213,6 @@ class SharedWorld:
                 self.upsert_entity(bus)
                 self.simulation_manager.register_controller(bus_ctrl)
                 logger.info("Flota autoritativa instanciada con unidad única de respaldo.")
-        else:
-            logger.warning("No se encontró bus_hongo_route.json en '%s'. Usando circuito urbano procedural activo de emergencia.", route_path)
-            fallback_waypoints = [
-                (164.0, 402.25, -32.0),
-                (167.7, 403.45, -47.5),
-                (250.8, 404.39, -69.2),
-                (368.1, 409.85, -81.2),
-                (189.2, 401.02, 88.6),
-                (99.5, 399.51, 99.6),
-                (32.4, 398.06, 107.5),
-                (-7.8, 397.62, 111.5),
-                (-127.4, 397.9, 126.3),
-                (160.0, 401.99, -6.0),
-            ]
-            bus = DynamicEntity(
-                entity_id=1002,
-                entity_type=EntityType.VEHICLE,
-                flags=(VehicleFlags.ROUTE_VEHICLE | VehicleFlags.ENGINE_RUNNING | VehicleFlags.HEADLIGHTS),
-                properties={
-                    "fuel": 999.0,
-                    "vehicle_type": "bus_route",
-                    "vehicle_name": "Autobús El Hongo (Unidad 24)",
-                    "driver_id": None,
-                    "passengers": [],
-                },
-            )
-            bus_ctrl = RouteVehicleController(
-                entity=bus,
-                waypoints=fallback_waypoints,
-                station_indices={0: {"name": "Central Camionera", "dwell_time": 6.0}},
-                cruise_speed_kmh=36.0,
-                max_passengers=30,
-            )
-            self.upsert_entity(bus)
-            self.simulation_manager.register_controller(bus_ctrl)
 
         # 3. Ciudadanos y peatones autoritativos del centro urbano de Tecate
         # Simulados enteramente por el servidor TKT/1, recorriendo banquetas y áreas cívicas
