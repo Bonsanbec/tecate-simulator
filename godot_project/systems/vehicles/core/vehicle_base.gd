@@ -135,7 +135,7 @@ func _discover_doors() -> void:
 	var doors_container = get_node_or_null("Doors")
 	if doors_container:
 		for child in doors_container.get_children():
-			if child is Marker3D:
+			if child is Marker3D and child.name.begins_with("Door_"):
 				_internal_doors.append(child as Marker3D)
 	if _internal_doors.is_empty():
 		for child in find_children("Door_*", "Marker3D", true, false):

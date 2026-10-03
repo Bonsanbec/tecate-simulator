@@ -449,6 +449,8 @@ func _physics_process(delta: float) -> void:
 	else:
 		_process_walking(delta)
 
+	_scan_nearby_interactive_objects(delta)
+
 	# Actualizar cinemática inversa de pies y adaptación al suelo
 	if foot_ik:
 		foot_ik.update_ik(delta, is_on_floor() and not is_flying and not is_sitting)
@@ -819,6 +821,11 @@ func sit_in_seat(seat: Node) -> bool:
 		network_client.send_vehicle_enter(v_id, seat_idx, is_drv)
 
 	var s_name = seat.seat_name if "seat_name" in seat else "Asiento"
+	if hud:
+		var prompt = "[E] o [Espacio] Levantarse"
+		if _get_riding_bus():
+			prompt += "  |  [T] Solicitar Parada"
+		hud.set_interaction_prompt(prompt)
 	print("[PlayerController] Sentado con éxito en: %s" % s_name)
 	return true
 
@@ -1084,10 +1091,10 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 
 	var my_pos = global_position
 
-	# 1. Escaneo de asientos cercanos (radio estricto ≤ 1.1 m, dist_sq ≤ 1.21)
+	# 1. Escaneo de asientos cercanos (radio ergonómico ≤ 1.5 m, dist_sq ≤ 2.25)
 	if not is_sitting:
 		var seats = tree.get_nodes_in_group("seats")
-		var min_seat_dist_sq = 1.21 # radio 1.1 m
+		var min_seat_dist_sq = 2.25 # radio 1.5 m
 		for s in seats:
 			if s is Node3D and s.is_inside_tree():
 				if s.has_method("is_occupied") and s.is_occupied():
@@ -1123,20 +1130,20 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 		for veh in vehicles:
 			if veh is VehicleBase and veh.is_inside_tree():
 				if veh.doors.size() > 0 or veh.has_method("is_near_boarding_door"):
-					if veh.is_near_boarding_door(my_pos, 1.8):
+					if veh.is_near_boarding_door(my_pos, 2.5):
 						_nearby_vehicle = veh as VehicleBase
 						break
 				else:
-					# Vehículo particular sin puertas modeladas: proximidad estricta (≤ 2.0 m)
+					# Vehículo particular sin puertas modeladas: proximidad estricta (≤ 2.2 m)
 					var d_sq = my_pos.distance_squared_to(veh.global_position)
-					if d_sq < 4.0:
+					if d_sq < 4.84:
 						_nearby_vehicle = veh as VehicleBase
 						break
 	else:
 		# A bordo: verificar si está junto a una puerta para descender
 		if not is_sitting:
 			if current_vehicle.doors.size() > 0 or current_vehicle.has_method("is_near_boarding_door"):
-				_near_exit_door = current_vehicle.is_near_boarding_door(my_pos, 1.8)
+				_near_exit_door = current_vehicle.is_near_boarding_door(my_pos, 2.2)
 			else:
 				_near_exit_door = true
 
