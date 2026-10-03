@@ -1,10 +1,12 @@
 class_name PlayerController
-extends CharacterBody3D
+extends "res://systems/characters/citizen_entity.gd"
 
 ## Controlador Integral del Jugador Humanoide para Tecate Simulator
-## Integra biomecánica realista de Tecate (inercia, pendientes, escalado de guarniciones),
-## esqueleto rigged (Skeleton3D), cinemática inversa de pies (Foot IK), director de cámaras
-## tripartito (1P/2P/3P con alternancia F5), HUD inmersivo y arquitectura multijugador.
+## Hereda de CitizenEntity (compartiendo el cuerpo rígido CharacterBody3D con
+## cápsula antropométrica, rig 3D y locomoción procedural) e integra los
+## subsistemas de control del jugador: biomecánica de marcha/carrera en pendientes,
+## Foot IK, director de cámaras tripartito (1P/2P/3P con alternancia F5), HUD inmersivo
+## y sincronización de red con el servidor TKT/1.
 
 const CameraDirectorClass = preload("res://systems/player/camera_director.gd")
 const FootIKClass = preload("res://systems/player/foot_ik_controller.gd")
@@ -35,7 +37,6 @@ var _near_exit_door: bool = false
 var _vehicle_scan_timer: float = 0.0
 
 # Parámetros Biomecánicos de Marcha y Carrera
-@export var mass_kg: float = 75.0
 @export var walk_speed: float = 2.40       # ~8.6 km/h (caminata urbana fluida)
 @export var jog_speed: float = 3.80        # ~13.7 km/h
 @export var sprint_speed: float = 6.20     # ~22.3 km/h
@@ -59,7 +60,6 @@ var _prev_avatar_visible: bool = true
 var is_flying: bool = false
 var space_press_timer: float = 0.0
 const DOUBLE_TAP_WINDOW: float = 0.35
-const DEFAULT_SNAP_LENGTH: float = 0.30
 
 # Variables de telemetría y topografía de Tecate
 var current_slope_angle: float = 0.0
@@ -86,40 +86,9 @@ var _net_tick: int = 0
 var _net_tick_timer: float = 0.0
 const NET_TICK_RATE: float = 30.0
 
-# Nodos del avatar 3D rigged
-var humanoid_scene: Node3D
-var skeleton: Skeleton3D
-var mesh_body: MeshInstance3D
-var mesh_head: MeshInstance3D
-
-# Huesos para animación procedural (brazos, manos, piernas, columna)
-var bone_upperarm_l: int = -1
-var bone_upperarm_r: int = -1
-var bone_forearm_l: int = -1
-var bone_forearm_r: int = -1
-var bone_upperleg_l: int = -1
-var bone_upperleg_r: int = -1
-var bone_lowerleg_l: int = -1
-var bone_lowerleg_r: int = -1
-var bone_chest: int = -1
-
-# Rotaciones base de reposo de cada hueso para composición canónica
-var _base_rot_upperarm_l: Quaternion = Quaternion.IDENTITY
-var _base_rot_upperarm_r: Quaternion = Quaternion.IDENTITY
-var _base_rot_forearm_l: Quaternion = Quaternion.IDENTITY
-var _base_rot_forearm_r: Quaternion = Quaternion.IDENTITY
-var _base_rot_upperleg_l: Quaternion = Quaternion.IDENTITY
-var _base_rot_upperleg_r: Quaternion = Quaternion.IDENTITY
-var _base_rot_lowerleg_l: Quaternion = Quaternion.IDENTITY
-var _base_rot_lowerleg_r: Quaternion = Quaternion.IDENTITY
-var _base_rot_chest: Quaternion = Quaternion.IDENTITY
-
 # Banderas de estado de teclas continuas para alta fidelidad en vuelo
 var _is_space_held: bool = false
 var _is_shift_held: bool = false
-
-# Ciclo de locomoción biomecánico de extremidades
-var locomotion_phase: float = 0.0
 
 # Compatibilidad con scripts existentes que buscan player.camera, player.rot_x y player.rot_y
 var camera: Camera3D:
@@ -145,19 +114,17 @@ var rot_y: float:
 			camera_director.rot_yaw = val
 
 func _ready():
+	is_locally_controlled = true
+	super._ready()
+
 	spawn_position = global_position
 	spawn_rotation_y = rotation_degrees.y
 
-	# Configuración de CharacterBody3D para colisión óptima en el terreno de Tecate
-	safe_margin = 0.02
-	floor_max_angle = deg_to_rad(65.0)
-	floor_constant_speed = true
-	floor_stop_on_slope = true
-	floor_block_on_wall = true
-	floor_snap_length = DEFAULT_SNAP_LENGTH
-
 	_initialize_submodules()
-	_initialize_humanoid_rig()
+	if skeleton and foot_ik:
+		foot_ik.setup(self, skeleton)
+	if camera_director and mesh_body and mesh_head:
+		camera_director.setup(self, mesh_body, mesh_head)
 
 	# Si existe StartScreen en la escena, pausar inputs y ocultar HUD al inicio
 	var start_screen = get_parent().get_node_or_null("StartScreen") if get_parent() else null
@@ -215,45 +182,10 @@ func _initialize_submodules() -> void:
 		network_client.start_connection()
 
 func _initialize_humanoid_rig() -> void:
-	# Cargar e instanciar el modelo humanoide rigged
-	var model_res = load("res://assets/characters/humanoid_player.glb")
-	if not model_res:
-		push_error("[PlayerController] No se encontró res://assets/characters/humanoid_player.glb")
-		return
-
-	humanoid_scene = model_res.instantiate() as Node3D
-	humanoid_scene.name = "HumanoidAvatar"
-	add_child(humanoid_scene)
-
-	# Localizar Skeleton3D y mallas
-	skeleton = humanoid_scene.find_child("Skeleton3D", true, false) as Skeleton3D
-	mesh_body = humanoid_scene.find_child("Player_Body_Mesh", true, false) as MeshInstance3D
-	mesh_head = humanoid_scene.find_child("Player_Head_Mesh", true, false) as MeshInstance3D
-
-	if skeleton:
-		bone_upperarm_l = skeleton.find_bone("UpperArm.L")
-		bone_upperarm_r = skeleton.find_bone("UpperArm.R")
-		bone_forearm_l = skeleton.find_bone("Forearm.L")
-		bone_forearm_r = skeleton.find_bone("Forearm.R")
-		bone_upperleg_l = skeleton.find_bone("UpperLeg.L")
-		bone_upperleg_r = skeleton.find_bone("UpperLeg.R")
-		bone_lowerleg_l = skeleton.find_bone("LowerLeg.L")
-		bone_lowerleg_r = skeleton.find_bone("LowerLeg.R")
-		bone_chest = skeleton.find_bone("Chest")
-
-		if bone_upperarm_l != -1: _base_rot_upperarm_l = skeleton.get_bone_pose_rotation(bone_upperarm_l)
-		if bone_upperarm_r != -1: _base_rot_upperarm_r = skeleton.get_bone_pose_rotation(bone_upperarm_r)
-		if bone_forearm_l != -1: _base_rot_forearm_l = skeleton.get_bone_pose_rotation(bone_forearm_l)
-		if bone_forearm_r != -1: _base_rot_forearm_r = skeleton.get_bone_pose_rotation(bone_forearm_r)
-		if bone_upperleg_l != -1: _base_rot_upperleg_l = skeleton.get_bone_pose_rotation(bone_upperleg_l)
-		if bone_upperleg_r != -1: _base_rot_upperleg_r = skeleton.get_bone_pose_rotation(bone_upperleg_r)
-		if bone_lowerleg_l != -1: _base_rot_lowerleg_l = skeleton.get_bone_pose_rotation(bone_lowerleg_l)
-		if bone_lowerleg_r != -1: _base_rot_lowerleg_r = skeleton.get_bone_pose_rotation(bone_lowerleg_r)
-		if bone_chest != -1: _base_rot_chest = skeleton.get_bone_pose_rotation(bone_chest)
-
+	super._initialize_humanoid_rig()
+	if skeleton and foot_ik:
 		foot_ik.setup(self, skeleton)
-
-	if camera_director:
+	if camera_director and mesh_body and mesh_head:
 		camera_director.setup(self, mesh_body, mesh_head)
 
 func _on_perspective_changed(mode: int) -> void:

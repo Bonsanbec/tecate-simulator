@@ -6,28 +6,33 @@ extends Node
 
 signal player_count_changed(count: int)
 
-@export var remote_player_scene: PackedScene = preload("res://systems/network/remote_player.tscn")
+@export var citizen_entity_scene: PackedScene = preload("res://systems/network/citizen_entity.tscn")
+@export var remote_player_scene: PackedScene = preload("res://systems/network/citizen_entity.tscn")
 @export var remote_vehicle_scene: PackedScene = preload("res://systems/network/remote_vehicle.tscn")
-@export var remote_npc_scene: PackedScene = preload("res://systems/network/remote_npc.tscn")
+@export var remote_npc_scene: PackedScene = preload("res://systems/network/citizen_entity.tscn")
 
+const CitizenEntityClass = preload("res://systems/characters/citizen_entity.gd")
 const RemoteNPCClass = preload("res://systems/network/remote_npc.gd")
 
 var network_client: NetworkClient
 var remote_entities_container: Node3D
-var active_remote_players: Dictionary = {}  # entity_id -> RemotePlayer
+var active_remote_players: Dictionary = {}  # entity_id -> CitizenEntity
 var active_remote_vehicles: Dictionary = {} # entity_id -> RemoteVehicle
-var active_remote_npcs: Dictionary = {}     # entity_id -> Node3D (RemoteNPC)
+var active_remote_npcs: Dictionary = {}     # entity_id -> CitizenEntity
 var _entity_last_seen: Dictionary = {}      # entity_id -> float (timestamp)
 
 const ENTITY_TIMEOUT: float = 3.0
 
 var offline_fallback_container: Node3D = null
 
+func _ensure_remote_entities_container() -> void:
+	if not remote_entities_container:
+		remote_entities_container = Node3D.new()
+		remote_entities_container.name = "RemoteEntities"
+		add_child(remote_entities_container)
+
 func _ready():
-	# Crear contenedor para entidades remotas en la escena
-	remote_entities_container = Node3D.new()
-	remote_entities_container.name = "RemoteEntities"
-	add_child(remote_entities_container)
+	_ensure_remote_entities_container()
 
 	# Localizar o instanciar NetworkClient
 	network_client = get_node_or_null("../NetworkClient") as NetworkClient
@@ -63,6 +68,7 @@ func _on_disconnected(_reason: String) -> void:
 	player_count_changed.emit(1)
 
 func _on_snapshot_received(_server_tick: int, entities: Array[TKTCodec.EntityRecord]) -> void:
+	_ensure_remote_entities_container()
 	var now = Time.get_ticks_msec() / 1000.0
 	var local_id = network_client.player_entity_id if network_client else 0
 
@@ -85,11 +91,11 @@ func _on_snapshot_received(_server_tick: int, entities: Array[TKTCodec.EntityRec
 			_entity_last_seen[rec.entity_id] = now
 
 		elif rec.entity_type == TKTCodec.EntityType.PLAYER:
-			var remote_p: RemotePlayer = active_remote_players.get(rec.entity_id)
+			var remote_p = active_remote_players.get(rec.entity_id) as CitizenEntityClass
 			if not remote_p:
-				remote_p = remote_player_scene.instantiate() as RemotePlayer
+				remote_p = (citizen_entity_scene if citizen_entity_scene else remote_player_scene).instantiate() as CitizenEntityClass
 				remote_entities_container.add_child(remote_p)
-				remote_p.setup(rec.entity_id)
+				remote_p.setup(rec.entity_id, false, "Jugador #%d" % rec.entity_id)
 				active_remote_players[rec.entity_id] = remote_p
 				print("[MultiplayerManager] Nuevo jugador remoto avistado: ID=%d" % rec.entity_id)
 				player_count_changed.emit(get_player_count())
@@ -98,17 +104,16 @@ func _on_snapshot_received(_server_tick: int, entities: Array[TKTCodec.EntityRec
 			_entity_last_seen[rec.entity_id] = now
 
 		elif rec.entity_type == TKTCodec.EntityType.NPC:
-			var remote_npc: Node3D = active_remote_npcs.get(rec.entity_id)
+			var remote_npc = active_remote_npcs.get(rec.entity_id) as CitizenEntityClass
 			if not remote_npc:
-				remote_npc = remote_npc_scene.instantiate() as Node3D
+				remote_npc = (citizen_entity_scene if citizen_entity_scene else remote_npc_scene).instantiate() as CitizenEntityClass
 				remote_entities_container.add_child(remote_npc)
-				if remote_npc.has_method("setup"):
-					remote_npc.setup(rec.entity_id)
+				var c_name = _get_citizen_name_by_id(rec.entity_id)
+				remote_npc.setup(rec.entity_id, true, c_name)
 				active_remote_npcs[rec.entity_id] = remote_npc
-				print("[MultiplayerManager] Nuevo NPC remoto avistado: ID=%d" % rec.entity_id)
+				print("[MultiplayerManager] Nuevo ciudadano remoto avistado: %s (ID=%d)" % [c_name, rec.entity_id])
 
-			if remote_npc.has_method("push_snapshot_record"):
-				remote_npc.push_snapshot_record(rec, Time.get_ticks_msec())
+			remote_npc.push_snapshot_record(rec, Time.get_ticks_msec())
 			_entity_last_seen[rec.entity_id] = now
 
 	# Purgar entidades que dejaron de reportarse
@@ -150,9 +155,11 @@ func _on_event_received(ev: Dictionary) -> void:
 			if not enter_data.is_empty():
 				var remote_v = active_remote_vehicles.get(enter_data["vehicle_id"])
 				var remote_p = active_remote_players.get(entity_id)
+				if not remote_p:
+					remote_p = active_remote_npcs.get(entity_id)
 				if remote_v and remote_p:
 					remote_v.mount_passenger(entity_id, enter_data["seat_index"], remote_p)
-					print("[MultiplayerManager] Jugador %d montado en vehículo %d (asiento %d)" % [
+					print("[MultiplayerManager] Ciudadano/Jugador %d montado en vehículo %d (asiento %d)" % [
 						entity_id, enter_data["vehicle_id"], enter_data["seat_index"]
 					])
 
@@ -164,7 +171,7 @@ func _on_event_received(ev: Dictionary) -> void:
 					var unmounted = remote_v.unmount_passenger(entity_id)
 					if unmounted:
 						remote_entities_container.add_child(unmounted)
-					print("[MultiplayerManager] Jugador %d desmontado del vehículo %d" % [
+					print("[MultiplayerManager] Ciudadano/Jugador %d desmontado del vehículo %d" % [
 						entity_id, exit_data["vehicle_id"]
 					])
 
@@ -214,4 +221,13 @@ func _clear_all_remote_entities() -> void:
 func get_player_count() -> int:
 	# Retorna 1 (jugador local) + cantidad de jugadores remotos activos
 	return 1 + active_remote_players.size()
+
+func _get_citizen_name_by_id(id: int) -> String:
+	match id:
+		3001: return "Don Miguel (Transeúnte)"
+		3002: return "Doña Rosa (Comerciante)"
+		3003: return "Juan Carlos (Peatón Kiosko)"
+		3004: return "Carmen (Espera en Parada)"
+		_: return "Ciudadano #%d" % id
+
 

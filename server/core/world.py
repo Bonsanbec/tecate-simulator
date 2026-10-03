@@ -8,6 +8,7 @@ import os
 from collections import defaultdict
 from typing import Iterator
 
+from server.core.controllers.citizen import CitizenController
 from server.core.controllers.free_vehicle import FreeVehicleController
 from server.core.controllers.npc_pedestrian import NPCPedestrianController
 from server.core.controllers.route_vehicle import RouteVehicleController
@@ -263,51 +264,76 @@ class SharedWorld:
             self.upsert_entity(bus)
             self.simulation_manager.register_controller(bus_ctrl)
 
-        # 3. Peatones y NPCs del centro urbano (Parque Miguel Hidalgo y Presidencia)
-        npc1 = DynamicEntity(
-            entity_id=3001,
-            entity_type=EntityType.NPC,
-            pos_x=-15.0,
-            pos_y=400.0,
-            pos_z=20.0,
-            flags=PlayerFlags.GROUNDED,
-            properties={"name": "Don Miguel (Transeúnte)"},
-        )
-        self.upsert_entity(npc1)
-        npc1_ctrl = NPCPedestrianController(
-            entity=npc1,
-            patrol_points=[
-                (-15.0, 400.0, 20.0),
-                (-5.0, 400.0, 25.0),
-                (10.0, 400.0, 15.0),
-                (-10.0, 400.0, 5.0),
-            ],
-            walk_speed=1.30,
-            name="Don Miguel (Transeúnte)",
-        )
-        self.simulation_manager.register_controller(npc1_ctrl)
+        # 3. Ciudadanos y peatones autoritativos del centro urbano de Tecate
+        # Simulados enteramente por el servidor TKT/1, recorriendo banquetas y áreas cívicas
+        citizens_data = [
+            {
+                "id": 3001,
+                "name": "Don Miguel (Transeúnte)",
+                "spawn": (-15.0, 400.0, 20.0),
+                "patrol": [
+                    (-15.0, 400.0, 20.0),
+                    (-5.0, 400.0, 25.0),
+                    (10.0, 400.0, 15.0),
+                    (-10.0, 400.0, 5.0),
+                ],
+                "speed": 1.30,
+            },
+            {
+                "id": 3002,
+                "name": "Doña Rosa (Comerciante)",
+                "spawn": (-30.0, 400.0, -10.0),
+                "patrol": [
+                    (-30.0, 400.0, -10.0),
+                    (-10.0, 400.0, -15.0),
+                    (-15.0, 400.0, -5.0),
+                ],
+                "speed": 1.15,
+            },
+            {
+                "id": 3003,
+                "name": "Juan Carlos (Peatón Kiosko)",
+                "spawn": (-6.6, 400.2, 5.0),
+                "patrol": [
+                    (-6.6, 400.2, 5.0),
+                    (-2.0, 400.2, 2.0),
+                    (-6.6, 400.2, -2.0),
+                    (-11.0, 400.2, 2.0),
+                ],
+                "speed": 1.25,
+            },
+            {
+                "id": 3004,
+                "name": "Carmen (Espera en Parada)",
+                "spawn": (-50.0, 399.8, 12.0),
+                "patrol": [
+                    (-50.0, 399.8, 12.0),
+                    (-52.0, 399.8, 8.0),
+                    (-48.0, 399.8, 8.0),
+                ],
+                "speed": 1.10,
+            },
+        ]
 
-        npc2 = DynamicEntity(
-            entity_id=3002,
-            entity_type=EntityType.NPC,
-            pos_x=-30.0,
-            pos_y=400.0,
-            pos_z=-10.0,
-            flags=PlayerFlags.GROUNDED,
-            properties={"name": "Doña Rosa (Comerciante)"},
-        )
-        self.upsert_entity(npc2)
-        npc2_ctrl = NPCPedestrianController(
-            entity=npc2,
-            patrol_points=[
-                (-30.0, 400.0, -10.0),
-                (-10.0, 400.0, -15.0),
-                (-15.0, 400.0, -5.0),
-            ],
-            walk_speed=1.15,
-            name="Doña Rosa (Comerciante)",
-        )
-        self.simulation_manager.register_controller(npc2_ctrl)
+        for c_data in citizens_data:
+            c_ent = DynamicEntity(
+                entity_id=c_data["id"],
+                entity_type=EntityType.NPC,
+                pos_x=c_data["spawn"][0],
+                pos_y=c_data["spawn"][1],
+                pos_z=c_data["spawn"][2],
+                flags=PlayerFlags.GROUNDED,
+                properties={"name": c_data["name"]},
+            )
+            self.upsert_entity(c_ent)
+            c_ctrl = CitizenController(
+                entity=c_ent,
+                patrol_points=c_data["patrol"],
+                walk_speed=c_data["speed"],
+                name=c_data["name"],
+            )
+            self.simulation_manager.register_controller(c_ctrl)
+        logger.info("Población de ciudadanos autoritativos instanciada (%d ciudadanos).", len(citizens_data))
 
     def _resolve_route_json_path(self) -> str | None:
         """Localiza de forma robusta la ruta al archivo bus_hongo_route.json."""

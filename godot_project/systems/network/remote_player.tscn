@@ -1,6 +1,14 @@
-[gd_scene load_steps=2 format=3 uid="uid://c7m5y1networkrem"]
+[gd_scene load_steps=3 format=3 uid="uid://c7m5y1networkrem"]
 
 [ext_resource type="Script" path="res://systems/network/remote_player.gd" id="1_remote_script"]
 
-[node name="RemotePlayer" type="Node3D"]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player_rem"]
+radius = 0.25
+height = 1.75
+
+[node name="RemotePlayer" type="CharacterBody3D"]
 script = ExtResource("1_remote_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.875, 0)
+shape = SubResource("CapsuleShape3D_player_rem")

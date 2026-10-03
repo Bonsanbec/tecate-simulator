@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://citizen_entity_tkt_001"]
+
+[ext_resource type="Script" path="res://systems/characters/citizen_entity.gd" id="1_citizen_script"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_citizen"]
+radius = 0.25
+height = 1.75
+
+[node name="CitizenEntity" type="CharacterBody3D"]
+script = ExtResource("1_citizen_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.875, 0)
+shape = SubResource("CapsuleShape3D_citizen")

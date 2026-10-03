@@ -173,8 +173,8 @@ class TestSimulationArchitecture(unittest.TestCase):
     def test_world_spawn_default_entities(self):
         self.world.spawn_default_world_entities()
 
-        # Debe haber 28 autobuses de ruta autoritativos (2001 a 2028)
-        for bus_id in range(2001, 2029):
+        # Debe haber 26 autobuses de ruta autoritativos configurados (2001 a 2026)
+        for bus_id in range(2001, 2027):
             bus = self.world.get_entity(bus_id)
             self.assertIsNotNone(bus, f"Autobús {bus_id} debe existir en SharedWorld")
             self.assertTrue(bus.flags & VehicleFlags.ROUTE_VEHICLE)
@@ -185,11 +185,14 @@ class TestSimulationArchitecture(unittest.TestCase):
         self.assertIsNotNone(car)
         self.assertIsNotNone(self.world.simulation_manager.get_controller(1001))
 
-        # Deben existir los NPCs 3001 y 3002
-        npc1 = self.world.get_entity(3001)
-        self.assertIsNotNone(npc1)
-        self.assertEqual(npc1.entity_type, EntityType.NPC)
-        self.assertIsNotNone(self.world.simulation_manager.get_controller(3001))
+        # Deben existir los ciudadanos autoritativos 3001, 3002, 3003 y 3004
+        for citizen_id in (3001, 3002, 3003, 3004):
+            citizen = self.world.get_entity(citizen_id)
+            self.assertIsNotNone(citizen, f"Ciudadano {citizen_id} debe existir en SharedWorld")
+            self.assertEqual(citizen.entity_type, EntityType.NPC)
+            ctrl = self.world.simulation_manager.get_controller(citizen_id)
+            self.assertIsNotNone(ctrl, f"Ciudadano {citizen_id} debe tener controlador de simulación")
+            self.assertIn("citizen_state", citizen.properties)
 
         # Probar un ciclo de simulación del mundo completo
         self.world.simulation_manager.update(0.033, self.world)
