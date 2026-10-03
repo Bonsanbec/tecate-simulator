@@ -95,15 +95,20 @@ class CitizenController(EntityController):
                 self._sync_state_property()
                 return
 
-            # Calcular dirección angular y orientación Yaw
-            yaw_deg = (math.degrees(math.atan2(dx, -dz)) + 360.0) % 360.0
+            # Dirección horizontal normalizada hacia el objetivo
+            dir_x = dx / dist_h
+            dir_z = dz / dist_h
+
+            # En Godot, el frente canónico es -Z. Al rotar 'yaw' grados alrededor del eje vertical +Y,
+            # el frente se transforma en: forward = (-sin(yaw), 0, -cos(yaw)).
+            # Para que coincida con (dir_x, dir_z):
+            #   sin(yaw) = -dir_x, cos(yaw) = -dir_z => yaw = atan2(-dx, -dz).
+            yaw_rad = math.atan2(-dx, -dz)
+            yaw_deg = (math.degrees(yaw_rad) + 360.0) % 360.0
             self.entity.yaw = yaw_deg
 
-            fwd_x = math.sin(math.radians(yaw_deg))
-            fwd_z = -math.cos(math.radians(yaw_deg))
-
-            self.entity.vel_x = fwd_x * self.walk_speed
-            self.entity.vel_z = fwd_z * self.walk_speed
+            self.entity.vel_x = dir_x * self.walk_speed
+            self.entity.vel_z = dir_z * self.walk_speed
 
             self.entity.pos_x += self.entity.vel_x * dt
             self.entity.pos_z += self.entity.vel_z * dt

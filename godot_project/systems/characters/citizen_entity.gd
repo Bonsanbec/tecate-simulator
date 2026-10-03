@@ -86,6 +86,10 @@ func setup(id: int, is_npc: bool = true, display_name: String = "") -> void:
 			nameplate_label.modulate = Color(1.0, 0.9, 0.4, 1.0) # Amarillo cálido jugador
 
 func _setup_physics_properties() -> void:
+	collision_layer = 1
+	collision_mask = 1
+	set_collision_layer_value(1, true)
+	set_collision_mask_value(1, true)
 	safe_margin = 0.02
 	floor_max_angle = deg_to_rad(65.0)
 	floor_constant_speed = true
@@ -200,8 +204,24 @@ func _physics_process(delta: float) -> void:
 	if interp_state.is_empty():
 		return
 
+	var target_pos: Vector3 = interp_state["position"]
+
+	# Corrección topográfica: Raycast vertical hacia el pavimento o terreno de Tecate
+	# para garantizar que las suelas descansen exactamente sobre la superficie,
+	# absorbiendo pendientes de banquetas sin hundirse hasta la rodilla ni flotar.
+	if is_inside_tree() and get_world_3d():
+		var space_state = get_world_3d().direct_space_state
+		if space_state:
+			var ray_from = Vector3(target_pos.x, target_pos.y + 2.5, target_pos.z)
+			var ray_to = Vector3(target_pos.x, target_pos.y - 3.5, target_pos.z)
+			var ray_query = PhysicsRayQueryParameters3D.create(ray_from, ray_to, 1)
+			ray_query.exclude = [get_rid()]
+			var hit = space_state.intersect_ray(ray_query)
+			if not hit.is_empty() and hit.has("position"):
+				target_pos.y = hit["position"].y
+
 	# Aplicar cinemática en el mundo físico de Godot (CharacterBody3D)
-	global_position = interp_state["position"]
+	global_position = target_pos
 	rotation_degrees.y = interp_state["yaw"]
 	velocity = interp_state["velocity"]
 

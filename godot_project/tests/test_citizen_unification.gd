@@ -90,7 +90,7 @@ func _test_remote_entities_unification() -> void:
 	root.add_child(remote_player)
 
 	var remote_npc = RemoteNPCClass.new()
-	remote_npc.setup(3002, true, "Doña Rosa (Comerciante)")
+	remote_npc.setup(3002, true, "Doña Rosa")
 	root.add_child(remote_npc)
 
 	assert_test(remote_player is CitizenEntityClass, "RemotePlayer hereda de CitizenEntity")
@@ -169,6 +169,6 @@ func _test_multiplayer_manager_unification() -> void:
 	assert_test(rem_p is CitizenEntityClass, "El jugador remoto 55 es instancia de CitizenEntity")
 	assert_test(rem_npc != null, "MultiplayerManager instanció al ciudadano remoto 3004")
 	assert_test(rem_npc is CitizenEntityClass, "El ciudadano remoto 3004 es instancia de CitizenEntity")
-	assert_test(rem_npc.citizen_name == "Carmen (Espera en Parada)", "El ciudadano 3004 recibe su nombre cívico asignado")
+	assert_test(rem_npc.citizen_name == "Carmen", "El ciudadano 3004 recibe su nombre cívico asignado")
 
 	mgr.queue_free()

@@ -224,10 +224,10 @@ func get_player_count() -> int:
 
 func _get_citizen_name_by_id(id: int) -> String:
 	match id:
-		3001: return "Don Miguel (Transeúnte)"
-		3002: return "Doña Rosa (Comerciante)"
-		3003: return "Juan Carlos (Peatón Kiosko)"
-		3004: return "Carmen (Espera en Parada)"
+		3001: return "Don Miguel"
+		3002: return "Doña Rosa"
+		3003: return "Juan Carlos"
+		3004: return "Carmen"
 		_: return "Ciudadano #%d" % id
 
 
