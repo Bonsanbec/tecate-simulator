@@ -128,20 +128,20 @@ def render_axel():
         pb.rotation_mode = 'XYZ'
         pb.rotation_euler = (0, 0, 0)
 
-    # Pose de Axel fiel a scratch/humans/axel2.png:
-    # 1. Torso en ligero giro de 3/4 hacia su derecha
-    arm.pose.bones['Chest'].rotation_euler = (0, math.radians(-14), 0)
+    # Pose de Axel fiel a scratch/humans/axel2.png (espejada canónicamente):
+    # 1. Torso en ligero giro de 3/4 hacia su izquierda (lado izquierdo en encuadre)
+    arm.pose.bones['Chest'].rotation_euler = (0, math.radians(14), 0)
 
-    # 2. Cabeza orientada con aplomo mirando hacia el horizonte a su derecha
-    arm.pose.bones['Head'].rotation_euler = (math.radians(-4), math.radians(-26), math.radians(2))
+    # 2. Cabeza orientada con aplomo mirando hacia el horizonte a su derecha (lado derecho en encuadre)
+    arm.pose.bones['Head'].rotation_euler = (math.radians(-4), math.radians(26), math.radians(-2))
 
-    # 3. Brazo derecho flexionado con la mano apoyada sobre el chaleco sartorial
-    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(-20), math.radians(30), math.radians(-20))
-    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(102), math.radians(20), math.radians(20))
-    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(-8), math.radians(24), math.radians(5))
+    # 3. Brazo izquierdo flexionado con la mano apoyada sobre el chaleco sartorial
+    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(-20), math.radians(-30), math.radians(20))
+    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(102), math.radians(-20), math.radians(-20))
+    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(-8), math.radians(-24), math.radians(-5))
 
-    # 4. Brazo izquierdo relajado cayendo al costado
-    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(8), 0, math.radians(8))
+    # 4. Brazo derecho relajado cayendo al costado
+    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(8), 0, math.radians(-8))
 
     clear_lights_and_cameras(scene)
 
@@ -152,18 +152,18 @@ def render_axel():
     scene.collection.objects.link(cam_obj)
     scene.camera = cam_obj
 
-    cam_obj.location = Vector((0.24, 2.15, 1.28))
-    target = Vector((0.02, 0.0, 1.25))
+    cam_obj.location = Vector((-0.24, 2.15, 1.28))
+    target = Vector((-0.02, 0.0, 1.25))
     cam_obj.rotation_euler = (target - cam_obj.location).to_track_quat('-Z', 'Y').to_euler()
 
     # Esquema de iluminación de estudio con acento dorado cálido de atardecer
-    head_t = (0.02, 0.0, 1.48)
-    chest_t = (0.02, 0.0, 1.18)
+    head_t = (-0.02, 0.0, 1.48)
+    chest_t = (-0.02, 0.0, 1.18)
 
-    add_directed_light(scene, 'GoldenSunKey', 'AREA', 230.0, (1.2, 1.6, 1.6), chest_t, (1.0, 0.88, 0.72), size=1.2)
-    add_directed_light(scene, 'SoftFill', 'AREA', 100.0, (-1.2, 1.6, 1.3), head_t, (0.92, 0.96, 1.0), size=2.2)
-    add_directed_light(scene, 'RimLight', 'SPOT', 170.0, (-0.2, -1.3, 1.9), head_t, (1.0, 0.98, 0.92))
-    add_directed_light(scene, 'DetailFill', 'AREA', 50.0, (0.1, 2.0, 1.2), chest_t, (1.0, 0.98, 0.96), size=1.0)
+    add_directed_light(scene, 'GoldenSunKey', 'AREA', 230.0, (-1.2, 1.6, 1.6), chest_t, (1.0, 0.88, 0.72), size=1.2)
+    add_directed_light(scene, 'SoftFill', 'AREA', 100.0, (1.2, 1.6, 1.3), head_t, (0.92, 0.96, 1.0), size=2.2)
+    add_directed_light(scene, 'RimLight', 'SPOT', 170.0, (0.2, -1.3, 1.9), head_t, (1.0, 0.98, 0.92))
+    add_directed_light(scene, 'DetailFill', 'AREA', 50.0, (-0.1, 2.0, 1.2), chest_t, (1.0, 0.98, 0.96), size=1.0)
 
     # 1. Render Ícono Transparente RGBA
     setup_render_engine(scene, resolution=1024, samples=48, transparent=True)
@@ -201,18 +201,18 @@ def render_eli():
         pb.rotation_euler = (0, 0, 0)
 
     # 1. Torso en ángulo sutil
-    arm.pose.bones['Chest'].rotation_euler = (0, math.radians(-10), 0)
+    arm.pose.bones['Chest'].rotation_euler = (0, math.radians(10), 0)
 
-    # 2. Cabeza mirando de frente con inclinación carismática hacia su hombro derecho
-    arm.pose.bones['Head'].rotation_euler = (math.radians(-3), math.radians(10), math.radians(6))
+    # 2. Cabeza mirando de frente con inclinación carismática hacia su hombro izquierdo
+    arm.pose.bones['Head'].rotation_euler = (math.radians(-3), math.radians(-10), math.radians(-6))
 
-    # 3. Brazo derecho señalando a través del pecho hacia la derecha del encuadre
-    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(-6), math.radians(34), math.radians(-32))
-    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(98), math.radians(18), math.radians(14))
-    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(-8), math.radians(22), math.radians(8))
+    # 3. Brazo izquierdo señalando a través del pecho hacia la derecha del encuadre
+    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(-6), math.radians(-34), math.radians(32))
+    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(98), math.radians(-18), math.radians(-14))
+    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(-8), math.radians(-22), math.radians(-8))
 
-    # 4. Brazo izquierdo relajado
-    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(7), 0, math.radians(7))
+    # 4. Brazo derecho relajado
+    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(7), 0, math.radians(-7))
 
     clear_lights_and_cameras(scene)
 
@@ -222,16 +222,16 @@ def render_eli():
     scene.collection.objects.link(cam_obj)
     scene.camera = cam_obj
 
-    cam_obj.location = Vector((-0.02, 2.15, 1.28))
+    cam_obj.location = Vector((0.02, 2.15, 1.28))
     target = Vector((0.0, 0.0, 1.25))
     cam_obj.rotation_euler = (target - cam_obj.location).to_track_quat('-Z', 'Y').to_euler()
 
     head_t = (0.0, 0.0, 1.48)
     chest_t = (0.0, 0.0, 1.22)
 
-    # Iluminación calibrada para el rostro, sonrisa y camisa de lino (atenuada para evitar sobreexposición/blanqueado)
-    add_directed_light(scene, 'KeyLight', 'AREA', 135.0, (0.8, 1.6, 1.6), chest_t, (1.0, 0.98, 0.94), size=1.4)
-    add_directed_light(scene, 'FillLight', 'AREA', 65.0, (-1.0, 1.5, 1.4), head_t, (0.94, 0.97, 1.0), size=2.0)
+    # Iluminación calibrada para el rostro, sonrisa y camisa de lino
+    add_directed_light(scene, 'KeyLight', 'AREA', 135.0, (-0.8, 1.6, 1.6), chest_t, (1.0, 0.98, 0.94), size=1.4)
+    add_directed_light(scene, 'FillLight', 'AREA', 65.0, (1.0, 1.5, 1.4), head_t, (0.94, 0.97, 1.0), size=2.0)
     add_directed_light(scene, 'FaceLight', 'AREA', 24.0, (0.0, 1.8, 1.48), head_t, (1.0, 0.99, 0.97), size=1.4)
     add_directed_light(scene, 'RimLight', 'SPOT', 115.0, (0.0, -1.3, 1.9), head_t, (1.0, 0.98, 0.95))
 

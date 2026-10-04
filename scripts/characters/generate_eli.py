@@ -308,15 +308,15 @@ def build_head_mesh(materials):
             t = (i / float(n_pts - 1)) * 2.0 - 1.0
             dx = t * 0.0145 * sign_side
             arch = math.sqrt(max(0.0, 1.0 - t**2))
-            dz_sup = 0.0040 * arch
-            dz_inf = -0.0040 * arch
+            dz_sup = 0.0018 * arch
+            dz_inf = -0.0018 * arch
             dy_sup = math.sqrt(max(0.0001, (eye_r * 1.03)**2 - dx**2 - dz_sup**2))
             dy_inf = math.sqrt(max(0.0001, (eye_r * 1.03)**2 - dx**2 - dz_inf**2))
 
             v_sup_m = bm.verts.new((ex + dx, ey + dy_sup, ez + dz_sup))
-            v_sup_c = bm.verts.new((ex + dx, ey + dy_sup * 0.98 + 0.002, ez + dz_sup + 0.004 * arch))
+            v_sup_c = bm.verts.new((ex + dx, ey + dy_sup * 0.98 + 0.002, ez + dz_sup + 0.0035 * arch))
             v_inf_m = bm.verts.new((ex + dx, ey + dy_inf, ez + dz_inf))
-            v_inf_c = bm.verts.new((ex + dx, ey + dy_inf * 0.98 + 0.002, ez + dz_inf - 0.004 * arch))
+            v_inf_c = bm.verts.new((ex + dx, ey + dy_inf * 0.98 + 0.002, ez + dz_inf - 0.0035 * arch))
 
             upper_margin.append(v_sup_m)
             upper_crease.append(v_sup_c)
@@ -587,12 +587,13 @@ def build_head_mesh(materials):
     # Shape Key: 'blink'
     sk_basis = obj_head.shape_key_add(name="Basis")
     sk_blink = obj_head.shape_key_add(name="blink")
+    sk_blink.value = 0.0
     for v_idx in margin_v_indices:
-        sk_blink.data[v_idx].co.z -= 0.0075
-        sk_blink.data[v_idx].co.y += 0.0010
+        sk_blink.data[v_idx].co.z -= 0.0036
+        sk_blink.data[v_idx].co.y += 0.0006
     for v_idx in crease_v_indices:
-        sk_blink.data[v_idx].co.z -= 0.0038
-        sk_blink.data[v_idx].co.y += 0.0005
+        sk_blink.data[v_idx].co.z -= 0.0018
+        sk_blink.data[v_idx].co.y += 0.0003
 
     return obj_head
 

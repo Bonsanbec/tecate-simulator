@@ -91,20 +91,20 @@ def build_head_mesh(materials):
         (1.372, 0.050, 0.044, 0.050, -0.004, 0.12), # 0: Base cuello
         (1.392, 0.048, 0.044, 0.056, -0.002, 0.18), # 1: Cuello medio
         (1.412, 0.052, 0.048, 0.064,  0.002, 0.24), # 2: Submandíbula
-        (1.428, 0.060, 0.068, 0.076,  0.012, 0.30), # 3: Mentón masculino angular
-        (1.442, 0.065, 0.064, 0.086,  0.010, 0.35), # 4: Surco mentolabial suave
-        (1.455, 0.068, 0.071, 0.094,  0.008, 0.38), # 5: Labio inferior
-        (1.465, 0.070, 0.067, 0.100,  0.007, 0.40), # 6: Hendidura labial
-        (1.476, 0.071, 0.073, 0.104,  0.005, 0.43), # 7: Labio superior
-        (1.490, 0.074, 0.068, 0.106,  0.003, 0.48), # 8: Base nasal / Filtrum
-        (1.503, 0.077, 0.080, 0.106,  0.001, 0.54), # 9: Punta nasal recta y definida
-        (1.515, 0.080, 0.074, 0.105,  0.000, 0.63), # 10: Ojos / puente nasal medio (Z = 1.515)
-        (1.530, 0.082, 0.078, 0.104, -0.002, 0.72), # 11: Pómulos y cejas
-        (1.548, 0.080, 0.073, 0.102, -0.004, 0.79), # 12: Frente baja / relieve occipital
-        (1.568, 0.077, 0.067, 0.096, -0.006, 0.85), # 13: Frente media
-        (1.588, 0.072, 0.058, 0.088, -0.008, 0.91), # 14: Asiento sombrero
-        (1.615, 0.060, 0.044, 0.074, -0.010, 0.96), # 15: Bóveda craneal
-        (1.635, 0.038, 0.026, 0.046, -0.012, 0.99), # 16: Coronilla
+        (1.428, 0.060, 0.068, 0.070,  0.010, 0.30), # 3: Mentón masculino angular
+        (1.442, 0.065, 0.064, 0.076,  0.008, 0.35), # 4: Surco mentolabial suave
+        (1.455, 0.068, 0.071, 0.082,  0.006, 0.38), # 5: Labio inferior
+        (1.465, 0.070, 0.067, 0.085,  0.005, 0.40), # 6: Hendidura labial
+        (1.476, 0.071, 0.073, 0.088,  0.003, 0.43), # 7: Labio superior
+        (1.490, 0.074, 0.068, 0.090,  0.001, 0.48), # 8: Base nasal / Filtrum
+        (1.503, 0.077, 0.080, 0.090, -0.001, 0.54), # 9: Punta nasal recta y definida
+        (1.515, 0.080, 0.074, 0.089, -0.002, 0.63), # 10: Ojos / puente nasal medio (Z = 1.515)
+        (1.530, 0.082, 0.078, 0.088, -0.004, 0.72), # 11: Pómulos y cejas
+        (1.548, 0.080, 0.073, 0.086, -0.006, 0.79), # 12: Frente baja / relieve occipital
+        (1.568, 0.077, 0.067, 0.082, -0.007, 0.85), # 13: Frente media
+        (1.588, 0.072, 0.058, 0.078, -0.008, 0.91), # 14: Asiento sombrero
+        (1.615, 0.060, 0.044, 0.070, -0.010, 0.96), # 15: Bóveda craneal
+        (1.635, 0.038, 0.026, 0.044, -0.012, 0.99), # 16: Coronilla
     ]
 
     rings = []
@@ -205,18 +205,18 @@ def build_head_mesh(materials):
         lower_margin, lower_crease = [], []
         for i in range(n_pts):
             t = (i / float(n_pts - 1)) * 2.0 - 1.0
-            dx = t * 0.0135 * sign_side
+            dx = t * 0.0125 * sign_side
             arch_sup = math.sqrt(max(0.0, 1.0 - t**2))
-            dz_margin_sup = 0.0022 * arch_sup + 0.0005 * t
-            dz_margin_inf = -0.0040 * arch_sup + 0.0003 * t
+            dz_margin_sup = 0.0012 * arch_sup + 0.0003 * t
+            dz_margin_inf = -0.0018 * arch_sup + 0.0002 * t
             dy_margin = math.sqrt(max(0.0001, (eye_r * 1.02)**2 - dx**2 - dz_margin_sup**2))
             dy_margin_inf = math.sqrt(max(0.0001, (eye_r * 1.02)**2 - dx**2 - dz_margin_inf**2))
 
             v_sup_m = bm.verts.new((ex + dx, ey + dy_margin, ez + dz_margin_sup))
-            v_sup_c = bm.verts.new((ex + dx, ey + dy_margin * 0.98 + 0.002, ez + dz_margin_sup + 0.0045 * arch_sup))
-            v_sup_b = bm.verts.new((ex + dx, ey + dy_margin * 0.92 + 0.005, ez + dz_margin_sup + 0.0100 * arch_sup))
+            v_sup_c = bm.verts.new((ex + dx, ey + dy_margin * 0.98 + 0.002, ez + dz_margin_sup + 0.0035 * arch_sup))
+            v_sup_b = bm.verts.new((ex + dx, ey + dy_margin * 0.92 + 0.005, ez + dz_margin_sup + 0.0090 * arch_sup))
             v_inf_m = bm.verts.new((ex + dx, ey + dy_margin_inf, ez + dz_margin_inf))
-            v_inf_c = bm.verts.new((ex + dx, ey + dy_margin_inf * 0.96 + 0.003, ez + dz_margin_inf - 0.0060 * arch_sup))
+            v_inf_c = bm.verts.new((ex + dx, ey + dy_margin_inf * 0.96 + 0.003, ez + dz_margin_inf - 0.0045 * arch_sup))
 
             upper_margin.append(v_sup_m)
             upper_crease.append(v_sup_c)
@@ -429,12 +429,13 @@ def build_head_mesh(materials):
     # Shape Keys: Parpadeo biológico 'blink'
     sk_basis = obj_head.shape_key_add(name="Basis")
     sk_blink = obj_head.shape_key_add(name="blink")
+    sk_blink.value = 0.0
     for v_idx in margin_v_indices:
-        sk_blink.data[v_idx].co.z -= 0.0068
-        sk_blink.data[v_idx].co.y += 0.0008
-    for v_idx in crease_v_indices:
-        sk_blink.data[v_idx].co.z -= 0.0034
+        sk_blink.data[v_idx].co.z -= 0.0030
         sk_blink.data[v_idx].co.y += 0.0004
+    for v_idx in crease_v_indices:
+        sk_blink.data[v_idx].co.z -= 0.0015
+        sk_blink.data[v_idx].co.y += 0.0002
 
     return obj_head
 
@@ -764,11 +765,11 @@ def build_body_mesh(materials):
             kn = (k + 1) % n_cuff
             bm.faces.new((wrist_v[k], wrist_v[kn], cuff_bot[kn], cuff_bot[k])).material_index = 6
 
-        z_knuckles = 0.845
-        x_in = w_center.x - sign_h * 0.013
-        x_out = w_center.x + sign_h * 0.013
-        y_ant = w_center.y + 0.026
-        y_post = w_center.y - 0.024
+        z_knuckles = 0.855
+        x_in = w_center.x - sign_h * 0.010
+        x_out = w_center.x + sign_h * 0.010
+        y_ant = w_center.y + 0.019
+        y_post = w_center.y - 0.018
 
         p_box = [
             bm.verts.new((x_in,  y_ant,  0.895)),
@@ -786,12 +787,12 @@ def build_body_mesh(materials):
         bm.faces.new((p_box[3], p_box[0], p_box[4], p_box[7])).material_index = 6
 
         finger_specs = [
-            ("Index",   w_center.y + 0.015, 0.048, 0.0058, 0.85, is_left),
-            ("Middle",  w_center.y + 0.005, 0.052, 0.0062, 1.00, is_left),
-            ("Ring",    w_center.y - 0.005, 0.047, 0.0058, 1.15, False),
-            ("Little",  w_center.y - 0.015, 0.038, 0.0052, 1.30, False),
+            ("Index",   w_center.y + 0.012, 0.036, 0.0044, 1.10, is_left),
+            ("Middle",  w_center.y + 0.004, 0.040, 0.0046, 1.25, is_left),
+            ("Ring",    w_center.y - 0.004, 0.036, 0.0043, 1.35, False),
+            ("Little",  w_center.y - 0.012, 0.028, 0.0038, 1.50, False),
         ]
-        curl_dir = Vector((-sign_h * 0.70, 0.35, 0.0)).normalized()
+        curl_dir = Vector((-sign_h * 0.70, 0.35, -0.25)).normalized()
 
         for (f_name, fy, flen, frad, curl, has_ring) in finger_specs:
             mcp = Vector((w_center.x, fy, z_knuckles))
@@ -819,35 +820,35 @@ def build_body_mesh(materials):
                 prev_ring = cur_ring
                 ring_joints.append(pt)
 
-            tip_v = bm.verts.new(p3 + curl_dir * 0.003 - Vector((0, 0, 0.003)))
+            tip_v = bm.verts.new(p3 + curl_dir * 0.002 - Vector((0, 0, 0.002)))
             for k in range(6):
                 kn = (k + 1) % 6
                 bm.faces.new((prev_ring[kn], prev_ring[k], tip_v)).material_index = 6
 
             if has_ring:
                 r_c = (ring_joints[0] + ring_joints[1]) * 0.5
-                r_rad = frad * 1.30
+                r_rad = frad * 1.32
                 r1_pts, r2_pts = [], []
                 for k in range(8):
                     ang_r = (2.0 * math.pi * k) / 8.0
                     rx = r_c.x + r_rad * math.cos(ang_r)
                     ry = r_c.y + r_rad * math.sin(ang_r)
-                    r1_pts.append(bm.verts.new((rx, ry, r_c.z + 0.0035)))
-                    r2_pts.append(bm.verts.new((rx, ry, r_c.z - 0.0035)))
+                    r1_pts.append(bm.verts.new((rx, ry, r_c.z + 0.0025)))
+                    r2_pts.append(bm.verts.new((rx, ry, r_c.z - 0.0025)))
                 for k in range(8):
                     kn = (k + 1) % 8
                     bm.faces.new((r1_pts[k], r1_pts[kn], r2_pts[kn], r2_pts[k])).material_index = 5
 
-        th_mcp = Vector((x_in - sign_h * 0.004, y_ant + 0.005, z_knuckles + 0.020))
+        th_mcp = Vector((x_in - sign_h * 0.003, y_ant + 0.003, z_knuckles + 0.015))
         th_joints = [
             th_mcp,
-            th_mcp + Vector((-sign_h * 0.007, 0.010, -0.012)),
-            th_mcp + Vector((-sign_h * 0.011, 0.014, -0.023)),
-            th_mcp + Vector((-sign_h * 0.013, 0.015, -0.032)),
+            th_mcp + Vector((-sign_h * 0.005, 0.007, -0.009)),
+            th_mcp + Vector((-sign_h * 0.008, 0.010, -0.017)),
+            th_mcp + Vector((-sign_h * 0.010, 0.011, -0.024)),
         ]
         prev_th = None
         for j_idx, pt in enumerate(th_joints):
-            th_rad = 0.0064 * (1.0 - 0.20 * (j_idx / 3.0))
+            th_rad = 0.0048 * (1.0 - 0.20 * (j_idx / 3.0))
             cur_ring = []
             for k in range(6):
                 ang = (2.0 * math.pi * k) / 6.0
