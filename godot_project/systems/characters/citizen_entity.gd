@@ -11,10 +11,14 @@ extends CharacterBody3D
 ## Tanto el jugador local (a través de PlayerController) como los ciudadanos
 ## autónomos y los jugadores remotos son instancias de esta misma entidad.
 
+const CitizenProfileClass = preload("res://systems/characters/citizen_profile.gd")
+
 # Identidad y estado de control
 @export var entity_id: int = 0
 @export var citizen_name: String = ""
 @export var is_locally_controlled: bool = false
+@export var identity_id: String = "axel"
+@export var profile: Resource = null
 
 # Parámetros antropométricos y físicos de Tecate
 @export var mass_kg: float = 75.0
@@ -31,6 +35,7 @@ var humanoid_scene: Node3D
 var skeleton: Skeleton3D
 var mesh_body: MeshInstance3D
 var mesh_head: MeshInstance3D
+var mesh_props: MeshInstance3D
 var collision_shape: CollisionShape3D
 var nameplate_label: Label3D
 
@@ -115,9 +120,24 @@ func _initialize_humanoid_rig() -> void:
 	if humanoid_scene:
 		return
 
-	var model_res = load("res://assets/characters/humanoid_player.glb")
+	# Resolver ruta del modelo según perfil o identidad
+	var model_path: String = "res://assets/characters/citizens/axel.glb"
+	if profile and not profile.model_path.is_empty():
+		model_path = profile.model_path
+	elif not identity_id.is_empty():
+		var candidate = "res://assets/characters/citizens/%s.glb" % identity_id.to_lower()
+		if ResourceLoader.exists(candidate):
+			model_path = candidate
+		elif ResourceLoader.exists("res://assets/characters/citizens/axel.glb"):
+			model_path = "res://assets/characters/citizens/axel.glb"
+		else:
+			model_path = "res://assets/characters/humanoid_player.glb"
+
+	var model_res = load(model_path)
 	if not model_res:
-		push_error("[CitizenEntity] No se encontró res://assets/characters/humanoid_player.glb")
+		model_res = load("res://assets/characters/humanoid_player.glb")
+	if not model_res:
+		push_error("[CitizenEntity] No se encontró el modelo humanoide en %s" % model_path)
 		return
 
 	humanoid_scene = model_res.instantiate() as Node3D
@@ -127,6 +147,16 @@ func _initialize_humanoid_rig() -> void:
 	skeleton = humanoid_scene.find_child("Skeleton3D", true, false) as Skeleton3D
 	mesh_body = humanoid_scene.find_child("Player_Body_Mesh", true, false) as MeshInstance3D
 	mesh_head = humanoid_scene.find_child("Player_Head_Mesh", true, false) as MeshInstance3D
+	mesh_props = humanoid_scene.find_child("Player_Props_Mesh", true, false) as MeshInstance3D
+
+	# Configurar capas visuales (Capa 1: cuerpo y props; Capa 2: cabeza)
+	if mesh_body:
+		mesh_body.layers = 1
+	if mesh_head:
+		mesh_head.layers = 2
+		_apply_skin_subsurface_scattering(mesh_head)
+	if mesh_props:
+		mesh_props.layers = 1
 
 	if skeleton:
 		bone_upperarm_l = skeleton.find_bone("UpperArm.L")
@@ -148,6 +178,30 @@ func _initialize_humanoid_rig() -> void:
 		if bone_lowerleg_l != -1: _base_rot_lowerleg_l = skeleton.get_bone_pose_rotation(bone_lowerleg_l)
 		if bone_lowerleg_r != -1: _base_rot_lowerleg_r = skeleton.get_bone_pose_rotation(bone_lowerleg_r)
 		if bone_chest != -1: _base_rot_chest = skeleton.get_bone_pose_rotation(bone_chest)
+
+func apply_identity(p_id: String) -> void:
+	identity_id = p_id
+	if humanoid_scene:
+		humanoid_scene.queue_free()
+		humanoid_scene = null
+		skeleton = null
+		mesh_body = null
+		mesh_head = null
+		mesh_props = null
+	_initialize_humanoid_rig()
+
+func _apply_skin_subsurface_scattering(head_node: MeshInstance3D) -> void:
+	if not head_node:
+		return
+	var mat_count = head_node.get_surface_override_material_count()
+	for s_idx in range(max(1, mat_count)):
+		var mat = head_node.get_active_material(s_idx)
+		if mat is StandardMaterial3D and ("Skin" in mat.resource_name or s_idx == 0):
+			var sss_mat = mat.duplicate() as StandardMaterial3D
+			sss_mat.subsurf_scatter_strength = 0.32
+			sss_mat.subsurf_scatter_skin_mode = true
+			sss_mat.subsurf_scatter_transmittance_color = Color(0.92, 0.45, 0.35, 1.0)
+			head_node.set_surface_override_material(s_idx, sss_mat)
 
 func _create_nameplate() -> void:
 	if nameplate_label:
