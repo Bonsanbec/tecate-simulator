@@ -187,10 +187,10 @@ def build_head_mesh(materials):
         (1.515,  0.075, 0.069,    0.095,    0.000,   True),  # 10: Ojos y puente nasal (Z = 1.515)
         (1.532,  0.076, 0.072,    0.094,   -0.002,   True),  # 11: Pómulos y cejas pobladas
         (1.550,  0.075, 0.069,    0.091,   -0.004,   True),  # 12: Sienes y frente baja
-        (1.570,  0.073, 0.063,    0.087,   -0.006,   True),  # 13: Frente media despejada
-        (1.592,  0.069, 0.055,    0.080,   -0.008,   False), # 14: Nacimiento de cabello
-        (1.615,  0.059, 0.045,    0.070,   -0.010,   False), # 15: Bóveda craneal
-        (1.635,  0.039, 0.027,    0.045,   -0.012,   False), # 16: Coronilla
+        (1.566,  0.073, 0.064,    0.087,   -0.006,   True),  # 13: Frente media (cubierta por flequillo)
+        (1.580,  0.070, 0.058,    0.080,   -0.008,   False), # 14: Bóveda baja
+        (1.593,  0.061, 0.048,    0.070,   -0.010,   False), # 15: Bóveda media achatada
+        (1.603,  0.044, 0.034,    0.048,   -0.012,   False), # 16: Borde de coronilla achatada
     ]
 
     n_ring = 28
@@ -236,19 +236,26 @@ def build_head_mesh(materials):
 
             ang_mid = (2.0 * math.pi * (i + 0.5)) / n_ring
             sin_mid = math.sin(ang_mid)
-            is_scalp = (z_mid >= 1.585) or (z_mid >= 1.44 and sin_mid < -0.15)
-            f.material_index = 2 if is_scalp else 0 # 2: Hair, 0: Skin
+
+            # Rostro visible debajo de la frente: piel (0: Skin)
+            is_face_skin = (z_mid < 1.560 and sin_mid > -0.10)
+            # Hueco calvo ligero en la coronilla: piel (0: Skin)
+            is_bald_spot = (z_mid >= 1.595 and l_idx >= 15)
+            # El resto de la cabeza bajo el cabello toroidal: tono de cabello base (2: Hair)
+            is_hair_base = not is_face_skin and not is_bald_spot
+
+            f.material_index = 2 if is_hair_base else 0
 
             for loop in f.loops:
                 loop[uv_lay].uv = calc_face_uv(loop.vert.co.x, loop.vert.co.z)
 
-    # Coronilla superior
-    top_vert = bm.verts.new((0.0, -0.012, 1.642))
+    # Coronilla superior calva (cuero cabelludo en el hueco ligero)
+    top_vert = bm.verts.new((0.0, -0.012, 1.610))
     r_last = rings[-1]
     for i in range(n_ring):
         inxt = (i + 1) % n_ring
         f_top = bm.faces.new((r_last[i], r_last[inxt], top_vert))
-        f_top.material_index = 2
+        f_top.material_index = 0 # 0: Skin (calva central)
         for loop in f_top.loops:
             loop[uv_lay].uv = calc_face_uv(loop.vert.co.x, loop.vert.co.z)
 
@@ -424,51 +431,82 @@ def build_head_mesh(materials):
     glasses_bm.free()
 
     # -------------------------------------------------------------------------
-    # CABELLERA ONDULADA Y RIZADA ORGÁNICA EN 360° (eli3.png)
+    # CABELLERA TOROIDAL ORGÁNICA EN 360° CON HUECO LIGERO EN CORONILLA
     # -------------------------------------------------------------------------
-    # 1. Cúpula volumétrica base con ondulación continua
-    hair_profile = [
-        # z,     rx,    ry_front, ry_back, y_offset
-        (1.505, 0.078, 0.046,    0.092,   -0.006),
-        (1.535, 0.080, 0.058,    0.096,   -0.006),
-        (1.565, 0.082, 0.068,    0.098,   -0.005),
-        (1.595, 0.080, 0.068,    0.095,   -0.005),
-        (1.625, 0.072, 0.060,    0.084,   -0.007),
-        (1.648, 0.054, 0.044,    0.064,   -0.009),
-        (1.662, 0.030, 0.024,    0.036,   -0.012),
-    ]
-    n_hring = 24
-    h_rings = []
-    for l_idx, (hz, hrx, hry_f, hry_b, hy_off) in enumerate(hair_profile):
-        cur_h = []
-        for i in range(n_hring):
-            hang = (2.0 * math.pi * i) / n_hring
+    # 1. Anillo toroidal volumétrico en 360° (frente cubierta, sienes, nuca y hueco ligero)
+    n_h = 28
+    rings_toroid = []
+
+    for stage in range(6):
+        cur_ring = []
+        for i in range(n_h):
+            hang = (2.0 * math.pi * i) / n_h
             cos_a = math.cos(hang)
             sin_a = math.sin(hang)
-            wave = 0.0032 * math.sin(hang * 4.0 + hz * 18.0) + 0.0016 * math.cos(hang * 6.0)
-            tuft_boost = 0.0060 * math.cos((hang - 0.5 * math.pi) * 2.0)**2 if (hz >= 1.58 and 0.25 * math.pi <= hang <= 0.75 * math.pi) else 0.0
-            hx = (hrx + wave) * cos_a
-            hy = ((hry_f if sin_a >= 0 else hry_b) + wave + tuft_boost) * sin_a + hy_off
-            cur_h.append(bm.verts.new((hx, hy, hz)))
-        h_rings.append(cur_h)
 
-    for l in range(len(h_rings) - 1):
-        ra = h_rings[l]
-        rb = h_rings[l + 1]
-        for i in range(n_hring):
-            inxt = (i + 1) % n_hring
-            hf = bm.faces.new((ra[i], ra[inxt], rb[inxt], rb[i]))
-            hf.material_index = 2 # Mat_Eli_Hair
-            for loop in hf.loops: loop[uv_lay].uv = (0.5, 0.5)
+            # Altura base de nacimiento según ángulo polar:
+            # Frente: Z=1.560 (frente con flequillo completo)
+            # Nuca: Z=1.475
+            z_base = 1.518 + 0.042 * sin_a
+            rx_b = 0.074
+            ry_b = 0.065 if sin_a >= 0 else 0.088
+            y_off = -0.005
 
-    h_top = bm.verts.new((0.0, -0.012, 1.666))
-    for i in range(n_hring):
-        inxt = (i + 1) % n_hring
-        hf_top = bm.faces.new((h_rings[-1][i], h_rings[-1][inxt], h_top))
-        hf_top.material_index = 2
-        for loop in hf_top.loops: loop[uv_lay].uv = (0.5, 0.5)
+            bx = rx_b * cos_a
+            by = ry_b * sin_a + y_off
 
-    # 2. Mechones ondulados 3D volumétricos en coronilla y flequillo (eli3.png)
+            # Ondulación rizada orgánica procedural 360°
+            wave = 0.0038 * math.sin(hang * 6.0 + stage * 6.0) + 0.0018 * math.cos(hang * 10.0)
+
+            if stage == 0:
+                # Nivel 0: Borde inferior del nacimiento
+                vz = z_base
+                vx = bx
+                vy = by
+            elif stage == 1:
+                # Nivel 1: Relieve exterior bajo
+                thick = 0.009 + wave
+                vz = z_base + 0.018
+                vx = bx + cos_a * thick
+                vy = by + sin_a * thick
+            elif stage == 2:
+                # Nivel 2: Máximo volumen exterior esponjoso (más cabello)
+                thick = 0.015 + wave * 1.2
+                vz = z_base + 0.038
+                vx = bx + cos_a * thick
+                vy = by + sin_a * thick
+            elif stage == 3:
+                # Nivel 3: Cresta superior del toroide
+                thick = 0.012 + wave
+                vz = 1.616 + 0.003 * math.sin(hang * 4.0)
+                vx = bx * 0.95 + cos_a * thick
+                vy = by * 0.95 + sin_a * thick
+            elif stage == 4:
+                # Nivel 4: Borde superior del hueco ligero interior
+                r_hole = 0.034 + 0.004 * math.sin(hang * 3.0)
+                vz = 1.610
+                vx = r_hole * cos_a
+                vy = r_hole * sin_a - 0.012
+            elif stage == 5:
+                # Nivel 5: Borde inferior del hueco asentado en el cráneo calvo
+                r_base_hole = 0.027
+                vz = 1.604
+                vx = r_base_hole * cos_a
+                vy = r_base_hole * sin_a - 0.012
+
+            cur_ring.append(bm.verts.new((vx, vy, vz)))
+        rings_toroid.append(cur_ring)
+
+    for st in range(5):
+        r_curr = rings_toroid[st]
+        r_next = rings_toroid[st + 1]
+        for i in range(n_h):
+            inxt = (i + 1) % n_h
+            f_h = bm.faces.new((r_curr[i], r_curr[inxt], r_next[inxt], r_next[i]))
+            f_h.material_index = 2 # Mat_Eli_Hair
+            for loop in f_h.loops: loop[uv_lay].uv = (0.5, 0.5)
+
+    # 2. Mechones ondulados 3D volumétricos (flequillo frontal, sienes, corona y hueco)
     def add_wavy_lock(p_start, p_delta, r_wave, turns, phi0, base_thick=0.0055, n_steps=10):
         prev_ring = None
         for s in range(n_steps):
@@ -497,18 +535,27 @@ def build_head_mesh(materials):
             prev_ring = c_ring
 
     locks_specs = [
-        # Flequillo frontal (ondas rizadas hacia la frente)
-        (( 0.024, 0.068, 1.595), ( 0.008, 0.012, -0.028), 0.007, 1.8, 0.5),
-        ((-0.024, 0.068, 1.595), (-0.008, 0.012, -0.028), 0.007, 1.8, 1.2),
-        (( 0.000, 0.072, 1.605), ( 0.002, 0.014, -0.032), 0.008, 2.1, 2.0),
-        (( 0.045, 0.058, 1.585), ( 0.010, 0.008, -0.025), 0.006, 1.7, 0.8),
-        ((-0.045, 0.058, 1.585), (-0.010, 0.008, -0.025), 0.006, 1.7, 1.5),
-        # Mechones en la coronilla superior
-        (( 0.030, 0.025, 1.635), ( 0.012, 0.005, -0.022), 0.007, 1.6, 0.2),
-        ((-0.030, 0.025, 1.635), (-0.012, 0.005, -0.022), 0.007, 1.6, 1.0),
-        (( 0.000, 0.035, 1.642), ( 0.004, 0.008, -0.024), 0.007, 1.8, 2.4),
-        (( 0.020, -0.010, 1.650), ( 0.008, -0.006, -0.020), 0.006, 1.5, 0.6),
-        ((-0.020, -0.010, 1.650), (-0.008, -0.006, -0.020), 0.006, 1.5, 1.4),
+        # Flequillo frontal (ondas rizadas cubriendo la frente natural de Eli)
+        (( 0.024,  0.065, 1.575), ( 0.006,  0.010, -0.024), 0.006, 1.8, 0.5),
+        ((-0.024,  0.065, 1.575), (-0.006,  0.010, -0.024), 0.006, 1.8, 1.2),
+        (( 0.000,  0.068, 1.580), ( 0.002,  0.012, -0.026), 0.007, 2.0, 2.0),
+        (( 0.045,  0.055, 1.570), ( 0.008,  0.008, -0.022), 0.006, 1.7, 0.8),
+        ((-0.045,  0.055, 1.570), (-0.008,  0.008, -0.022), 0.006, 1.7, 1.5),
+        # Sienes y patillas
+        (( 0.072,  0.020, 1.535), ( 0.008, -0.006, -0.020), 0.005, 1.7, 0.6),
+        ((-0.072,  0.020, 1.535), (-0.008, -0.006, -0.020), 0.005, 1.7, 1.4),
+        # Laterales sobre orejas
+        (( 0.076, -0.020, 1.555), ( 0.008, -0.008, -0.020), 0.006, 1.6, 2.1),
+        ((-0.076, -0.020, 1.555), (-0.008, -0.008, -0.020), 0.006, 1.6, 0.9),
+        # Región occipital y nuca
+        (( 0.045, -0.075, 1.560), ( 0.004, -0.012, -0.018), 0.007, 1.8, 1.6),
+        ((-0.045, -0.075, 1.560), (-0.004, -0.012, -0.018), 0.007, 1.8, 0.4),
+        (( 0.000, -0.085, 1.555), ( 0.002, -0.012, -0.018), 0.007, 1.9, 2.3),
+        # Borde superior del anillo toroidal enmarcando el hueco ligero
+        (( 0.036, -0.005, 1.612), ( 0.005, -0.004, -0.012), 0.005, 1.5, 0.3),
+        ((-0.036, -0.005, 1.612), (-0.005, -0.004, -0.012), 0.005, 1.5, 1.1),
+        (( 0.016, -0.038, 1.610), ( 0.004, -0.006, -0.012), 0.005, 1.5, 2.2),
+        ((-0.016, -0.038, 1.610), (-0.004, -0.006, -0.012), 0.005, 1.5, 0.8),
     ]
     for p_st, p_dt, rw, trns, p0 in locks_specs:
         add_wavy_lock(p_st, p_dt, rw, trns, p0)
