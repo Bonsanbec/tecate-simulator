@@ -149,11 +149,13 @@ func _initialize_humanoid_rig() -> void:
 	mesh_head = humanoid_scene.find_child("Player_Head_Mesh", true, false) as MeshInstance3D
 	mesh_props = humanoid_scene.find_child("Player_Props_Mesh", true, false) as MeshInstance3D
 
-	# Configurar capas visuales (Capa 1: cuerpo y props; Capa 2: cabeza)
+	# Configurar capas visuales:
+	# Capa 1: Renderizado general (cuerpo, accesorios y cabezas de ciudadanos/NPCs)
+	# Capa 2: Exclusiva para la cabeza del avatar local (culling en 1P para evitar clipping facial)
 	if mesh_body:
 		mesh_body.layers = 1
 	if mesh_head:
-		mesh_head.layers = 2
+		mesh_head.layers = 2 if is_locally_controlled else 1
 		_apply_skin_subsurface_scattering(mesh_head)
 	if mesh_props:
 		mesh_props.layers = 1

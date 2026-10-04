@@ -64,6 +64,7 @@ func _test_citizen_entity_structure() -> void:
 	assert_test(citizen.nameplate_label != null, "CitizenEntity contiene Nameplate 3D billboard")
 	assert_test(citizen.nameplate_label.text == "Don Miguel", "Nameplate refleja el nombre del ciudadano")
 	assert_test(citizen.is_locally_controlled == false, "CitizenEntity autónoma tiene is_locally_controlled = false")
+	assert_test(citizen.mesh_head == null or citizen.mesh_head.layers == 1, "La cabeza de un ciudadano autónomo está en Capa 1 (visible en 1P)")
 
 	citizen.queue_free()
 
@@ -80,6 +81,7 @@ func _test_player_inheritance_and_control() -> void:
 	assert_test(player.nameplate_label != null and not player.nameplate_label.visible, "El nameplate local está oculto en primera persona")
 	assert_test(player.camera_director != null, "PlayerController inicializa su CameraDirector3D local")
 	assert_test(player.foot_ik != null, "PlayerController inicializa FootIKController")
+	assert_test(player.mesh_head == null or player.mesh_head.layers == 2, "La cabeza del jugador local está en Capa 2 (oculta en 1P)")
 
 	player.queue_free()
 
@@ -99,6 +101,8 @@ func _test_remote_entities_unification() -> void:
 	assert_test(remote_npc is CharacterBody3D, "RemoteNPC posee cuerpo físico CharacterBody3D")
 	assert_test(remote_player.nameplate_label.modulate.r > 0.8, "RemotePlayer utiliza paleta cálida de jugador")
 	assert_test(remote_npc.nameplate_label.modulate.g > 0.8, "RemoteNPC utiliza paleta verde cívica de ciudadano")
+	assert_test(remote_player.mesh_head == null or remote_player.mesh_head.layers == 1, "La cabeza del jugador remoto está en Capa 1 (visible en 1P)")
+	assert_test(remote_npc.mesh_head == null or remote_npc.mesh_head.layers == 1, "La cabeza del NPC remoto está en Capa 1 (visible en 1P)")
 
 	remote_player.queue_free()
 	remote_npc.queue_free()
