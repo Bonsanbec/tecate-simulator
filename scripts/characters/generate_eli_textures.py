@@ -112,65 +112,105 @@ def generate_face_textures():
     for c in range(3):
         diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - eyebrows * 0.95) + brow_col[c] * (eyebrows * 0.95)
 
-    # Barba perfilada y bigote completos fieles a eli3.png:
-    # Delimitación precisa: LA BARBA TERMINA EN LA LÍNEA MANDIBULAR (y >= 0.26)
-    dx_jaw = np.abs(x - 0.50)
+    # =========================================================================
+    # BARBA COMPLETA Y ESCULPIDA DE ELI SEGÚN ELI3.PNG Y ELI2.PNG
+    # =========================================================================
+    # Geometría UV de referencia:
+    # y = 0.190: Pliegue submandibular (inicio inferior de la barba en cuello)
+    # y = 0.262: Mentón (barbilla ósea)
+    # y = 0.395: Labio inferior (base)
+    # y = 0.429: Hendidura bucal
+    # y = 0.471: Labio superior
+    # y = 0.528: Base nasal
+    dx_face = np.abs(x - 0.50)
 
-    # Límite inferior estricto en la mandíbula (bajo la mandíbula es piel limpia)
-    y_jaw_bone = 0.265 + 0.140 * np.maximum(0.0, (dx_jaw - 0.04) / 0.22)**1.3
-    lower_mask = np.clip((y - (y_jaw_bone - 0.015)) / 0.015, 0.0, 1.0)
+    # 1. Límite inferior en cuello (Neckline):
+    # En el centro (y >= 0.190); hacia los ángulos de mandíbula sube suavemente a 0.280
+    y_neckline = 0.190 + 0.090 * np.clip(dx_face / 0.25, 0.0, 1.0)**1.4
+    mask_lower = np.clip((y - y_neckline) / 0.024, 0.0, 1.0)
 
-    # Límite superior en las mejillas: desciende suavemente de patillas a comisuras
-    t_cheek = np.clip((dx_jaw - 0.05) / 0.18, 0.0, 1.0)
-    y_cheek_upper = 0.380 + 0.090 * t_cheek
-    upper_mask = np.clip((y_cheek_upper - y) / 0.015, 0.0, 1.0)
+    # 2. Límite superior en mejillas (Cheekline fiel a eli3.png):
+    # Despeja las mejillas superiores y pómulos; desciende de patillas (y=0.490) a comisura (y=0.428)
+    t_cheek = np.clip((dx_face - 0.075) / 0.165, 0.0, 1.0)
+    y_cheekline = 0.428 + 0.065 * (t_cheek**1.1)
+    mask_upper = np.clip((y_cheekline - y) / 0.028, 0.0, 1.0)
 
-    # Límite lateral en patillas
-    lat_mask = np.clip((0.265 - dx_jaw) / 0.020, 0.0, 1.0)
+    # 3. Límite lateral en patillas
+    mask_lateral = np.clip((0.265 - dx_face) / 0.025, 0.0, 1.0)
 
-    # Hendidura anatómica entre labio inferior y mentón
-    lip_gap = np.clip(1.0 - np.sqrt((dx_jaw / 0.038)**2 + ((y - 0.360) / 0.018)**2), 0.0, 1.0) * (y > 0.33) * (dx_jaw > 0.014)
+    # Masa basal continua de la barba (mentón, mandíbula y mejillas inferiores)
+    beard_base = mask_lower * mask_upper * mask_lateral
 
-    # Mosca / Soul Patch centrado bajo el labio inferior (eli3.png)
-    soul_patch = np.clip(1.0 - np.sqrt((dx_jaw / 0.018)**2 + ((y - 0.345) / 0.022)**2), 0.0, 1.0)**1.3
+    # 4. Hendiduras periorales limpias a los lados del Soul Patch (eli3.png)
+    gap_l = np.clip(1.0 - np.sqrt(((x - 0.450) / 0.026)**2 + ((y - 0.392) / 0.024)**2), 0.0, 1.0)**1.5
+    gap_r = np.clip(1.0 - np.sqrt(((x - 0.550) / 0.026)**2 + ((y - 0.392) / 0.024)**2), 0.0, 1.0)**1.5
+    perioral_gaps = np.maximum(gap_l, gap_r)
 
-    # Masa completa de barba en mentón, mandíbula y mejilla
-    beard_mass = lower_mask * upper_mask * lat_mask * (1.0 - lip_gap * 0.95)
+    # 5. Soul Patch (Mosca) anatómico centrado bajo el labio inferior
+    soul_patch = np.clip(1.0 - np.sqrt((dx_face / 0.022)**2 + ((y - 0.380) / 0.040)**2), 0.0, 1.0)**1.2 * (y >= 0.330)
 
-    # Bigote continuo sobre labio superior con hendidura en filtrum (eli3.png)
-    dx_stache = dx_jaw / 0.085
-    dy_stache = (y - 0.442) / 0.024
-    stache_base = np.clip(1.0 - np.sqrt(dx_stache**2 + dy_stache**2), 0.0, 1.0)**1.2
-    stache_gap = np.clip(dx_jaw / 0.010, 0.40, 1.0)
-    stache_base *= stache_gap
+    # Masa mandibular con las hendiduras periorales talladas y soul patch reforzado
+    beard_jaw = np.clip(beard_base * (1.0 - perioral_gaps * 0.90) + soul_patch * 0.95, 0.0, 1.0)
 
-    # Comisuras que unen bigote con la mandíbula
-    comm_l = np.clip(1.0 - np.sqrt(((x - 0.425) / 0.024)**2 + ((y - 0.385) / 0.042)**2), 0.0, 1.0)**1.2
-    comm_r = np.clip(1.0 - np.sqrt(((x - 0.575) / 0.024)**2 + ((y - 0.385) / 0.042)**2), 0.0, 1.0)**1.2
+    # 6. Bigote anatómico sobre el labio superior (eli3.png)
+    # Entre la base nasal (0.525) y la apertura bucal (0.430)
+    dx_st = dx_face / 0.092
+    dy_st = (y - 0.472) / 0.038
+    dist_stache = np.sqrt(dx_st**2 + dy_st**2)
+    stache_shape = np.clip(1.0 - dist_stache, 0.0, 1.0)**1.20 * (y >= 0.428) * (y <= 0.525)
+    # Separación sutil en el filtrum nasal
+    filtrum_notch = np.clip(dx_face / 0.012, 0.55, 1.0)
+    stache = stache_shape * filtrum_notch
 
-    beard_total = np.clip(np.maximum.reduce([beard_mass, soul_patch, stache_base, comm_l, comm_r]), 0.0, 1.0)
+    # 7. Conexión de comisuras (une bigote con barba mandibular lateral)
+    comm_l = np.clip(1.0 - np.sqrt(((x - 0.418) / 0.028)**2 + ((y - 0.435) / 0.038)**2), 0.0, 1.0)**1.3
+    comm_r = np.clip(1.0 - np.sqrt(((x - 0.582) / 0.028)**2 + ((y - 0.435) / 0.038)**2), 0.0, 1.0)**1.3
+    comm_connect = np.maximum(comm_l, comm_r)
 
-    # Color de barba y vello facial de Eli: castaño muy oscuro natural
-    beard_col = np.array([0.115, 0.085, 0.068], dtype=np.float32)
+    # Integración total de la barba sin costuras
+    beard_total = np.clip(np.maximum.reduce([beard_jaw, stache, comm_connect]), 0.0, 1.0)
+
+    # Tono de barba: castaño oscuro natural masculino con matiz dérmico (eli3.png)
+    beard_col = np.array([0.145, 0.112, 0.090], dtype=np.float32)
     for c in range(3):
-        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - beard_total * 0.93) + beard_col[c] * (beard_total * 0.93)
+        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - beard_total * 0.80) + beard_col[c] * (beard_total * 0.80)
 
-    # Labios con sonrisa suave y bermellón natural (y ~ 0.385 - 0.415)
-    dx_lip = (x - 0.50) / 0.065
-    dy_lip = (y - 0.392) / 0.018
-    lip_mask = np.clip(1.0 - np.sqrt(dx_lip**2 + dy_lip**2), 0.0, 1.0)**1.3
-    smile_curve = 0.005 * (1.0 - np.clip(dx_lip**2, 0.0, 1.0))
-    dy_split = np.abs(y - (0.391 + smile_curve)) / 0.004
-    lip_split = np.clip(1.0 - dy_split, 0.0, 1.0) * (np.abs(dx_lip) < 0.85)
+    # =========================================================================
+    # BOCA, LABIOS Y SONRISA CÁLIDA CON DIENTES (eli2.png)
+    # =========================================================================
+    dx_mouth = (x - 0.50) / 0.078
+    smile_arch = 0.008 * (1.0 - np.clip(dx_mouth**2, 0.0, 1.0))
 
-    lip_col = np.array([0.76, 0.47, 0.42], dtype=np.float32)
+    # Labio superior (y ~ 0.432 - 0.455)
+    upper_lip = np.clip(1.0 - np.sqrt(dx_mouth**2 + ((y - (0.442 + smile_arch)) / 0.016)**2), 0.0, 1.0)**1.4 * (y >= 0.428)
+
+    # Labio inferior (y ~ 0.405 - 0.430)
+    lower_lip = np.clip(1.0 - np.sqrt(dx_mouth**2 + ((y - (0.416 + smile_arch)) / 0.016)**2), 0.0, 1.0)**1.4 * (y <= 0.430)
+
+    lip_total = np.clip(upper_lip + lower_lip, 0.0, 1.0) * (1.0 - beard_total * 0.50)
+    lip_tone = np.array([0.76, 0.48, 0.43], dtype=np.float32)
+
     for c in range(3):
-        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - lip_mask * 0.58) + lip_col[c] * (lip_mask * 0.58)
-        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - lip_split * 0.60) + 0.16 * (lip_split * 0.60)
+        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - lip_total * 0.55) + lip_tone[c] * (lip_total * 0.55)
 
-    # Aletas nasales
-    nostril_l = np.clip(1.0 - np.sqrt(((x - 0.486) / 0.011)**2 + ((y - 0.510) / 0.007)**2), 0.0, 1.0)**2
-    nostril_r = np.clip(1.0 - np.sqrt(((x - 0.514) / 0.011)**2 + ((y - 0.510) / 0.007)**2), 0.0, 1.0)**2
+    # Sonrisa con dientes blancos superiores expuestos en la hendidura (eli2.png)
+    dx_teeth = (x - 0.50) / 0.046
+    y_teeth_c = 0.428 + smile_arch
+    teeth_mask = np.clip(1.0 - np.sqrt(dx_teeth**2 + ((y - y_teeth_c) / 0.0085)**2), 0.0, 1.0)**1.3 * (np.abs(dx_teeth) < 0.90) * (1.0 - beard_total)
+    teeth_col = np.array([0.96, 0.94, 0.91], dtype=np.float32)
+    teeth_gap = (np.sin(x * 160.0 * np.pi) > 0.88) * 0.10
+
+    for c in range(3):
+        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - teeth_mask * 0.88) + (teeth_col[c] - teeth_gap) * (teeth_mask * 0.88)
+
+    # Hendidura labial / línea de comisura
+    mouth_crease = np.clip(1.0 - np.abs(y - (0.423 + smile_arch)) / 0.0038, 0.0, 1.0) * (np.abs(dx_mouth) < 1.0) * (1.0 - teeth_mask * 0.70)
+    for c in range(3):
+        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - mouth_crease * 0.65) + 0.15 * (mouth_crease * 0.65)
+
+    # Aletas nasales anatómicas alineadas a z=1.492 (v=0.528)
+    nostril_l = np.clip(1.0 - np.sqrt(((x - 0.486) / 0.011)**2 + ((y - 0.528) / 0.008)**2), 0.0, 1.0)**2
+    nostril_r = np.clip(1.0 - np.sqrt(((x - 0.514) / 0.011)**2 + ((y - 0.528) / 0.008)**2), 0.0, 1.0)**2
     nostrils = np.maximum(nostril_l, nostril_r)
     for c in range(3):
         diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - nostrils * 0.40) + shadow_tone[c] * (nostrils * 0.40)
@@ -181,7 +221,7 @@ def generate_face_textures():
     pore_noise = (np.sin(xx * 2.3 + yy * 3.1) * 0.020 + np.cos(xx * 3.7 - yy * 2.5) * 0.020)
     stubble_noise = (np.sin(xx * 5.2 + yy * 6.8) * 0.035 + np.cos(xx * 6.5 - yy * 5.1) * 0.035) * beard_total
 
-    height = (eyebrows * 0.28) + (beard_total * 0.20) + (lip_mask * 0.14) - (lip_split * 0.20) + pore_noise + stubble_noise
+    height = (eyebrows * 0.28) + (beard_total * 0.20) + (lip_total * 0.14) - (mouth_crease * 0.20) + pore_noise + stubble_noise
     normal = height_to_normal_map(height, scale=1.4)
 
     paths_d = [os.path.join(TEXTURES_DIR, "eli_face_diffuse.png"), os.path.join(CITIZENS_DIR, "eli_face_diffuse.png")]

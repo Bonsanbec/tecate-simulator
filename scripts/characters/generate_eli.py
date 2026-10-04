@@ -126,7 +126,7 @@ def create_materials():
                                       os.path.join(TEXTURES_DIR, "eli_glasses_diffuse.png"),
                                       base_color=(0.05, 0.05, 0.06, 1.0), roughness=0.25),
         "glass": setup_pbr_material("Mat_Eli_Glass", None, None,
-                                    base_color=(0.95, 0.98, 1.0, 1.0), roughness=0.04, transmission=0.95, alpha=0.15),
+                                    base_color=(0.95, 0.98, 1.0, 1.0), roughness=0.08, transmission=0.0, alpha=0.12),
         "teeth": setup_pbr_material("Mat_Eli_Teeth", None, None,
                                     base_color=(0.98, 0.98, 0.96, 1.0), roughness=0.15,
                                     emission_color=(0.20, 0.20, 0.19, 1.0)),
@@ -175,10 +175,10 @@ def build_head_mesh(materials):
     head_profile = [
         # z,      rx,    ry_front, ry_back, y_offset, is_face
         (1.370,  0.046, 0.046,    0.048,   -0.002,   False), # 0: Base cuello (conecta con cuerpo)
-        (1.392,  0.048, 0.046,    0.052,   -0.001,   False), # 1: Cuello medio (piel limpia)
-        (1.412,  0.052, 0.050,    0.060,    0.001,   True),  # 2: Submandíbula
-        (1.428,  0.057, 0.063,    0.070,    0.006,   True),  # 3: Mentón con barba
-        (1.445,  0.061, 0.063,    0.078,    0.005,   True),  # 4: Surco mentolabial
+        (1.392,  0.046, 0.044,    0.050,   -0.002,   False), # 1: Cuello medio (piel limpia y afeitada)
+        (1.412,  0.050, 0.046,    0.056,    0.000,   True),  # 2: Ángulo submandibular perfilado
+        (1.428,  0.058, 0.066,    0.068,    0.004,   True),  # 3: Mentón óseo con barba
+        (1.445,  0.062, 0.064,    0.074,    0.003,   True),  # 4: Surco mentolabial
         (1.458,  0.064, 0.066,    0.084,    0.003,   True),  # 5: Labio inferior sonriente
         (1.468,  0.066, 0.065,    0.088,    0.002,   True),  # 6: Hendidura bucal abierta
         (1.478,  0.068, 0.068,    0.092,    0.002,   True),  # 7: Labio superior con bigote
@@ -350,7 +350,7 @@ def build_head_mesh(materials):
     frame_depth = 0.0015
     lens_hw = 0.0205
     lens_hh = 0.0130
-    lens_y = 0.0715
+    lens_y = 0.0760
     lens_z = 1.515
 
     for s_side in (1.0, -1.0):
@@ -562,13 +562,13 @@ def build_body_mesh(materials):
         # Brazos
         ( 0.06, -0.004, 1.36, 0.070, 0.070), # 7
         ( 0.185, -0.004, 1.34, 0.065, 0.065), # 8: Hombro L
-        ( 0.265,  0.002, 1.15, 0.052, 0.052), # 9: Codo L
-        ( 0.325,  0.012, 0.93, 0.038, 0.035), # 10: Muñeca L
+        ( 0.265,  0.002, 1.15, 0.050, 0.050), # 9: Codo L
+        ( 0.305,  0.008, 0.98, 0.034, 0.030), # 10: Antebrazo bajo L
 
         (-0.06, -0.004, 1.36, 0.070, 0.070), # 11
         (-0.185, -0.004, 1.34, 0.065, 0.065), # 12: Hombro R
-        (-0.265,  0.002, 1.15, 0.052, 0.052), # 13: Codo R
-        (-0.325,  0.012, 0.93, 0.038, 0.035), # 14: Muñeca R
+        (-0.265,  0.002, 1.15, 0.050, 0.050), # 13: Codo R
+        (-0.305,  0.008, 0.98, 0.034, 0.030), # 14: Antebrazo bajo R
 
         # Piernas
         ( 0.088, 0.002, 0.82, 0.082, 0.082), # 15: Cadera sup L
@@ -584,11 +584,17 @@ def build_body_mesh(materials):
         (-0.088, 0.000, 0.30, 0.058, 0.058), # 24: Pantorrilla R
         (-0.088, 0.002, 0.12, 0.050, 0.050), # 25: Tobillo R
         (-0.088, 0.055, 0.03, 0.052, 0.105), # 26: Pie R
+
+        # Muñecas y Palmas anatómicas continuas en piel
+        ( 0.325,  0.012, 0.895, 0.024, 0.017), # 27: Muñeca L
+        ( 0.325,  0.012, 0.835, 0.028, 0.014), # 28: Palma L
+        (-0.325,  0.012, 0.895, 0.024, 0.017), # 29: Muñeca R
+        (-0.325,  0.012, 0.835, 0.028, 0.014), # 30: Palma R
     ]
     edges = [
         (0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6),
-        (5, 7), (7, 8), (8, 9), (9, 10),
-        (5, 11), (11, 12), (12, 13), (13, 14),
+        (5, 7), (7, 8), (8, 9), (9, 10), (10, 27), (27, 28),
+        (5, 11), (11, 12), (12, 13), (13, 14), (14, 29), (29, 30),
         (0, 15), (15, 16), (16, 17), (17, 18), (18, 19), (19, 20),
         (0, 21), (21, 22), (22, 23), (23, 24), (24, 25), (25, 26),
     ]
@@ -619,16 +625,22 @@ def build_body_mesh(materials):
     # 2: Mat_Eli_Shoes (Zapatos mocasines café en pies Z < 0.10)
     # 3: Mat_Eli_Skin  (Antebrazos y manos en piel natural)
     for p in bm.faces:
-        center_z = p.calc_center_median().z
-        center_x = abs(p.calc_center_median().x)
-        if center_z < 0.10:
+        c_median = p.calc_center_median()
+        cz = c_median.z
+        cx = abs(c_median.x)
+        if cz < 0.10:
             p.material_index = 2 # Zapatos
-        elif center_z < 0.96 and center_x < 0.18:
+        elif cz < 0.96 and cx < 0.18:
             p.material_index = 1 # Pantalón chino
-        elif center_x > 0.18 and center_z < 1.18:
-            p.material_index = 3 # Piel del antebrazo expuesto
+        elif cx > 0.18:
+            # Proyección perpendicular a lo largo del eje del brazo (hombro 0.185, 1.34 a codo 0.265, 1.15)
+            t_arm = ((cx - 0.185) * 0.080 + (cz - 1.340) * (-0.190)) / 0.0425
+            if cz < 1.15 or t_arm > 0.52:
+                p.material_index = 3 # Piel del antebrazo y codo expuesto
+            else:
+                p.material_index = 0 # Manga corta de la camisa de lino
         else:
-            p.material_index = 0 # Camisa de lino crema
+            p.material_index = 0 # Torso de la camisa de lino crema
         for loop in p.loops:
             loop[uv_lay].uv = (loop.vert.co.x * 2.0 + 0.5, loop.vert.co.z * 1.5)
 
@@ -665,11 +677,11 @@ def build_body_mesh(materials):
     # Mapeo UV calibrado para que el vello pectoral se centre en el esternón
     chest_specs = [
         # z,     hw,    yf
-        (1.390, 0.044, 0.088),
-        (1.345, 0.038, 0.112),
-        (1.300, 0.030, 0.126),
-        (1.250, 0.020, 0.130),
-        (1.210, 0.005, 0.128),
+        (1.390, 0.044, 0.054),
+        (1.350, 0.038, 0.098),
+        (1.300, 0.030, 0.114),
+        (1.250, 0.020, 0.115),
+        (1.210, 0.005, 0.112),
     ]
     chest_rows = []
     n_cpts = 5
@@ -678,7 +690,7 @@ def build_body_mesh(materials):
         for i in range(n_cpts):
             t = (i / float(n_cpts - 1)) * 2.0 - 1.0
             cx = t * chw
-            cy = cyf - 0.0030 * (1.0 - t**2)
+            cy = cyf - 0.0025 * (1.0 - t**2)
             v = bm.verts.new((cx, cy, cz))
             row.append(v)
         chest_rows.append(row)
@@ -700,12 +712,12 @@ def build_body_mesh(materials):
     # -------------------------------------------------------------------------
     for s_side in (1.0, -1.0):
         sgn = s_side
-        v_neck_top = bm.verts.new((sgn * 0.036, 0.082, 1.392))
-        v_lapel_tip = bm.verts.new((sgn * 0.078, 0.112, 1.345))
-        v_lapel_notch = bm.verts.new((sgn * 0.068, 0.118, 1.328))
-        v_lapel_outer = bm.verts.new((sgn * 0.075, 0.126, 1.280))
-        v_v_apex = bm.verts.new((sgn * 0.012, 0.132, 1.210))
-        v_mid_inner = bm.verts.new((sgn * 0.026, 0.120, 1.295))
+        v_neck_top = bm.verts.new((sgn * 0.042, 0.056, 1.392))
+        v_lapel_tip = bm.verts.new((sgn * 0.082, 0.104, 1.340))
+        v_lapel_notch = bm.verts.new((sgn * 0.072, 0.110, 1.325))
+        v_lapel_outer = bm.verts.new((sgn * 0.078, 0.116, 1.275))
+        v_v_apex = bm.verts.new((sgn * 0.012, 0.116, 1.210))
+        v_mid_inner = bm.verts.new((sgn * 0.026, 0.115, 1.290))
 
         if sgn > 0:
             bm.faces.new((v_neck_top, v_lapel_tip, v_lapel_notch)).material_index = 0 # Shirt
@@ -734,7 +746,7 @@ def build_body_mesh(materials):
 
     # Hilera frontal de botones nacarados bajo el escote en V (Z = 1.150, 1.070, 0.990)
     for bz in [1.150, 1.070, 0.990]:
-        by = 0.126 + (1.150 - bz) * (-0.010)
+        by = 0.118 + (1.150 - bz) * (-0.008)
         btn_bm = bmesh.new()
         bmesh.ops.create_uvsphere(btn_bm, u_segments=8, v_segments=6, radius=0.0040)
         bmesh.ops.scale(btn_bm, verts=btn_bm.verts, vec=(1.0, 0.45, 1.0))
@@ -747,60 +759,19 @@ def build_body_mesh(materials):
         btn_bm.free()
 
     # -------------------------------------------------------------------------
-    # MANOS ANATÓMICAS CONECTADAS A LA MUÑECA (PIEL, 5 DEDOS)
+    # DEDOS Y PULGAR ANATÓMICOS CONECTADOS A LA PALMA CONTINUA (PIEL)
     # -------------------------------------------------------------------------
     for is_l in (True, False):
         sign_a = 1.0 if is_l else -1.0
-        w_center = Vector((sign_a * 0.325, 0.012, 0.930))
-
-        # Muñeca anatómica en piel
-        n_w = 8
-        wrist_v = []
-        for k in range(n_w):
-            cang = (2.0 * math.pi * k) / n_w
-            wx = sign_a * (0.325 + 0.020 * math.cos(cang))
-            wy = w_center.y + 0.018 * math.sin(cang)
-            wrist_v.append(bm.verts.new((wx, wy, 0.930)))
-
-        # Palma y nudillos anatómicos
-        z_knuckles = 0.850
-        x_in = sign_a * (0.325 - 0.012)
-        x_out = sign_a * (0.325 + 0.012)
-        y_ant = w_center.y + 0.024
-        y_post = w_center.y - 0.022
-
-        p_box = [
-            bm.verts.new((x_in,  y_ant,  0.900)),
-            bm.verts.new((x_out, y_ant,  0.900)),
-            bm.verts.new((x_out, y_post, 0.900)),
-            bm.verts.new((x_in,  y_post, 0.900)),
-            bm.verts.new((x_in,  y_ant,  z_knuckles)),
-            bm.verts.new((x_out, y_ant,  z_knuckles)),
-            bm.verts.new((x_out, y_post, z_knuckles)),
-            bm.verts.new((x_in,  y_post, z_knuckles)),
-        ]
-        # Conectar muñeca con la caja de la palma (evitar huecos)
-        for k in range(n_w):
-            kn = (k + 1) % n_w
-            # Asignar a la parte superior de p_box
-            p_target1 = p_box[k % 4]
-            p_target2 = p_box[kn % 4]
-            bm.faces.new((wrist_v[k], wrist_v[kn], p_target2, p_target1)).material_index = 3
-
-        f_p1 = bm.faces.new((p_box[0], p_box[1], p_box[5], p_box[4]))
-        f_p2 = bm.faces.new((p_box[1], p_box[2], p_box[6], p_box[5]))
-        f_p3 = bm.faces.new((p_box[2], p_box[3], p_box[7], p_box[6]))
-        f_p4 = bm.faces.new((p_box[3], p_box[0], p_box[4], p_box[7]))
-        for f in (f_p1, f_p2, f_p3, f_p4):
-            f.material_index = 3 # Skin
-            for loop in f.loops: loop[uv_lay].uv = (0.5, 0.5)
+        w_center = Vector((sign_a * 0.325, 0.012, 0.835))
+        z_knuckles = 0.825
 
         # 4 Dedos estilizados en reposo relajado
         finger_specs = [
-            ("Index",   w_center.y + 0.017, 0.055, 0.0062),
-            ("Middle",  w_center.y + 0.005, 0.060, 0.0065),
-            ("Ring",    w_center.y - 0.007, 0.054, 0.0060),
-            ("Pinky",   w_center.y - 0.017, 0.044, 0.0055),
+            ("Index",   w_center.y + 0.015, 0.048, 0.0058),
+            ("Middle",  w_center.y + 0.005, 0.052, 0.0062),
+            ("Ring",    w_center.y - 0.005, 0.047, 0.0058),
+            ("Pinky",   w_center.y - 0.015, 0.038, 0.0052),
         ]
         for f_name, fy, f_len, f_rad in finger_specs:
             fx = sign_a * 0.325
@@ -835,15 +806,15 @@ def build_body_mesh(materials):
                 for loop in ff_tip.loops: loop[uv_lay].uv = (0.5, 0.5)
 
         # Pulgar en oposición anatómica
-        th_root = Vector((sign_a * (0.325 - 0.012), w_center.y + 0.014, 0.885))
+        th_root = Vector((sign_a * (0.325 - 0.018), w_center.y + 0.010, 0.840))
         n_tseg = 3
         prev_th = None
         for s in range(n_tseg + 1):
             t = s / float(n_tseg)
-            tx = th_root.x - sign_a * 0.018 * t
-            ty = th_root.y + 0.016 * t
-            tz = th_root.z - 0.034 * t
-            trad = 0.0070 * (1.0 - 0.25 * t)
+            tx = th_root.x - sign_a * 0.012 * t
+            ty = th_root.y + 0.012 * t
+            tz = th_root.z - 0.028 * t
+            trad = 0.0062 * (1.0 - 0.25 * t)
             cur_th = []
             for k in range(6):
                 tang = (2.0 * math.pi * k) / 6.0
@@ -858,13 +829,14 @@ def build_body_mesh(materials):
                     for loop in thf.loops: loop[uv_lay].uv = (0.5, 0.5)
             prev_th = cur_th
 
-        tip_th = bm.verts.new((th_root.x - sign_a * 0.020, th_root.y + 0.018, th_root.z - 0.038))
+        tip_th = bm.verts.new((th_root.x - sign_a * 0.014, th_root.y + 0.014, th_root.z - 0.032))
         for k in range(6):
             knxt = (k + 1) % 6
             thf_tip = bm.faces.new((prev_th[knxt], prev_th[k], tip_th))
             thf_tip.material_index = 3
             for loop in thf_tip.loops: loop[uv_lay].uv = (0.5, 0.5)
 
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.normal_update()
     for f in bm.faces: f.smooth = True
     bm.to_mesh(obj_body.data)
