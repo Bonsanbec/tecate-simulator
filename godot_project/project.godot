@@ -43,6 +43,8 @@ common/physics_interpolation=true
 
 [debug]
 
+settings/file_logging/enable_file_logging=false
+settings/file_logging/enable_file_logging.pc=false
 file_logging/enable_file_logging=false
 
 [network]

@@ -875,22 +875,32 @@ def assign_weights(obj, is_head=False):
             grp = "Neck" if co.z < 1.41 else "Head"
             obj.vertex_groups[grp].add([v.index], 1.0, 'REPLACE')
         else:
-            if co.z < 0.04:
+            # 1. Pies y dedos de los pies (confinados a |X| <= 0.18)
+            if co.z < 0.04 and abs(co.x) <= 0.18:
                 obj.vertex_groups["Toes.L" if co.x > 0 else "Toes.R"].add([v.index], 1.0, 'REPLACE')
-            elif co.z < 0.12:
+            elif co.z < 0.12 and abs(co.x) <= 0.18:
                 obj.vertex_groups["Foot.L" if co.x > 0 else "Foot.R"].add([v.index], 1.0, 'REPLACE')
+            # 2. Extremidades superiores completas (|X| > 0.18): Hombros, brazos, antebrazos, manos y dedos
+            elif abs(co.x) > 0.18 and co.z < 1.38:
+                side = ".L" if co.x > 0 else ".R"
+                if co.z < 0.93:
+                    obj.vertex_groups["Hand" + side].add([v.index], 1.0, 'REPLACE')
+                elif co.z < 1.15:
+                    obj.vertex_groups["Forearm" + side].add([v.index], 1.0, 'REPLACE')
+                else:
+                    obj.vertex_groups["UpperArm" + side].add([v.index], 1.0, 'REPLACE')
+            # 3. Extremidades inferiores (|X| <= 0.18): Piernas, rodillas y muslos
             elif co.z < 0.48:
                 obj.vertex_groups["LowerLeg.L" if co.x > 0 else "LowerLeg.R"].add([v.index], 1.0, 'REPLACE')
             elif co.z < 0.82 and abs(co.x) > 0.03:
                 obj.vertex_groups["UpperLeg.L" if co.x > 0 else "UpperLeg.R"].add([v.index], 1.0, 'REPLACE')
-            elif abs(co.x) > 0.18 and co.z < 1.38:
-                side = ".L" if co.x > 0 else ".R"
-                if co.z < 0.925: obj.vertex_groups["Hand" + side].add([v.index], 1.0, 'REPLACE')
-                elif co.z < 1.15: obj.vertex_groups["Forearm" + side].add([v.index], 1.0, 'REPLACE')
-                else: obj.vertex_groups["UpperArm" + side].add([v.index], 1.0, 'REPLACE')
-            elif co.z < 0.95: obj.vertex_groups["Hips"].add([v.index], 1.0, 'REPLACE')
-            elif co.z < 1.15: obj.vertex_groups["Spine"].add([v.index], 1.0, 'REPLACE')
-            else: obj.vertex_groups["Chest"].add([v.index], 1.0, 'REPLACE')
+            # 4. Pelvis y columna
+            elif co.z < 0.95:
+                obj.vertex_groups["Hips"].add([v.index], 1.0, 'REPLACE')
+            elif co.z < 1.15:
+                obj.vertex_groups["Spine"].add([v.index], 1.0, 'REPLACE')
+            else:
+                obj.vertex_groups["Chest"].add([v.index], 1.0, 'REPLACE')
 
 # =============================================================================
 # 4. RENDER PREVIEW DE ESTUDIO CINEMATOGRÁFICO
