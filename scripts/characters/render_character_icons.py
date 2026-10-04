@@ -106,6 +106,7 @@ def setup_render_engine(scene, resolution=1024, samples=48, transparent=True):
     scene.render.resolution_y = resolution
     scene.render.resolution_percentage = 100
     scene.render.film_transparent = transparent
+    scene.view_settings.exposure = -0.15
 
 # =============================================================================
 # 1. RENDER DE AXEL (scratch/humans/axel2.png)
@@ -228,11 +229,11 @@ def render_eli():
     head_t = (0.0, 0.0, 1.48)
     chest_t = (0.0, 0.0, 1.22)
 
-    # Iluminación calibrada para el rostro, sonrisa y camisa de lino
-    add_directed_light(scene, 'KeyLight', 'AREA', 230.0, (0.8, 1.6, 1.6), chest_t, (1.0, 0.98, 0.94), size=1.3)
-    add_directed_light(scene, 'FillLight', 'AREA', 120.0, (-1.0, 1.5, 1.4), head_t, (0.94, 0.97, 1.0), size=1.8)
-    add_directed_light(scene, 'FaceLight', 'AREA', 70.0, (0.0, 1.8, 1.48), head_t, (1.0, 0.99, 0.97), size=0.9)
-    add_directed_light(scene, 'RimLight', 'SPOT', 180.0, (0.0, -1.3, 1.9), head_t, (1.0, 0.98, 0.95))
+    # Iluminación calibrada para el rostro, sonrisa y camisa de lino (atenuada para evitar sobreexposición/blanqueado)
+    add_directed_light(scene, 'KeyLight', 'AREA', 135.0, (0.8, 1.6, 1.6), chest_t, (1.0, 0.98, 0.94), size=1.4)
+    add_directed_light(scene, 'FillLight', 'AREA', 65.0, (-1.0, 1.5, 1.4), head_t, (0.94, 0.97, 1.0), size=2.0)
+    add_directed_light(scene, 'FaceLight', 'AREA', 24.0, (0.0, 1.8, 1.48), head_t, (1.0, 0.99, 0.97), size=1.4)
+    add_directed_light(scene, 'RimLight', 'SPOT', 115.0, (0.0, -1.3, 1.9), head_t, (1.0, 0.98, 0.95))
 
     # 1. Render Ícono Transparente RGBA (Pose Señalando)
     setup_render_engine(scene, resolution=1024, samples=48, transparent=True)
@@ -269,10 +270,10 @@ def render_eli():
     target_p = Vector((0.0, 0.0, 1.28))
     cam_obj.rotation_euler = (target_p - cam_obj.location).to_track_quat('-Z', 'Y').to_euler()
 
-    add_directed_light(scene, 'KeyLight', 'AREA', 230.0, (0.8, 1.6, 1.6), chest_t, (1.0, 0.98, 0.94), size=1.3)
-    add_directed_light(scene, 'FillLight', 'AREA', 120.0, (-1.0, 1.5, 1.4), head_t, (0.94, 0.97, 1.0), size=1.8)
-    add_directed_light(scene, 'FaceLight', 'AREA', 75.0, (0.0, 1.8, 1.48), head_t, (1.0, 0.99, 0.97), size=0.9)
-    add_directed_light(scene, 'RimLight', 'SPOT', 180.0, (0.0, -1.3, 1.9), head_t, (1.0, 0.98, 0.95))
+    add_directed_light(scene, 'KeyLight', 'AREA', 135.0, (0.8, 1.6, 1.6), chest_t, (1.0, 0.98, 0.94), size=1.4)
+    add_directed_light(scene, 'FillLight', 'AREA', 65.0, (-1.0, 1.5, 1.4), head_t, (0.94, 0.97, 1.0), size=2.0)
+    add_directed_light(scene, 'FaceLight', 'AREA', 24.0, (0.0, 1.8, 1.48), head_t, (1.0, 0.99, 0.97), size=1.4)
+    add_directed_light(scene, 'RimLight', 'SPOT', 115.0, (0.0, -1.3, 1.9), head_t, (1.0, 0.98, 0.95))
 
     setup_render_engine(scene, resolution=1024, samples=48, transparent=True)
     out_portrait = os.path.join(ICONS_DIR, "eli_icon_portrait.png")

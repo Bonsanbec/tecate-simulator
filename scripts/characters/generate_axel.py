@@ -786,10 +786,10 @@ def build_body_mesh(materials):
         bm.faces.new((p_box[3], p_box[0], p_box[4], p_box[7])).material_index = 6
 
         finger_specs = [
-            ("Index",   w_center.y + 0.018, 0.060, 0.0068, 0.85, is_left),
-            ("Middle",  w_center.y + 0.005, 0.066, 0.0072, 1.00, is_left),
-            ("Ring",    w_center.y - 0.008, 0.061, 0.0068, 1.15, False),
-            ("Little",  w_center.y - 0.019, 0.050, 0.0058, 1.30, False),
+            ("Index",   w_center.y + 0.015, 0.048, 0.0058, 0.85, is_left),
+            ("Middle",  w_center.y + 0.005, 0.052, 0.0062, 1.00, is_left),
+            ("Ring",    w_center.y - 0.005, 0.047, 0.0058, 1.15, False),
+            ("Little",  w_center.y - 0.015, 0.038, 0.0052, 1.30, False),
         ]
         curl_dir = Vector((-sign_h * 0.70, 0.35, 0.0)).normalized()
 
@@ -838,16 +838,16 @@ def build_body_mesh(materials):
                     kn = (k + 1) % 8
                     bm.faces.new((r1_pts[k], r1_pts[kn], r2_pts[kn], r2_pts[k])).material_index = 5
 
-        th_mcp = Vector((x_in - sign_h * 0.004, y_ant + 0.005, z_knuckles + 0.022))
+        th_mcp = Vector((x_in - sign_h * 0.004, y_ant + 0.005, z_knuckles + 0.020))
         th_joints = [
             th_mcp,
-            th_mcp + Vector((-sign_h * 0.008, 0.012, -0.018)),
-            th_mcp + Vector((-sign_h * 0.014, 0.018, -0.035)),
-            th_mcp + Vector((-sign_h * 0.016, 0.020, -0.048)),
+            th_mcp + Vector((-sign_h * 0.007, 0.010, -0.012)),
+            th_mcp + Vector((-sign_h * 0.011, 0.014, -0.023)),
+            th_mcp + Vector((-sign_h * 0.013, 0.015, -0.032)),
         ]
         prev_th = None
         for j_idx, pt in enumerate(th_joints):
-            th_rad = 0.0078 * (1.0 - 0.20 * (j_idx / 3.0))
+            th_rad = 0.0064 * (1.0 - 0.20 * (j_idx / 3.0))
             cur_ring = []
             for k in range(6):
                 ang = (2.0 * math.pi * k) / 6.0
@@ -860,7 +860,7 @@ def build_body_mesh(materials):
                     kn = (k + 1) % 6
                     bm.faces.new((prev_th[k], prev_th[kn], cur_ring[kn], cur_ring[k])).material_index = 6
             prev_th = cur_ring
-        tip_th = bm.verts.new(th_joints[-1] + Vector((-sign_h * 0.002, 0.003, -0.003)))
+        tip_th = bm.verts.new(th_joints[-1] + Vector((-sign_h * 0.002, 0.002, -0.002)))
         for k in range(6):
             kn = (k + 1) % 6
             bm.faces.new((prev_th[kn], prev_th[k], tip_th)).material_index = 6
