@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CitizenProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://systems/characters/citizen_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+identity_id = "axel"
+display_name = "Axel"
+model_path = "res://assets/characters/citizens/axel.glb"
+archetype = "urban_youth"
+preferred_greeting = "¡Qué onda! Bienvenidos a Tecate."
+voice_pitch = 1.0
+walk_speed_modifier = 1.0
+enable_skin_sss = true
+sss_strength = 0.32
+sss_color = Color(0.92, 0.45, 0.35, 1)

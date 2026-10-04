@@ -26,6 +26,7 @@ func _init() -> void:
 	_test_remote_entities_unification()
 	_test_network_snapshot_interpolation()
 	_test_multiplayer_manager_unification()
+	_test_dual_citizen_profiles_and_avatars()
 
 	print("\n========================================================")
 	print(" RESUMEN: %d / %d pruebas superadas." % [passed_tests, total_tests])
@@ -176,3 +177,37 @@ func _test_multiplayer_manager_unification() -> void:
 	assert_test(rem_npc.citizen_name == "Carmen", "El ciudadano 3004 recibe su nombre cívico asignado")
 
 	mgr.queue_free()
+ 
+func _test_dual_citizen_profiles_and_avatars() -> void:
+	print("\n--- 6. Validación de Perfiles Duales y Avatares Canónicos (Axel y Eli) ---")
+	var axel_profile = CitizenEntityClass.CitizenProfileClass.create_axel_profile()
+	var eli_profile = CitizenEntityClass.CitizenProfileClass.create_eli_profile()
+
+	assert_test(axel_profile != null and axel_profile.identity_id == "axel", "Perfil de Axel creado con identity_id 'axel'")
+	assert_test(axel_profile.archetype == "urban_youth", "Arquetipo de Axel es 'urban_youth'")
+	assert_test(ResourceLoader.exists(axel_profile.model_path), "Modelo 3D GLB de Axel existe en disco")
+
+	assert_test(eli_profile != null and eli_profile.identity_id == "eli", "Perfil de Eli creado con identity_id 'eli'")
+	assert_test(eli_profile.archetype == "formal_beige", "Arquetipo de Eli es 'formal_beige'")
+	assert_test(ResourceLoader.exists(eli_profile.model_path), "Modelo 3D GLB de Eli existe en disco")
+
+	# Probar instanciación de CitizenEntity con Eli
+	var citizen_eli = CitizenEntityClass.new()
+	citizen_eli.identity_id = "eli"
+	citizen_eli.profile = eli_profile
+	citizen_eli.citizen_name = "Eli"
+	root.add_child(citizen_eli)
+	citizen_eli._ready()
+
+	assert_test(citizen_eli.humanoid_scene != null, "CitizenEntity instanció el avatar de Eli")
+	assert_test(citizen_eli.skeleton != null, "Avatar de Eli contiene Skeleton3D articulado")
+	assert_test(citizen_eli.skeleton.get_bone_count() == 22, "Skeleton3D de Eli posee los 22 huesos antropométricos canónicos")
+	assert_test(citizen_eli.mesh_head != null, "Avatar de Eli contiene Player_Head_Mesh")
+	assert_test(citizen_eli.mesh_body != null, "Avatar de Eli contiene Player_Body_Mesh")
+
+	# Probar conmutación dinámica de identidad a Axel
+	citizen_eli.apply_identity("axel")
+	assert_test(citizen_eli.humanoid_scene != null, "CitizenEntity transicionó dinámicamente al avatar de Axel")
+	assert_test(citizen_eli.skeleton != null and citizen_eli.skeleton.get_bone_count() == 22, "Skeleton3D de Axel conserva 22 huesos tras la transición")
+
+	citizen_eli.queue_free()
