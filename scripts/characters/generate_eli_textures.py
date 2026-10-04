@@ -283,6 +283,77 @@ def generate_suit_and_pants_textures():
                      [os.path.join(TEXTURES_DIR, "eli_pants_normal.png"), os.path.join(CITIZENS_DIR, "eli_pants_normal.png")])
 
 # =============================================================================
+# ??. PECHO ANATÓMICO CON VELLO PECTORAL PROCEDURAL (eli2.png) - 1024x1024
+# =============================================================================
+def generate_chest_textures():
+    print("-> Sintetizando mapas procedurales PBR para Pecho y Vello Pectoral de Eli (eli2.png)...")
+    w, h = 1024, 1024
+    diffuse = np.zeros((h, w, 4), dtype=np.float32)
+
+    u = np.linspace(0.0, 1.0, w, dtype=np.float32)[None, :]
+    v = np.linspace(0.0, 1.0, h, dtype=np.float32)[:, None]
+
+    np.random.seed(404)
+    noise_fine = np.random.normal(0.0, 1.0, (h, w)).astype(np.float32)
+
+    # Base dérmica del pecho (idéntica al cuello)
+    base_skin = np.array([0.835, 0.665, 0.550], dtype=np.float32)
+    for c in range(3):
+        diffuse[:, :, c] = base_skin[c] + noise_fine * 0.007
+    diffuse[:, :, 3] = 1.0
+
+    # Sombra del esternón medio
+    du_mid = np.abs(u - 0.50)
+    sternum_shade = np.exp(-(du_mid**2 / 0.006 + (v - 0.50)**2 / 0.20)) * 0.10
+    for c in range(3):
+        diffuse[:, :, c] -= sternum_shade
+
+    # Generación analítica de 1100 micro-hebras curvas de vello pectoral natural (eli2.png)
+    hair_layer = np.zeros((h, w), dtype=np.float32)
+    num_strands = 1100
+    for _ in range(num_strands):
+        cx = np.random.normal(0.50, 0.11)
+        cy = np.random.uniform(0.10, 0.90)
+        if cx < 0.12 or cx > 0.88:
+            continue
+        length = np.random.uniform(0.016, 0.038)
+        angle = np.random.uniform(-np.pi, np.pi)
+        curl = np.random.uniform(-3.5, 3.5)
+
+        t_steps = 16
+        t_arr = np.linspace(0, 1, t_steps)
+        px = cx + length * (t_arr * np.cos(angle) + curl * 0.22 * (t_arr**2) * np.sin(angle))
+        py = cy + length * (t_arr * np.sin(angle) - curl * 0.22 * (t_arr**2) * np.cos(angle))
+
+        ix = np.clip((px * (w - 1)).astype(np.int32), 0, w - 1)
+        iy = np.clip((py * (h - 1)).astype(np.int32), 0, h - 1)
+        hair_layer[iy, ix] = 1.0
+
+    # Dilatar ligeramente las hebras con NumPy puro para grosor realista de 1-2 píxeles
+    hair_strands = np.maximum.reduce([
+        hair_layer,
+        np.roll(hair_layer, 1, axis=0),
+        np.roll(hair_layer, -1, axis=0),
+        np.roll(hair_layer, 1, axis=1),
+        np.roll(hair_layer, -1, axis=1)
+    ])
+
+    envelope = np.exp(-(du_mid**2 / 0.038)) * np.clip(1.0 - (v - 0.70)**2 / 0.18, 0.35, 1.0)
+    hair_final = np.clip(hair_strands * envelope * 0.95, 0.0, 1.0)
+
+    hair_dark = np.array([0.09, 0.06, 0.04], dtype=np.float32)
+    for c in range(3):
+        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - hair_final * 0.94) + hair_dark[c] * (hair_final * 0.94)
+
+    chest_height = hair_final * 0.32 + noise_fine * 0.025
+    chest_normal = height_to_normal_map(chest_height, scale=1.7)
+
+    paths_d = [os.path.join(TEXTURES_DIR, "eli_chest_diffuse.png"), os.path.join(CITIZENS_DIR, "eli_chest_diffuse.png")]
+    paths_n = [os.path.join(TEXTURES_DIR, "eli_chest_normal.png"), os.path.join(CITIZENS_DIR, "eli_chest_normal.png")]
+    save_numpy_image("eli_chest_diffuse", diffuse, paths_d)
+    save_numpy_image("eli_chest_normal", chest_normal, paths_n)
+
+# =============================================================================
 # 4. CAMISA DE VESTIR Y CORBATA DE SEDA VINO TINTO
 # =============================================================================
 def generate_shirt_and_tie_textures():
