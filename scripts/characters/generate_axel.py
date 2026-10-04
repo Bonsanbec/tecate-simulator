@@ -1,44 +1,22 @@
 """
-=============================================================================
-Generador 3D Procedural: Axel - Modelo Humano Hiperrealista (Tecate Simulator)
-=============================================================================
-Reconstrucción fotorrealista y estilizada de Axel (estilo Fortnite / AAA):
-- CERO IA: materiales PBR shader nativos y texturas procedurales matemáticas
-  directas ('godot_project/assets/characters/textures/').
-- Identidad fidedigna a 'scratch/humans/axel.png':
-  * Rostro masculino esculpido: proporciones atléticas, mandíbula angular, pómulos.
-  * Ojos 3D almendrados con cuencas profundas, esclerótica, iris avellana estriado y párpados.
-  * Nariz 3D con puente esculpido, punta definida y aletas nasales.
-  * Labios 3D anatómicos con arco de Cupido y volumen bermellón.
-  * Sombreado de barba / 5 o'clock shadow auténtico en mentón y mandíbula.
-  * Cuello esbelto y atlético (r ~ 0.046 m) con relieve de nuez de Adán.
-  * Mechones 3D de cabello castaño oscuro ondulado bajo el gorro (frente, patillas y nuca).
-  * Gorro beanie 3D de lana verde oliva/tierra con dobladillo acanalado en relieve.
-  * Chamarra acolchada puffer / cortavientos azul marino con cuello alto (storm collar),
-    cremallera central, gajos acolchados horizontales y puños elásticos en muñecas.
-  * Cinturón de cuero marrón con textura de grano y hebilla rectangular metálica con hebijón.
-  * Pantalón de mezclilla oscura continuo con sarga procedural.
-  * Calzado deportivo urbano con suela de caucho y lengüeta.
-  * Manos anatómicas en A-pose: dorso hacia el frente (+Y), palma hacia el interior/fondo (-Y),
-    pulgar OPONIBLE que nace en la eminencia tenar y se orienta hacia la palma/interior,
-    y 4 dedos escalonados (Medio > Anular > Índice > Meñique) con 3 falanges relajadas.
-- Cero accesorios ajenos a la vestimenta (sin micrófonos ni cables).
-- Esqueleto canónico de 22 huesos compatible con CitizenEntity y Godot 4.
-=============================================================================
+Axel Master Generator - Versión Definitiva con Chaleco Sastre Diagonal y Corbata Continua
+Basado fidedignamente en scratch/humans/axel2.png / axel2.tiff
 """
 
-import os
 import bpy
 import bmesh
 import math
+import os
+import numpy as np
 from mathutils import Vector, Matrix, Euler, Quaternion
 
-OUTPUT_GLB = "godot_project/assets/characters/citizens/axel.glb"
-OUTPUT_BLEND = "godot_project/assets/characters/citizens/axel.blend"
-TEX_DIR = "godot_project/assets/characters/textures"
+PROJECT_ROOT = "/Users/hakkindavid/Documents/GitHub/tecate-simulator"
+TEXTURES_DIR = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/textures")
+OUTPUT_BLEND = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/citizens/axel.blend")
+OUTPUT_GLB = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/citizens/axel.glb")
+PREVIEW_PNG = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/axel_preview.png")
 
 def clean_scene():
-    """Limpia todos los datos residuales de la escena."""
     bpy.ops.wm.read_factory_settings(use_empty=True)
     for obj in list(bpy.data.objects):
         bpy.data.objects.remove(obj, do_unlink=True)
@@ -49,909 +27,840 @@ def clean_scene():
     for mat in list(bpy.data.materials):
         bpy.data.materials.remove(mat, do_unlink=True)
 
-def clampf(v, min_v, max_v):
-    return max(min_v, min(v, max_v))
-
 def create_pbr_material(name, base_color=(1, 1, 1, 1), roughness=0.5, metallic=0.0,
-                        tex_diffuse_path=None, tex_normal_path=None, sss_weight=0.0):
-    """Crea un material Principled BSDF nativo de alta fidelidad con soporte para texturas PBR."""
+                        diffuse_tex_path=None, normal_tex_path=None, specular=0.5):
     mat = bpy.data.materials.new(name=name)
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
     nodes.clear()
-    
+
     node_out = nodes.new(type='ShaderNodeOutputMaterial')
     node_bsdf = nodes.new(type='ShaderNodeBsdfPrincipled')
     links.new(node_bsdf.outputs['BSDF'], node_out.inputs['Surface'])
-    
+
     node_bsdf.inputs['Base Color'].default_value = base_color
     node_bsdf.inputs['Roughness'].default_value = roughness
     node_bsdf.inputs['Metallic'].default_value = metallic
-    
-    if sss_weight > 0.0:
-        if 'Subsurface Weight' in node_bsdf.inputs:
-            node_bsdf.inputs['Subsurface Weight'].default_value = sss_weight
-        elif 'Subsurface' in node_bsdf.inputs:
-            node_bsdf.inputs['Subsurface'].default_value = sss_weight
-        if 'Subsurface Radius' in node_bsdf.inputs:
-            node_bsdf.inputs['Subsurface Radius'].default_value = (0.04, 0.02, 0.01)
-            
-    # Textura difusa
-    if tex_diffuse_path and os.path.exists(tex_diffuse_path):
-        tex_img = bpy.data.images.load(os.path.abspath(tex_diffuse_path))
-        node_tex = nodes.new(type='ShaderNodeTexImage')
-        node_tex.image = tex_img
-        links.new(node_tex.outputs['Color'], node_bsdf.inputs['Base Color'])
-        
-    # Textura de normales
-    if tex_normal_path and os.path.exists(tex_normal_path):
-        norm_img = bpy.data.images.load(os.path.abspath(tex_normal_path))
-        norm_img.colorspace_settings.name = 'Non-Color'
-        node_norm_img = nodes.new(type='ShaderNodeTexImage')
-        node_norm_img.image = norm_img
-        node_norm_map = nodes.new(type='ShaderNodeNormalMap')
-        node_norm_map.inputs['Strength'].default_value = 1.0
-        links.new(node_norm_img.outputs['Color'], node_norm_map.inputs['Color'])
-        links.new(node_norm_map.outputs['Normal'], node_bsdf.inputs['Normal'])
-        
+    if 'Specular IOR Level' in node_bsdf.inputs:
+        node_bsdf.inputs['Specular IOR Level'].default_value = specular
+
+    if diffuse_tex_path and os.path.exists(diffuse_tex_path):
+        tex_node = nodes.new(type='ShaderNodeTexImage')
+        img = bpy.data.images.load(diffuse_tex_path)
+        tex_node.image = img
+        links.new(tex_node.outputs['Color'], node_bsdf.inputs['Base Color'])
+
+    if normal_tex_path and os.path.exists(normal_tex_path):
+        norm_img_node = nodes.new(type='ShaderNodeTexImage')
+        img_norm = bpy.data.images.load(normal_tex_path)
+        img_norm.colorspace_settings.name = 'Non-Color'
+        norm_img_node.image = img_norm
+
+        norm_map_node = nodes.new(type='ShaderNodeNormalMap')
+        norm_map_node.inputs['Strength'].default_value = 0.85
+        links.new(norm_img_node.outputs['Color'], norm_map_node.inputs['Color'])
+        links.new(norm_map_node.outputs['Normal'], node_bsdf.inputs['Normal'])
+
     return mat
 
-def build_axel_armature():
-    """
-    Construye el esqueleto antropométrico canónico simétrico (22 huesos).
-    Ambos brazos en A-pose limpia y relajada (~22° respecto al torso).
-    """
-    arm_data = bpy.data.armatures.new("Armature_Humanoid_Data")
-    arm_data.display_type = 'OCTAHEDRAL'
-    arm_obj = bpy.data.objects.new("Armature_Humanoid", arm_data)
-    bpy.context.scene.collection.objects.link(arm_obj)
-    bpy.context.view_layer.objects.active = arm_obj
-
-    bpy.ops.object.mode_set(mode='EDIT')
-    edit_bones = arm_data.edit_bones
-
-    # 1. Raíz
-    b_root = edit_bones.new("Root")
-    b_root.head = Vector((0.0, 0.0, 0.0))
-    b_root.tail = Vector((0.0, 0.0, 0.15))
-
-    # 2. Pelvis / Caderas
-    b_hips = edit_bones.new("Hips")
-    b_hips.head = Vector((0.0, 0.0, 0.95))
-    b_hips.tail = Vector((0.0, 0.0, 1.10))
-    b_hips.parent = b_root
-
-    # 3. Columna vertebral
-    b_spine = edit_bones.new("Spine")
-    b_spine.head = Vector((0.0, 0.0, 1.10))
-    b_spine.tail = Vector((0.0, 0.0, 1.25))
-    b_spine.parent = b_hips
-
-    b_spine1 = edit_bones.new("Spine1")
-    b_spine1.head = Vector((0.0, 0.0, 1.25))
-    b_spine1.tail = Vector((0.0, 0.0, 1.38))
-    b_spine1.parent = b_spine
-
-    b_chest = edit_bones.new("Chest")
-    b_chest.head = Vector((0.0, 0.0, 1.38))
-    b_chest.tail = Vector((0.0, 0.0, 1.46))
-    b_chest.parent = b_spine1
-
-    # 4. Cuello y Cabeza
-    b_neck = edit_bones.new("Neck")
-    b_neck.head = Vector((0.0, 0.0, 1.46))
-    b_neck.tail = Vector((0.0, 0.0, 1.52))
-    b_neck.parent = b_chest
-
-    b_head = edit_bones.new("Head")
-    b_head.head = Vector((0.0, 0.0, 1.52))
-    b_head.tail = Vector((0.0, 0.0, 1.72))
-    b_head.parent = b_neck
-
-    b_eyes = edit_bones.new("EyesAnchor")
-    b_eyes.head = Vector((0.0, 0.058, 1.585))
-    b_eyes.tail = Vector((0.0, 0.158, 1.585))
-    b_eyes.parent = b_head
-
-    # 5. Brazos en A-Pose Simétrica Natural
-    for sign_x, suffix in [(-1.0, ".L"), (1.0, ".R")]:
-        b_sh = edit_bones.new("Shoulder" + suffix)
-        b_sh.head = Vector((sign_x * 0.06, 0.0, 1.42))
-        b_sh.tail = Vector((sign_x * 0.19, 0.0, 1.38))
-        b_sh.parent = b_chest
-
-        b_uarm = edit_bones.new("UpperArm" + suffix)
-        b_uarm.head = Vector((sign_x * 0.19, 0.0, 1.38))
-        b_uarm.tail = Vector((sign_x * 0.29, 0.0, 1.16))
-        b_uarm.parent = b_chest
-
-        b_farm = edit_bones.new("Forearm" + suffix)
-        b_farm.head = Vector((sign_x * 0.29, 0.0, 1.16))
-        b_farm.tail = Vector((sign_x * 0.36, 0.0, 0.95))
-        b_farm.parent = b_uarm
-
-        b_hand = edit_bones.new("Hand" + suffix)
-        b_hand.head = Vector((sign_x * 0.36, 0.0, 0.95))
-        b_hand.tail = Vector((sign_x * 0.38, 0.0, 0.80))
-        b_hand.parent = b_farm
-
-    # 6. Piernas Simétricas
-    for sign_x, suffix in [(-1.0, ".L"), (1.0, ".R")]:
-        b_uleg = edit_bones.new("UpperLeg" + suffix)
-        b_uleg.head = Vector((sign_x * 0.10, 0.0, 0.92))
-        b_uleg.tail = Vector((sign_x * 0.11, 0.0, 0.50))
-        b_uleg.parent = b_hips
-
-        b_lleg = edit_bones.new("LowerLeg" + suffix)
-        b_lleg.head = Vector((sign_x * 0.11, 0.0, 0.50))
-        b_lleg.tail = Vector((sign_x * 0.11, 0.0, 0.12))
-        b_lleg.parent = b_uleg
-
-        b_foot = edit_bones.new("Foot" + suffix)
-        b_foot.head = Vector((sign_x * 0.11, 0.0, 0.12))
-        b_foot.tail = Vector((sign_x * 0.11, 0.12, 0.03))
-        b_foot.parent = b_lleg
-
-        b_toe = edit_bones.new("Toes" + suffix)
-        b_toe.head = Vector((sign_x * 0.11, 0.12, 0.03))
-        b_toe.tail = Vector((sign_x * 0.11, 0.20, 0.03))
-        b_toe.parent = b_foot
-
-    bpy.ops.object.mode_set(mode='OBJECT')
-    return arm_obj
-
-def build_head_mesh(arm_obj, mat_skin, mat_beanie, mat_hair, mat_eyes):
-    """
-    Construye la cabeza hiperrealista completa de Axel (Capa 2):
-    - Escultura facial proporcionada canónicamente (cuello atlético firme, mentón angular).
-    - Ojos almendrados con párpado superior cubriendo el borde superior del iris (mirada segura y humana).
-    - Nariz definida con puente recto y aletas nasales.
-    - Labios 3D con arco de Cupido.
-    - Gorro beanie verde oliva con dobladillo en relieve.
-    - Mechones de cabello castaño rizado bajo el dobladillo.
-    """
-    mesh = bpy.data.meshes.new("Player_Head_Mesh_Data")
+# =============================================================================
+# 1. CABEZA ANATÓMICA PROPORCIONADA
+# =============================================================================
+def build_head_mesh(materials):
+    me = bpy.data.meshes.new("Player_Head_Mesh_Data")
     bm = bmesh.new()
+    uv_lay = bm.loops.layers.uv.new("UVMap")
 
-    u_segs = 32
-    v_rings = 24
-    grid = []
+    n_ring = 32
+    head_profile = [
+        # z, rx, ry_front, ry_back, y_offset, v_uv
+        (1.380, 0.052, 0.048, 0.052, 0.008, 0.12), # Base cuello
+        (1.405, 0.050, 0.047, 0.050, 0.010, 0.18), # Cuello medio
+        (1.420, 0.054, 0.042, 0.054, 0.012, 0.24), # Submandíbula
+        (1.435, 0.065, 0.068, 0.062, 0.018, 0.30), # Mentón y mandíbula
+        (1.450, 0.068, 0.060, 0.066, 0.015, 0.35), # Surco mentolabial
+        (1.462, 0.071, 0.076, 0.069, 0.012, 0.395),# Labio inferior carnosos
+        (1.472, 0.072, 0.065, 0.071, 0.010, 0.415),# Hendidura labial
+        (1.482, 0.073, 0.077, 0.073, 0.008, 0.435),# Labio superior con arco de Cupido
+        (1.500, 0.074, 0.070, 0.075, 0.005, 0.485),# Base nasal
+        (1.520, 0.075, 0.092, 0.077, 0.002, 0.535),# Punta nasal
+        (1.542, 0.077, 0.080, 0.079, 0.000, 0.585),# Puente nasal / pómulos
+        (1.565, 0.077, 0.065, 0.081, -0.002, 0.635),# Cuencas oculares
+        (1.590, 0.078, 0.070, 0.082, -0.004, 0.720),# Cejas
+        (1.615, 0.077, 0.066, 0.082, -0.006, 0.810),# Frente
+        (1.645, 0.071, 0.056, 0.076, -0.008, 0.890),# Frente alta
+        (1.670, 0.058, 0.044, 0.064, -0.010, 0.950),# Bóveda craneal
+        (1.685, 0.038, 0.026, 0.042, -0.012, 0.990),# Coronilla
+    ]
 
-    # Proporciones faciales calibradas con cuello atlético proporcionado
-    for vi in range(v_rings + 1):
-        tv = vi / float(v_rings)
-        if tv < 0.22: # Cuello atlético (Z: 1.44 a 1.50)
-            t_neck = tv / 0.22
-            z = 1.440 + t_neck * 0.060
-            rx = 0.048 + t_neck * 0.002
-            ry_f = 0.050 + t_neck * 0.003
-            ry_b = 0.048
-            yc = 0.002
-        elif tv < 0.50: # Mandíbula y mentón (Z: 1.50 a 1.55)
-            tj = (tv - 0.22) / 0.28
-            z = 1.500 + tj * 0.052
-            rx = 0.050 + tj * 0.016
-            ry_f = 0.058 + tj * 0.014
-            ry_b = 0.048 + tj * 0.014
-            yc = 0.001
-        elif tv < 0.76: # Pómulos, nariz y ojos (Z: 1.55 a 1.61)
-            tm = (tv - 0.50) / 0.26
-            z = 1.552 + tm * 0.058
-            rx = 0.066 + tm * 0.005
-            ry_f = 0.072
-            ry_b = 0.062 + tm * 0.008
-            yc = 0.0
-        else: # Frente y bóveda craneal (Z: 1.61 a 1.70)
-            tt = (tv - 0.76) / 0.24
-            z = 1.610 + tt * 0.085
-            dome = math.sqrt(max(0.01, 1.0 - (tt * 0.95)**2))
-            rx = 0.071 * dome + 0.002
-            ry_f = 0.073 * dome + 0.002
-            ry_b = 0.073 * dome + 0.002
-            yc = -0.008 * tt
-
-        ring = []
-        for ui in range(u_segs):
-            ang = (ui / float(u_segs)) * 2.0 * math.pi - (math.pi / 2.0)
-            sin_a = math.sin(ang)
+    rings = []
+    for l_idx, (z, rx, ry_f, ry_b, y_off, v_uv) in enumerate(head_profile):
+        cur_ring = []
+        cur_u = []
+        for i in range(n_ring):
+            ang = (2.0 * math.pi * i) / n_ring
             cos_a = math.cos(ang)
-            vx = cos_a * rx
-            vy = yc + (sin_a * ry_f if sin_a >= 0 else sin_a * ry_b)
+            sin_a = math.sin(ang)
+            x = rx * cos_a
+            y = (ry_f if sin_a >= 0 else ry_b) * sin_a + y_off
+
+            if l_idx in (5, 6, 7) and 0.38 * math.pi <= ang <= 0.62 * math.pi:
+                m_dist = abs(ang - 0.5 * math.pi) / 0.12
+                mw = max(0.0, 1.0 - m_dist**2)
+                if l_idx == 5:
+                    y += 0.012 * mw
+                elif l_idx == 6:
+                    y -= 0.007 * mw
+                elif l_idx == 7:
+                    cupid_dip = math.cos((ang - 0.5 * math.pi) * 20.0) * 0.0035
+                    y += (0.011 + cupid_dip) * mw
+
+            if l_idx in (8, 9, 10) and 0.40 * math.pi <= ang <= 0.60 * math.pi:
+                nw = max(0.0, 1.0 - abs(ang - 0.5 * math.pi) / 0.20)
+                y += (0.022 if l_idx == 9 else 0.010) * nw
+
+            if l_idx == 3 and 0.35 * math.pi <= ang <= 0.65 * math.pi:
+                cw = max(0.0, 1.0 - abs(ang - 0.5 * math.pi) / 0.28)
+                y += 0.016 * cw
+
+            if l_idx == 11 and (0.28 * math.pi <= ang <= 0.42 * math.pi or 0.58 * math.pi <= ang <= 0.72 * math.pi):
+                y -= 0.014
+
+            cur_ring.append(bm.verts.new((x, y, z)))
+            u_coord = ((ang - 0.5 * math.pi) / (2.0 * math.pi) + 0.5) % 1.0
+            cur_u.append(u_coord)
+
+        rings.append((cur_ring, cur_u, v_uv))
+
+    for l_idx in range(len(head_profile) - 1):
+        r1, u1, v1 = rings[l_idx]
+        r2, u2, v2 = rings[l_idx + 1]
+        for i in range(n_ring):
+            i_next = (i + 1) % n_ring
+            f = bm.faces.new((r1[i], r1[i_next], r2[i_next], r2[i]))
+            f.material_index = 0
+
+            u_a = u1[i]
+            u_b = u1[i_next]
+            if abs(u_b - u_a) > 0.5:
+                u_b = u_b + 1.0 if u_a > 0.5 else u_b - 1.0
+            u_c = u2[i_next]
+            u_d = u2[i]
+            if abs(u_c - u_d) > 0.5:
+                u_c = u_c + 1.0 if u_d > 0.5 else u_c - 1.0
+
+            for loop in f.loops:
+                if loop.vert == r1[i]: loop[uv_lay].uv = (u_a, v1)
+                elif loop.vert == r1[i_next]: loop[uv_lay].uv = (u_b, v1)
+                elif loop.vert == r2[i_next]: loop[uv_lay].uv = (u_c, v2)
+                elif loop.vert == r2[i]: loop[uv_lay].uv = (u_d, v2)
+
+    # Ojos 3D avellana
+    eye_pos = [(0.033, 0.055, 1.565), (-0.033, 0.055, 1.565)]
+    for pos in eye_pos:
+        e_bm = bmesh.new()
+        bmesh.ops.create_uvsphere(e_bm, u_segments=16, v_segments=12, radius=0.0135)
+        bmesh.ops.rotate(e_bm, verts=e_bm.verts, cent=(0,0,0), matrix=Matrix.Rotation(math.radians(-90), 4, 'X'))
+        bmesh.ops.translate(e_bm, verts=e_bm.verts, vec=pos)
+        v_map = {v: bm.verts.new(v.co) for v in e_bm.verts}
+        for f in e_bm.faces:
+            nf = bm.faces.new([v_map[v] for v in f.verts])
+            nf.material_index = 1
+            for loop in nf.loops:
+                co = loop.vert.co - Vector(pos)
+                loop[uv_lay].uv = (0.5 + co.x / (2.0 * 0.0135), 0.5 + co.z / (2.0 * 0.0135))
+        e_bm.free()
+
+    # Rizos volumétricos
+    curl_specs = [
+        (0.000, 0.068, 1.625, 0.003, 0.018, -0.050, 0.010, 2.2, 0.0),
+        (0.016, 0.066, 1.623, 0.008, 0.016, -0.052, 0.010, 2.4, 0.8),
+        (-0.016, 0.066, 1.623, -0.008, 0.016, -0.052, 0.010, 2.4, 1.5),
+        (0.032, 0.062, 1.620, 0.012, 0.014, -0.048, 0.009, 2.1, 2.2),
+        (-0.032, 0.062, 1.620, -0.012, 0.014, -0.048, 0.009, 2.1, 2.9),
+        (0.046, 0.054, 1.616, 0.015, 0.012, -0.045, 0.0085, 2.0, 3.7),
+        (-0.046, 0.054, 1.616, -0.015, 0.012, -0.045, 0.0085, 2.0, 4.4),
+        (0.064, 0.025, 1.605, 0.010, 0.005, -0.065, 0.0085, 2.5, 0.5),
+        (-0.064, 0.025, 1.605, -0.010, 0.005, -0.065, 0.0085, 2.5, 1.7),
+    ]
+    for (x0, y0, z0, dx, dy, dz, r_curl, turns, phi0) in curl_specs:
+        steps = 14
+        prev_ring = None
+        for s in range(steps):
+            t = s / float(steps - 1)
+            c_x = x0 + dx * t
+            c_y = y0 + dy * t
+            c_z = z0 + dz * t
+            cur_r = r_curl * (1.0 - 0.45 * t)
+            phase = 2.0 * math.pi * turns * t + phi0
+            sp_cx = c_x + cur_r * math.cos(phase)
+            sp_cy = c_y + cur_r * math.sin(phase)
+            sp_cz = c_z
+            tb_r = 0.0055 * (1.0 - 0.5 * t)
+            cur_ring = []
+            for k in range(4):
+                k_ang = (2.0 * math.pi * k) / 4.0
+                cur_ring.append(bm.verts.new((sp_cx + tb_r * math.cos(k_ang),
+                                             sp_cy + tb_r * math.sin(k_ang) * 0.5,
+                                             sp_cz + tb_r * math.sin(k_ang) * 0.8)))
+            if prev_ring:
+                for k in range(4):
+                    k_next = (k + 1) % 4
+                    f_h = bm.faces.new((prev_ring[k], prev_ring[k_next], cur_ring[k_next], cur_ring[k]))
+                    f_h.material_index = 2
+            prev_ring = cur_ring
+
+    # Sombrero Fedora con Teardrop Pinch, Grosgrain y Snap-Brim
+    n_hat = 32
+    hat_levels = [
+        (1.615, 0.090, 0.100, -0.002, 1.00, 0.000),
+        (1.640, 0.088, 0.098, -0.003, 0.96, 0.000),
+        (1.670, 0.085, 0.095, -0.004, 0.90, 0.000),
+        (1.695, 0.082, 0.092, -0.005, 0.84, 0.000),
+        (1.715, 0.078, 0.088, -0.006, 0.78, 0.016),
+    ]
+    hat_rings = []
+    for (z, rx, ry, y_c, pinch_x, crease) in hat_levels:
+        cur_ring = []
+        for i in range(n_hat):
+            ang = (2.0 * math.pi * i) / n_hat
+            cos_a = math.cos(ang)
+            sin_a = math.sin(ang)
+            cur_rx = rx * (pinch_x if sin_a > 0 else 1.0)
+            vx = cur_rx * cos_a
+            vy = ry * sin_a + y_c
             vz = z
+            if crease > 0.0:
+                dist_x = abs(vx) / cur_rx
+                if dist_x < 0.6: vz -= crease * (1.0 - dist_x / 0.6)
+            cur_ring.append(bm.verts.new((vx, vy, vz)))
+        hat_rings.append(cur_ring)
 
-            if sin_a > 0: # Cara anterior (+Y)
-                # Mentón masculino
-                if abs(vz - 1.510) < 0.020 and abs(vx) < 0.026:
-                    cd = math.sqrt((vx / 0.026)**2 + ((vz - 1.510) / 0.020)**2)
-                    if cd < 1.0:
-                        vy += 0.014 * (1.0 - cd)**2
-                # Surco mentolabial
-                if abs(vz - 1.522) < 0.008 and abs(vx) < 0.022:
-                    vy -= 0.004 * (1.0 - abs(vx) / 0.022)
-                # Labios con volumen y arco de Cupido
-                if 1.528 < vz < 1.548 and abs(vx) < 0.028:
-                    tlip = (vz - 1.528) / 0.020
-                    w_lip = 0.026 * (1.0 - abs(tlip - 0.5) * 1.5)
-                    if abs(vx) < max(0.004, w_lip):
-                        vy += 0.009 * math.sin(tlip * math.pi) * (1.0 - abs(vx) / max(0.004, w_lip))
-                # Nariz esculpida continua
-                if 1.548 < vz < 1.600 and abs(vx) < 0.020:
-                    tn = (vz - 1.548) / 0.052
-                    nw = 0.010 + (1.0 - tn) * 0.009
-                    if abs(vx) < nw:
-                        lf = 1.0 - (abs(vx) / nw)
-                        n_proj = 0.024 * math.sin(tn * math.pi * 0.85) if tn < 0.40 else 0.015 + (1.0 - tn) * 0.009
-                        vy += n_proj * (lf**1.3)
-                # Cuencas orbitarias profundas para los ojos
-                for ecx in [-0.032, 0.032]:
-                    de = math.sqrt(((vx - ecx) / 0.018)**2 + ((vz - 1.585) / 0.014)**2)
-                    if de < 1.0:
-                        vy -= 0.014 * (1.0 - de)**2
-                # Nuez de Adán en el cuello
-                if abs(vz - 1.470) < 0.012 and abs(vx) < 0.012:
-                    vy += 0.006 * (1.0 - abs(vx) / 0.012)
+    for l_idx in range(len(hat_levels) - 1):
+        r1 = hat_rings[l_idx]
+        r2 = hat_rings[l_idx + 1]
+        m_idx = 4 if l_idx == 0 else 3
+        for i in range(n_hat):
+            i_next = (i + 1) % n_hat
+            f = bm.faces.new((r1[i], r1[i_next], r2[i_next], r2[i]))
+            f.material_index = m_idx
 
-            ring.append(bm.verts.new(Vector((vx, vy, vz))))
-        grid.append(ring)
+    top_c = bm.verts.new((0.0, -0.006, 1.700))
+    for i in range(n_hat):
+        i_next = (i + 1) % n_hat
+        f = bm.faces.new((hat_rings[-1][i], hat_rings[-1][i_next], top_c))
+        f.material_index = 3
 
-    # Crear caras con mapeo UV cilíndrico facial
-    uv_layer = bm.loops.layers.uv.new("UVMap")
-    
-    for vi in range(v_rings):
-        r0 = grid[vi]
-        r1 = grid[vi + 1]
-        v_coord0 = vi / float(v_rings)
-        v_coord1 = (vi + 1) / float(v_rings)
-        for ui in range(u_segs):
-            un = (ui + 1) % u_segs
-            f = bm.faces.new([r0[ui], r0[un], r1[un], r1[ui]])
-            f.material_index = 0 # mat_skin
-            
-            u0 = 0.5 + math.atan2(r0[ui].co.x, max(0.001, r0[ui].co.y)) / (2.0 * math.pi)
-            u1 = 0.5 + math.atan2(r0[un].co.x, max(0.001, r0[un].co.y)) / (2.0 * math.pi)
-            u2 = 0.5 + math.atan2(r1[un].co.x, max(0.001, r1[un].co.y)) / (2.0 * math.pi)
-            u3 = 0.5 + math.atan2(r1[ui].co.x, max(0.001, r1[ui].co.y)) / (2.0 * math.pi)
-            
-            for lp, u_val, v_val in zip(f.loops, [u0, u1, u2, u3], [v_coord0, v_coord0, v_coord1, v_coord1]):
-                lp[uv_layer].uv = Vector((clampf(u_val, 0.0, 1.0), clampf(v_val, 0.0, 1.0)))
+    base_r = hat_rings[0]
+    brim_mid = []
+    brim_outer = []
+    for i in range(n_hat):
+        ang = (2.0 * math.pi * i) / n_hat
+        cos_a = math.cos(ang)
+        sin_a = math.sin(ang)
+        dip_z = -0.022 * max(0.0, sin_a) + 0.015 * abs(cos_a) + 0.008 * max(0.0, -sin_a)
+        brim_mid.append(bm.verts.new((0.125 * cos_a, 0.138 * sin_a - 0.002, 1.615 + dip_z * 0.5)))
+        brim_outer.append(bm.verts.new((0.158 * cos_a, 0.170 * sin_a - 0.002, 1.615 + dip_z)))
 
-    # Cierre de la coronilla
-    top_vh = bm.verts.new(Vector((0.0, -0.008, 1.695)))
-    for ui in range(u_segs):
-        un = (ui + 1) % u_segs
-        f = bm.faces.new([grid[-1][ui], grid[-1][un], top_vh])
-        f.material_index = 0
+    for i in range(n_hat):
+        i_next = (i + 1) % n_hat
+        f1 = bm.faces.new((base_r[i], base_r[i_next], brim_mid[i_next], brim_mid[i]))
+        f2 = bm.faces.new((brim_mid[i], brim_mid[i_next], brim_outer[i_next], brim_outer[i]))
+        f1.material_index = 3
+        f2.material_index = 3
 
-    # 2. Globos Oculares 3D en Cuencas Recesadas con Párpados Almendrados Cubriendo el Borde Superior
-    for ex in [-0.032, 0.032]:
-        p_eye = Vector((ex, 0.058, 1.585))
-        sph = bmesh.ops.create_uvsphere(bm, u_segments=16, v_segments=12, radius=0.0120,
-                                        matrix=Matrix.Translation(p_eye))
-        for v in sph['verts']:
-            for f in v.link_faces:
-                f.material_index = 3 # mat_eyes
-                for lp in f.loops:
-                    dx = (lp.vert.co.x - p_eye.x) / 0.0120
-                    dz = (lp.vert.co.z - p_eye.z) / 0.0120
-                    lp[uv_layer].uv = Vector((clampf(0.5 + dx * 0.5, 0.0, 1.0), clampf(0.5 + dz * 0.5, 0.0, 1.0)))
-
-        # Párpado superior envolvente cubriendo el polo superior del globo ocular (Z=1.588)
-        lid_top_pts = [
-            Vector((ex - 0.014, 0.064, 1.582)), # Comisura lateral
-            Vector((ex - 0.007, 0.069, 1.589)), # Borde superior descansando sobre el iris
-            Vector((ex + 0.007, 0.069, 1.589)), # Borde superior descansando sobre el iris
-            Vector((ex + 0.014, 0.064, 1.582)), # Comisura medial
-            Vector((ex + 0.011, 0.067, 1.596)), # Pliegue supratarzal
-            Vector((ex + 0.000, 0.071, 1.599)),
-            Vector((ex - 0.011, 0.067, 1.596)),
-        ]
-        lv_top = [bm.verts.new(p) for p in lid_top_pts]
-        bm.faces.new([lv_top[0], lv_top[1], lv_top[6]]).material_index = 0
-        bm.faces.new([lv_top[1], lv_top[2], lv_top[5], lv_top[6]]).material_index = 0
-        bm.faces.new([lv_top[2], lv_top[3], lv_top[4], lv_top[5]]).material_index = 0
-
-        # Párpado inferior descansando en el polo inferior del globo ocular (Z=1.579)
-        lid_bot_pts = [
-            Vector((ex - 0.013, 0.064, 1.582)),
-            Vector((ex - 0.006, 0.068, 1.579)),
-            Vector((ex + 0.006, 0.068, 1.579)),
-            Vector((ex + 0.013, 0.064, 1.582)),
-            Vector((ex + 0.010, 0.066, 1.573)),
-            Vector((ex + 0.000, 0.069, 1.571)),
-            Vector((ex - 0.010, 0.066, 1.573)),
-        ]
-        lv_bot = [bm.verts.new(p) for p in lid_bot_pts]
-        bm.faces.new([lv_bot[0], lv_bot[1], lv_bot[6]]).material_index = 0
-        bm.faces.new([lv_bot[1], lv_bot[2], lv_bot[5], lv_bot[6]]).material_index = 0
-        bm.faces.new([lv_bot[2], lv_bot[3], lv_bot[4], lv_bot[5]]).material_index = 0
-
-    # 3. Mechones 3D de Cabello Ondulado (Axel Bangs)
-    def add_hair_curl(bm, p_start, p_mid, p_end, width, thick):
-        pts = [p_start, p_mid, p_end]
-        scale_w = [width, width * 0.85, width * 0.3]
-        scale_t = [thick, thick * 0.80, thick * 0.3]
-        c_rings = []
-        for pt, w, t in zip(pts, scale_w, scale_t):
-            rng = []
-            for a in range(8):
-                ang = (2.0 * math.pi * a) / 8.0
-                vx = pt.x + math.cos(ang) * w
-                vy = pt.y + math.sin(ang) * t * 0.7
-                vz = pt.z - math.sin(ang) * t * 0.4
-                rng.append(bm.verts.new(Vector((vx, vy, vz))))
-            c_rings.append(rng)
-        for i in range(len(c_rings) - 1):
-            r0 = c_rings[i]
-            r1 = c_rings[i + 1]
-            for a in range(8):
-                an = (a + 1) % 8
-                f = bm.faces.new([r0[a], r0[an], r1[an], r1[a]])
-                f.material_index = 2 # mat_hair
-        tip = bm.verts.new(pts[-1] + Vector((0, 0, -thick * 0.4)))
-        for a in range(8):
-            an = (a + 1) % 8
-            f = bm.faces.new([c_rings[-1][a], c_rings[-1][an], tip])
-            f.material_index = 2
-
-    curls = [
-        (Vector((-0.035, 0.072, 1.635)), Vector((-0.028, 0.080, 1.622)), Vector((-0.020, 0.080, 1.605)), 0.012, 0.008),
-        (Vector((-0.018, 0.076, 1.638)), Vector((-0.010, 0.084, 1.624)), Vector((-0.003, 0.084, 1.603)), 0.013, 0.009),
-        (Vector((-0.001, 0.078, 1.638)), Vector(( 0.006, 0.084, 1.624)), Vector(( 0.013, 0.084, 1.603)), 0.013, 0.009),
-        (Vector(( 0.015, 0.077, 1.638)), Vector(( 0.022, 0.083, 1.624)), Vector(( 0.028, 0.082, 1.605)), 0.013, 0.009),
-        (Vector(( 0.030, 0.073, 1.635)), Vector(( 0.036, 0.079, 1.622)), Vector(( 0.040, 0.079, 1.607)), 0.012, 0.008),
-        # Patillas
-        (Vector((-0.066, 0.022, 1.625)), Vector((-0.069, 0.018, 1.595)), Vector((-0.066, 0.014, 1.565)), 0.010, 0.007),
-        (Vector(( 0.066, 0.022, 1.625)), Vector(( 0.069, 0.018, 1.595)), Vector(( 0.066, 0.014, 1.565)), 0.010, 0.007),
-    ]
-    for p1, p2, p3, w, t in curls:
-        add_hair_curl(bm, p1, p2, p3, w, t)
-
-    # 4. Gorro Beanie de Lana Verde Oliva con Dobladillo en Relieve
-    beanie_levels = [
-        (1.622, 1.592, 0.082, 0.086, 0.005),
-        (1.638, 1.608, 0.086, 0.090, 0.006),
-        (1.656, 1.626, 0.083, 0.087, 0.003),
-        (1.678, 1.650, 0.079, 0.083, 0.000),
-        (1.698, 1.674, 0.067, 0.071, 0.000),
-        (1.714, 1.696, 0.049, 0.053, 0.000),
-        (1.724, 1.712, 0.024, 0.026, 0.000),
-    ]
-    b_rings = []
-    for zf, zb, rx, ry, cuff_thick in beanie_levels:
-        br = []
-        for i in range(28):
-            ang = (2.0 * math.pi * i) / 28.0
-            cos_a = math.cos(ang)
-            sin_a = math.sin(ang)
-            t_fb = (cos_a + 1.0) * 0.5
-            z = zb * (1.0 - t_fb) + zf * t_fb
-            vx = sin_a * (rx + cuff_thick)
-            vy = (cos_a * (ry + cuff_thick)) - 0.008 * (1.0 - t_fb)
-            br.append(bm.verts.new(Vector((vx, vy, z))))
-        b_rings.append(br)
-
-    for r in range(len(b_rings) - 1):
-        r0 = b_rings[r]
-        r1 = b_rings[r + 1]
-        v_uv0 = r / float(len(b_rings) - 1)
-        v_uv1 = (r + 1) / float(len(b_rings) - 1)
-        for i in range(28):
-            in_idx = (i + 1) % 28
-            f = bm.faces.new([r0[i], r0[in_idx], r1[in_idx], r1[i]])
-            f.material_index = 1 # mat_beanie
-            u_uv0 = i / 28.0
-            u_uv1 = (i + 1) / 28.0
-            for lp, u_val, v_val in zip(f.loops, [u_uv0, u_uv1, u_uv1, u_uv0], [v_uv0, v_uv0, v_uv1, v_uv1]):
-                lp[uv_layer].uv = Vector((u_val, v_val))
-
-    top_b = bm.verts.new(Vector((0.0, -0.012, 1.730)))
-    for i in range(28):
-        in_idx = (i + 1) % 28
-        f = bm.faces.new([b_rings[-1][i], b_rings[-1][in_idx], top_b])
-        f.material_index = 1
-        for lp in f.loops:
-            lp[uv_layer].uv = Vector((i / 28.0, 1.0))
-
-    bm.verts.index_update()
-    bm.to_mesh(mesh)
+    bm.normal_update()
+    for f in bm.faces: f.smooth = True
+    bm.to_mesh(me)
     bm.free()
 
-    obj = bpy.data.objects.new("Player_Head_Mesh", mesh)
+    obj = bpy.data.objects.new("Player_Head_Mesh", me)
     bpy.context.scene.collection.objects.link(obj)
-
-    obj.data.materials.append(mat_skin)   # 0
-    obj.data.materials.append(mat_beanie) # 1
-    obj.data.materials.append(mat_hair)   # 2
-    obj.data.materials.append(mat_eyes)   # 3
-
-    for poly in mesh.polygons:
-        poly.use_smooth = True
-
-    # Ponderación a huesos de cabeza y cuello
-    obj.parent = arm_obj
-    mod = obj.modifiers.new(name="Armature", type='ARMATURE')
-    mod.object = arm_obj
-
-    vg_head = obj.vertex_groups.new(name="Head")
-    vg_neck = obj.vertex_groups.new(name="Neck")
-
-    for v in obj.data.vertices:
-        z = v.co.z
-        if z >= 1.52:
-            vg_head.add([v.index], 1.0, 'REPLACE')
-        else:
-            w_neck = clampf((1.52 - z) / 0.08, 0.0, 1.0)
-            vg_head.add([v.index], 1.0 - w_neck, 'REPLACE')
-            vg_neck.add([v.index], w_neck, 'REPLACE')
-
+    for mat in materials["head"]:
+        obj.data.materials.append(mat)
+    sub = obj.modifiers.new("Subsurf", type='SUBSURF')
+    sub.levels = 1
+    sub.render_levels = 1
     return obj
 
-def build_body_mesh(arm_obj, mat_jacket, mat_pants, mat_shoes, mat_skin, mat_belt, mat_buckle):
-    """
-    Construye el cuerpo estilizado e hiperrealista completo de Axel (Capa 1):
-    - Chamarra acolchada puffer / cortavientos con cuello alto (storm collar), cremallera central,
-      gajos acolchados en torso y mangas, y puños elásticos.
-    - Cinturón de cuero marrón continuo con hebilla rectangular metálica y hebijón.
-    - Pantalón de mezclilla oscura continuo sin fisuras en cintura ni entrepierna.
-    - Calzado deportivo urbano con suela de caucho y lengüeta.
-    - Manos anatómicas con pulgares OPONIBLES naciendo de la eminencia tenar y curvándose hacia la palma,
-      dorso hacia el frente (+Y) y 4 dedos escalonados (3 falanges c/u).
-    - Subsurf aplicado para continuidad y suavidad orgánica absoluta.
-    """
-    mesh = bpy.data.meshes.new("Player_Body_Mesh_Data")
-    obj = bpy.data.objects.new("Player_Body_Mesh", mesh)
-    bpy.context.scene.collection.objects.link(obj)
+# =============================================================================
+# 2. CUERPO: CAMISA, CORBATA FLUIDA Y CHALECO SASTRE AUTÉNTICO
+# =============================================================================
+def build_body_mesh(materials):
+    mesh_graph = bpy.data.meshes.new("Body_Graph_Data")
+    obj_body = bpy.data.objects.new("Player_Body_Mesh", mesh_graph)
+    bpy.context.scene.collection.objects.link(obj_body)
 
     nodes = [
-        # 0: Pelvis centro
-        (0.0, 0.0, 0.96, 0.155, 0.125),
-        # 1: Cintura / Ombligo
-        (0.0, 0.0, 1.08, 0.145, 0.115),
-        # 2: Pecho bajo / Esternón
-        (0.0, 0.0, 1.22, 0.170, 0.130),
-        # 3: Pecho alto
-        (0.0, 0.0, 1.34, 0.185, 0.135),
-        # 4: Cuello base de la chamarra
-        (0.0, 0.0, 1.42, 0.055, 0.055),
+        # Tronco
+        (0.00,  0.00, 0.82, 0.130, 0.100), # 0: Pelvis base
+        (0.00,  0.00, 0.94, 0.145, 0.105), # 1: Caderas / Cintura pantalón
+        (0.00,  0.00, 1.04, 0.135, 0.098), # 2: Cintura entallada
+        (0.00,  0.00, 1.16, 0.155, 0.110), # 3: Costillas
+        (0.00,  0.00, 1.28, 0.170, 0.120), # 4: Pectorales
+        (0.00,  0.00, 1.36, 0.150, 0.105), # 5: Clavículas / hombros
+        (0.00,  0.00, 1.40, 0.052, 0.052), # 6: Base del cuello
 
-        # Hombros y brazos Izquierda (-X)
-        (-0.08, 0.0, 1.42, 0.085, 0.085), # 5: Trapecio/Clavícula L
-        (-0.19, 0.0, 1.38, 0.075, 0.075), # 6: Deltoides/Hombro L
-        (-0.29, 0.0, 1.16, 0.062, 0.062), # 7: Codo L
-        (-0.36, 0.0, 0.95, 0.045, 0.045), # 8: Muñeca L
+        # Brazos (+X Left, -X Right)
+        ( 0.06, 0.00, 1.36, 0.070, 0.070), # 7
+        ( 0.18, 0.00, 1.34, 0.062, 0.062), # 8: Hombro L
+        ( 0.26, 0.00, 1.15, 0.050, 0.050), # 9: Codo L
+        ( 0.33, 0.01, 0.92, 0.038, 0.034), # 10: Muñeca L
 
-        # Hombros y brazos Derecha (+X)
-        (0.08, 0.0, 1.42, 0.085, 0.085),  # 9: Trapecio/Clavícula R
-        (0.19, 0.0, 1.38, 0.075, 0.075),  # 10: Deltoides/Hombro R
-        (0.29, 0.0, 1.16, 0.062, 0.062),  # 11: Codo R
-        (0.36, 0.0, 0.95, 0.045, 0.045),  # 12: Muñeca R
+        (-0.06, 0.00, 1.36, 0.070, 0.070), # 11
+        (-0.18, 0.00, 1.34, 0.062, 0.062), # 12: Hombro R
+        (-0.26, 0.00, 1.15, 0.050, 0.050), # 13: Codo R
+        (-0.33, 0.01, 0.92, 0.038, 0.034), # 14: Muñeca R
 
-        # Piernas Izquierda (-X)
-        (-0.10, 0.0, 0.92, 0.100, 0.100), # 13: Cadera L
-        (-0.11, 0.0, 0.70, 0.090, 0.090), # 14: Muslo L
-        (-0.11, 0.0, 0.50, 0.078, 0.078), # 15: Rodilla L
-        (-0.11, 0.0, 0.30, 0.068, 0.068), # 16: Pantorrilla L
-        (-0.11, 0.0, 0.12, 0.054, 0.054), # 17: Tobillo L
-        (-0.11, 0.06, 0.03, 0.058, 0.110),# 18: Pie L
+        # Piernas
+        ( 0.088, 0.00, 0.82, 0.085, 0.085), # 15
+        ( 0.088, 0.00, 0.65, 0.078, 0.078), # 16: Muslo L
+        ( 0.088, 0.00, 0.48, 0.068, 0.068), # 17: Rodilla L
+        ( 0.088, 0.00, 0.30, 0.060, 0.060), # 18: Pantorrilla L
+        ( 0.088, 0.00, 0.12, 0.048, 0.048), # 19: Tobillo L
+        ( 0.088, 0.06, 0.03, 0.050, 0.105), # 20: Pie L
 
-        # Piernas Derecha (+X)
-        (0.10, 0.0, 0.92, 0.100, 0.100),  # 19: Cadera R
-        (0.11, 0.0, 0.70, 0.090, 0.090),  # 20: Muslo R
-        (0.11, 0.0, 0.50, 0.078, 0.078),  # 21: Rodilla R
-        (0.11, 0.0, 0.30, 0.068, 0.068),  # 22: Pantorrilla R
-        (0.11, 0.0, 0.12, 0.054, 0.054),  # 23: Tobillo R
-        (0.11, 0.06, 0.03, 0.058, 0.110), # 24: Pie R
+        (-0.088, 0.00, 0.82, 0.085, 0.085), # 21
+        (-0.088, 0.00, 0.65, 0.078, 0.078), # 22: Muslo R
+        (-0.088, 0.00, 0.48, 0.068, 0.068), # 23: Rodilla R
+        (-0.088, 0.00, 0.30, 0.060, 0.060), # 24: Pantorrilla R
+        (-0.088, 0.00, 0.12, 0.048, 0.048), # 25: Tobillo R
+        (-0.088, 0.06, 0.03, 0.050, 0.105), # 26: Pie R
     ]
-
     edges = [
-        (0, 1), (1, 2), (2, 3), (3, 4),
-        (3, 5), (5, 6), (6, 7), (7, 8),
-        (3, 9), (9, 10), (10, 11), (11, 12),
-        (0, 13), (13, 14), (14, 15), (15, 16), (16, 17), (17, 18),
-        (0, 19), (19, 20), (20, 21), (21, 22), (22, 23), (23, 24),
+        (0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6),
+        (5, 7), (7, 8), (8, 9), (9, 10),
+        (5, 11), (11, 12), (12, 13), (13, 14),
+        (0, 15), (15, 16), (16, 17), (17, 18), (18, 19), (19, 20),
+        (0, 21), (21, 22), (22, 23), (23, 24), (24, 25), (25, 26),
     ]
 
     verts = [Vector((n[0], n[1], n[2])) for n in nodes]
-    mesh.from_pydata(verts, edges, [])
-    mesh.update()
+    mesh_graph.from_pydata(verts, edges, [])
+    mesh_graph.update()
 
-    bpy.context.view_layer.objects.active = obj
-    mod_skin = obj.modifiers.new(name="Skin", type='SKIN')
-    skin_data = mesh.skin_vertices[0].data
+    bpy.context.view_layer.objects.active = obj_body
+    mod_skin = obj_body.modifiers.new(name="Skin", type='SKIN')
+    skin_data = mesh_graph.skin_vertices[0].data
     for i, n in enumerate(nodes):
         skin_data[i].radius = (n[3], n[4])
 
     bpy.ops.object.modifier_apply(modifier="Skin")
-
-    # Aplicar Subsurf para curvatura orgánica continua
-    mod_sub = obj.modifiers.new(name="Subsurf", type='SUBSURF')
+    mod_sub = obj_body.modifiers.new(name="Subsurf", type='SUBSURF')
     mod_sub.levels = 1
     bpy.ops.object.modifier_apply(modifier="Subsurf")
 
     bm = bmesh.new()
-    bm.from_mesh(mesh)
+    bm.from_mesh(obj_body.data)
 
-    raw_hand_assignments = []
-
-    # =========================================================================
-    # 1. MANOS ANATÓMICAS CON PULGARES OPONIBLES Y 4 DEDOS ESCALONADOS
-    # =========================================================================
-    def add_detailed_anatomical_hand(bm, p_wrist, sign_x, hand_bone, mat_idx=3):
-        """
-        Construye una mano humana anatómica de alta definición:
-        - Muñeca conecta a la base palmar/dorsal.
-        - Dorso mira hacia el frente (+Y), Palma mira hacia atrás (-Y).
-        - Eminencia tenar medial (hacia el cuerpo) de donde nace el PULGAR OPONIBLE.
-        - El pulgar se proyecta antero-medialmente y se curva hacia la palma (-Y),
-          oponiéndose anatómicamente a los otros 4 dedos.
-        - 4 dedos (Índice, Medio, Anular, Meñique) escalonados con 3 falanges relajadas.
-        """
-        # Palma calibrada sin salientes laterales excesivas
-        w_p = 0.024
-        t_p = 0.012
-        h_layers = [
-            ( 0.000, 0.85, 0.85),
-            (-0.020, 0.95, 1.00),
-            (-0.042, 1.00, 0.95),
-            (-0.060, 0.92, 0.80),
-        ]
-        h_rings = []
-        all_h_verts = []
-        
-        for dz, ws, ts in h_layers:
-            c = p_wrist + Vector((0, 0, dz))
-            rng = []
-            for i in range(12):
-                ang = (2.0 * math.pi * i) / 12.0
-                vx = c.x + math.cos(ang) * (w_p * ws)
-                vy = c.y + math.sin(ang) * (t_p * ts)
-                v = bm.verts.new(Vector((vx, vy, c.z)))
-                rng.append(v)
-                all_h_verts.append(v)
-            h_rings.append(rng)
-            
-        for li in range(len(h_rings) - 1):
-            r0 = h_rings[li]
-            r1 = h_rings[li + 1]
-            for i in range(12):
-                in_idx = (i + 1) % 12
-                f = bm.faces.new([r0[i], r0[in_idx], r1[in_idx], r1[i]])
-                f.material_index = mat_idx
-
-        def add_finger(pts, rads):
-            fr = []
-            for pt, r in zip(pts, rads):
-                rng = []
-                for a in range(8):
-                    ang = (2.0 * math.pi * a) / 8.0
-                    v = bm.verts.new(pt + Vector((math.cos(ang) * r, math.sin(ang) * r, 0)))
-                    rng.append(v)
-                    all_h_verts.append(v)
-                fr.append(rng)
-            for i in range(len(fr) - 1):
-                r0 = fr[i]
-                r1 = fr[i + 1]
-                for a in range(8):
-                    an = (a + 1) % 8
-                    f = bm.faces.new([r0[a], r0[an], r1[an], r1[a]])
-                    f.material_index = mat_idx
-            tip = bm.verts.new(pts[-1] + Vector((0, 0, -rads[-1] * 0.4)))
-            all_h_verts.append(tip)
-            for a in range(8):
-                an = (a + 1) % 8
-                f = bm.faces.new([fr[-1][a], fr[-1][an], tip])
-                f.material_index = mat_idx
-
-        # PULGAR OPONIBLE:
-        # Nace en la eminencia tenar medial (-sign_x hacia el cuerpo),
-        # se proyecta hacia adelante (+Y) y hacia adentro (medial),
-        # y se curva hacia la palma (-Y) para oponerse a los 4 dedos.
-        medial_dir = -sign_x
-        t_pts = [
-            p_wrist + Vector((medial_dir * 0.020,  0.008, -0.020)), # Eminencia tenar
-            p_wrist + Vector((medial_dir * 0.034,  0.016, -0.036)), # Falange proximal hacia el frente
-            p_wrist + Vector((medial_dir * 0.028,  0.006, -0.052)), # Curvatura hacia la palma
-            p_wrist + Vector((medial_dir * 0.018, -0.006, -0.065)), # Yema en oposición directa
-        ]
-        add_finger(t_pts, [0.009, 0.008, 0.007, 0.0055])
-
-        # 4 DEDOS ESCALONADOS (Índice, Medio, Anular, Meñique)
-        # Nudillos alineados con curvatura natural hacia la palma (-Y)
-        fdata = [
-            (medial_dir * 0.014, 0.060, 0.0075), # Índice
-            (medial_dir * 0.004, 0.068, 0.0080), # Medio (más largo)
-            (-medial_dir * 0.005, 0.062, 0.0072),# Anular
-            (-medial_dir * 0.014, 0.048, 0.0062),# Meñique (más corto)
-        ]
-        for fx, flen, frad in fdata:
-            kn = p_wrist + Vector((fx, 0.002, -0.060)) # Nudillo distal
-            p1 = kn + Vector((0, -0.006, -flen * 0.45)) # Falange proximal (curva a la palma -Y)
-            p2 = p1 + Vector((0, -0.012, -flen * 0.35)) # Falange media
-            pt = p2 + Vector((0, -0.016, -flen * 0.20)) # Falange distal relajada
-            add_finger([kn, p1, p2, pt], [frad, frad * 0.88, frad * 0.72, frad * 0.50])
-
-        bm.verts.index_update()
-        all_indices = [v.index for v in all_h_verts]
-        raw_hand_assignments.append((all_indices, hand_bone))
-
-    add_detailed_anatomical_hand(bm, Vector((-0.36, 0.0, 0.95)), -1.0, "Hand.L")
-    add_detailed_anatomical_hand(bm, Vector(( 0.36, 0.0, 0.95)),  1.0, "Hand.R")
-
-    # =========================================================================
-    # 2. CUELLO ALTO DE LA CHAMARRA PUFFER (STORM COLLAR)
-    # =========================================================================
-    collar_rings = []
-    for cz in [1.42, 1.45, 1.48]:
-        c_ring = []
-        for a in range(24):
-            ang = (2.0 * math.pi * a) / 24.0
-            rx = 0.072
-            ry = 0.076
-            vx = math.cos(ang) * rx
-            vy = math.sin(ang) * ry + 0.002
-            c_ring.append(bm.verts.new(Vector((vx, vy, cz))))
-        collar_rings.append(c_ring)
-        
-    for r in range(len(collar_rings) - 1):
-        r0 = collar_rings[r]
-        r1 = collar_rings[r + 1]
-        for i in range(24):
-            in_idx = (i + 1) % 24
-            if 5 <= i <= 6: # Apertura frontal en V
-                continue
-            f = bm.faces.new([r0[i], r0[in_idx], r1[in_idx], r1[i]])
-            f.material_index = 0 # mat_jacket
-
-    # =========================================================================
-    # 3. CINTURÓN DE CUERO CON HEBILLA RECTANGULAR Y HEBIJÓN
-    # =========================================================================
-    belt_rings = []
-    for bz in [1.025, 1.065]:
-        b_ring = []
-        for i in range(28):
-            ang = (2.0 * math.pi * i) / 28.0
-            rx = 0.154
-            ry = 0.124
-            vx = math.cos(ang) * rx
-            vy = math.sin(ang) * ry
-            b_ring.append(bm.verts.new(Vector((vx, vy, bz))))
-        belt_rings.append(b_ring)
-        
-    for i in range(28):
-        in_idx = (i + 1) % 28
-        f = bm.faces.new([belt_rings[0][i], belt_rings[0][in_idx], belt_rings[1][in_idx], belt_rings[1][i]])
-        f.material_index = 4 # mat_belt
-
-    bw_out = 0.036
-    bh_out = 0.022
-    bw_in = 0.024
-    bh_in = 0.014
-    by = 0.132
-    bz_c = 1.045
-
-    b_frame_pts = [
-        Vector((-bw_out, by, bz_c + bh_out)), Vector(( bw_out, by, bz_c + bh_out)),
-        Vector(( bw_out, by, bz_c - bh_out)), Vector((-bw_out, by, bz_c - bh_out)),
-        Vector((-bw_in, by, bz_c + bh_in)),  Vector(( bw_in, by, bz_c + bh_in)),
-        Vector(( bw_in, by, bz_c - bh_in)),  Vector((-bw_in, by, bz_c - bh_in)),
-    ]
-    bfv = [bm.verts.new(p) for p in b_frame_pts]
-    bm.faces.new([bfv[0], bfv[1], bfv[5], bfv[4]]).material_index = 5
-    bm.faces.new([bfv[1], bfv[2], bfv[6], bfv[5]]).material_index = 5
-    bm.faces.new([bfv[2], bfv[3], bfv[7], bfv[6]]).material_index = 5
-    bm.faces.new([bfv[3], bfv[0], bfv[4], bfv[7]]).material_index = 5
-
-    prong_pts = [
-        Vector((-0.003, by + 0.003, bz_c + bh_in)),
-        Vector(( 0.003, by + 0.003, bz_c + bh_in)),
-        Vector(( 0.003, by + 0.003, bz_c - bh_in)),
-        Vector((-0.003, by + 0.003, bz_c - bh_in)),
-    ]
-    bm.faces.new([bm.verts.new(p) for p in prong_pts]).material_index = 5
-
-    # =========================================================================
-    # 4. ASIGNACIÓN RIGUROSA DE MATERIALES Y TEXTURAS UV AL CUERPO
-    # =========================================================================
-    bm.verts.index_update()
-    uv_layer = bm.loops.layers.uv.new("UVMap")
-
-    for f in bm.faces:
-        if f.material_index in [4, 5]:
-            continue
-            
-        cz = sum(v.co.z for v in f.verts) / float(len(f.verts))
-        cx = sum(v.co.x for v in f.verts) / float(len(f.verts))
-        
-        # BRAZOS Y MANOS (abs(cx) >= 0.22)
-        if abs(cx) >= 0.22:
-            if cz < 0.94:
-                f.material_index = 3 # mat_skin (mano)
-            else:
-                f.material_index = 0 # mat_jacket (manga de chamarra)
-        # PIERNAS Y CALZADO (abs(cx) < 0.22 y Z < 1.02)
-        elif cz < 0.12:
-            f.material_index = 2 # mat_shoes
-        elif cz < 1.02:
-            f.material_index = 1 # mat_pants (mezclilla)
-        # CINTURA (1.02 <= Z <= 1.06)
-        elif cz <= 1.06:
-            f.material_index = 4 # mat_belt
-        # TORSO (Z > 1.06)
+    for p in bm.faces:
+        center_z = p.calc_center_median().z
+        if center_z < 0.10:
+            p.material_index = 2 # Zapatos
+        elif center_z < 0.94:
+            p.material_index = 1 # Pantalón
         else:
-            f.material_index = 0 # mat_jacket (chamarra)
-            
-        for lp in f.loops:
-            u_coord = (math.atan2(lp.vert.co.x, lp.vert.co.y) / (2.0 * math.pi)) + 0.5
-            v_coord = clampf(lp.vert.co.z / 1.70, 0.0, 1.0)
-            lp[uv_layer].uv = Vector((u_coord, v_coord))
+            p.material_index = 0 # Camisa
 
-    bm.to_mesh(mesh)
+    # =========================================================================
+    # A. CUELLO CAMISERO (ENVOLVENTE + PALAS FRONTALES DOBLADAS)
+    # =========================================================================
+    n_c = 16
+    c_bot = []
+    c_top = []
+    for i in range(n_c):
+        ang = (2.0 * math.pi * i) / n_c
+        cos_a = math.cos(ang)
+        sin_a = math.sin(ang)
+        c_bot.append(bm.verts.new((0.054 * cos_a, 0.054 * sin_a + 0.008, 1.375)))
+        c_top.append(bm.verts.new((0.054 * cos_a, 0.054 * sin_a + 0.008, 1.418)))
+
+    for i in range(n_c):
+        i_next = (i + 1) % n_c
+        bm.faces.new((c_bot[i], c_bot[i_next], c_top[i_next], c_top[i])).material_index = 0
+
+    c_wings = [
+        [bm.verts.new((0.008, 0.060, 1.418)), bm.verts.new((0.052, 0.048, 1.412)), bm.verts.new((0.030, 0.082, 1.365))],
+        [bm.verts.new((-0.008, 0.060, 1.418)), bm.verts.new((-0.030, 0.082, 1.365)), bm.verts.new((-0.052, 0.048, 1.412))],
+    ]
+    bm.faces.new(c_wings[0]).material_index = 0
+    bm.faces.new(c_wings[1]).material_index = 0
+
+    # =========================================================================
+    # B. CORBATA CONTINUA (NUDO WINDSOR + PALA FLUIDA TUCKED EN CHALECO)
+    # =========================================================================
+    k_v = [
+        bm.verts.new((-0.016, 0.070, 1.415)), # 0: sup-izq
+        bm.verts.new(( 0.016, 0.070, 1.415)), # 1: sup-der
+        bm.verts.new(( 0.013, 0.098, 1.370)), # 2: inf-der
+        bm.verts.new((-0.013, 0.098, 1.370)), # 3: inf-izq
+        bm.verts.new(( 0.000, 0.104, 1.392)), # 4: centro prominente
+    ]
+    bm.faces.new((k_v[0], k_v[1], k_v[4])).material_index = 4
+    bm.faces.new((k_v[1], k_v[2], k_v[4])).material_index = 4
+    bm.faces.new((k_v[2], k_v[3], k_v[4])).material_index = 4
+    bm.faces.new((k_v[3], k_v[0], k_v[4])).material_index = 4
+
+    # Pala continua: nace del nudo y entra limpiamente detrás del chaleco
+    # Mantener Y_front en 0.124 en Z=1.210 para que quede detrás del chaleco (Z=1.22, Y=0.132)
+    tie_profile = [
+        (1.370, 0.013, 0.098),
+        (1.320, 0.015, 0.116),
+        (1.270, 0.016, 0.124),
+        (1.215, 0.015, 0.125), # Entra limpiamente detrás de la tapeta
+        (1.150, 0.013, 0.118), # Oculta tras el botón 2
+    ]
+    tie_rows = [ (k_v[3], k_v[2]) ]
+    for z, hw, y_f in tie_profile[1:]:
+        vl = bm.verts.new((-hw, y_f, z))
+        vr = bm.verts.new(( hw, y_f, z))
+        tie_rows.append((vl, vr))
+
+    for idx in range(len(tie_rows) - 1):
+        tl_a, tr_a = tie_rows[idx]
+        tl_b, tr_b = tie_rows[idx + 1]
+        bm.faces.new((tl_a, tr_a, tr_b, tl_b)).material_index = 4
+
+    # =========================================================================
+    # C. CHALECO SASTRE AUTÉNTICO CON HOMBROS EN CAÍDA NATURAL Y SISAS ANATÓMICAS
+    # =========================================================================
+    # El tirante del chaleco es de ancho sastre realista (~4.5 cm),
+    # apoyado sobre el trapecio: nace alto en el cuello (Z=1.410, X=0.055)
+    # y desciende por el hombro hasta el acromion (Z=1.365, X=0.110).
+    # La sisa (armhole) deja libre el deltoides y la manga de la camisa.
+    
+    # Filas del panel frontal:
+    # (z_in, in_x, in_y,  z_mid, mid_x, mid_y,  z_out, out_x, out_y,  b_y, b_z)
+    v_levels = [
+        # 0: Tirante del hombro (con pendiente anatómica de 18 grados)
+        (1.410, 0.055, 0.065,  1.390, 0.085, 0.055,  1.365, 0.112, 0.040, -0.075, 1.385),
+        # 1: Clavícula y pecho alto (inicio de la curvatura de la sisa)
+        (1.360, 0.042, 0.096,  1.345, 0.088, 0.092,  1.315, 0.135, 0.070, -0.092, 1.335),
+        # 2: Pecho medio / escote en V diagonal
+        (1.290, 0.022, 0.122,  1.285, 0.086, 0.118,  1.255, 0.150, 0.050, -0.106, 1.275),
+        # 3: Botón 1 / Cierre del escote en V / Fondo de la sisa
+        (1.220, 0.000, 0.132,  1.220, 0.084, 0.124,  1.220, 0.158, 0.015, -0.112, 1.220),
+        # 4: Botón 2 / Torso superior
+        (1.150, 0.000, 0.127,  1.150, 0.082, 0.120,  1.150, 0.156, 0.000, -0.108, 1.150),
+        # 5: Botón 3 / Cintura entallada
+        (1.080, 0.000, 0.123,  1.080, 0.078, 0.116,  1.080, 0.150, -0.005, -0.104, 1.080),
+        # 6: Botón 4 / Cadera alta
+        (1.010, 0.000, 0.120,  1.010, 0.075, 0.114,  1.010, 0.148, -0.005, -0.102, 1.010),
+        # 7: Botón 5 / Dobladillo
+        (0.940, 0.000, 0.118,  0.940, 0.074, 0.112,  0.940, 0.152, -0.005, -0.104, 0.940),
+    ]
+
+    front_l_rows = []
+    front_r_rows = []
+    back_rows = []
+
+    for (z_in, in_x, in_y, z_mid, mid_x, mid_y, z_out, out_x, out_y, b_y, b_z) in v_levels:
+        vl_in = bm.verts.new(( in_x,  in_y, z_in))
+        vl_mid = bm.verts.new(( mid_x, mid_y, z_mid))
+        vl_out = bm.verts.new(( out_x, out_y, z_out))
+        front_l_rows.append((vl_in, vl_mid, vl_out))
+
+        if in_x == 0.0:
+            vr_in = vl_in
+        else:
+            vr_in = bm.verts.new((-in_x,  in_y, z_in))
+        vr_mid = bm.verts.new((-mid_x, mid_y, z_mid))
+        vr_out = bm.verts.new((-out_x, out_y, z_out))
+        front_r_rows.append((vr_in, vr_mid, vr_out))
+
+        vb_c = bm.verts.new(( 0.000, b_y, b_z))
+        vb_l = bm.verts.new(( mid_x, b_y + 0.005, b_z))
+        vb_r = bm.verts.new((-mid_x, b_y + 0.005, b_z))
+        back_rows.append((vb_r, vb_c, vb_l))
+
+    # Conectar paneles frontales y posteriores
+    for l in range(len(v_levels) - 1):
+        (in_a, mid_a, out_a) = front_l_rows[l]
+        (in_b, mid_b, out_b) = front_l_rows[l + 1]
+        bm.faces.new((in_a, mid_a, mid_b, in_b)).material_index = 3
+        bm.faces.new((mid_a, out_a, out_b, mid_b)).material_index = 3
+
+        (rin_a, rmid_a, rout_a) = front_r_rows[l]
+        (rin_b, rmid_b, rout_b) = front_r_rows[l + 1]
+        bm.faces.new((rmid_a, rin_a, rin_b, rmid_b)).material_index = 3
+        bm.faces.new((rout_a, rmid_a, rmid_b, rout_b)).material_index = 3
+
+        (br_a, bc_a, bl_a) = back_rows[l]
+        (br_b, bc_b, bl_b) = back_rows[l + 1]
+        bm.faces.new((br_a, bc_a, bc_b, br_b)).material_index = 0
+        bm.faces.new((bc_a, bl_a, bl_b, bc_b)).material_index = 0
+
+        # Costados laterales (solo bajo la sisa, l >= 3, es decir Z <= 1.220)
+        if l >= 3:
+            bm.faces.new((out_a, bl_a, bl_b, out_b)).material_index = 3
+            bm.faces.new((br_a, rout_a, rout_b, br_b)).material_index = 3
+
+    # Tirantes sobre los hombros (conectar el frente alto con la espalda alta a Z = 1.405)
+    in_0, mid_0, out_0 = front_l_rows[0]
+    rin_0, rmid_0, rout_0 = front_r_rows[0]
+    br_0, bc_0, bl_0 = back_rows[0]
+    bm.faces.new((in_0, mid_0, bl_0, bc_0)).material_index = 3
+    bm.faces.new((mid_0, out_0, bl_0)).material_index = 3
+    bm.faces.new((rin_0, bc_0, br_0, rmid_0)).material_index = 3
+    bm.faces.new((rmid_0, br_0, rout_0)).material_index = 3
+
+    # Picos inferiores frontales del chaleco (puntas triangulares sastre a Z=0.880)
+    bot_l_in, bot_l_mid, bot_l_out = front_l_rows[-1]
+    bot_r_in, bot_r_mid, bot_r_out = front_r_rows[-1]
+    peak_l = bm.verts.new(( 0.042, 0.116, 0.880))
+    peak_r = bm.verts.new((-0.042, 0.116, 0.880))
+
+    bm.faces.new((bot_l_in, bot_l_mid, peak_l)).material_index = 3
+    bm.faces.new((bot_l_mid, bot_l_out, peak_l)).material_index = 3
+    bm.faces.new((bot_r_mid, bot_r_in, peak_r)).material_index = 3
+    bm.faces.new((bot_r_out, bot_r_mid, peak_r)).material_index = 3
+
+    # 5 Botones plateados tridimensionales alineados en la tapeta central
+    b_zs = [1.220, 1.150, 1.080, 1.010, 0.940]
+    for bz in b_zs:
+        by = 0.126 + (1.220 - bz) * (-0.008)
+        btn_bm = bmesh.new()
+        bmesh.ops.create_uvsphere(btn_bm, u_segments=8, v_segments=6, radius=0.0045)
+        bmesh.ops.translate(btn_bm, verts=btn_bm.verts, vec=(0.0, by + 0.007, bz))
+        v_map = {v: bm.verts.new(v.co) for v in btn_bm.verts}
+        for f in btn_bm.faces:
+            nf = bm.faces.new([v_map[v] for v in f.verts])
+            nf.material_index = 5 # Plata
+        btn_bm.free()
+
+    # Bolsillos Welt de ribete
+    p_specs = [(0.070, 0.985, 0.032), (-0.070, 0.985, 0.032), (0.065, 1.140, 0.026)]
+    for (px, pz, pw) in p_specs:
+        py = 0.122
+        p_box = [
+            bm.verts.new((px - pw*0.5, py + 0.003, pz + 0.004)),
+            bm.verts.new((px + pw*0.5, py + 0.003, pz + 0.004)),
+            bm.verts.new((px + pw*0.5, py + 0.003, pz - 0.004)),
+            bm.verts.new((px - pw*0.5, py + 0.003, pz - 0.004)),
+        ]
+        bm.faces.new(p_box).material_index = 3
+
+    # =========================================================================
+    # D. MANOS ANATÓMICAS
+    # =========================================================================
+    for is_left in (True, False):
+        sign_h = 1.0 if is_left else -1.0
+        w_m = sign_h * 0.298
+        w_l = sign_h * 0.362
+
+        base_z = 0.84
+        base_y = 0.012
+
+        finger_specs = [
+            ("Index",  0.22, 0.075, 0.0065),
+            ("Middle", 0.45, 0.082, 0.0070),
+            ("Ring",   0.68, 0.076, 0.0065),
+            ("Little", 0.90, 0.065, 0.0055),
+        ]
+
+        for (f_name, f_frac, f_len, f_rad) in finger_specs:
+            f_x = w_m + (w_l - w_m) * f_frac
+            p_joint = [
+                Vector((f_x, base_y, base_z)),
+                Vector((f_x, base_y - 0.004, base_z - f_len * 0.40)),
+                Vector((f_x, base_y - 0.010, base_z - f_len * 0.75)),
+                Vector((f_x, base_y - 0.015, base_z - f_len * 1.00)),
+            ]
+            prev_f_r = None
+            for j_idx, pt in enumerate(p_joint):
+                cur_r = f_rad * (1.0 - 0.25 * (j_idx / 3.0))
+                cur_f_r = [
+                    bm.verts.new((pt.x - cur_r, pt.y, pt.z)),
+                    bm.verts.new((pt.x, pt.y + cur_r, pt.z)),
+                    bm.verts.new((pt.x + cur_r, pt.y, pt.z)),
+                    bm.verts.new((pt.x, pt.y - cur_r, pt.z)),
+                ]
+                if prev_f_r:
+                    for k in range(4):
+                        k_next = (k + 1) % 4
+                        f_seg = bm.faces.new((prev_f_r[k], prev_f_r[k_next], cur_f_r[k_next], cur_f_r[k]))
+                        f_seg.material_index = 6
+                prev_f_r = cur_f_r
+            tip_v = bm.verts.new((p_joint[-1].x, p_joint[-1].y - 0.003, p_joint[-1].z - 0.004))
+            for k in range(4):
+                k_next = (k + 1) % 4
+                f_tip = bm.faces.new((prev_f_r[k_next], prev_f_r[k], tip_v))
+                f_tip.material_index = 6
+
+            if is_left and f_name in ("Index", "Middle"):
+                r_zc = base_z - f_len * 0.20
+                r_rad = f_rad * 1.22
+                r1_pts = []
+                r2_pts = []
+                for k in range(8):
+                    ang_r = (2.0 * math.pi * k) / 8.0
+                    rx = f_x + r_rad * math.cos(ang_r)
+                    ry = (base_y - 0.002) + r_rad * math.sin(ang_r)
+                    r1_pts.append(bm.verts.new((rx, ry, r_zc + 0.003)))
+                    r2_pts.append(bm.verts.new((rx, ry, r_zc - 0.003)))
+                for k in range(8):
+                    k_next = (k + 1) % 8
+                    f_ring = bm.faces.new((r1_pts[k], r1_pts[k_next], r2_pts[k_next], r2_pts[k]))
+                    f_ring.material_index = 5
+
+        th_pts = [
+            Vector((w_m, 0.008, 0.895)),
+            Vector((w_m - sign_h * 0.015, 0.004, 0.870)),
+            Vector((w_m - sign_h * 0.026, -0.002, 0.845)),
+            Vector((w_m - sign_h * 0.032, -0.008, 0.825)),
+        ]
+        prev_th_r = None
+        for j_idx, pt in enumerate(th_pts):
+            th_r = 0.0075 * (1.0 - 0.20 * (j_idx / 3.0))
+            cur_th_r = [
+                bm.verts.new((pt.x - th_r, pt.y, pt.z)),
+                bm.verts.new((pt.x, pt.y + th_r, pt.z)),
+                bm.verts.new((pt.x + th_r, pt.y, pt.z)),
+                bm.verts.new((pt.x, pt.y - th_r, pt.z)),
+            ]
+            if prev_th_r:
+                for k in range(4):
+                    k_next = (k + 1) % 4
+                    f_th = bm.faces.new((prev_th_r[k], prev_th_r[k_next], cur_th_r[k_next], cur_th_r[k]))
+                    f_th.material_index = 6
+            prev_th_r = cur_th_r
+        tip_th = bm.verts.new((th_pts[-1].x - sign_h * 0.003, th_pts[-1].y - 0.005, th_pts[-1].z - 0.004))
+        for k in range(4):
+            k_next = (k + 1) % 4
+            f_tip_th = bm.faces.new((prev_th_r[k_next], prev_th_r[k], tip_th))
+            f_tip_th.material_index = 6
+
+        p_box = [
+            bm.verts.new((w_m, 0.022, 0.92)),
+            bm.verts.new((w_l, 0.022, 0.92)),
+            bm.verts.new((w_l, -0.002, 0.92)),
+            bm.verts.new((w_m, -0.002, 0.92)),
+            bm.verts.new((w_m, 0.022, 0.84)),
+            bm.verts.new((w_l, 0.022, 0.84)),
+            bm.verts.new((w_l, -0.004, 0.84)),
+            bm.verts.new((w_m, -0.004, 0.84)),
+        ]
+        p_f_idxs = [(0, 1, 5, 4), (3, 7, 6, 2), (0, 4, 7, 3), (1, 2, 6, 5), (0, 3, 2, 1)]
+        for pfi in p_f_idxs:
+            f_p = bm.faces.new([p_box[idx] for idx in pfi])
+            f_p.material_index = 6
+
+    bm.normal_update()
+    for f in bm.faces: f.smooth = True
+    bm.to_mesh(obj_body.data)
     bm.free()
 
-    obj.data.materials.append(mat_jacket) # 0
-    obj.data.materials.append(mat_pants)  # 1
-    obj.data.materials.append(mat_shoes)  # 2
-    obj.data.materials.append(mat_skin)   # 3
-    obj.data.materials.append(mat_belt)   # 4
-    obj.data.materials.append(mat_buckle) # 5
+    for mat in materials["body"]:
+        obj_body.data.materials.append(mat)
 
-    for poly in mesh.polygons:
-        poly.use_smooth = True
+    return obj_body
 
-    # Ponderación a huesos del Armature
-    obj.parent = arm_obj
-    mod = obj.modifiers.new(name="Armature", type='ARMATURE')
-    mod.object = arm_obj
+# =============================================================================
+# 3. ESQUELETO Y RIGGING
+# =============================================================================
+def build_skeleton():
+    arm_data = bpy.data.armatures.new("Skeleton3D")
+    arm_obj = bpy.data.objects.new("Skeleton3D", arm_data)
+    bpy.context.scene.collection.objects.link(arm_obj)
+    bpy.context.view_layer.objects.active = arm_obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    edit_bones = arm_data.edit_bones
 
+    bones_def = [
+        ("Root",        None,          (0, 0, 0),         (0, 0, 0.10)),
+        ("Hips",        "Root",        (0, 0, 0.82),      (0, 0, 0.95)),
+        ("Spine",       "Hips",        (0, 0, 0.95),      (0, 0, 1.15)),
+        ("Chest",       "Spine",       (0, 0, 1.15),      (0, 0, 1.36)),
+        ("Neck",        "Chest",       (0, 0, 1.36),      (0, 0, 1.43)),
+        ("Head",        "Neck",        (0, 0, 1.43),      (0, 0, 1.70)),
+        
+        ("Shoulder.L",  "Chest",       (0.04, 0, 1.36),   (0.180, 0, 1.36)),
+        ("UpperArm.L",  "Shoulder.L",  (0.180, 0, 1.36),  (0.260, 0.007, 1.15)),
+        ("Forearm.L",   "UpperArm.L",  (0.260, 0.007, 1.15),(0.330, 0.015, 0.92)),
+        ("Hand.L",      "Forearm.L",   (0.330, 0.015, 0.92),(0.330, 0.015, 0.82)),
+        
+        ("Shoulder.R",  "Chest",       (-0.04, 0, 1.36),  (-0.180, 0, 1.36)),
+        ("UpperArm.R",  "Shoulder.R",  (-0.180, 0, 1.36), (-0.260, 0.007, 1.15)),
+        ("Forearm.R",   "UpperArm.R",  (-0.260, 0.007, 1.15),(-0.330, 0.015, 0.92)),
+        ("Hand.R",      "Forearm.R",   (-0.330, 0.015, 0.92),(-0.330, 0.015, 0.82)),
+        
+        ("UpperLeg.L",  "Hips",        (0.088, 0, 0.82),  (0.088, 0, 0.48)),
+        ("LowerLeg.L",  "UpperLeg.L",  (0.088, 0, 0.48),  (0.088, 0, 0.12)),
+        ("Foot.L",      "LowerLeg.L",  (0.088, 0, 0.12),  (0.088, 0.06, 0.03)),
+        ("Toes.L",      "Foot.L",      (0.088, 0.06, 0.03),(0.088, 0.12, 0.00)),
+        
+        ("UpperLeg.R",  "Hips",        (-0.088, 0, 0.82), (-0.088, 0, 0.48)),
+        ("LowerLeg.R",  "UpperLeg.R",  (-0.088, 0, 0.48), (-0.088, 0, 0.12)),
+        ("Foot.R",      "LowerLeg.R",  (-0.088, 0, 0.12), (-0.088, 0.06, 0.03)),
+        ("Toes.R",      "Foot.R",      (-0.088, 0.06, 0.03),(-0.088, 0.12, 0.00)),
+    ]
+    created = {}
+    for name, parent, head, tail in bones_def:
+        b = edit_bones.new(name)
+        b.head = head
+        b.tail = tail
+        created[name] = b
+    for name, parent, head, tail in bones_def:
+        if parent: created[name].parent = created[parent]
+    bpy.ops.object.mode_set(mode='OBJECT')
+    return arm_obj
+
+def assign_weights(obj, is_head=False):
     bone_names = [
-        "Hips", "Spine", "Spine1", "Chest",
+        "Root", "Hips", "Spine", "Chest", "Neck", "Head",
         "Shoulder.L", "UpperArm.L", "Forearm.L", "Hand.L",
         "Shoulder.R", "UpperArm.R", "Forearm.R", "Hand.R",
         "UpperLeg.L", "LowerLeg.L", "Foot.L", "Toes.L",
         "UpperLeg.R", "LowerLeg.R", "Foot.R", "Toes.R"
     ]
-    vgroups = {b: obj.vertex_groups.new(name=b) for b in bone_names}
-
+    for b in bone_names:
+        if b not in obj.vertex_groups: obj.vertex_groups.new(name=b)
     for v in obj.data.vertices:
-        x, y, z = v.co.x, v.co.y, v.co.z
-        
-        # Brazos
-        if abs(x) > 0.16 and z > 0.85:
-            side = ".L" if x < 0 else ".R"
-            if z > 1.35:
-                vgroups["Shoulder" + side].add([v.index], 1.0, 'REPLACE')
-            elif z > 1.15:
-                w_farm = clampf((1.35 - z) / 0.20, 0.0, 1.0)
-                vgroups["UpperArm" + side].add([v.index], 1.0 - w_farm, 'REPLACE')
-                vgroups["Forearm" + side].add([v.index], w_farm, 'REPLACE')
-            elif z > 0.94:
-                vgroups["Forearm" + side].add([v.index], 1.0, 'REPLACE')
-            else:
-                vgroups["Hand" + side].add([v.index], 1.0, 'REPLACE')
-        # Piernas
-        elif z < 0.94 and (abs(x) > 0.04 or z < 0.80):
-            side = ".L" if x < 0 else ".R"
-            if z > 0.50:
-                vgroups["UpperLeg" + side].add([v.index], 1.0, 'REPLACE')
-            elif z > 0.12:
-                vgroups["LowerLeg" + side].add([v.index], 1.0, 'REPLACE')
-            elif y < 0.12:
-                vgroups["Foot" + side].add([v.index], 1.0, 'REPLACE')
-            else:
-                vgroups["Toes" + side].add([v.index], 1.0, 'REPLACE')
-        # Torso
+        co = v.co
+        if is_head:
+            grp = "Neck" if co.z < 1.42 else "Head"
+            obj.vertex_groups[grp].add([v.index], 1.0, 'REPLACE')
         else:
-            if z < 1.08:
-                vgroups["Hips"].add([v.index], 1.0, 'REPLACE')
-            elif z < 1.25:
-                w_s = clampf((z - 1.08) / 0.17, 0.0, 1.0)
-                vgroups["Spine"].add([v.index], 1.0 - w_s, 'REPLACE')
-                vgroups["Spine1"].add([v.index], w_s, 'REPLACE')
-            elif z < 1.38:
-                vgroups["Spine1"].add([v.index], 1.0, 'REPLACE')
-            else:
-                vgroups["Chest"].add([v.index], 1.0, 'REPLACE')
+            if co.z < 0.04:
+                obj.vertex_groups["Toes.L" if co.x > 0 else "Toes.R"].add([v.index], 1.0, 'REPLACE')
+            elif co.z < 0.12:
+                obj.vertex_groups["Foot.L" if co.x > 0 else "Foot.R"].add([v.index], 1.0, 'REPLACE')
+            elif co.z < 0.48:
+                obj.vertex_groups["LowerLeg.L" if co.x > 0 else "LowerLeg.R"].add([v.index], 1.0, 'REPLACE')
+            elif co.z < 0.82 and abs(co.x) > 0.03:
+                obj.vertex_groups["UpperLeg.L" if co.x > 0 else "UpperLeg.R"].add([v.index], 1.0, 'REPLACE')
+            elif abs(co.x) > 0.18 and co.z < 1.38:
+                side = ".L" if co.x > 0 else ".R"
+                if co.z < 0.93: obj.vertex_groups["Hand" + side].add([v.index], 1.0, 'REPLACE')
+                elif co.z < 1.15: obj.vertex_groups["Forearm" + side].add([v.index], 1.0, 'REPLACE')
+                else: obj.vertex_groups["UpperArm" + side].add([v.index], 1.0, 'REPLACE')
+            elif co.z < 0.95: obj.vertex_groups["Hips"].add([v.index], 1.0, 'REPLACE')
+            elif co.z < 1.15: obj.vertex_groups["Spine"].add([v.index], 1.0, 'REPLACE')
+            else: obj.vertex_groups["Chest"].add([v.index], 1.0, 'REPLACE')
 
-    for indices, bone_name in raw_hand_assignments:
-        vg = vgroups.get(bone_name)
-        if vg:
-            vg.add(indices, 1.0, 'REPLACE')
+# =============================================================================
+# 4. RENDER PREVIEW DE ESTUDIO FOTOGRÁFICO
+# =============================================================================
+def render_preview():
+    scene = bpy.context.scene
+    scene.render.engine = 'CYCLES'
+    scene.cycles.samples = 32
+    scene.cycles.device = 'CPU'
 
-    return obj
+    key = bpy.data.objects.new("Key", bpy.data.lights.new("Key", 'AREA'))
+    key.data.energy = 110.0
+    key.data.size = 1.4
+    key.data.color = (1.0, 0.98, 0.95)
+    key.location = Vector((-0.6, 1.7, 1.5))
+    key.rotation_euler = (math.radians(50.0), 0.0, math.radians(-155.0))
+    scene.collection.objects.link(key)
+
+    fill = bpy.data.objects.new("Fill", bpy.data.lights.new("Fill", 'AREA'))
+    fill.data.energy = 55.0
+    fill.data.size = 1.8
+    fill.data.color = (0.94, 0.97, 1.0)
+    fill.location = Vector((0.8, 1.7, 1.3))
+    scene.collection.objects.link(fill)
+
+    rim = bpy.data.objects.new("Rim", bpy.data.lights.new("Rim", 'SPOT'))
+    rim.data.energy = 65.0
+    rim.data.spot_size = math.radians(65.0)
+    rim.data.color = (1.0, 1.0, 1.0)
+    rim.location = Vector((0.0, -1.2, 1.8))
+    rim.rotation_euler = (math.radians(-50.0), 0.0, 0.0)
+    scene.collection.objects.link(rim)
+
+    cam = bpy.data.objects.new("Cam", bpy.data.cameras.new("Cam"))
+    cam.data.lens = 52.0
+    cam.location = Vector((0.02, 1.65, 1.28))
+    cam.rotation_euler = (math.radians(88.5), 0.0, math.radians(178.0))
+    scene.collection.objects.link(cam)
+    scene.camera = cam
+
+    scene.render.resolution_x = 720
+    scene.render.resolution_y = 1280
+    scene.render.filepath = PREVIEW_PNG
+    scene.render.image_settings.file_format = 'PNG'
+    bpy.ops.render.render(write_still=True)
+    print(f"✓ Render preview guardado en: {PREVIEW_PNG}")
 
 def main():
-    print("==================================================")
-    print("GENERANDO AVATAR HIPERREALISTA DE AXEL (TECATENSE)")
-    print("==================================================")
+    print("=" * 60)
+    print("GENERANDO AXEL CON CHALECO SASTRE Y CORBATA PERFECTOS")
+    print("=" * 60)
     clean_scene()
 
-    # 1. Asegurar la existencia de texturas procedurales matemáticas PBR (CERO IA)
-    import subprocess
-    cmd = [
-        "/Applications/Blender.app/Contents/MacOS/Blender",
-        "--background",
-        "--python",
-        "scripts/characters/generate_character_textures.py"
-    ]
-    subprocess.run(cmd, check=True)
+    mat_skin = create_pbr_material("Mat_Axel_Skin", (0.88, 0.62, 0.48, 1.0), roughness=0.50,
+                                   diffuse_tex_path=os.path.join(TEXTURES_DIR, "axel_face_diffuse.png"),
+                                   normal_tex_path=os.path.join(TEXTURES_DIR, "axel_face_normal.png"))
+    mat_eye = create_pbr_material("Mat_Axel_Eyes", (1, 1, 1, 1), roughness=0.1,
+                                  diffuse_tex_path=os.path.join(TEXTURES_DIR, "axel_eye_diffuse.png"))
+    mat_hair = create_pbr_material("Mat_Axel_Hair", (0.05, 0.04, 0.035, 1.0), roughness=0.85)
+    mat_fedora = create_pbr_material("Mat_Axel_Fedora", (0.015, 0.015, 0.018, 1.0), roughness=0.92,
+                                     diffuse_tex_path=os.path.join(TEXTURES_DIR, "axel_hat_diffuse.png"),
+                                     normal_tex_path=os.path.join(TEXTURES_DIR, "axel_hat_normal.png"))
+    mat_hatband = create_pbr_material("Mat_Axel_Hatband", (0.02, 0.02, 0.025, 1.0), roughness=0.45, specular=0.6)
+    
+    mat_shirt = create_pbr_material("Mat_Axel_Shirt", (0.17, 0.18, 0.20, 1.0), roughness=0.75,
+                                    diffuse_tex_path=os.path.join(TEXTURES_DIR, "axel_shirt_diffuse.png"),
+                                    normal_tex_path=os.path.join(TEXTURES_DIR, "axel_shirt_normal.png"))
+    mat_pants = create_pbr_material("Mat_Axel_Pants", (0.13, 0.14, 0.16, 1.0), roughness=0.78,
+                                    diffuse_tex_path=os.path.join(TEXTURES_DIR, "axel_pants_diffuse.png"),
+                                    normal_tex_path=os.path.join(TEXTURES_DIR, "axel_pants_normal.png"))
+    mat_shoes = create_pbr_material("Mat_Axel_Shoes", (0.03, 0.03, 0.035, 1.0), roughness=0.28, specular=0.7,
+                                    diffuse_tex_path=os.path.join(TEXTURES_DIR, "axel_shoes_diffuse.png"),
+                                    normal_tex_path=os.path.join(TEXTURES_DIR, "axel_shoes_normal.png"))
+    mat_vest = create_pbr_material("Mat_Axel_Vest", (0.84, 0.85, 0.87, 1.0), roughness=0.68,
+                                   diffuse_tex_path=os.path.join(TEXTURES_DIR, "axel_vest_diffuse.png"),
+                                   normal_tex_path=os.path.join(TEXTURES_DIR, "axel_vest_normal.png"))
+    mat_tie = create_pbr_material("Mat_Axel_Tie", (0.35, 0.36, 0.38, 1.0), roughness=0.4, specular=0.7,
+                                   diffuse_tex_path=os.path.join(TEXTURES_DIR, "axel_tie_diffuse.png"),
+                                   normal_tex_path=os.path.join(TEXTURES_DIR, "axel_tie_normal.png"))
+    mat_silver = create_pbr_material("Mat_Axel_Silver", (0.88, 0.89, 0.90, 1.0), roughness=0.18, metallic=0.95)
 
-    # 2. Cargar y compilar materiales PBR hiperrealistas nativos
-    tex_face_diff = os.path.join(TEX_DIR, "axel_face_diffuse.png")
-    tex_face_norm = os.path.join(TEX_DIR, "axel_face_normal.png")
-    tex_beanie_diff = os.path.join(TEX_DIR, "axel_beanie_diffuse.png")
-    tex_beanie_norm = os.path.join(TEX_DIR, "axel_beanie_normal.png")
-    tex_jacket_diff = os.path.join(TEX_DIR, "axel_jacket_diffuse.png")
-    tex_jacket_norm = os.path.join(TEX_DIR, "axel_jacket_normal.png")
-    tex_pants_norm = os.path.join(TEX_DIR, "axel_pants_normal.png")
-    tex_belt_diff = os.path.join(TEX_DIR, "axel_belt_diffuse.png")
-    tex_belt_norm = os.path.join(TEX_DIR, "axel_belt_normal.png")
-    tex_eye_diff = os.path.join(TEX_DIR, "axel_eye_diffuse.png")
+    materials = {
+        "head": [mat_skin, mat_eye, mat_hair, mat_fedora, mat_hatband],
+        "body": [mat_shirt, mat_pants, mat_shoes, mat_vest, mat_tie, mat_silver, mat_skin]
+    }
 
-    # Piel con SSS y texturas faciales
-    mat_skin = create_pbr_material("Mat_Axel_Skin", (0.64, 0.46, 0.38, 1.0), roughness=0.45,
-                                   tex_diffuse_path=tex_face_diff, tex_normal_path=tex_face_norm, sss_weight=0.35)
+    skel = build_skeleton()
+    print("✓ Armature canónico construido con 22 huesos.")
     
-    # Gorro Beanie de lana verde oliva / khaki con textura difusa y normal
-    mat_beanie = create_pbr_material("Mat_Axel_Beanie", (0.22, 0.20, 0.13, 1.0), roughness=0.85,
-                                     tex_diffuse_path=tex_beanie_diff, tex_normal_path=tex_beanie_norm)
+    head_obj = build_head_mesh(materials)
+    assign_weights(head_obj, is_head=True)
+    head_obj.parent = skel
+    mod_h = head_obj.modifiers.new("Armature", type='ARMATURE')
+    mod_h.object = skel
+    print("✓ Player_Head_Mesh generado con boca 3D anatómica, proporciones reales y fedora.")
     
-    # Cabello castaño oscuro
-    mat_hair = create_pbr_material("Mat_Axel_Hair", (0.10, 0.07, 0.05, 1.0), roughness=0.55, metallic=0.05)
+    body_obj = build_body_mesh(materials)
+    assign_weights(body_obj, is_head=False)
+    body_obj.parent = skel
+    mod_b = body_obj.modifiers.new("Armature", type='ARMATURE')
+    mod_b.object = skel
+    print("✓ Player_Body_Mesh generado con chaleco entallado y corbata continua estratificada.")
     
-    # Ojos con iris detallado y brillo corneal
-    mat_eyes = create_pbr_material("Mat_Axel_Eyes", (1, 1, 1, 1), roughness=0.08, metallic=0.0,
-                                   tex_diffuse_path=tex_eye_diff)
-    
-    # Chamarra puffer azul marino carbón oscuro
-    mat_jacket = create_pbr_material("Mat_Axel_Jacket", (0.11, 0.12, 0.15, 1.0), roughness=0.55, metallic=0.04,
-                                     tex_diffuse_path=tex_jacket_diff, tex_normal_path=tex_jacket_norm)
-    
-    # Pantalón de mezclilla oscura
-    mat_pants = create_pbr_material("Mat_Axel_Pants", (0.10, 0.12, 0.16, 1.0), roughness=0.85, metallic=0.0,
-                                    tex_normal_path=tex_pants_norm)
-    
-    # Calzado urbano con suela de caucho
-    mat_shoes = create_pbr_material("Mat_Axel_Shoes", (0.14, 0.14, 0.15, 1.0), roughness=0.65, metallic=0.05)
-    
-    # Cinturón de cuero con hebilla metálica
-    mat_belt = create_pbr_material("Mat_Axel_Belt", (0.28, 0.20, 0.16, 1.0), roughness=0.68,
-                                   tex_diffuse_path=tex_belt_diff, tex_normal_path=tex_belt_norm)
-    mat_buckle = create_pbr_material("Mat_Axel_Buckle", (0.85, 0.85, 0.88, 1.0), roughness=0.22, metallic=0.92)
-
-    # 3. Construir Armature y Mallas Skinned
-    arm_obj = build_axel_armature()
-    print("✓ Armature antropométrico canónico construido con 22 huesos.")
-
-    head_obj = build_head_mesh(arm_obj, mat_skin, mat_beanie, mat_hair, mat_eyes)
-    print("✓ Player_Head_Mesh generado con rasgos faciales 3D, ojos y gorro beanie.")
-
-    body_obj = build_body_mesh(arm_obj, mat_jacket, mat_pants, mat_shoes, mat_skin, mat_belt, mat_buckle)
-    print("✓ Player_Body_Mesh generado con chamarra puffer, manos anatómicas y cinturón.")
-
-    # 4. Guardar archivo maestro .blend
     os.makedirs(os.path.dirname(OUTPUT_BLEND), exist_ok=True)
-    bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(OUTPUT_BLEND))
-    print(f"✓ Guardado .blend maestro en: {OUTPUT_BLEND}")
-
-    # 5. Exportar archivo .glb optimizado para Godot 4
+    bpy.ops.wm.save_as_mainfile(filepath=OUTPUT_BLEND)
+    print(f"✓ Guardado .blend en: {OUTPUT_BLEND}")
+    
     bpy.ops.export_scene.gltf(
-        filepath=os.path.abspath(OUTPUT_GLB),
+        filepath=OUTPUT_GLB,
         export_format='GLB',
         use_selection=False,
-        export_yup=True,
         export_apply=False,
-        export_skins=True,
-        export_all_influences=False,
+        export_def_bones=True,
         export_materials='EXPORT',
-        export_image_format='AUTO',
-        export_lights=False,
-        export_cameras=False
+        export_cameras=False,
+        export_lights=False
     )
-    print(f"✓ Exportado archivo glTF .glb en: {OUTPUT_GLB}")
-    print("==================================================")
-    print("PERSONAJE AXEL HIPERREALISTA GENERADO CON ÉXITO")
-    print("==================================================")
+    print(f"✓ Exportado .glb en: {OUTPUT_GLB}")
+    
+    render_preview()
+    print("=" * 60)
+    print("PROCESO COMPLETADO EXITOSAMENTE")
+    print("=" * 60)
 
 if __name__ == "__main__":
     main()
