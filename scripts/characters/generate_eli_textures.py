@@ -117,19 +117,19 @@ def generate_face_textures():
     dx_jaw = np.abs(x - 0.50)
 
     # Límite inferior estricto en la mandíbula (bajo la mandíbula es piel limpia)
-    y_jaw_bone = 0.265 + 0.38 * np.maximum(0.0, (dx_jaw - 0.04) / 0.23)**1.5
-    lower_mask = np.clip((y - (y_jaw_bone - 0.025)) / 0.020, 0.0, 1.0)
+    y_jaw_bone = 0.265 + 0.140 * np.maximum(0.0, (dx_jaw - 0.04) / 0.22)**1.3
+    lower_mask = np.clip((y - (y_jaw_bone - 0.015)) / 0.015, 0.0, 1.0)
 
     # Límite superior en las mejillas: desciende suavemente de patillas a comisuras
-    t_cheek = np.clip((dx_jaw - 0.06) / 0.18, 0.0, 1.0)
-    y_cheek_upper = 0.395 + 0.125 * (t_cheek**1.1)
-    upper_mask = np.clip((y_cheek_upper - y) / 0.025, 0.0, 1.0)
+    t_cheek = np.clip((dx_jaw - 0.05) / 0.18, 0.0, 1.0)
+    y_cheek_upper = 0.380 + 0.090 * t_cheek
+    upper_mask = np.clip((y_cheek_upper - y) / 0.015, 0.0, 1.0)
 
     # Límite lateral en patillas
     lat_mask = np.clip((0.265 - dx_jaw) / 0.020, 0.0, 1.0)
 
     # Hendidura anatómica entre labio inferior y mentón
-    lip_gap = np.clip(1.0 - np.sqrt((dx_jaw / 0.038)**2 + ((y - 0.362) / 0.018)**2), 0.0, 1.0) * (y > 0.33) * (dx_jaw > 0.015)
+    lip_gap = np.clip(1.0 - np.sqrt((dx_jaw / 0.038)**2 + ((y - 0.360) / 0.018)**2), 0.0, 1.0) * (y > 0.33) * (dx_jaw > 0.014)
 
     # Mosca / Soul Patch centrado bajo el labio inferior (eli3.png)
     soul_patch = np.clip(1.0 - np.sqrt((dx_jaw / 0.018)**2 + ((y - 0.345) / 0.022)**2), 0.0, 1.0)**1.3
