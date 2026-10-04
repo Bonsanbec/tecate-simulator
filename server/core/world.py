@@ -216,6 +216,7 @@ class SharedWorld:
 
         # 3. Ciudadanos y peatones autoritativos del centro urbano de Tecate
         # Simulados enteramente por el servidor TKT/1, recorriendo banquetas y áreas cívicas
+        # deshabilitado hasta no tener suficientes personajes
         citizens_data = [
             
         ]
