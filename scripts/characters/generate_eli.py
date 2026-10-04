@@ -431,13 +431,13 @@ def build_head_mesh(materials):
     glasses_bm.free()
 
     # -------------------------------------------------------------------------
-    # CABELLERA TOROIDAL ORGÁNICA EN 360° CON HUECO LIGERO EN CORONILLA
+    # CABELLERA TOROIDAL ORGÁNICA REDONDEADA EN 360° CON HUECO LIGERO EN CORONILLA
     # -------------------------------------------------------------------------
-    # 1. Anillo toroidal volumétrico en 360° (frente cubierta, sienes, nuca y hueco ligero)
+    # 1. Anillo toroidal volumétrico convexo en 360° (frente cubierta, sienes, nuca y hueco ligero)
     n_h = 28
     rings_toroid = []
 
-    for stage in range(6):
+    for stage in range(7):
         cur_ring = []
         for i in range(n_h):
             hang = (2.0 * math.pi * i) / n_h
@@ -445,59 +445,67 @@ def build_head_mesh(materials):
             sin_a = math.sin(hang)
 
             # Altura base de nacimiento según ángulo polar:
-            # Frente: Z=1.560 (frente con flequillo completo)
-            # Nuca: Z=1.475
-            z_base = 1.518 + 0.042 * sin_a
-            rx_b = 0.074
+            # Frente: Z=1.558 (flequillo frontal completo)
+            # Nuca: Z=1.472
+            z_base = 1.515 + 0.043 * sin_a
+            rx_b = 0.075
             ry_b = 0.065 if sin_a >= 0 else 0.088
-            y_off = -0.005
+            y_off = -0.006
 
             bx = rx_b * cos_a
             by = ry_b * sin_a + y_off
 
             # Ondulación rizada orgánica procedural 360°
-            wave = 0.0038 * math.sin(hang * 6.0 + stage * 6.0) + 0.0018 * math.cos(hang * 10.0)
+            wave = 0.0032 * math.sin(hang * 6.0 + stage * 5.0) + 0.0016 * math.cos(hang * 10.0)
 
             if stage == 0:
-                # Nivel 0: Borde inferior del nacimiento
+                # Nivel 0: Borde inferior del nacimiento en cráneo
                 vz = z_base
                 vx = bx
                 vy = by
             elif stage == 1:
-                # Nivel 1: Relieve exterior bajo
-                thick = 0.009 + wave
-                vz = z_base + 0.018
+                # Nivel 1: Abultamiento exterior bajo
+                thick = 0.011 + wave
+                vz = z_base + 0.016
                 vx = bx + cos_a * thick
                 vy = by + sin_a * thick
             elif stage == 2:
-                # Nivel 2: Máximo volumen exterior esponjoso (más cabello)
+                # Nivel 2: Máximo volumen exterior esponjoso
                 thick = 0.015 + wave * 1.2
-                vz = z_base + 0.038
+                vz = z_base + 0.034
                 vx = bx + cos_a * thick
                 vy = by + sin_a * thick
             elif stage == 3:
-                # Nivel 3: Cresta superior del toroide
-                thick = 0.012 + wave
-                vz = 1.616 + 0.003 * math.sin(hang * 4.0)
-                vx = bx * 0.95 + cos_a * thick
-                vy = by * 0.95 + sin_a * thick
+                # Nivel 3: Hombro exterior superior (curvatura convexa hacia adentro)
+                r_x3 = 0.062 + wave
+                r_y3 = (0.054 if sin_a >= 0 else 0.072) + wave
+                vz = 1.596 + 0.006 * sin_a
+                vx = r_x3 * cos_a
+                vy = r_y3 * sin_a - 0.008
             elif stage == 4:
-                # Nivel 4: Borde superior del hueco ligero interior
-                r_hole = 0.034 + 0.004 * math.sin(hang * 3.0)
-                vz = 1.610
+                # Nivel 4: Cresta superior del toroide (redondeada suave)
+                r_x4 = 0.044 + wave * 0.7
+                r_y4 = (0.040 if sin_a >= 0 else 0.052) + wave * 0.7
+                vz = 1.605 + 0.003 * sin_a
+                vx = r_x4 * cos_a
+                vy = r_y4 * sin_a - 0.010
+            elif stage == 5:
+                # Nivel 5: Borde superior del hueco ligero interior
+                r_hole = 0.025 + 0.003 * math.sin(hang * 3.0)
+                vz = 1.598
                 vx = r_hole * cos_a
                 vy = r_hole * sin_a - 0.012
-            elif stage == 5:
-                # Nivel 5: Borde inferior del hueco asentado en el cráneo calvo
-                r_base_hole = 0.027
-                vz = 1.604
-                vx = r_base_hole * cos_a
-                vy = r_base_hole * sin_a - 0.012
+            elif stage == 6:
+                # Nivel 6: Base del hueco asentada en el cráneo calvo
+                r_base_h = 0.019
+                vz = 1.592
+                vx = r_base_h * cos_a
+                vy = r_base_h * sin_a - 0.012
 
             cur_ring.append(bm.verts.new((vx, vy, vz)))
         rings_toroid.append(cur_ring)
 
-    for st in range(5):
+    for st in range(6):
         r_curr = rings_toroid[st]
         r_next = rings_toroid[st + 1]
         for i in range(n_h):
@@ -536,26 +544,26 @@ def build_head_mesh(materials):
 
     locks_specs = [
         # Flequillo frontal (ondas rizadas cubriendo la frente natural de Eli)
-        (( 0.024,  0.065, 1.575), ( 0.006,  0.010, -0.024), 0.006, 1.8, 0.5),
-        ((-0.024,  0.065, 1.575), (-0.006,  0.010, -0.024), 0.006, 1.8, 1.2),
-        (( 0.000,  0.068, 1.580), ( 0.002,  0.012, -0.026), 0.007, 2.0, 2.0),
-        (( 0.045,  0.055, 1.570), ( 0.008,  0.008, -0.022), 0.006, 1.7, 0.8),
-        ((-0.045,  0.055, 1.570), (-0.008,  0.008, -0.022), 0.006, 1.7, 1.5),
+        (( 0.000,  0.066, 1.568), ( 0.002,  0.010, -0.022), 0.006, 1.8, 1.0),
+        (( 0.022,  0.062, 1.565), ( 0.005,  0.008, -0.020), 0.0055, 1.7, 0.4),
+        ((-0.022,  0.062, 1.565), (-0.005,  0.008, -0.020), 0.0055, 1.7, 1.6),
+        (( 0.045,  0.052, 1.558), ( 0.008,  0.006, -0.018), 0.005, 1.6, 2.2),
+        ((-0.045,  0.052, 1.558), (-0.008,  0.006, -0.018), 0.005, 1.6, 0.8),
         # Sienes y patillas
-        (( 0.072,  0.020, 1.535), ( 0.008, -0.006, -0.020), 0.005, 1.7, 0.6),
-        ((-0.072,  0.020, 1.535), (-0.008, -0.006, -0.020), 0.005, 1.7, 1.4),
+        (( 0.072,  0.018, 1.530), ( 0.006, -0.006, -0.020), 0.005, 1.7, 0.5),
+        ((-0.072,  0.018, 1.530), (-0.006, -0.006, -0.020), 0.005, 1.7, 1.3),
         # Laterales sobre orejas
-        (( 0.076, -0.020, 1.555), ( 0.008, -0.008, -0.020), 0.006, 1.6, 2.1),
-        ((-0.076, -0.020, 1.555), (-0.008, -0.008, -0.020), 0.006, 1.6, 0.9),
+        (( 0.075, -0.020, 1.545), ( 0.006, -0.008, -0.020), 0.006, 1.6, 1.9),
+        ((-0.075, -0.020, 1.545), (-0.006, -0.008, -0.020), 0.006, 1.6, 0.7),
         # Región occipital y nuca
-        (( 0.045, -0.075, 1.560), ( 0.004, -0.012, -0.018), 0.007, 1.8, 1.6),
-        ((-0.045, -0.075, 1.560), (-0.004, -0.012, -0.018), 0.007, 1.8, 0.4),
-        (( 0.000, -0.085, 1.555), ( 0.002, -0.012, -0.018), 0.007, 1.9, 2.3),
+        (( 0.040, -0.075, 1.545), ( 0.004, -0.010, -0.018), 0.006, 1.7, 1.2),
+        ((-0.040, -0.075, 1.545), (-0.004, -0.010, -0.018), 0.006, 1.7, 0.3),
+        (( 0.000, -0.082, 1.540), ( 0.002, -0.010, -0.018), 0.006, 1.8, 2.0),
         # Borde superior del anillo toroidal enmarcando el hueco ligero
-        (( 0.036, -0.005, 1.612), ( 0.005, -0.004, -0.012), 0.005, 1.5, 0.3),
-        ((-0.036, -0.005, 1.612), (-0.005, -0.004, -0.012), 0.005, 1.5, 1.1),
-        (( 0.016, -0.038, 1.610), ( 0.004, -0.006, -0.012), 0.005, 1.5, 2.2),
-        ((-0.016, -0.038, 1.610), (-0.004, -0.006, -0.012), 0.005, 1.5, 0.8),
+        (( 0.030, -0.006, 1.602), ( 0.004, -0.003, -0.010), 0.0045, 1.5, 0.2),
+        ((-0.030, -0.006, 1.602), (-0.004, -0.003, -0.010), 0.0045, 1.5, 1.0),
+        (( 0.015, -0.032, 1.600), ( 0.003, -0.005, -0.010), 0.0045, 1.5, 2.1),
+        ((-0.015, -0.032, 1.600), (-0.003, -0.005, -0.010), 0.0045, 1.5, 0.7),
     ]
     for p_st, p_dt, rw, trns, p0 in locks_specs:
         add_wavy_lock(p_st, p_dt, rw, trns, p0)
