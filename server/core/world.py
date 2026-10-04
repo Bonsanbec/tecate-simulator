@@ -217,57 +217,7 @@ class SharedWorld:
         # 3. Ciudadanos y peatones autoritativos del centro urbano de Tecate
         # Simulados enteramente por el servidor TKT/1, recorriendo banquetas y áreas cívicas
         citizens_data = [
-            {
-                "id": 3001,
-                "name": "Don Miguel",
-                "spawn": (-6.7, 400.2, 2.7),
-                "patrol": [
-                    (-6.7, 400.2, 2.7),
-                    (-6.7, 400.6, -14.0),
-                    (-6.7, 401.0, -28.0),
-                    (-16.0, 400.7, -14.0),
-                    (-16.0, 400.3, 2.7),
-                ],
-                "speed": 1.25,
-            },
-            {
-                "id": 3002,
-                "name": "Doña Rosa",
-                "spawn": (-12.0, 400.3, 2.7),
-                "patrol": [
-                    (-12.0, 400.3, 2.7),
-                    (-24.0, 400.7, -5.0),
-                    (-38.0, 401.2, -12.0),
-                    (-24.0, 400.7, -5.0),
-                ],
-                "speed": 1.15,
-            },
-            {
-                "id": 3003,
-                "name": "Juan Carlos",
-                "spawn": (-6.7, 400.2, 5.0),
-                "patrol": [
-                    (-6.7, 400.2, 5.0),
-                    (-6.7, 399.6, 18.0),
-                    (-6.7, 398.9, 32.0),
-                    (-6.7, 399.6, 18.0),
-                ],
-                "speed": 1.30,
-            },
-            {
-                "id": 3004,
-                "name": "Carmen",
-                "spawn": (-2.0, 400.2, 2.7),
-                "patrol": [
-                    (-2.0, 400.2, 2.7),
-                    (15.0, 400.1, 2.7),
-                    (32.0, 399.9, 2.7),
-                    (44.0, 399.6, 2.7),
-                    (32.0, 399.9, 2.7),
-                    (15.0, 400.1, 2.7),
-                ],
-                "speed": 1.20,
-            },
+            
         ]
 
         for c_data in citizens_data:
