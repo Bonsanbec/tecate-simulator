@@ -2,31 +2,27 @@
 =============================================================================
 GENERADOR CANÓNICO PROCEDURAL DE ALTA FIDELIDAD: ELI (TECATE SIMULATOR)
 =============================================================================
-Reconstrucción fidedigna del personaje Eli basada en 'scratch/humans/eli.png':
-1. Cabeza y Fisiología Facial:
+Reconstrucción fidedigna del personaje Eli basada en 'eli2.png' y 'eli3.png':
+1. Cabeza y Fisiología Facial (eli3.png y eli2.png):
    - Rostro masculino estilizado con mandíbula angulada, mentón firme y pómulos definidos.
    - Sonrisa amplia y cálida característica de Eli, con dientes blancos alineados visibles.
    - Ojos castaños cálidos estilizados con párpados anatómicos y Shape Key 'blink'.
-   - Gafas rectangulares modernas de pasta fina negra con cristales transparentes diáfanos.
-   - Cabellera castaño oscuro con masa volumétrica continua y textura ondulada 360°
-     integrada armónicamente a la silueta del cráneo (sin protuberancias artificiales).
-   - Texturas PBR faciales proyectadas frontalmente sin distorsiones cilíndricas.
-2. Traje Sastre Formal Beige ("formal_beige"):
-   - Malla corporal hermética generada mediante grafo antropométrico unificado
-     (Skin + Subsurf), garantizando unión continua y orgánica en hombros, axilas,
-     tórax, cadera y piernas.
-   - Saco formal beige de lino/algodón con hombreras naturales, faldón sastre integrado,
-     escote en V, solapas de muesca (notch lapels), 3 botones oscuros al frente y
-     bolsillos de parche laterales adosados.
-   - Camisa de vestir celeste pálido con cuello formal y puños asomando bajo las mangas.
-   - Corbata de seda vino tinto / borgoña con micro-motas Jacquard.
-   - Pantalón beige formal de corte recto a juego con el saco.
-   - Zapatos Oxford de piel café oscuro / coñac pulido con suela fina formal.
+   - Gafas rectangulares modernas de pasta fina negra con cristales transparentes diáfanos (eli2.png).
+   - Cabellera castaño oscuro con volumen y mechones ondulados orgánicos 360° (eli3.png).
+   - Barba perfilada completa a lo largo de la mandíbula y cuello limpio en piel natural.
+2. Indumentaria: Camisa Resort en V y Pecho Expuesto (eli2.png):
+   - Camisa casual de lino crema / marfil con cuello camp / solapas abiertas tipo cubano.
+   - Escote pronunciado en V (Z=1.40 a Z=1.21) que expone el pecho anatómico.
+   - Vello pectoral (chest hair) natural procedural con micro-hebras curvas y relieve PBR.
+   - Hilera frontal de botones nacarados bajo el escote en V.
+   - Mangas cortas de lino con dobladillo y antebrazos anatómicos en piel natural.
+   - Pantalón chino en tono arena cálido / caqui elegante con cinturón y hebilla.
+   - Zapatos casuales / mocasines de cuero café pulido.
    - Manos anatómicas de 5 dedos en reposo relajado con pulgar en oposición.
 3. Arquitectura y Contratos de Rigging de Tecate Simulator:
    - Submallas modulares requeridas por CitizenEntity:
      * 'Player_Head_Mesh' (cabeza, ojos, gafas, cabello, dientes, párpados con blink)
-     * 'Player_Body_Mesh' (traje, camisa, corbata, pantalón, zapatos y manos)
+     * 'Player_Body_Mesh' (camisa en V, pecho con vello pectoral, pantalón, cinturón, zapatos y manos)
    - Esqueleto canónico 'Skeleton3D' con los 22 huesos antropométricos estándar.
    - Asignación de pesos sin fugas (0 vértices de manos asignados a piernas).
    - Exportación a 'eli.glb' y 'eli.blend'.
@@ -36,6 +32,7 @@ Reconstrucción fidedigna del personaje Eli basada en 'scratch/humans/eli.png':
 
 import os
 import math
+import numpy as np
 import bpy
 import bmesh
 from mathutils import Vector, Matrix
@@ -44,6 +41,10 @@ PROJECT_ROOT = "/Users/hakkindavid/Documents/GitHub/tecate-simulator"
 ASSETS_DIR = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/citizens")
 TEXTURES_DIR = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/textures")
 SCRATCH_DIR = os.path.join(PROJECT_ROOT, "scratch")
+
+OUTPUT_BLEND = os.path.join(ASSETS_DIR, "eli.blend")
+OUTPUT_GLB = os.path.join(ASSETS_DIR, "eli.glb")
+PREVIEW_PNG = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/eli_preview.png")
 
 os.makedirs(ASSETS_DIR, exist_ok=True)
 os.makedirs(SCRATCH_DIR, exist_ok=True)
@@ -58,7 +59,9 @@ def get_or_create_material(name):
         mat.use_nodes = True
     return mat
 
-def setup_pbr_material(name, diffuse_tex_path, normal_tex_path=None, base_color=(0.8, 0.8, 0.8, 1.0), roughness=0.6, metallic=0.0, transmission=0.0, alpha=1.0):
+def setup_pbr_material(name, diffuse_tex_path, normal_tex_path=None,
+                       base_color=(0.8, 0.8, 0.8, 1.0), roughness=0.6,
+                       metallic=0.0, transmission=0.0, alpha=1.0):
     mat = get_or_create_material(name)
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
@@ -73,6 +76,7 @@ def setup_pbr_material(name, diffuse_tex_path, normal_tex_path=None, base_color=
     bsdf.inputs['Base Color'].default_value = base_color
     bsdf.inputs['Roughness'].default_value = roughness
     bsdf.inputs['Metallic'].default_value = metallic
+
     if 'Transmission Weight' in bsdf.inputs:
         bsdf.inputs['Transmission Weight'].default_value = transmission
     elif 'Transmission' in bsdf.inputs:
@@ -108,83 +112,84 @@ def create_materials():
         "skin": setup_pbr_material("Mat_Eli_Skin",
                                    os.path.join(TEXTURES_DIR, "eli_face_diffuse.png"),
                                    os.path.join(TEXTURES_DIR, "eli_face_normal.png"),
-                                   base_color=(0.79, 0.62, 0.51, 1.0), roughness=0.52),
+                                   base_color=(0.865, 0.685, 0.605, 1.0), roughness=0.52),
         "eyes": setup_pbr_material("Mat_Eli_Eyes",
                                    os.path.join(TEXTURES_DIR, "eli_eye_diffuse.png"),
                                    base_color=(0.96, 0.95, 0.94, 1.0), roughness=0.10),
         "hair": setup_pbr_material("Mat_Eli_Hair", None, None,
-                                   base_color=(0.11, 0.08, 0.06, 1.0), roughness=0.72),
+                                   base_color=(0.09, 0.07, 0.05, 1.0), roughness=0.74),
         "glasses": setup_pbr_material("Mat_Eli_Glasses",
                                       os.path.join(TEXTURES_DIR, "eli_glasses_diffuse.png"),
-                                      base_color=(0.06, 0.06, 0.07, 1.0), roughness=0.25),
+                                      base_color=(0.05, 0.05, 0.06, 1.0), roughness=0.25),
         "glass": setup_pbr_material("Mat_Eli_Glass", None, None,
-                                    base_color=(0.95, 0.98, 1.0, 1.0), roughness=0.04, transmission=0.96, alpha=0.15),
+                                    base_color=(0.95, 0.98, 1.0, 1.0), roughness=0.04, transmission=0.95, alpha=0.15),
         "teeth": setup_pbr_material("Mat_Eli_Teeth", None, None,
                                     base_color=(0.96, 0.95, 0.93, 1.0), roughness=0.20),
-        "suit": setup_pbr_material("Mat_Eli_Suit",
-                                   os.path.join(TEXTURES_DIR, "eli_suit_diffuse.png"),
-                                   os.path.join(TEXTURES_DIR, "eli_suit_normal.png"),
-                                   base_color=(0.83, 0.78, 0.71, 1.0), roughness=0.68),
+        "shirt": setup_pbr_material("Mat_Eli_Shirt",
+                                    os.path.join(TEXTURES_DIR, "eli_resort_shirt_diffuse.png"),
+                                    os.path.join(TEXTURES_DIR, "eli_resort_shirt_normal.png"),
+                                    base_color=(0.865, 0.855, 0.785, 1.0), roughness=0.70),
+        "chest": setup_pbr_material("Mat_Eli_Chest",
+                                    os.path.join(TEXTURES_DIR, "eli_chest_diffuse.png"),
+                                    os.path.join(TEXTURES_DIR, "eli_chest_normal.png"),
+                                    base_color=(0.865, 0.685, 0.605, 1.0), roughness=0.52),
         "pants": setup_pbr_material("Mat_Eli_Pants",
                                     os.path.join(TEXTURES_DIR, "eli_pants_diffuse.png"),
                                     os.path.join(TEXTURES_DIR, "eli_pants_normal.png"),
-                                    base_color=(0.83, 0.78, 0.71, 1.0), roughness=0.68),
-        "shirt": setup_pbr_material("Mat_Eli_Shirt",
-                                    os.path.join(TEXTURES_DIR, "eli_shirt_diffuse.png"),
-                                    os.path.join(TEXTURES_DIR, "eli_shirt_normal.png"),
-                                    base_color=(0.91, 0.94, 0.97, 1.0), roughness=0.55),
-        "tie": setup_pbr_material("Mat_Eli_Tie",
-                                  os.path.join(TEXTURES_DIR, "eli_tie_diffuse.png"),
-                                  os.path.join(TEXTURES_DIR, "eli_tie_normal.png"),
-                                  base_color=(0.45, 0.08, 0.15, 1.0), roughness=0.38),
+                                    base_color=(0.760, 0.710, 0.635, 1.0), roughness=0.65),
         "shoes": setup_pbr_material("Mat_Eli_Shoes",
                                     os.path.join(TEXTURES_DIR, "eli_shoes_diffuse.png"),
                                     os.path.join(TEXTURES_DIR, "eli_shoes_normal.png"),
-                                    base_color=(0.22, 0.12, 0.08, 1.0), roughness=0.28),
-        "buttons": setup_pbr_material("Mat_Eli_Buttons", None, None,
-                                      base_color=(0.10, 0.08, 0.07, 1.0), roughness=0.30),
+                                    base_color=(0.22, 0.12, 0.08, 1.0), roughness=0.30),
+        "belt": setup_pbr_material("Mat_Eli_Belt",
+                                   os.path.join(TEXTURES_DIR, "eli_belt_diffuse.png"),
+                                   os.path.join(TEXTURES_DIR, "eli_belt_normal.png"),
+                                   base_color=(0.20, 0.10, 0.06, 1.0), roughness=0.30),
         "buckle": setup_pbr_material("Mat_Eli_Buckle", None, None,
-                                     base_color=(0.78, 0.75, 0.65, 1.0), roughness=0.25, metallic=0.90),
+                                     base_color=(0.82, 0.80, 0.75, 1.0), roughness=0.25, metallic=0.90),
+        "buttons": setup_pbr_material("Mat_Eli_Buttons",
+                                      os.path.join(TEXTURES_DIR, "eli_button_diffuse.png"),
+                                      base_color=(0.91, 0.89, 0.84, 1.0), roughness=0.30),
     }
     return materials
 
 # =============================================================================
-# 1. CABEZA, ROSTRO, OJOS, GAFAS Y CABELLO (Player_Head_Mesh)
+# 1. CABEZA, ROSTRO, OJOS, GAFAS Y CABELLO ONDULADO (Player_Head_Mesh)
 # =============================================================================
 def build_head_mesh(materials):
     me = bpy.data.meshes.new("Player_Head_Mesh_Data")
     bm = bmesh.new()
     uv_lay = bm.loops.layers.uv.new("UVMap")
 
-    # Mapeo UV frontal calibrado milimétricamente con la textura de piel, barba y bigote:
+    # Mapeo UV frontal milimétricamente calibrado con eli_face_diffuse.png:
     def calc_face_uv(x, z):
         u = 0.50 + x / 0.275
         v = 0.50 + (z - 1.485) / 0.240
         return (max(0.0, min(1.0, u)), max(0.0, min(1.0, v)))
 
-    # Perfil craneofacial estilizado de Eli (18 secciones transversales de Z=1.365 a Z=1.650)
+    # Perfil craneofacial estilizado de Eli basado en eli3.png
     head_profile = [
         # z,      rx,    ry_front, ry_back, y_offset, is_face
-        (1.365,  0.046, 0.045,    0.048,   -0.002,   False), # 0: Base cuello
+        (1.365,  0.046, 0.045,    0.048,   -0.002,   False), # 0: Base cuello (piel limpia)
         (1.390,  0.048, 0.046,    0.052,   -0.001,   False), # 1: Cuello medio
         (1.412,  0.052, 0.050,    0.060,    0.001,   True),  # 2: Submandíbula
-        (1.428,  0.056, 0.062,    0.070,    0.005,   True),  # 3: Mentón con barba
-        (1.445,  0.060, 0.062,    0.078,    0.004,   True),  # 4: Surco mentolabial
-        (1.458,  0.063, 0.065,    0.084,    0.003,   True),  # 5: Labio inferior sonriente
-        (1.468,  0.065, 0.064,    0.088,    0.002,   True),  # 6: Hendidura bucal abierta
-        (1.478,  0.067, 0.067,    0.092,    0.002,   True),  # 7: Labio superior con bigote
-        (1.492,  0.070, 0.066,    0.094,    0.001,   True),  # 8: Base nasal / Filtrum
-        (1.505,  0.072, 0.074,    0.095,    0.000,   True),  # 9: Punta nasal
-        (1.515,  0.074, 0.068,    0.095,    0.000,   True),  # 10: Ojos y puente nasal (Z = 1.515)
-        (1.532,  0.075, 0.071,    0.094,   -0.002,   True),  # 11: Pómulos y cejas
-        (1.550,  0.074, 0.068,    0.091,   -0.004,   True),  # 12: Sienes y frente baja
-        (1.570,  0.072, 0.062,    0.087,   -0.006,   True),  # 13: Frente media
-        (1.592,  0.068, 0.054,    0.080,   -0.008,   False), # 14: Nacimiento de cabello
-        (1.615,  0.058, 0.044,    0.070,   -0.010,   False), # 15: Bóveda craneal
-        (1.635,  0.038, 0.026,    0.045,   -0.012,   False), # 16: Coronilla
+        (1.428,  0.057, 0.063,    0.070,    0.006,   True),  # 3: Mentón con barba
+        (1.445,  0.061, 0.063,    0.078,    0.005,   True),  # 4: Surco mentolabial
+        (1.458,  0.064, 0.066,    0.084,    0.003,   True),  # 5: Labio inferior sonriente
+        (1.468,  0.066, 0.065,    0.088,    0.002,   True),  # 6: Hendidura bucal abierta
+        (1.478,  0.068, 0.068,    0.092,    0.002,   True),  # 7: Labio superior con bigote
+        (1.492,  0.071, 0.067,    0.094,    0.001,   True),  # 8: Base nasal / Filtrum
+        (1.505,  0.073, 0.075,    0.095,    0.000,   True),  # 9: Punta nasal recta y definida
+        (1.515,  0.075, 0.069,    0.095,    0.000,   True),  # 10: Ojos y puente nasal (Z = 1.515)
+        (1.532,  0.076, 0.072,    0.094,   -0.002,   True),  # 11: Pómulos y cejas pobladas
+        (1.550,  0.075, 0.069,    0.091,   -0.004,   True),  # 12: Sienes y frente baja
+        (1.570,  0.073, 0.063,    0.087,   -0.006,   True),  # 13: Frente media despejada
+        (1.592,  0.069, 0.055,    0.080,   -0.008,   False), # 14: Nacimiento de cabello
+        (1.615,  0.059, 0.045,    0.070,   -0.010,   False), # 15: Bóveda craneal
+        (1.635,  0.039, 0.027,    0.045,   -0.012,   False), # 16: Coronilla
     ]
 
-    n_ring = 24
+    n_ring = 28
     rings = []
     for l_idx, (z, rx, ry_f, ry_b, y_off, is_face) in enumerate(head_profile):
         cur_ring = []
@@ -196,19 +201,19 @@ def build_head_mesh(materials):
             y = (ry_f if sin_a >= 0 else ry_b) * sin_a + y_off
 
             # Modulaciones faciales anatómicas:
-            # 1. Mentón angulado de Eli
+            # 1. Mentón angulado y firme de Eli
             if l_idx == 3 and 0.44 * math.pi <= ang <= 0.56 * math.pi:
-                y += 0.005 * math.cos((ang - 0.5 * math.pi) / 0.06 * (0.5 * math.pi))**2
+                y += 0.006 * math.cos((ang - 0.5 * math.pi) / 0.06 * (0.5 * math.pi))**2
 
             # 2. Sonrisa de Eli: apertura y comisuras vivas
             if l_idx in (5, 6, 7) and 0.38 * math.pi <= ang <= 0.62 * math.pi:
                 sw = math.cos((ang - 0.5 * math.pi) / 0.12 * (0.5 * math.pi))**2
                 if l_idx == 6:
-                    y -= 0.004 * sw # Hendidura bucal abierta hacia adentro
+                    y -= 0.004 * sw # Hendidura bucal
                 else:
                     y += 0.003 * sw
 
-            # 3. Nariz recta de Eli
+            # 3. Nariz recta y proporcionada de Eli (eli3.png)
             if l_idx in (8, 9, 10) and 0.46 * math.pi <= ang <= 0.54 * math.pi:
                 nw = math.cos((ang - 0.5 * math.pi) / 0.04 * (0.5 * math.pi))**2
                 if l_idx == 9: y += 0.011 * nw
@@ -238,8 +243,7 @@ def build_head_mesh(materials):
             f.material_index = 2 if is_scalp else 0 # 2: Hair, 0: Skin
 
             for loop in f.loops:
-                loop_v = loop.vert
-                loop[uv_lay].uv = calc_face_uv(loop_v.co.x, loop_v.co.z)
+                loop[uv_lay].uv = calc_face_uv(loop.vert.co.x, loop.vert.co.z)
 
     # Coronilla superior
     top_vert = bm.verts.new((0.0, -0.012, 1.642))
@@ -345,12 +349,12 @@ def build_head_mesh(materials):
         ear_bm.free()
 
     # -------------------------------------------------------------------------
-    # GAFAS RECTANGULARES MODERNAS DE ACETATO NEGRO (scratch/humans/eli.png)
+    # GAFAS RECTANGULARES MODERNAS DE ACETATO NEGRO (eli2.png)
     # -------------------------------------------------------------------------
     glasses_bm = bmesh.new()
     frame_w = 0.0016
     frame_depth = 0.0015
-    lens_hw = 0.0190
+    lens_hw = 0.0200
     lens_hh = 0.0125
     lens_y = 0.0715
     lens_z = 1.515
@@ -363,8 +367,8 @@ def build_head_mesh(materials):
         lens_inner = []
         for i in range(n_frame):
             ang = (2.0 * math.pi * i) / n_frame
-            cos_a = math.copysign(abs(math.cos(ang))**0.80, math.cos(ang))
-            sin_a = math.copysign(abs(math.sin(ang))**0.80, math.sin(ang))
+            cos_a = math.copysign(abs(math.cos(ang))**0.45, math.cos(ang))
+            sin_a = math.copysign(abs(math.sin(ang))**0.45, math.sin(ang))
 
             rx_in = c_x + lens_hw * cos_a
             rz_in = lens_z + lens_hh * sin_a
@@ -395,7 +399,7 @@ def build_head_mesh(materials):
             inxt = (i + 1) % n_frame
             glasses_bm.faces.new((lens_inner[i], lens_inner[inxt], c_lens)).material_index = 4 # Mat_Eli_Glass
 
-        # Patillas ergonómicas hacia las orejas (horizontales limpias a Z = 1.515)
+        # Patillas ergonómicas hacia las orejas
         tx_front = c_x + s_side * (lens_hw + frame_w)
         tx_ear = s_side * 0.072
         t_bar = [
@@ -411,10 +415,10 @@ def build_head_mesh(materials):
 
     # Puente nasal recto
     bridge = [
-        glasses_bm.verts.new(( 0.014, lens_y + frame_depth * 0.4, lens_z + 0.0015)),
-        glasses_bm.verts.new((-0.014, lens_y + frame_depth * 0.4, lens_z + 0.0015)),
-        glasses_bm.verts.new((-0.014, lens_y - frame_depth * 0.4, lens_z - 0.0005)),
-        glasses_bm.verts.new(( 0.014, lens_y - frame_depth * 0.4, lens_z - 0.0005)),
+        glasses_bm.verts.new(( 0.013, lens_y + frame_depth * 0.4, lens_z + 0.0015)),
+        glasses_bm.verts.new((-0.013, lens_y + frame_depth * 0.4, lens_z + 0.0015)),
+        glasses_bm.verts.new((-0.013, lens_y - frame_depth * 0.4, lens_z - 0.0005)),
+        glasses_bm.verts.new(( 0.013, lens_y - frame_depth * 0.4, lens_z - 0.0005)),
     ]
     glasses_bm.faces.new(bridge).material_index = 3
 
@@ -427,8 +431,9 @@ def build_head_mesh(materials):
     glasses_bm.free()
 
     # -------------------------------------------------------------------------
-    # CABELLERA ONDULADA ORGÁNICA INTEGRADA EN 360° (scratch/humans/eli.png)
+    # CABELLERA ONDULADA ORGÁNICA INTEGRADA EN 360° (eli3.png)
     # -------------------------------------------------------------------------
+    # 1. Cúpula volumétrica base con ondulación continua
     hair_profile = [
         # z,     rx,    ry_front, ry_back, y_offset
         (1.505, 0.078, 0.046,    0.092,   -0.006),
@@ -447,10 +452,8 @@ def build_head_mesh(materials):
             hang = (2.0 * math.pi * i) / n_hring
             cos_a = math.cos(hang)
             sin_a = math.sin(hang)
-            # Textura ondulada sutil en el cabello en 360°
-            wave = 0.0030 * math.sin(hang * 4.0 + hz * 18.0) + 0.0015 * math.cos(hang * 6.0)
-            # Ligero volumen superior en el tupé frontal
-            tuft_boost = 0.0050 * math.cos((hang - 0.5 * math.pi) * 2.0)**2 if (hz >= 1.58 and 0.25 * math.pi <= hang <= 0.75 * math.pi) else 0.0
+            wave = 0.0032 * math.sin(hang * 4.0 + hz * 18.0) + 0.0016 * math.cos(hang * 6.0)
+            tuft_boost = 0.0055 * math.cos((hang - 0.5 * math.pi) * 2.0)**2 if (hz >= 1.58 and 0.25 * math.pi <= hang <= 0.75 * math.pi) else 0.0
             hx = (hrx + wave) * cos_a
             hy = ((hry_f if sin_a >= 0 else hry_b) + wave + tuft_boost) * sin_a + hy_off
             cur_h.append(bm.verts.new((hx, hy, hz)))
@@ -471,6 +474,52 @@ def build_head_mesh(materials):
         hf_top = bm.faces.new((h_rings[-1][i], h_rings[-1][inxt], h_top))
         hf_top.material_index = 2
         for loop in hf_top.loops: loop[uv_lay].uv = (0.5, 0.5)
+
+    # 2. Mechones ondulados 3D volumétricos en coronilla y flequillo (eli3.png)
+    def add_wavy_lock(p_start, p_delta, r_wave, turns, phi0, base_thick=0.0055, n_steps=10):
+        prev_ring = None
+        for s in range(n_steps):
+            t = s / float(n_steps - 1)
+            cx = p_start[0] + p_delta[0] * t
+            cy = p_start[1] + p_delta[1] * t
+            cz = p_start[2] + p_delta[2] * t
+            cur_r = r_wave * (1.0 - 0.20 * t)
+            phase = 2.0 * math.pi * turns * t + phi0
+            sp_x = cx + cur_r * math.cos(phase)
+            sp_y = cy + cur_r * math.sin(phase) * 0.5
+            sp_z = cz
+            tb_r = base_thick * (1.0 - 0.35 * t)
+            c_ring = []
+            for k in range(5):
+                k_ang = (2.0 * math.pi * k) / 5.0
+                c_ring.append(bm.verts.new((sp_x + tb_r * math.cos(k_ang),
+                                           sp_y + tb_r * math.sin(k_ang) * 0.75,
+                                           sp_z + tb_r * math.sin(k_ang) * 0.85)))
+            if prev_ring:
+                for k in range(5):
+                    kn = (k + 1) % 5
+                    f_c = bm.faces.new((prev_ring[k], prev_ring[kn], c_ring[kn], c_ring[k]))
+                    f_c.material_index = 2 # Mat_Eli_Hair
+                    for loop in f_c.loops: loop[uv_lay].uv = (0.5, 0.5)
+            prev_ring = c_ring
+
+    # Mechones rizados frontales y superiores (eli3.png)
+    locks_specs = [
+        # Flequillo frontal
+        (( 0.024, 0.068, 1.595), ( 0.008, 0.012, -0.028), 0.007, 1.8, 0.5),
+        ((-0.024, 0.068, 1.595), (-0.008, 0.012, -0.028), 0.007, 1.8, 1.2),
+        (( 0.000, 0.072, 1.605), ( 0.002, 0.014, -0.032), 0.008, 2.1, 2.0),
+        (( 0.045, 0.058, 1.585), ( 0.010, 0.008, -0.025), 0.006, 1.7, 0.8),
+        ((-0.045, 0.058, 1.585), (-0.010, 0.008, -0.025), 0.006, 1.7, 1.5),
+        # Mechones en la coronilla superior
+        (( 0.030, 0.025, 1.635), ( 0.012, 0.005, -0.022), 0.007, 1.6, 0.2),
+        ((-0.030, 0.025, 1.635), (-0.012, 0.005, -0.022), 0.007, 1.6, 1.0),
+        (( 0.000, 0.035, 1.642), ( 0.004, 0.008, -0.024), 0.007, 1.8, 2.4),
+        (( 0.020, -0.010, 1.650), ( 0.008, -0.006, -0.020), 0.006, 1.5, 0.6),
+        ((-0.020, -0.010, 1.650), (-0.008, -0.006, -0.020), 0.006, 1.5, 1.4),
+    ]
+    for p_st, p_dt, rw, trns, p0 in locks_specs:
+        add_wavy_lock(p_st, p_dt, rw, trns, p0)
 
     bm.normal_update()
     for f in bm.faces: f.smooth = True
@@ -501,45 +550,45 @@ def build_head_mesh(materials):
     return obj_head
 
 # =============================================================================
-# 2. CUERPO: GRAFO BASE HERMÉTICO (SKIN + SUBSURF), SOLAPAS, CAMISA Y MANOS
+# 2. CUERPO: CAMISA RESORT EN V, PECHO EXPUESTO CON VELLO PECTORAL Y CHINOS
 # =============================================================================
 def build_body_mesh(materials):
     mesh_graph = bpy.data.meshes.new("Body_Graph_Data")
     obj_body = bpy.data.objects.new("Player_Body_Mesh", mesh_graph)
     bpy.context.scene.collection.objects.link(obj_body)
 
-    # Grafo antropométrico continuo para Skin: hombros unidos orgánicamente,
-    # torso sastre entallado, faldón continuo y piernas sin cortes.
+    # Grafo antropométrico continuo para Skin:
+    # Hombros continuos, torso entallado para camisa de lino, piernas sin cortes.
     nodes = [
-        # Tronco y Traje
-        (0.00,  0.000, 0.82, 0.165, 0.116), # 0: Dobladillo inferior del saco
-        (0.00,  0.002, 0.92, 0.160, 0.114), # 1: Caderas / faldón medio
-        (0.00,  0.004, 1.04, 0.146, 0.104), # 2: Cintura entallada
-        (0.00, -0.006, 1.16, 0.158, 0.114), # 3: Costillas / tórax medio
-        (0.00, -0.008, 1.28, 0.174, 0.124), # 4: Pectorales y espalda
-        (0.00, -0.004, 1.36, 0.160, 0.110), # 5: Clavículas / hombros
-        (0.00,  0.004, 1.40, 0.052, 0.050), # 6: Base del cuello
+        # Tronco
+        (0.00,  0.000, 0.82, 0.145, 0.108), # 0: Base pelvis
+        (0.00,  0.002, 0.94, 0.148, 0.106), # 1: Caderas / Cintura pantalón
+        (0.00,  0.004, 1.04, 0.142, 0.100), # 2: Cintura
+        (0.00, -0.006, 1.16, 0.154, 0.112), # 3: Costillas / tórax
+        (0.00, -0.008, 1.28, 0.168, 0.120), # 4: Pectorales y espalda
+        (0.00, -0.004, 1.36, 0.156, 0.108), # 5: Clavículas / hombros
+        (0.00,  0.004, 1.40, 0.050, 0.048), # 6: Base del cuello
+        
+        # Brazos (unidos a nodo 5)
+        ( 0.06, -0.004, 1.36, 0.070, 0.070), # 7
+        ( 0.185, -0.004, 1.34, 0.065, 0.065), # 8: Hombro L
+        ( 0.265,  0.002, 1.15, 0.052, 0.052), # 9: Codo L
+        ( 0.325,  0.012, 0.93, 0.038, 0.035), # 10: Muñeca L
 
-        # Brazos unidos a clavículas (nodo 5)
-        ( 0.06, -0.004, 1.36, 0.075, 0.075), # 7
-        ( 0.185, -0.004, 1.34, 0.070, 0.070), # 8: Hombro L
-        ( 0.265,  0.002, 1.15, 0.056, 0.056), # 9: Codo L
-        ( 0.325,  0.012, 0.93, 0.044, 0.040), # 10: Bocamanga L
-
-        (-0.06, -0.004, 1.36, 0.075, 0.075), # 11
-        (-0.185, -0.004, 1.34, 0.070, 0.070), # 12: Hombro R
-        (-0.265,  0.002, 1.15, 0.056, 0.056), # 13: Codo R
-        (-0.325,  0.012, 0.93, 0.044, 0.040), # 14: Bocamanga R
+        (-0.06, -0.004, 1.36, 0.070, 0.070), # 11
+        (-0.185, -0.004, 1.34, 0.065, 0.065), # 12: Hombro R
+        (-0.265,  0.002, 1.15, 0.052, 0.052), # 13: Codo R
+        (-0.325,  0.012, 0.93, 0.038, 0.035), # 14: Muñeca R
 
         # Piernas unidas a la base de la pelvis (nodo 0)
-        ( 0.088, 0.002, 0.82, 0.082, 0.082), # 15: Cadera / muslo sup L
+        ( 0.088, 0.002, 0.82, 0.082, 0.082), # 15: Cadera sup L
         ( 0.088, 0.002, 0.65, 0.074, 0.074), # 16: Muslo medio L
         ( 0.088, 0.000, 0.48, 0.066, 0.066), # 17: Rodilla L
         ( 0.088, 0.000, 0.30, 0.058, 0.058), # 18: Pantorrilla L
         ( 0.088, 0.002, 0.12, 0.050, 0.050), # 19: Tobillo L
         ( 0.088, 0.055, 0.03, 0.052, 0.105), # 20: Pie L
 
-        (-0.088, 0.002, 0.82, 0.082, 0.082), # 21: Cadera / muslo sup R
+        (-0.088, 0.002, 0.82, 0.082, 0.082), # 21: Cadera sup R
         (-0.088, 0.002, 0.65, 0.074, 0.074), # 22: Muslo medio R
         (-0.088, 0.000, 0.48, 0.066, 0.066), # 23: Rodilla R
         (-0.088, 0.000, 0.30, 0.058, 0.058), # 24: Pantorrilla R
@@ -575,105 +624,130 @@ def build_body_mesh(materials):
     uv_lay = bm.loops.layers.uv.new("UVMap")
 
     # Asignación de materiales base a la malla unificada:
-    # 0: Mat_Eli_Suit (Saco beige en torso y mangas)
-    # 1: Mat_Eli_Pants (Pantalón beige en piernas)
-    # 2: Mat_Eli_Shoes (Zapatos Oxford café en pies)
+    # 0: Mat_Eli_Shirt (Camisa de lino crema en torso y mangas cortas)
+    # 1: Mat_Eli_Pants (Pantalón chino arena en piernas)
+    # 2: Mat_Eli_Shoes (Zapatos mocasines café en pies)
+    # 3: Mat_Eli_Skin  (Antebrazos y muñecas expuestas bajo manga corta)
     for p in bm.faces:
         center_z = p.calc_center_median().z
         center_x = abs(p.calc_center_median().x)
         if center_z < 0.10:
             p.material_index = 2 # Zapatos
-        elif center_z < 0.82 and center_x < 0.18:
-            p.material_index = 1 # Pantalón
+        elif center_z < 0.96 and center_x < 0.18:
+            p.material_index = 1 # Pantalón chino
+        elif center_x > 0.18 and center_z < 1.18:
+            p.material_index = 3 # Piel del antebrazo expuesto (manga corta)
         else:
-            p.material_index = 0 # Saco
+            p.material_index = 0 # Camisa de lino crema
         for loop in p.loops:
             loop[uv_lay].uv = (loop.vert.co.x * 2.0 + 0.5, loop.vert.co.z * 1.5)
 
+    # Cinturón de cuero y hebilla
+    belt_bm = bmesh.new()
+    bmesh.ops.create_circle(belt_bm, cap_ends=False, radius=0.152, segments=24)
+    # Extruir anillo de cinturón en Z = 0.955 a 0.985
+    b_verts = list(belt_bm.verts)
+    for v in b_verts: v.co.z = 0.955
+    res_b = bmesh.ops.extrude_edge_only(belt_bm, edges=belt_bm.edges)
+    v_ext = [ele for ele in res_b['geom'] if isinstance(ele, bmesh.types.BMVert)]
+    for v in v_ext: v.co.z = 0.985
+    for f in belt_bm.faces: f.material_index = 6 # Belt
+    # Hebilla metálica en el centro (Z = 0.970, Y = 0.145)
+    bmesh.ops.create_cube(belt_bm, size=0.016)
+    bmesh.ops.scale(belt_bm, verts=belt_bm.verts[-8:], vec=(1.6, 0.4, 1.2))
+    bmesh.ops.translate(belt_bm, verts=belt_bm.verts[-8:], vec=(0.0, 0.138, 0.970))
+    for f in belt_bm.faces[-6:]: f.material_index = 7 # Buckle
+    v_map_b = {v: bm.verts.new(v.co) for v in belt_bm.verts}
+    for f in belt_bm.faces:
+        nf = bm.faces.new([v_map_b[v] for v in f.verts])
+        nf.material_index = f.material_index
+        for loop in nf.loops: loop[uv_lay].uv = (0.5, 0.5)
+    belt_bm.free()
+
     # -------------------------------------------------------------------------
-    # ESCOTE EN V, CAMISA CELESTE, CORBATA VINO TINTO Y SOLAPAS DE MUESCA
+    # PECHO EXPUESTO EN V CON VELLO PECTORAL ANATÓMICO (eli2.png)
     # -------------------------------------------------------------------------
-    # Cuello de camisa sobresaliente
-    c_wings = [
-        [bm.verts.new(( 0.006, 0.058, 1.415)), bm.verts.new(( 0.048, 0.046, 1.410)), bm.verts.new(( 0.026, 0.076, 1.370))],
-        [bm.verts.new((-0.006, 0.058, 1.415)), bm.verts.new((-0.026, 0.076, 1.370)), bm.verts.new((-0.048, 0.046, 1.410))],
+    # Superficie anatómica pectoral dentro del escote en V (Z = 1.21 a Z = 1.40)
+    # Mapeo UV calibrado para que el vello pectoral se centre en el esternón
+    chest_specs = [
+        # z,     hw,    yf
+        (1.400, 0.046, 0.082),
+        (1.350, 0.040, 0.108),
+        (1.300, 0.032, 0.124),
+        (1.250, 0.022, 0.128),
+        (1.210, 0.005, 0.126),
     ]
-    f_cw0 = bm.faces.new(c_wings[0])
-    f_cw0.material_index = 3 # Shirt
-    f_cw1 = bm.faces.new(c_wings[1])
-    f_cw1.material_index = 3
-    for f in (f_cw0, f_cw1):
-        for loop in f.loops: loop[uv_lay].uv = (0.5, 0.5)
+    chest_rows = []
+    n_cpts = 5
+    for cz, chw, cyf in chest_specs:
+        row = []
+        for i in range(n_cpts):
+            t = (i / float(n_cpts - 1)) * 2.0 - 1.0
+            cx = t * chw
+            # Concavidad central suave en esternón
+            cy = cyf - 0.0035 * (1.0 - t**2)
+            v = bm.verts.new((cx, cy, cz))
+            row.append(v)
+        chest_rows.append(row)
 
-    # Pechera celeste formal en el escote en V del saco
-    shirt_patch = [
-        bm.verts.new(( 0.042, 0.095, 1.375)),
-        bm.verts.new((-0.042, 0.095, 1.375)),
-        bm.verts.new((-0.018, 0.126, 1.185)),
-        bm.verts.new(( 0.018, 0.126, 1.185)),
-    ]
-    f_sp = bm.faces.new(shirt_patch)
-    f_sp.material_index = 3 # Shirt
-    for loop in f_sp.loops: loop[uv_lay].uv = (0.5, 0.5)
+    for l in range(len(chest_specs) - 1):
+        r1 = chest_rows[l]
+        r2 = chest_rows[l + 1]
+        for i in range(n_cpts - 1):
+            f_ch = bm.faces.new((r1[i], r1[i+1], r2[i+1], r2[i]))
+            f_ch.material_index = 4 # Mat_Eli_Chest (Piel con vello pectoral)
+            for loop in f_ch.loops:
+                vco = loop.vert.co
+                # UV normalizado de u=0..1 centrado en esternón y v=0..1 de Z=1.21..1.40
+                u_coord = (vco.x / 0.092) + 0.50
+                v_coord = (vco.z - 1.21) / 0.19
+                loop[uv_lay].uv = (max(0.0, min(1.0, u_coord)), max(0.0, min(1.0, v_coord)))
 
-    # Corbata de seda vino tinto (Nudo y caída sastre)
-    k_v = [
-        bm.verts.new((-0.014, 0.072, 1.412)),
-        bm.verts.new(( 0.014, 0.072, 1.412)),
-        bm.verts.new(( 0.012, 0.098, 1.370)),
-        bm.verts.new((-0.012, 0.098, 1.370)),
-        bm.verts.new(( 0.000, 0.104, 1.392)),
-    ]
-    bm.faces.new((k_v[0], k_v[1], k_v[4])).material_index = 4 # Tie
-    bm.faces.new((k_v[1], k_v[2], k_v[4])).material_index = 4
-    bm.faces.new((k_v[2], k_v[3], k_v[4])).material_index = 4
-    bm.faces.new((k_v[3], k_v[0], k_v[4])).material_index = 4
-
-    tie_profile = [
-        (1.370, 0.012, 0.098),
-        (1.315, 0.015, 0.114),
-        (1.255, 0.017, 0.124),
-        (1.185, 0.016, 0.128),
-        (1.115, 0.014, 0.122),
-    ]
-    tie_rows = [(k_v[3], k_v[2])]
-    for tz, thw, ty_f in tie_profile[1:]:
-        vl = bm.verts.new((-thw, ty_f, tz))
-        vr = bm.verts.new(( thw, ty_f, tz))
-        tie_rows.append((vl, vr))
-    for idx in range(len(tie_rows) - 1):
-        tl_a, tr_a = tie_rows[idx]
-        tl_b, tr_b = tie_rows[idx + 1]
-        tf = bm.faces.new((tl_a, tr_a, tr_b, tl_b))
-        tf.material_index = 4
-        for loop in tf.loops: loop[uv_lay].uv = (loop.vert.co.x * 5.0 + 0.5, (loop.vert.co.z - 1.1) * 3.5)
-
-    # Solapas de muesca (Notch Lapels) del saco asentadas sobre el pecho
+    # -------------------------------------------------------------------------
+    # CUELLO CAMP / SOLAPAS ABIERTAS RESORT (CUELLO EN V DE LINO) (eli2.png)
+    # -------------------------------------------------------------------------
+    # Solapas abiertas tendidas elegantemente sobre clavículas y pecho alto
     for s_side in (1.0, -1.0):
         sgn = s_side
-        v_col = bm.verts.new((sgn * 0.052, 0.090, 1.375))
-        v_pek = bm.verts.new((sgn * 0.090, 0.114, 1.315))
-        v_ntc = bm.verts.new((sgn * 0.074, 0.122, 1.295))
-        v_stp = bm.verts.new((sgn * 0.084, 0.128, 1.275))
-        v_bas = bm.verts.new((sgn * 0.018, 0.132, 1.185))
-        v_inn = bm.verts.new((sgn * 0.038, 0.112, 1.265))
+        # Vértices del cuello camp
+        v_neck_top = bm.verts.new((sgn * 0.038, 0.080, 1.402))
+        v_lapel_tip = bm.verts.new((sgn * 0.076, 0.108, 1.348))
+        v_lapel_notch = bm.verts.new((sgn * 0.065, 0.114, 1.332))
+        v_lapel_outer = bm.verts.new((sgn * 0.072, 0.122, 1.285))
+        v_v_apex = bm.verts.new((sgn * 0.012, 0.130, 1.210))
+        v_mid_inner = bm.verts.new((sgn * 0.028, 0.116, 1.295))
 
         if sgn > 0:
-            bm.faces.new((v_col, v_pek, v_ntc)).material_index = 0 # Suit
-            bm.faces.new((v_col, v_ntc, v_inn)).material_index = 0
-            bm.faces.new((v_ntc, v_stp, v_bas)).material_index = 0
-            bm.faces.new((v_ntc, v_bas, v_inn)).material_index = 0
+            bm.faces.new((v_neck_top, v_lapel_tip, v_lapel_notch)).material_index = 0 # Shirt
+            bm.faces.new((v_neck_top, v_lapel_notch, v_mid_inner)).material_index = 0
+            bm.faces.new((v_lapel_notch, v_lapel_outer, v_v_apex)).material_index = 0
+            bm.faces.new((v_lapel_notch, v_v_apex, v_mid_inner)).material_index = 0
         else:
-            bm.faces.new((v_pek, v_col, v_ntc)).material_index = 0
-            bm.faces.new((v_ntc, v_col, v_inn)).material_index = 0
-            bm.faces.new((v_stp, v_ntc, v_bas)).material_index = 0
-            bm.faces.new((v_bas, v_ntc, v_inn)).material_index = 0
+            bm.faces.new((v_lapel_tip, v_neck_top, v_lapel_notch)).material_index = 0
+            bm.faces.new((v_lapel_notch, v_neck_top, v_mid_inner)).material_index = 0
+            bm.faces.new((v_lapel_outer, v_lapel_notch, v_v_apex)).material_index = 0
+            bm.faces.new((v_v_apex, v_lapel_notch, v_mid_inner)).material_index = 0
 
-    # 3 botones oscuros al frente del saco perfectamente adosados a la tela
-    for bz in [1.170, 1.070, 0.970]:
-        by = 0.122 + (1.170 - bz) * (-0.015)
+    # Banda trasera del cuello camisero sobre la nuca (Z = 1.385 a 1.415)
+    n_bcollar = 10
+    bc_top, bc_bot = [], []
+    for i in range(n_bcollar):
+        ang = math.pi * 0.15 + (math.pi * 0.70 * i) / (n_bcollar - 1)
+        bx = 0.052 * math.cos(ang)
+        by = -0.046 * math.sin(ang) - 0.005
+        bc_top.append(bm.verts.new((bx, by, 1.415)))
+        bc_bot.append(bm.verts.new((bx, by, 1.385)))
+    for i in range(n_bcollar - 1):
+        f_bc = bm.faces.new((bc_bot[i], bc_bot[i+1], bc_top[i+1], bc_top[i]))
+        f_bc.material_index = 0
+        for loop in f_bc.loops: loop[uv_lay].uv = (0.5, 0.5)
+
+    # Hilera frontal de botones nacarados bajo el escote en V (Z = 1.160, 1.080, 1.000)
+    for bz in [1.160, 1.080, 1.000]:
+        by = 0.126 + (1.160 - bz) * (-0.012)
         btn_bm = bmesh.new()
-        bmesh.ops.create_uvsphere(btn_bm, u_segments=8, v_segments=6, radius=0.0045)
+        bmesh.ops.create_uvsphere(btn_bm, u_segments=8, v_segments=6, radius=0.0040)
+        bmesh.ops.scale(btn_bm, verts=btn_bm.verts, vec=(1.0, 0.45, 1.0))
         bmesh.ops.translate(btn_bm, verts=btn_bm.verts, vec=(0.0, by, bz))
         v_map_b = {v: bm.verts.new(v.co) for v in btn_bm.verts}
         for f in btn_bm.faces:
@@ -682,71 +756,38 @@ def build_body_mesh(materials):
             for loop in nf.loops: loop[uv_lay].uv = (0.5, 0.5)
         btn_bm.free()
 
-    # Bolsillos de parche laterales en el saco adosados a la superficie
-    for px_sign in (1.0, -1.0):
-        px = px_sign * 0.092
-        pz_c = 0.920
-        pw, ph = 0.052, 0.062
-        py = 0.096
-        p_patch = [
-            bm.verts.new((px - px_sign * pw*0.5, py + 0.001, pz_c + ph*0.5)),
-            bm.verts.new((px + px_sign * pw*0.5, py - 0.003, pz_c + ph*0.5)),
-            bm.verts.new((px + px_sign * pw*0.5, py - 0.003, pz_c - ph*0.5)),
-            bm.verts.new((px - px_sign * pw*0.5, py + 0.001, pz_c - ph*0.5)),
-        ]
-        if px_sign > 0:
-            bm.faces.new(p_patch).material_index = 0
-        else:
-            bm.faces.new(p_patch[::-1]).material_index = 0
+    # Dobladillo / puño de manga corta en Z = 1.180
+    for is_l in (True, False):
+        sign_a = 1.0 if is_l else -1.0
+        n_arm = 12
+        hem_top, hem_bot = [], []
+        for k in range(n_arm):
+            cang = (2.0 * math.pi * k) / n_arm
+            cx = sign_a * (0.265 + 0.054 * math.cos(cang))
+            cy = 0.002 + 0.054 * math.sin(cang)
+            hem_top.append(bm.verts.new((cx, cy, 1.185)))
+            hem_bot.append(bm.verts.new((cx * 1.02, cy * 1.02, 1.170)))
+        for k in range(n_arm):
+            knxt = (k + 1) % n_arm
+            hf = bm.faces.new((hem_top[k], hem_top[knxt], hem_bot[knxt], hem_bot[k]))
+            hf.material_index = 0 # Shirt hem
+            for loop in hf.loops: loop[uv_lay].uv = (0.5, 0.5)
 
     # -------------------------------------------------------------------------
-    # BOCAMANGAS DEL SACO, PUÑOS CAMISEROS Y MANOS ANATÓMICAS
+    # MANOS ANATÓMICAS (PIEL, 5 DEDOS CON PULGAR EN OPOSICIÓN)
     # -------------------------------------------------------------------------
     for is_l in (True, False):
         sign_a = 1.0 if is_l else -1.0
         w_center = Vector((sign_a * 0.325, 0.015, 0.930))
 
-        # Botones de la bocamanga del saco (adosados a la tela exterior)
-        for b_idx in range(3):
-            btn_sz = 0.942 - b_idx * 0.012
-            btn_sx = sign_a * (0.325 + 0.036)
-            b_bm = bmesh.new()
-            bmesh.ops.create_uvsphere(b_bm, u_segments=6, v_segments=4, radius=0.0025)
-            bmesh.ops.translate(b_bm, verts=b_bm.verts, vec=(btn_sx, w_center.y + 0.005, btn_sz))
-            v_map_ab = {v: bm.verts.new(v.co) for v in b_bm.verts}
-            for f in b_bm.faces:
-                nf = bm.faces.new([v_map_ab[v] for v in f.verts])
-                nf.material_index = 5 # Buttons
-                for loop in nf.loops: loop[uv_lay].uv = (0.5, 0.5)
-            b_bm.free()
-
-        # Puño de camisa celeste asomando (1.5 cm) bajo la manga del saco
-        n_arm = 12
-        cuff_top, cuff_bot = [], []
-        for k in range(n_arm):
-            cang = (2.0 * math.pi * k) / n_arm
-            cx = sign_a * (0.325 + 0.030 * math.cos(cang))
-            cy = w_center.y + 0.026 * math.sin(cang)
-            cuff_top.append(bm.verts.new((cx, cy, 0.930)))
-            cuff_bot.append(bm.verts.new((cx * 1.01, cy * 1.01, 0.915)))
-        for k in range(n_arm):
-            knxt = (k + 1) % n_arm
-            cf = bm.faces.new((cuff_top[k], cuff_top[knxt], cuff_bot[knxt], cuff_bot[k]))
-            cf.material_index = 3 # Shirt
-            for loop in cf.loops: loop[uv_lay].uv = (0.5, 0.5)
-
         # Muñeca anatómica en piel
+        n_w = 10
         wrist_v = []
-        for k in range(n_arm):
-            cang = (2.0 * math.pi * k) / n_arm
+        for k in range(n_w):
+            cang = (2.0 * math.pi * k) / n_w
             wx = sign_a * (0.325 + 0.022 * math.cos(cang))
             wy = w_center.y + 0.018 * math.sin(cang)
-            wrist_v.append(bm.verts.new((wx, wy, 0.905)))
-        for k in range(n_arm):
-            knxt = (k + 1) % n_arm
-            wf = bm.faces.new((wrist_v[k], wrist_v[knxt], cuff_bot[knxt], cuff_bot[k]))
-            wf.material_index = 9 # Skin
-            for loop in wf.loops: loop[uv_lay].uv = (0.5, 0.5)
+            wrist_v.append(bm.verts.new((wx, wy, 0.920)))
 
         # Palma y nudillos anatómicos
         z_knuckles = 0.850
@@ -770,7 +811,7 @@ def build_body_mesh(materials):
         f_p3 = bm.faces.new((p_box[2], p_box[3], p_box[7], p_box[6]))
         f_p4 = bm.faces.new((p_box[3], p_box[0], p_box[4], p_box[7]))
         for f in (f_p1, f_p2, f_p3, f_p4):
-            f.material_index = 9 # Skin
+            f.material_index = 3 # Skin
             for loop in f.loops: loop[uv_lay].uv = (0.5, 0.5)
 
         # 4 Dedos estilizados (Índice, Medio, Anular, Meñique) en postura relajada
@@ -801,16 +842,15 @@ def build_body_mesh(materials):
                     for k in range(6):
                         knxt = (k + 1) % 6
                         ff = bm.faces.new((prev_fring[k], prev_fring[knxt], cur_fring[knxt], cur_fring[k]))
-                        ff.material_index = 9
+                        ff.material_index = 3
                         for loop in ff.loops: loop[uv_lay].uv = (0.5, 0.5)
                 prev_fring = cur_fring
 
-            # Punta del dedo
             tip_v = bm.verts.new((fx + sign_a * 0.002, fy + 0.007, z_knuckles - f_len - 0.003))
             for k in range(6):
                 knxt = (k + 1) % 6
                 ff_tip = bm.faces.new((prev_fring[knxt], prev_fring[k], tip_v))
-                ff_tip.material_index = 9
+                ff_tip.material_index = 3
                 for loop in ff_tip.loops: loop[uv_lay].uv = (0.5, 0.5)
 
         # Pulgar en oposición anatómica
@@ -833,7 +873,7 @@ def build_body_mesh(materials):
                 for k in range(6):
                     knxt = (k + 1) % 6
                     thf = bm.faces.new((prev_th[k], prev_th[knxt], cur_th[knxt], cur_th[k]))
-                    thf.material_index = 9
+                    thf.material_index = 3
                     for loop in thf.loops: loop[uv_lay].uv = (0.5, 0.5)
             prev_th = cur_th
 
@@ -841,7 +881,7 @@ def build_body_mesh(materials):
         for k in range(6):
             knxt = (k + 1) % 6
             thf_tip = bm.faces.new((prev_th[knxt], prev_th[k], tip_th))
-            thf_tip.material_index = 9
+            thf_tip.material_index = 3
             for loop in thf_tip.loops: loop[uv_lay].uv = (0.5, 0.5)
 
     bm.normal_update()
@@ -1014,10 +1054,10 @@ def render_control_views():
         scene.collection.objects.link(lo)
         return lo
 
-    # Key light frontal-alta suave, fill suave y rim para recortar silueta
-    add_light("KeyLight", 'AREA', 220.0, (0.4, 1.6, 1.6), color=(1.0, 0.97, 0.94))
-    add_light("FillLight", 'AREA', 140.0, (-0.8, 1.4, 1.4), color=(0.94, 0.96, 1.0))
-    add_light("RimLight", 'AREA', 200.0, (0.0, -1.6, 1.6), color=(1.0, 0.98, 0.95))
+    # Key light frontal-alta, fill suave y rim para recortar silueta
+    add_light("KeyLight", 'AREA', 240.0, (0.3, 1.6, 1.6), color=(1.0, 0.98, 0.95))
+    add_light("FillLight", 'AREA', 150.0, (-0.8, 1.4, 1.4), color=(0.95, 0.97, 1.0))
+    add_light("RimLight", 'AREA', 220.0, (0.0, -1.6, 1.6), color=(1.0, 0.98, 0.95))
 
     # Cámara
     cam_data = bpy.data.cameras.new("RenderCam")
@@ -1027,11 +1067,11 @@ def render_control_views():
     scene.camera = cam_obj
 
     shots = [
-        ("eli_preview.png",             ( 0.00,  1.75, 1.25), ( 0.00, 0.00, 1.25), os.path.join(PROJECT_ROOT, "godot_project/assets/characters/eli_preview.png")),
-        ("eli_master_front.png",        ( 0.00,  1.75, 1.25), ( 0.00, 0.00, 1.25), os.path.join(SCRATCH_DIR, "eli_master_front.png")),
-        ("eli_master_profile.png",      (-1.75,  0.00, 1.25), ( 0.00, 0.00, 1.25), os.path.join(SCRATCH_DIR, "eli_master_profile.png")),
-        ("eli_master_back.png",         ( 0.00, -1.75, 1.25), ( 0.00, 0.00, 1.25), os.path.join(SCRATCH_DIR, "eli_master_back.png")),
-        ("eli_master_threequarter.png", ( 1.15,  1.35, 1.30), ( 0.00, 0.00, 1.25), os.path.join(SCRATCH_DIR, "eli_master_threequarter.png")),
+        ("eli_preview.png",             ( 0.00,  1.70, 1.30), ( 0.00, 0.00, 1.30), os.path.join(PROJECT_ROOT, "godot_project/assets/characters/eli_preview.png")),
+        ("eli_master_front.png",        ( 0.00,  2.20, 1.05), ( 0.00, 0.00, 1.05), os.path.join(SCRATCH_DIR, "eli_master_front.png")),
+        ("eli_master_profile.png",      (-2.00,  0.00, 1.15), ( 0.00, 0.00, 1.15), os.path.join(SCRATCH_DIR, "eli_master_profile.png")),
+        ("eli_master_back.png",         ( 0.00, -2.00, 1.15), ( 0.00, 0.00, 1.15), os.path.join(SCRATCH_DIR, "eli_master_back.png")),
+        ("eli_master_threequarter.png", ( 1.20,  1.45, 1.25), ( 0.00, 0.00, 1.20), os.path.join(SCRATCH_DIR, "eli_master_threequarter.png")),
     ]
 
     for name, c_pos, t_pos, out_p in shots:
@@ -1048,16 +1088,32 @@ def render_control_views():
 # =============================================================================
 def main():
     print("=" * 60)
-    print("GENERANDO ELI CANÓNICO RECONSTRUIDO: ALTA CALIDAD Y PARECIDO REAL")
-    print("=" * 60)
+    print("GENERANDO ELI CANÓNICO RECONSTRUIDO: CAMISA EN V Y VELLO PECTORAL")
+    print("============================================================")
 
     # Limpiar escena inicial
     bpy.ops.wm.read_factory_settings(use_empty=True)
 
     all_mats = create_materials()
     mat_groups = {
-        "head": [all_mats["skin"], all_mats["eyes"], all_mats["hair"], all_mats["glasses"], all_mats["glass"], all_mats["teeth"]],
-        "body": [all_mats["suit"], all_mats["pants"], all_mats["shoes"], all_mats["shirt"], all_mats["tie"], all_mats["buttons"], all_mats["buckle"], all_mats["suit"], all_mats["suit"], all_mats["skin"]]
+        "head": [
+            all_mats["skin"],
+            all_mats["eyes"],
+            all_mats["hair"],
+            all_mats["glasses"],
+            all_mats["glass"],
+            all_mats["teeth"]
+        ],
+        "body": [
+            all_mats["shirt"],
+            all_mats["pants"],
+            all_mats["shoes"],
+            all_mats["skin"],
+            all_mats["chest"],
+            all_mats["buttons"],
+            all_mats["belt"],
+            all_mats["buckle"]
+        ]
     }
 
     # 1. Esqueleto canónico
@@ -1068,13 +1124,13 @@ def main():
     obj_head = build_head_mesh(mat_groups)
     assign_weights(obj_head, is_head=True)
     attach_armature_modifier(obj_head, arm_obj)
-    print("✓ Player_Head_Mesh generado con gafas finas, ojos a Z=1.515, párpados con shape key 'blink' y cabello 360°.")
+    print("✓ Player_Head_Mesh generado con gafas finas, ojos a Z=1.515, párpados con shape key 'blink' y cabello ondulado 360°.")
 
     # 3. Malla de Cuerpo modular
     obj_body = build_body_mesh(mat_groups)
     assign_weights(obj_body, is_head=False)
     attach_armature_modifier(obj_body, arm_obj)
-    print("✓ Player_Body_Mesh generado con traje formal beige continuo, solapas y manos anatómicas.")
+    print("✓ Player_Body_Mesh generado con camisa resort en V, pecho con vello pectoral y chinos.")
 
     # Verificación de fugas de pesos hacia las piernas
     vg_h_l = obj_body.vertex_groups.get("Hand.L")
@@ -1090,14 +1146,12 @@ def main():
     print(f"✓ Verificación matemática de pesos: {leaks} vértices de manos fugados a piernas.")
 
     # Guardar archivo .blend canónico
-    blend_path = os.path.join(ASSETS_DIR, "eli.blend")
-    bpy.ops.wm.save_as_mainfile(filepath=blend_path)
-    print(f"✓ Guardado .blend en: {blend_path}")
+    bpy.ops.wm.save_as_mainfile(filepath=OUTPUT_BLEND)
+    print(f"✓ Guardado .blend en: {OUTPUT_BLEND}")
 
     # Exportar archivo .glb canónico
-    glb_path = os.path.join(ASSETS_DIR, "eli.glb")
     bpy.ops.export_scene.gltf(
-        filepath=glb_path,
+        filepath=OUTPUT_GLB,
         export_format='GLB',
         use_selection=False,
         export_apply=False,
@@ -1108,7 +1162,7 @@ def main():
         export_cameras=False,
         export_lights=False
     )
-    print(f"✓ Exportado .glb canónico en: {glb_path}")
+    print(f"✓ Exportado .glb canónico en: {OUTPUT_GLB}")
 
     # Renders de validación multi-ángulo
     render_control_views()
