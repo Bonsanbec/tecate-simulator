@@ -11,6 +11,7 @@ archetype = "urban_youth"
 preferred_greeting = "¡Qué onda! Bienvenidos a Tecate."
 voice_pitch = 1.0
 walk_speed_modifier = 1.0
+icon_path = "res://assets/characters/icons/axel_icon.png"
 enable_skin_sss = true
 sss_strength = 0.32
 sss_color = Color(0.92, 0.45, 0.35, 1)

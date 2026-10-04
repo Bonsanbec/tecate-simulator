@@ -11,6 +11,7 @@ archetype = "formal_beige"
 preferred_greeting = "Buenas tardes, un placer coincidir en Tecate."
 voice_pitch = 0.95
 walk_speed_modifier = 0.98
+icon_path = "res://assets/characters/icons/eli_icon.png"
 enable_skin_sss = true
 sss_strength = 0.3
 sss_color = Color(0.9, 0.44, 0.33, 1)

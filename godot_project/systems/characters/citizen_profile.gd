@@ -12,6 +12,7 @@ extends Resource
 @export var preferred_greeting: String = "¡Qué onda! Bienvenidos a Tecate."
 @export var voice_pitch: float = 1.0
 @export var walk_speed_modifier: float = 1.0
+@export var icon_path: String = "res://assets/characters/icons/axel_icon.png"
 @export var enable_skin_sss: bool = true
 @export var sss_strength: float = 0.32
 @export var sss_color: Color = Color(0.92, 0.45, 0.35, 1.0) # Tono subdérmico cálido
@@ -21,6 +22,7 @@ static func create_axel_profile() -> CitizenProfile:
 	p.identity_id = "axel"
 	p.display_name = "Axel"
 	p.model_path = "res://assets/characters/citizens/axel.glb"
+	p.icon_path = "res://assets/characters/icons/axel_icon.png"
 	p.archetype = "urban_youth"
 	p.preferred_greeting = "¡Qué onda! Bienvenidos a Tecate."
 	p.voice_pitch = 1.0
@@ -35,6 +37,7 @@ static func create_eli_profile() -> CitizenProfile:
 	p.identity_id = "eli"
 	p.display_name = "Eli"
 	p.model_path = "res://assets/characters/citizens/eli.glb"
+	p.icon_path = "res://assets/characters/icons/eli_icon.png"
 	p.archetype = "formal_beige"
 	p.preferred_greeting = "Buenas tardes, un placer coincidir en Tecate."
 	p.voice_pitch = 0.95
