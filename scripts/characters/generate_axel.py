@@ -207,8 +207,8 @@ def build_head_mesh(materials):
             t = (i / float(n_pts - 1)) * 2.0 - 1.0
             dx = t * 0.0125 * sign_side
             arch_sup = math.sqrt(max(0.0, 1.0 - t**2))
-            dz_margin_sup = 0.0012 * arch_sup + 0.0003 * t
-            dz_margin_inf = -0.0018 * arch_sup + 0.0002 * t
+            dz_margin_sup = 0.0024 * arch_sup + 0.0003 * t
+            dz_margin_inf = -0.0024 * arch_sup + 0.0002 * t
             dy_margin = math.sqrt(max(0.0001, (eye_r * 1.02)**2 - dx**2 - dz_margin_sup**2))
             dy_margin_inf = math.sqrt(max(0.0001, (eye_r * 1.02)**2 - dx**2 - dz_margin_inf**2))
 
@@ -275,7 +275,7 @@ def build_head_mesh(materials):
                     f_c.material_index = 2
             prev_ring = c_ring
 
-    # 1. Flequillo frontal en 2 capas (24 rizos)
+    # 1. Flequillo frontal en 2 capas recortado en '^' (24 rizos)
     for row_z, row_r, n_curls in [(1.585, 0.068, 12), (1.572, 0.073, 12)]:
         for i in range(n_curls):
             t_f = (i / float(n_curls - 1)) * 2.0 - 1.0
@@ -283,11 +283,16 @@ def build_head_mesh(materials):
             y_pos = row_r * math.sqrt(max(0.01, 1.0 - (x_pos / 0.082)**2)) + 0.006
             dx = t_f * 0.010 + (0.004 if i % 2 == 0 else -0.004)
             dy = 0.014 - 0.006 * abs(t_f)
-            dz = -0.042 - 0.010 * (1.0 - abs(t_f))
-            r_c = 0.010 + 0.002 * (i % 3)
-            turns_c = 2.3 + 0.3 * (i % 2)
+            cur_z_start = row_z
+            if row_z < 1.58:
+                cur_z_start += 0.012 * max(0.0, 1.0 - abs(t_f) / 0.35)
+                dz = -0.022 - 0.026 * abs(t_f)
+            else:
+                dz = -0.024 - 0.024 * abs(t_f)
+            r_c = 0.009 + 0.002 * (i % 3)
+            turns_c = 2.1 + 0.3 * (i % 2)
             phi = 0.85 * i + (1.2 if row_z < 1.58 else 0.0)
-            add_curl((x_pos, y_pos, row_z), (dx, dy, dz), r_c, turns_c, phi, base_thick=0.0070)
+            add_curl((x_pos, y_pos, cur_z_start), (dx, dy, dz), r_c, turns_c, phi, base_thick=0.0070)
 
     # 2. Sienes y patillas (20 rizos)
     for s_side in (1.0, -1.0):
@@ -482,11 +487,17 @@ def build_body_mesh(materials):
         (-0.088, 0.00, 0.30, 0.060, 0.060), # 24: Pantorrilla R
         (-0.088, 0.00, 0.12, 0.048, 0.048), # 25: Tobillo R
         (-0.088, 0.06, 0.03, 0.050, 0.105), # 26: Pie R
+
+        # Muñecas y Palmas anatómicas continuas en piel (arquitectura unificada como Eli)
+        ( 0.325,  0.012, 0.895, 0.024, 0.017), # 27: Muñeca L
+        ( 0.325,  0.012, 0.835, 0.028, 0.014), # 28: Palma L
+        (-0.325,  0.012, 0.895, 0.024, 0.017), # 29: Muñeca R
+        (-0.325,  0.012, 0.835, 0.028, 0.014), # 30: Palma R
     ]
     edges = [
         (0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6),
-        (5, 7), (7, 8), (8, 9), (9, 10),
-        (5, 11), (11, 12), (12, 13), (13, 14),
+        (5, 7), (7, 8), (8, 9), (9, 10), (10, 27), (27, 28),
+        (5, 11), (11, 12), (12, 13), (13, 14), (14, 29), (29, 30),
         (0, 15), (15, 16), (16, 17), (17, 18), (18, 19), (19, 20),
         (0, 21), (21, 22), (22, 23), (23, 24), (24, 25), (25, 26),
     ]
@@ -510,13 +521,17 @@ def build_body_mesh(materials):
     bm.from_mesh(obj_body.data)
 
     for p in bm.faces:
-        center_z = p.calc_center_median().z
+        c_median = p.calc_center_median()
+        center_z = c_median.z
+        cx = abs(c_median.x)
         if center_z < 0.10:
             p.material_index = 2 # Zapatos
-        elif center_z < 0.94:
+        elif center_z < 0.94 and cx < 0.18:
             p.material_index = 1 # Pantalón
+        elif cx > 0.18 and center_z < 0.915:
+            p.material_index = 6 # Mat_Axel_Skin (Muñeca y palma continuas)
         else:
-            p.material_index = 0 # Camisa
+            p.material_index = 0 # Camisa / Manga gris
 
     # Cuello camisero
     n_c = 16
@@ -624,11 +639,49 @@ def build_body_mesh(materials):
         vr_out = bm.verts.new((-xout, yout, fz))
         front_r_upper.append((vr_in, vr_mid, vr_out))
 
-    # Conectar hombros: delantero con espalda en Z=1.380
-    bm.faces.new((front_l_upper[0][0], front_l_upper[0][1], back_rows[0][5], back_rows[0][4])).material_index = 3
-    bm.faces.new((front_l_upper[0][1], front_l_upper[0][2], back_rows[0][6], back_rows[0][5])).material_index = 3
-    bm.faces.new((front_r_upper[0][1], front_r_upper[0][0], back_rows[0][2], back_rows[0][1])).material_index = 3
-    bm.faces.new((front_r_upper[0][2], front_r_upper[0][1], back_rows[0][1], back_rows[0][0])).material_index = 3
+    # -------------------------------------------------------------------------
+    # TIRANTES DE HOMBRO ANATÓMICOS Y BANDA DE CUELLO TRASERA (CHALECO CONTINUO 360°)
+    # El chaleco pasa SOBRE el hombro (trapecio Z=1.408) y rodea la nuca conectando con la espalda.
+    # -------------------------------------------------------------------------
+    # Tirante Izquierdo (X > 0): 3 filas sobre el hombro
+    sh_l_f = [bm.verts.new((0.055,  0.038, 1.396)), bm.verts.new((0.085,  0.030, 1.396)), bm.verts.new((0.112,  0.022, 1.396))]
+    sh_l_m = [bm.verts.new((0.052, -0.008, 1.408)), bm.verts.new((0.082, -0.012, 1.408)), bm.verts.new((0.110, -0.018, 1.408))]
+    sh_l_b = [bm.verts.new((0.050, -0.052, 1.398)), bm.verts.new((0.080, -0.054, 1.398)), bm.verts.new((0.108, -0.045, 1.398))]
+
+    # Tirante Derecho (X < 0): simétrico
+    sh_r_f = [bm.verts.new((-0.055,  0.038, 1.396)), bm.verts.new((-0.085,  0.030, 1.396)), bm.verts.new((-0.112,  0.022, 1.396))]
+    sh_r_m = [bm.verts.new((-0.052, -0.008, 1.408)), bm.verts.new((-0.082, -0.012, 1.408)), bm.verts.new((-0.110, -0.018, 1.408))]
+    sh_r_b = [bm.verts.new((-0.050, -0.052, 1.398)), bm.verts.new((-0.080, -0.054, 1.398)), bm.verts.new((-0.108, -0.045, 1.398))]
+
+    # Caras del tirante izquierdo:
+    bm.faces.new((front_l_upper[0][0], front_l_upper[0][1], sh_l_f[1], sh_l_f[0])).material_index = 3
+    bm.faces.new((front_l_upper[0][1], front_l_upper[0][2], sh_l_f[2], sh_l_f[1])).material_index = 3
+    bm.faces.new((sh_l_f[0], sh_l_f[1], sh_l_m[1], sh_l_m[0])).material_index = 3
+    bm.faces.new((sh_l_f[1], sh_l_f[2], sh_l_m[2], sh_l_m[1])).material_index = 3
+    bm.faces.new((sh_l_m[0], sh_l_m[1], sh_l_b[1], sh_l_b[0])).material_index = 3
+    bm.faces.new((sh_l_m[1], sh_l_m[2], sh_l_b[2], sh_l_b[1])).material_index = 3
+    bm.faces.new((sh_l_b[0], sh_l_b[1], back_rows[0][5], back_rows[0][4])).material_index = 3
+    bm.faces.new((sh_l_b[1], sh_l_b[2], back_rows[0][6], back_rows[0][5])).material_index = 3
+
+    # Caras del tirante derecho:
+    bm.faces.new((front_r_upper[0][1], front_r_upper[0][0], sh_r_f[0], sh_r_f[1])).material_index = 3
+    bm.faces.new((front_r_upper[0][2], front_r_upper[0][1], sh_r_f[1], sh_r_f[2])).material_index = 3
+    bm.faces.new((sh_r_f[1], sh_r_f[0], sh_r_m[0], sh_r_m[1])).material_index = 3
+    bm.faces.new((sh_r_f[2], sh_r_f[1], sh_r_m[1], sh_r_m[2])).material_index = 3
+    bm.faces.new((sh_r_m[1], sh_r_m[0], sh_r_b[0], sh_r_b[1])).material_index = 3
+    bm.faces.new((sh_r_m[2], sh_r_m[1], sh_r_b[1], sh_r_b[2])).material_index = 3
+    bm.faces.new((sh_r_b[1], sh_r_b[0], back_rows[0][2], back_rows[0][1])).material_index = 3
+    bm.faces.new((sh_r_b[2], sh_r_b[1], back_rows[0][1], back_rows[0][0])).material_index = 3
+
+    # Banda de cuello trasera sobre la nuca (une hombro L y R con el centro de la espalda)
+    neck_t_l = bm.verts.new(( 0.026, -0.048, 1.406))
+    neck_t_c = bm.verts.new(( 0.000, -0.050, 1.408))
+    neck_t_r = bm.verts.new((-0.026, -0.048, 1.406))
+
+    bm.faces.new((sh_l_b[0], neck_t_l, back_rows[0][4], back_rows[0][3])).material_index = 3
+    bm.faces.new((neck_t_l, neck_t_c, back_rows[0][3])).material_index = 3
+    bm.faces.new((neck_t_c, neck_t_r, back_rows[0][3])).material_index = 3
+    bm.faces.new((neck_t_r, sh_r_b[0], back_rows[0][2], back_rows[0][3])).material_index = 3
 
     # Conectar filas superiores del delantero
     for l in range(2):
@@ -738,96 +791,82 @@ def build_body_mesh(materials):
         ]
         bm.faces.new(p_box).material_index = 3
 
-    # Manos y dedos anatómicos con rigging blindado
-    for is_left in (True, False):
-        sign_h = 1.0 if is_left else -1.0
-        w_center = Vector((sign_h * 0.33, 0.010, 0.920))
+    # -------------------------------------------------------------------------
+    # PUÑOS DE CAMISA Y DEDOS ANATÓMICOS CONECTADOS A LA PALMA CONTINUA (PIEL)
+    # Arquitectura idéntica a Eli: Palma continua en el grafo corporal, puño exterior
+    # que abraza la muñeca sin cortes y dedos orgánicos con anillos de plata.
+    # -------------------------------------------------------------------------
+    for is_l in (True, False):
+        sign_a = 1.0 if is_l else -1.0
+        w_center = Vector((sign_a * 0.325, 0.012, 0.835))
+        z_knuckles = 0.825
 
+        # 1. Puño exterior de camisa superpuesto (cuff que rodea la muñeca continua sin cortar)
         n_cuff = 12
         cuff_top, cuff_bot = [], []
         for k in range(n_cuff):
             ang = (2.0 * math.pi * k) / n_cuff
-            cx = w_center.x + 0.030 * math.cos(ang)
-            cy = w_center.y + 0.026 * math.sin(ang)
-            cuff_top.append(bm.verts.new((cx, cy, 0.925)))
-            cuff_bot.append(bm.verts.new((cx * 1.02, cy * 1.02, 0.898)))
+            cx = sign_a * 0.325 + 0.029 * math.cos(ang)
+            cy = 0.012 + 0.024 * math.sin(ang)
+            cuff_top.append(bm.verts.new((cx, cy, 0.932)))
+            cuff_bot.append(bm.verts.new((cx * 1.01, cy * 1.01, 0.908)))
         for k in range(n_cuff):
             kn = (k + 1) % n_cuff
             bm.faces.new((cuff_top[k], cuff_top[kn], cuff_bot[kn], cuff_bot[k])).material_index = 0
 
-        wrist_v = []
-        for k in range(n_cuff):
-            ang = (2.0 * math.pi * k) / n_cuff
-            wx = w_center.x + 0.022 * math.cos(ang)
-            wy = w_center.y + 0.018 * math.sin(ang)
-            wrist_v.append(bm.verts.new((wx, wy, 0.905)))
-        for k in range(n_cuff):
-            kn = (k + 1) % n_cuff
-            bm.faces.new((wrist_v[k], wrist_v[kn], cuff_bot[kn], cuff_bot[k])).material_index = 6
+        # Botón plateado en el puño exterior
+        btn_cuff_bm = bmesh.new()
+        bmesh.ops.create_uvsphere(btn_cuff_bm, u_segments=8, v_segments=6, radius=0.0032)
+        bmesh.ops.translate(btn_cuff_bm, verts=btn_cuff_bm.verts, vec=(sign_a * (0.325 + sign_a * 0.030), 0.012, 0.920))
+        for f in btn_cuff_bm.faces:
+            bm.faces.new([bm.verts.new(v.co) for v in f.verts]).material_index = 5
+        btn_cuff_bm.free()
 
-        z_knuckles = 0.855
-        x_in = w_center.x - sign_h * 0.010
-        x_out = w_center.x + sign_h * 0.010
-        y_ant = w_center.y + 0.019
-        y_post = w_center.y - 0.018
-
-        p_box = [
-            bm.verts.new((x_in,  y_ant,  0.895)),
-            bm.verts.new((x_out, y_ant,  0.895)),
-            bm.verts.new((x_out, y_post, 0.895)),
-            bm.verts.new((x_in,  y_post, 0.895)),
-            bm.verts.new((x_in,  y_ant,  z_knuckles)),
-            bm.verts.new((x_out, y_ant,  z_knuckles)),
-            bm.verts.new((x_out, y_post, z_knuckles)),
-            bm.verts.new((x_in,  y_post, z_knuckles)),
-        ]
-        bm.faces.new((p_box[0], p_box[1], p_box[5], p_box[4])).material_index = 6
-        bm.faces.new((p_box[1], p_box[2], p_box[6], p_box[5])).material_index = 6
-        bm.faces.new((p_box[2], p_box[3], p_box[7], p_box[6])).material_index = 6
-        bm.faces.new((p_box[3], p_box[0], p_box[4], p_box[7])).material_index = 6
-
+        # 2. 4 Dedos estilizados orgánicos en reposo anatómico
         finger_specs = [
-            ("Index",   w_center.y + 0.012, 0.036, 0.0044, 1.10, is_left),
-            ("Middle",  w_center.y + 0.004, 0.040, 0.0046, 1.25, is_left),
-            ("Ring",    w_center.y - 0.004, 0.036, 0.0043, 1.35, False),
-            ("Little",  w_center.y - 0.012, 0.028, 0.0038, 1.50, False),
+            ("Index",   w_center.y + 0.013, 0.038, 0.0044, is_l),
+            ("Middle",  w_center.y + 0.004, 0.042, 0.0046, is_l),
+            ("Ring",    w_center.y - 0.004, 0.038, 0.0043, False),
+            ("Pinky",   w_center.y - 0.012, 0.030, 0.0039, False),
         ]
-        curl_dir = Vector((-sign_h * 0.70, 0.35, -0.25)).normalized()
+        curl_dir = Vector((-sign_a * 0.70, 0.35, -0.25)).normalized()
 
-        for (f_name, fy, flen, frad, curl, has_ring) in finger_specs:
-            mcp = Vector((w_center.x, fy, z_knuckles))
-            p0 = mcp
-            p1 = p0 + Vector((0, 0, -flen * 0.38)) + curl_dir * (flen * 0.18 * curl)
-            p2 = p1 + Vector((0, 0, -flen * 0.34)) + curl_dir * (flen * 0.38 * curl)
-            p3 = p2 + Vector((0, 0, -flen * 0.24)) + curl_dir * (flen * 0.48 * curl)
-
-            joints = [p0, p1, p2, p3]
-            prev_ring = None
+        for (f_name, fy, f_len, f_rad, has_ring) in finger_specs:
+            fx = sign_a * 0.325
+            n_seg = 3
+            prev_fring = None
             ring_joints = []
-            for j_idx, pt in enumerate(joints):
-                rad = frad * (1.0 - 0.25 * (j_idx / 3.0))
-                cur_ring = []
+            for s in range(n_seg + 1):
+                t = s / float(n_seg)
+                fz = z_knuckles - f_len * t
+                cur_y = fy + curl_dir.y * (f_len * 0.35 * (t**1.3))
+                cur_x = fx + curl_dir.x * (f_len * 0.25 * (t**1.3))
+                r_cur = f_rad * (1.0 - 0.28 * t)
+
+                cur_fring = []
                 for k in range(6):
-                    ang = (2.0 * math.pi * k) / 6.0
-                    vx = pt.x + rad * math.cos(ang)
-                    vy = pt.y + rad * math.sin(ang)
-                    vz = pt.z + rad * 0.5 * math.sin(ang)
-                    cur_ring.append(bm.verts.new((vx, vy, vz)))
-                if prev_ring:
+                    fang = (2.0 * math.pi * k) / 6.0
+                    cur_fring.append(bm.verts.new((cur_x + r_cur * math.cos(fang),
+                                                  cur_y + r_cur * math.sin(fang),
+                                                  fz + curl_dir.z * (f_len * 0.25 * t))))
+                if prev_fring:
                     for k in range(6):
-                        kn = (k + 1) % 6
-                        bm.faces.new((prev_ring[k], prev_ring[kn], cur_ring[kn], cur_ring[k])).material_index = 6
-                prev_ring = cur_ring
-                ring_joints.append(pt)
+                        knxt = (k + 1) % 6
+                        ff = bm.faces.new((prev_fring[k], prev_fring[knxt], cur_fring[knxt], cur_fring[k]))
+                        ff.material_index = 6 # Mat_Axel_Skin
+                prev_fring = cur_fring
+                ring_joints.append(Vector((cur_x, cur_y, fz)))
 
-            tip_v = bm.verts.new(p3 + curl_dir * 0.002 - Vector((0, 0, 0.002)))
+            tip_v = bm.verts.new((cur_x + curl_dir.x * 0.003, cur_y + curl_dir.y * 0.003, z_knuckles - f_len - 0.003))
             for k in range(6):
-                kn = (k + 1) % 6
-                bm.faces.new((prev_ring[kn], prev_ring[k], tip_v)).material_index = 6
+                knxt = (k + 1) % 6
+                ff_tip = bm.faces.new((prev_fring[knxt], prev_fring[k], tip_v))
+                ff_tip.material_index = 6
 
+            # Anillos de plata en mano izquierda (axel2.png)
             if has_ring:
                 r_c = (ring_joints[0] + ring_joints[1]) * 0.5
-                r_rad = frad * 1.32
+                r_rad = f_rad * 1.30
                 r1_pts, r2_pts = [], []
                 for k in range(8):
                     ang_r = (2.0 * math.pi * k) / 8.0
@@ -837,31 +876,31 @@ def build_body_mesh(materials):
                     r2_pts.append(bm.verts.new((rx, ry, r_c.z - 0.0025)))
                 for k in range(8):
                     kn = (k + 1) % 8
-                    bm.faces.new((r1_pts[k], r1_pts[kn], r2_pts[kn], r2_pts[k])).material_index = 5
+                    bm.faces.new((r1_pts[k], r1_pts[kn], r2_pts[kn], r2_pts[k])).material_index = 5 # Mat_Axel_Silver
 
-        th_mcp = Vector((x_in - sign_h * 0.003, y_ant + 0.003, z_knuckles + 0.015))
-        th_joints = [
-            th_mcp,
-            th_mcp + Vector((-sign_h * 0.005, 0.007, -0.009)),
-            th_mcp + Vector((-sign_h * 0.008, 0.010, -0.017)),
-            th_mcp + Vector((-sign_h * 0.010, 0.011, -0.024)),
-        ]
+        # 3. Pulgar anatómico
+        th_mcp = Vector((sign_a * (0.325 - sign_a * 0.015), w_center.y + 0.012, z_knuckles + 0.010))
+        th_len = 0.032
+        th_rad_base = 0.0050
         prev_th = None
-        for j_idx, pt in enumerate(th_joints):
-            th_rad = 0.0048 * (1.0 - 0.20 * (j_idx / 3.0))
-            cur_ring = []
+        for s in range(4):
+            t = s / 3.0
+            tx = th_mcp.x - sign_a * 0.012 * t
+            ty = th_mcp.y + 0.014 * t
+            tz = th_mcp.z - 0.022 * t
+            r_t = th_rad_base * (1.0 - 0.25 * t)
+            cur_th = []
             for k in range(6):
-                ang = (2.0 * math.pi * k) / 6.0
-                vx = pt.x + th_rad * math.cos(ang)
-                vy = pt.y + th_rad * math.sin(ang)
-                vz = pt.z + th_rad * 0.5 * math.sin(ang)
-                cur_ring.append(bm.verts.new((vx, vy, vz)))
+                fang = (2.0 * math.pi * k) / 6.0
+                cur_th.append(bm.verts.new((tx + r_t * math.cos(fang),
+                                           ty + r_t * math.sin(fang),
+                                           tz)))
             if prev_th:
                 for k in range(6):
                     kn = (k + 1) % 6
-                    bm.faces.new((prev_th[k], prev_th[kn], cur_ring[kn], cur_ring[k])).material_index = 6
-            prev_th = cur_ring
-        tip_th = bm.verts.new(th_joints[-1] + Vector((-sign_h * 0.002, 0.002, -0.002)))
+                    bm.faces.new((prev_th[k], prev_th[kn], cur_th[kn], cur_th[k])).material_index = 6
+            prev_th = cur_th
+        tip_th = bm.verts.new((th_mcp.x - sign_a * 0.014, th_mcp.y + 0.016, th_mcp.z - 0.024))
         for k in range(6):
             kn = (k + 1) % 6
             bm.faces.new((prev_th[kn], prev_th[k], tip_th)).material_index = 6
@@ -950,8 +989,12 @@ def assign_weights(obj, is_head=False):
             # 2. Extremidades superiores (|X| > 0.18) - Prioridad absoluta para evitar fugas a piernas
             elif abs(co.x) > 0.18 and co.z < 1.38:
                 side = ".L" if co.x > 0 else ".R"
-                if co.z < 0.93:
+                if co.z < 0.90:
                     obj.vertex_groups["Hand" + side].add([v.index], 1.0, 'REPLACE')
+                elif co.z < 0.93:
+                    t_w = (co.z - 0.90) / 0.03
+                    obj.vertex_groups["Forearm" + side].add([v.index], t_w, 'REPLACE')
+                    obj.vertex_groups["Hand" + side].add([v.index], 1.0 - t_w, 'REPLACE')
                 elif co.z < 1.15:
                     obj.vertex_groups["Forearm" + side].add([v.index], 1.0, 'REPLACE')
                 else:

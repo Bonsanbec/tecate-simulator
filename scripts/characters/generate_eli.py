@@ -279,9 +279,9 @@ def build_head_mesh(materials):
         for loop in nf.loops: loop[uv_lay].uv = (0.5, 0.5)
     teeth_bm.free()
 
-    # Globos oculares 3D (Z = 1.515, Y = 0.058, Radio = 0.0135)
-    eye_pos = [(0.033, 0.058, 1.515), (-0.033, 0.058, 1.515)]
-    eye_r = 0.0135
+    # Globos oculares 3D (Z = 1.515, Y = 0.0535, Radio = 0.0120)
+    eye_pos = [(0.033, 0.0535, 1.515), (-0.033, 0.0535, 1.515)]
+    eye_r = 0.0120
     for pos in eye_pos:
         e_bm = bmesh.new()
         bmesh.ops.create_uvsphere(e_bm, u_segments=16, v_segments=12, radius=eye_r)
@@ -296,42 +296,49 @@ def build_head_mesh(materials):
                 loop[uv_lay].uv = (0.5 + co.x / (2.0 * eye_r), 0.5 + co.z / (2.0 * eye_r))
         e_bm.free()
 
-    # Párpados anatómicos con Shape Key 'blink'
+    # Párpados anatómicos con cobertura orbital completa y Shape Key 'blink'
     upper_lid_margin_verts = []
     upper_lid_crease_verts = []
     for ex, ey, ez in eye_pos:
         sign_side = 1.0 if ex > 0 else -1.0
         n_pts = 9
-        upper_margin, upper_crease = [], []
-        lower_margin, lower_crease = [], []
+        upper_margin, upper_crease, upper_brow = [], [], []
+        lower_margin, lower_crease, lower_cheek = [], [], []
         for i in range(n_pts):
             t = (i / float(n_pts - 1)) * 2.0 - 1.0
-            dx = t * 0.0145 * sign_side
+            dx = t * 0.0135 * sign_side
             arch = math.sqrt(max(0.0, 1.0 - t**2))
-            dz_sup = 0.0018 * arch
-            dz_inf = -0.0018 * arch
-            dy_sup = math.sqrt(max(0.0001, (eye_r * 1.03)**2 - dx**2 - dz_sup**2))
-            dy_inf = math.sqrt(max(0.0001, (eye_r * 1.03)**2 - dx**2 - dz_inf**2))
+            dz_sup = 0.0030 * arch + 0.0003 * t
+            dz_inf = -0.0026 * arch + 0.0002 * t
+            dy_sup = math.sqrt(max(0.0001, (eye_r * 1.02)**2 - dx**2 - dz_sup**2))
+            dy_inf = math.sqrt(max(0.0001, (eye_r * 1.02)**2 - dx**2 - dz_inf**2))
 
             v_sup_m = bm.verts.new((ex + dx, ey + dy_sup, ez + dz_sup))
-            v_sup_c = bm.verts.new((ex + dx, ey + dy_sup * 0.98 + 0.002, ez + dz_sup + 0.0035 * arch))
+            v_sup_c = bm.verts.new((ex + dx, ey + dy_sup * 0.97 + 0.003, ez + dz_sup + 0.0040 * arch))
+            v_sup_b = bm.verts.new((ex + dx, ey + dy_sup * 0.91 + 0.006, ez + dz_sup + 0.0095 * arch))
+
             v_inf_m = bm.verts.new((ex + dx, ey + dy_inf, ez + dz_inf))
-            v_inf_c = bm.verts.new((ex + dx, ey + dy_inf * 0.98 + 0.002, ez + dz_inf - 0.0035 * arch))
+            v_inf_c = bm.verts.new((ex + dx, ey + dy_inf * 0.97 + 0.003, ez + dz_inf - 0.0035 * arch))
+            v_inf_k = bm.verts.new((ex + dx, ey + dy_inf * 0.91 + 0.006, ez + dz_inf - 0.0080 * arch))
 
             upper_margin.append(v_sup_m)
             upper_crease.append(v_sup_c)
+            upper_brow.append(v_sup_b)
+
             lower_margin.append(v_inf_m)
             lower_crease.append(v_inf_c)
+            lower_cheek.append(v_inf_k)
 
             upper_lid_margin_verts.append(v_sup_m)
             upper_lid_crease_verts.append(v_sup_c)
 
         for i in range(n_pts - 1):
             f1 = bm.faces.new((upper_margin[i], upper_margin[i+1], upper_crease[i+1], upper_crease[i]))
-            f1.material_index = 0
-            f2 = bm.faces.new((lower_crease[i], lower_crease[i+1], lower_margin[i+1], lower_margin[i]))
-            f2.material_index = 0
-            for f in (f1, f2):
+            f2 = bm.faces.new((upper_crease[i], upper_crease[i+1], upper_brow[i+1], upper_brow[i]))
+            f3 = bm.faces.new((lower_crease[i], lower_crease[i+1], lower_margin[i+1], lower_margin[i]))
+            f4 = bm.faces.new((lower_cheek[i], lower_cheek[i+1], lower_crease[i+1], lower_crease[i]))
+            for f in (f1, f2, f3, f4):
+                f.material_index = 0
                 for loop in f.loops: loop[uv_lay].uv = calc_face_uv(loop.vert.co.x, loop.vert.co.z)
 
     # Orejas anatómicas en piel
