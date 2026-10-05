@@ -39,6 +39,8 @@ Salidas producidas en godot_project/assets/characters/icons/:
 import bpy
 import os
 import math
+import subprocess
+import numpy as np
 from mathutils import Vector, Euler
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -48,6 +50,67 @@ ICONS_DIR = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/icons")
 
 def ensure_icons_dir():
     os.makedirs(ICONS_DIR, exist_ok=True)
+
+def crop_to_fit_numpy(arr, target_w=1024, target_h=1024):
+    h, w, c = arr.shape
+    side = min(w, h)
+    x0 = (w - side) // 2
+    y0 = (h - side) // 2
+    cropped = arr[y0:y0+side, x0:x0+side, :]
+    y_idx = (np.linspace(0, side - 1, target_h)).astype(int)
+    x_idx = (np.linspace(0, side - 1, target_w)).astype(int)
+    return cropped[y_idx[:, None], x_idx[None, :], :]
+
+def prepare_axel_background():
+    axel_tiff = os.path.join(PROJECT_ROOT, "scratch/fondo_axel.tiff")
+    return axel_tiff
+
+def prepare_eli_background():
+    eli_bg = os.path.join(PROJECT_ROOT, "scratch/fondo_eli_triangulos.png")
+    if not os.path.exists(eli_bg):
+        gen_script = os.path.join(PROJECT_ROOT, "scripts/characters/generate_eli_abstract_background.py")
+        subprocess.run([
+            "/Applications/Blender.app/Contents/MacOS/Blender", "-b", "--python", gen_script
+        ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return eli_bg
+
+def composite_card_with_background(fg_png_path, bg_image_path, out_card_path):
+    assert os.path.exists(fg_png_path), f"No existe foreground: {fg_png_path}"
+    assert os.path.exists(bg_image_path), f"No existe background: {bg_image_path}"
+
+    img_fg = bpy.data.images.load(fg_png_path)
+    img_bg = bpy.data.images.load(bg_image_path)
+
+    target_w, target_h = img_fg.size[0], img_fg.size[1]
+    bg_w, bg_h = img_bg.size[0], img_bg.size[1]
+
+    fg_pixels = np.empty(target_w * target_h * 4, dtype=np.float32)
+    bg_pixels = np.empty(bg_w * bg_h * 4, dtype=np.float32)
+
+    img_fg.pixels.foreach_get(fg_pixels)
+    img_bg.pixels.foreach_get(bg_pixels)
+
+    fg = fg_pixels.reshape((target_h, target_w, 4))
+    bg_raw = bg_pixels.reshape((bg_h, bg_w, 4))
+
+    # Crop to fit centrado y escalado al tamaño exacto del render
+    bg = crop_to_fit_numpy(bg_raw, target_w, target_h)
+
+    alpha = fg[:, :, 3:4]
+    comp = np.empty_like(fg)
+    comp[:, :, :3] = fg[:, :, :3] * alpha + bg[:, :, :3] * (1.0 - alpha)
+    comp[:, :, 3] = 1.0
+
+    img_out = bpy.data.images.new("CompCardTemp", width=target_w, height=target_h, alpha=False)
+    img_out.pixels.foreach_set(comp.flatten())
+    img_out.filepath_raw = out_card_path
+    img_out.file_format = 'PNG'
+    img_out.save()
+
+    bpy.data.images.remove(img_fg)
+    bpy.data.images.remove(img_bg)
+    bpy.data.images.remove(img_out)
+    print(f"✓ Tarjeta compuesta con fondo guardada en: {out_card_path}")
 
 def clear_lights_and_cameras(scene):
     for obj in list(scene.objects):
@@ -172,13 +235,10 @@ def render_axel():
     bpy.ops.render.render(write_still=True)
     print(f"✓ Ícono transparente guardado en: {out_icon}")
 
-    # 2. Render Tarjeta con Fondo de Estudio Cinemático
-    create_studio_backdrop(scene, center_z=1.25, color=(0.05, 0.06, 0.09, 1.0))
-    setup_render_engine(scene, resolution=1024, samples=48, transparent=False)
+    # 2. Render Tarjeta con Fondo de scratch/fondo_axel.tiff (Crop to Fit)
+    bg_axel = prepare_axel_background()
     out_card = os.path.join(ICONS_DIR, "axel_card.png")
-    scene.render.filepath = out_card
-    bpy.ops.render.render(write_still=True)
-    print(f"✓ Tarjeta de estudio guardada en: {out_card}")
+    composite_card_with_background(out_icon, bg_axel, out_card)
 
 # =============================================================================
 # 2. RENDER DE ELI (scratch/humans/eli.png y eli2.png)
@@ -242,13 +302,10 @@ def render_eli():
     bpy.ops.render.render(write_still=True)
     print(f"✓ Ícono transparente señalando guardado en: {out_icon}")
 
-    # 2. Render Tarjeta con Fondo de Estudio Cinemático (Pose Señalando)
-    create_studio_backdrop(scene, center_z=1.25, color=(0.05, 0.06, 0.09, 1.0))
-    setup_render_engine(scene, resolution=1024, samples=48, transparent=False)
+    # 2. Render Tarjeta con Fondo Abstracto de Triángulos (Diseño Moderno)
+    bg_eli = prepare_eli_background()
     out_card = os.path.join(ICONS_DIR, "eli_card.png")
-    scene.render.filepath = out_card
-    bpy.ops.render.render(write_still=True)
-    print(f"✓ Tarjeta de estudio señalando guardada en: {out_card}")
+    composite_card_with_background(out_icon, bg_eli, out_card)
 
     # B. POSE 2: RETRATO DISTENDIDO (eli2.png)
     for pb in arm.pose.bones:
