@@ -799,7 +799,7 @@ def build_body_mesh(materials):
     for is_l in (True, False):
         sign_a = 1.0 if is_l else -1.0
         w_center = Vector((sign_a * 0.325, 0.012, 0.835))
-        z_knuckles = 0.825
+        z_knuckles = 0.842
 
         # 1. Puño exterior de camisa superpuesto (cuff que rodea la muñeca continua sin cortar)
         n_cuff = 12
@@ -817,17 +817,17 @@ def build_body_mesh(materials):
         # Botón plateado en el puño exterior
         btn_cuff_bm = bmesh.new()
         bmesh.ops.create_uvsphere(btn_cuff_bm, u_segments=8, v_segments=6, radius=0.0032)
-        bmesh.ops.translate(btn_cuff_bm, verts=btn_cuff_bm.verts, vec=(sign_a * (0.325 + sign_a * 0.030), 0.012, 0.920))
+        bmesh.ops.translate(btn_cuff_bm, verts=btn_cuff_bm.verts, vec=(sign_a * (0.325 + 0.030), 0.012, 0.920))
         for f in btn_cuff_bm.faces:
             bm.faces.new([bm.verts.new(v.co) for v in f.verts]).material_index = 5
         btn_cuff_bm.free()
 
         # 2. 4 Dedos estilizados orgánicos en reposo anatómico
         finger_specs = [
-            ("Index",   w_center.y + 0.013, 0.038, 0.0044, is_l),
-            ("Middle",  w_center.y + 0.004, 0.042, 0.0046, is_l),
-            ("Ring",    w_center.y - 0.004, 0.038, 0.0043, False),
-            ("Pinky",   w_center.y - 0.012, 0.030, 0.0039, False),
+            ("Index",   w_center.y + 0.013, 0.048, 0.0050, is_l),
+            ("Middle",  w_center.y + 0.004, 0.052, 0.0052, is_l),
+            ("Ring",    w_center.y - 0.004, 0.048, 0.0048, False),
+            ("Pinky",   w_center.y - 0.012, 0.038, 0.0042, False),
         ]
         curl_dir = Vector((-sign_a * 0.70, 0.35, -0.25)).normalized()
 
@@ -878,16 +878,16 @@ def build_body_mesh(materials):
                     kn = (k + 1) % 8
                     bm.faces.new((r1_pts[k], r1_pts[kn], r2_pts[kn], r2_pts[k])).material_index = 5 # Mat_Axel_Silver
 
-        # 3. Pulgar anatómico
-        th_mcp = Vector((sign_a * (0.325 - sign_a * 0.015), w_center.y + 0.012, z_knuckles + 0.010))
-        th_len = 0.032
-        th_rad_base = 0.0050
+        # 3. Pulgar anatómico conectado a la palma
+        th_mcp = Vector((sign_a * (0.325 - 0.014), w_center.y + 0.008, 0.846))
+        th_len = 0.036
+        th_rad_base = 0.0055
         prev_th = None
         for s in range(4):
             t = s / 3.0
-            tx = th_mcp.x - sign_a * 0.012 * t
-            ty = th_mcp.y + 0.014 * t
-            tz = th_mcp.z - 0.022 * t
+            tx = th_mcp.x - sign_a * 0.010 * t
+            ty = th_mcp.y + 0.012 * t
+            tz = th_mcp.z - 0.024 * t
             r_t = th_rad_base * (1.0 - 0.25 * t)
             cur_th = []
             for k in range(6):
@@ -900,7 +900,7 @@ def build_body_mesh(materials):
                     kn = (k + 1) % 6
                     bm.faces.new((prev_th[k], prev_th[kn], cur_th[kn], cur_th[k])).material_index = 6
             prev_th = cur_th
-        tip_th = bm.verts.new((th_mcp.x - sign_a * 0.014, th_mcp.y + 0.016, th_mcp.z - 0.024))
+        tip_th = bm.verts.new((th_mcp.x - sign_a * 0.012, th_mcp.y + 0.014, th_mcp.z - 0.026))
         for k in range(6):
             kn = (k + 1) % 6
             bm.faces.new((prev_th[kn], prev_th[k], tip_th)).material_index = 6
