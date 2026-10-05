@@ -222,29 +222,35 @@ def build_violin_mesh(material):
         sz = bridge_z + 0.008
         bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((sx, (string_start_y + string_end_y) * 0.5, sz)) @ Matrix.Diagonal((Vector((0.0012, string_end_y - string_start_y, 0.0012, 1.0)))))
 
-    # 6. Arco de Violín Clásico (Pernambuco y Crin de Caballo)
-    bow_len = 0.72
-    bow_offset_x = 0.16
-    bow_z = 0.02
-
-    # Varilla de madera noble
-    bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((bow_offset_x, body_len * 0.5, bow_z)) @ Matrix.Diagonal((Vector((0.006, bow_len, 0.006, 1.0)))))
-    # Nuez / Talón de ébano
-    bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((bow_offset_x, body_len * 0.5 - bow_len * 0.45, bow_z - 0.010)) @ Matrix.Diagonal((Vector((0.009, 0.035, 0.015, 1.0)))))
-    # Cintas de crin blanca tensada
-    bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation((bow_offset_x, body_len * 0.5, bow_z - 0.014)) @ Matrix.Diagonal((Vector((0.005, bow_len * 0.94, 0.002, 1.0)))))
-
     bm.to_mesh(me)
     bm.free()
 
-    obj = bpy.data.objects.new("Violin_Prop", me)
-    bpy.context.scene.collection.objects.link(obj)
-
-    # Asignar material
+    obj_violin = bpy.data.objects.new("Violin_Prop", me)
+    bpy.context.scene.collection.objects.link(obj_violin)
     if material:
-        obj.data.materials.append(material)
+        obj_violin.data.materials.append(material)
 
-    return obj
+    # 6. Objeto Independiente: Arco de Violín Clásico (Pernambuco y Crin de Caballo)
+    me_bow = bpy.data.meshes.new("Violin_Bow_Data")
+    bm_bow = bmesh.new()
+    bow_len = 0.72
+
+    # Varilla cilíndrica de madera noble (centrada a lo largo del eje Y, origen en la nuez)
+    bmesh.ops.create_cube(bm_bow, size=1.0, matrix=Matrix.Translation((0.0, bow_len * 0.5, 0.0)) @ Matrix.Diagonal((Vector((0.006, bow_len, 0.006, 1.0)))))
+    # Nuez / Talón de ébano donde se empuña el arco
+    bmesh.ops.create_cube(bm_bow, size=1.0, matrix=Matrix.Translation((0.0, 0.020, -0.010)) @ Matrix.Diagonal((Vector((0.009, 0.038, 0.015, 1.0)))))
+    # Cintas de crin blanca tensada
+    bmesh.ops.create_cube(bm_bow, size=1.0, matrix=Matrix.Translation((0.0, bow_len * 0.5, -0.014)) @ Matrix.Diagonal((Vector((0.005, bow_len * 0.94, 0.002, 1.0)))))
+
+    bm_bow.to_mesh(me_bow)
+    bm_bow.free()
+
+    obj_bow = bpy.data.objects.new("Violin_Bow", me_bow)
+    bpy.context.scene.collection.objects.link(obj_bow)
+    if material:
+        obj_bow.data.materials.append(material)
+
+    return obj_violin, obj_bow
 
 def render_preview():
     scene = bpy.context.scene
@@ -293,7 +299,7 @@ def main():
 
     clean_scene()
     mat = create_pbr_material("Mat_Violin", DIFFUSE_TEX, NORMAL_TEX, base_color=(0.65, 0.38, 0.18, 1.0), roughness=0.32)
-    obj = build_violin_mesh(mat)
+    obj_violin, obj_bow = build_violin_mesh(mat)
 
     # Guardar archivo .blend
     bpy.ops.wm.save_as_mainfile(filepath=OUTPUT_BLEND)

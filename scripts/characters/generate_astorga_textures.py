@@ -80,84 +80,118 @@ def generate_face_textures():
     x = np.linspace(0.0, 1.0, w)[None, :]
     y = np.linspace(0.0, 1.0, h)[:, None]
 
-    # Tez apiñonada cálida / oliva según scratch/humans/astorga.png
-    base_skin = np.array([0.835, 0.665, 0.575], dtype=np.float32)
-    warm_cheek = np.array([0.875, 0.575, 0.495], dtype=np.float32)
-    shadow_tone = np.array([0.695, 0.525, 0.435], dtype=np.float32)
-    neck_skin = np.array([0.805, 0.635, 0.545], dtype=np.float32)
+    # Tez morena cálida / apiñonada auténtica según scratch/humans/astorga.png
+    base_skin = np.array([0.485, 0.345, 0.265], dtype=np.float32)
+    warm_cheek = np.array([0.550, 0.320, 0.245], dtype=np.float32)
+    shadow_tone = np.array([0.340, 0.225, 0.165], dtype=np.float32)
+    neck_skin = np.array([0.440, 0.300, 0.230], dtype=np.float32)
 
     for c in range(3):
         diffuse[:, :, c] = base_skin[c]
     diffuse[:, :, 3] = 1.0
 
     # Gradiente en cuello inferior manteniendo piel limpia (sin barba)
-    neck_factor = np.clip((0.26 - y) / 0.26, 0.0, 1.0)
+    neck_factor = np.clip((0.28 - y) / 0.28, 0.0, 1.0)
     for c in range(3):
-        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - neck_factor * 0.20) + neck_skin[c] * (neck_factor * 0.20)
+        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - neck_factor * 0.25) + neck_skin[c] * (neck_factor * 0.25)
 
-    # Pómulos, puente nasal y frente
-    cheeks_l = np.exp(-((x - 0.36)**2 / 0.014 + (y - 0.52)**2 / 0.011))
-    cheeks_r = np.exp(-((x - 0.64)**2 / 0.014 + (y - 0.52)**2 / 0.011))
-    nose_bridge = np.exp(-((x - 0.50)**2 / 0.0018 + (y - 0.52)**2 / 0.024))
-    forehead_warmth = np.exp(-((x - 0.50)**2 / 0.040 + (y - 0.78)**2 / 0.018))
+    # Pómulos, puente nasal y frente cálida
+    cheeks_l = np.exp(-((x - 0.36)**2 / 0.016 + (y - 0.52)**2 / 0.013))
+    cheeks_r = np.exp(-((x - 0.64)**2 / 0.016 + (y - 0.52)**2 / 0.013))
+    nose_bridge = np.exp(-((x - 0.50)**2 / 0.0016 + (y - 0.52)**2 / 0.026))
+    forehead_warmth = np.exp(-((x - 0.50)**2 / 0.045 + (y - 0.78)**2 / 0.020))
 
-    facial_warmth = np.clip(cheeks_l + cheeks_r + nose_bridge * 0.45 + forehead_warmth * 0.30, 0.0, 1.0)
+    facial_warmth = np.clip(cheeks_l + cheeks_r + nose_bridge * 0.50 + forehead_warmth * 0.35, 0.0, 1.0)
     for c in range(3):
-        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - facial_warmth * 0.20) + warm_cheek[c] * (facial_warmth * 0.20)
+        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - facial_warmth * 0.24) + warm_cheek[c] * (facial_warmth * 0.24)
 
     # Cuencas orbitarias anatómicas suaves
-    for eye_cx in [0.385, 0.615]:
-        orbit_dist = np.sqrt(((x - eye_cx) / 0.068)**2 + ((y - 0.620)**2 / 0.038**2))
-        orbit_shade = np.clip(1.0 - orbit_dist, 0.0, 1.0)**2 * 0.28
+    for eye_cx in [0.380, 0.620]:
+        orbit_dist = np.sqrt(((x - eye_cx) / 0.072)**2 + ((y - 0.620)**2 / 0.040**2))
+        orbit_shade = np.clip(1.0 - orbit_dist, 0.0, 1.0)**2 * 0.32
         for c in range(3):
             diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - orbit_shade) + shadow_tone[c] * orbit_shade
 
-    # Cejas masculinas oscuras, naturales y expresivas de Astorga
+    # Delineado anatómico suave de pestañas y borde palpebral
+    for eye_cx in [0.380, 0.620]:
+        dx_eye = (x - eye_cx) / 0.048
+        in_eye = np.clip(1.0 - dx_eye**2, 0.0, 1.0)
+        # Línea superior de párpado
+        dist_lash_sup = np.abs(y - (0.630 + 0.008 * (1.0 - dx_eye**2))) / 0.0040
+        mask_lash_sup = np.clip(1.0 - dist_lash_sup, 0.0, 1.0) * in_eye
+        # Línea inferior de párpado
+        dist_lash_inf = np.abs(y - (0.612 - 0.005 * (1.0 - dx_eye**2))) / 0.0035
+        mask_lash_inf = np.clip(1.0 - dist_lash_inf, 0.0, 1.0) * in_eye
+        lash_total = np.clip(mask_lash_sup + mask_lash_inf * 0.7, 0.0, 1.0)
+        lash_col = np.array([0.08, 0.06, 0.05], dtype=np.float32)
+        for c in range(3):
+            diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - lash_total * 0.85) + lash_col[c] * (lash_total * 0.85)
+
+    # Cejas masculinas oscuras, naturales y definidas de Astorga
     # Ceja izquierda
-    t_l = np.clip((x - 0.315) / (0.460 - 0.315), 0.0, 1.0)
-    y_c_l = 0.690 + 0.018 * np.sin(t_l * np.pi * 0.88)
-    dist_brow_l = np.abs(y - y_c_l) / (0.016 * (1.1 - 0.5 * (t_l - 0.5)**2))
-    mask_brow_l = np.clip(1.0 - dist_brow_l, 0.0, 1.0)**1.8 * np.sin(t_l * np.pi)**0.5
+    t_l = np.clip((x - 0.300) / (0.465 - 0.300), 0.0, 1.0)
+    y_c_l = 0.692 + 0.022 * np.sin(t_l * np.pi * 0.90)
+    dist_brow_l = np.abs(y - y_c_l) / (0.020 * (1.15 - 0.45 * (t_l - 0.5)**2))
+    mask_brow_l = np.clip(1.0 - dist_brow_l, 0.0, 1.0)**1.2 * np.sin(t_l * np.pi)**0.35
 
     # Ceja derecha
-    t_r = np.clip((x - 0.540) / (0.685 - 0.540), 0.0, 1.0)
-    y_c_r = 0.690 + 0.018 * np.sin((1.0 - t_r) * np.pi * 0.88)
-    dist_brow_r = np.abs(y - y_c_r) / (0.016 * (1.1 - 0.5 * (t_r - 0.5)**2))
-    mask_brow_r = np.clip(1.0 - dist_brow_r, 0.0, 1.0)**1.8 * np.sin(t_r * np.pi)**0.5
+    t_r = np.clip((x - 0.535) / (0.700 - 0.535), 0.0, 1.0)
+    y_c_r = 0.692 + 0.022 * np.sin((1.0 - t_r) * np.pi * 0.90)
+    dist_brow_r = np.abs(y - y_c_r) / (0.020 * (1.15 - 0.45 * (t_r - 0.5)**2))
+    mask_brow_r = np.clip(1.0 - dist_brow_r, 0.0, 1.0)**1.2 * np.sin(t_r * np.pi)**0.35
 
-    eyebrow_color = np.array([0.10, 0.08, 0.07], dtype=np.float32)
+    eyebrow_color = np.array([0.06, 0.05, 0.04], dtype=np.float32)
     brow_total = np.clip(mask_brow_l + mask_brow_r, 0.0, 1.0)
     for c in range(3):
-        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - brow_total * 0.96) + eyebrow_color[c] * (brow_total * 0.96)
+        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - brow_total * 0.98) + eyebrow_color[c] * (brow_total * 0.98)
 
-    # Labios masculinos serenos y naturales
-    t_lip = np.clip((x - 0.405) / (0.595 - 0.405), 0.0, 1.0)
-    lip_shape = np.sin(t_lip * np.pi)
-    lip_dist = np.abs(y - 0.395) / (0.016 * lip_shape + 0.001)
-    mask_lip = np.clip(1.0 - lip_dist, 0.0, 1.0)**2 * (t_lip > 0.0) * (t_lip < 1.0)
-    lip_color = np.array([0.76, 0.46, 0.42], dtype=np.float32)
-    for c in range(3):
-        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - mask_lip * 0.50) + lip_color[c] * (mask_lip * 0.50)
+    # Labios masculinos serenos, expresivos y definidos
+    t_lip = np.clip((x - 0.395) / (0.605 - 0.395), 0.0, 1.0)
+    lip_span = np.sin(t_lip * np.pi)
 
-    # Hendidura labial
-    slit_dist = np.abs(y - 0.395) / 0.0035
-    mask_slit = np.clip(1.0 - slit_dist, 0.0, 1.0) * lip_shape
-    for c in range(3):
-        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - mask_slit * 0.65) + 0.12 * (mask_slit * 0.65)
+    # Labio superior con sutil arco de Cupido
+    y_cupid = 0.404 + 0.005 * lip_span * (1.0 - 0.8 * np.sin(t_lip * np.pi * 2.0)**2)
+    dist_lip_sup = np.clip((y_cupid - y) / (0.012 * lip_span + 0.001), 0.0, 1.0) * np.clip((y - 0.395) / 0.006 + 1.0, 0.0, 1.0)
+    mask_lip_sup = np.clip(dist_lip_sup, 0.0, 1.0) * (t_lip > 0.0) * (t_lip < 1.0)
+    lip_col_sup = np.array([0.430, 0.220, 0.175], dtype=np.float32)
 
-    # Sombra subnasal / filtrum suave
-    philtrum = np.exp(-((x - 0.50)**2 / 0.0008 + (y - 0.435)**2 / 0.0015))
+    # Labio inferior carnoso y natural
+    y_inf = 0.384 - 0.008 * lip_span
+    dist_lip_inf = np.clip((y - y_inf) / (0.014 * lip_span + 0.001), 0.0, 1.0) * np.clip((0.395 - y) / 0.006 + 1.0, 0.0, 1.0)
+    mask_lip_inf = np.clip(dist_lip_inf, 0.0, 1.0) * (t_lip > 0.0) * (t_lip < 1.0)
+    lip_col_inf = np.array([0.490, 0.255, 0.200], dtype=np.float32)
+
     for c in range(3):
-        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - philtrum * 0.22) + shadow_tone[c] * (philtrum * 0.22)
+        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - mask_lip_sup * 0.80) + lip_col_sup[c] * (mask_lip_sup * 0.80)
+        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - mask_lip_inf * 0.82) + lip_col_inf[c] * (mask_lip_inf * 0.82)
+
+    # Hendidura labial (comisura)
+    slit_dist = np.abs(y - 0.395) / 0.0032
+    mask_slit = np.clip(1.0 - slit_dist, 0.0, 1.0) * (lip_span**0.6)
+    fissure_col = np.array([0.16, 0.08, 0.06], dtype=np.float32)
+    for c in range(3):
+        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - mask_slit * 0.88) + fissure_col[c] * (mask_slit * 0.88)
+
+    # Sombra subnasal / filtrum anatómico
+    philtrum = np.exp(-((x - 0.50)**2 / 0.0006 + (y - 0.435)**2 / 0.0016))
+    for c in range(3):
+        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - philtrum * 0.28) + shadow_tone[c] * (philtrum * 0.28)
+
+    # Hendidura de mentón (chin cleft) sutil
+    chin_cleft = np.exp(-((x - 0.50)**2 / 0.0004 + (y - 0.315)**2 / 0.0015))
+    for c in range(3):
+        diffuse[:, :, c] = diffuse[:, :, c] * (1.0 - chin_cleft * 0.22) + shadow_tone[c] * (chin_cleft * 0.22)
 
     # Micro-textura de piel suave (poros y relieve dérmico fino)
     micro_skin = np.sin(x * 600.0) * np.cos(y * 600.0) * 0.015
 
     # Mapa de altura facial para normales
     height_map = np.zeros((h, w), dtype=np.float32)
-    height_map += brow_total * 0.06
-    height_map += mask_lip * 0.04
+    height_map += brow_total * 0.07
+    height_map += (mask_lip_sup + mask_lip_inf) * 0.05
+    height_map -= mask_slit * 0.04
     height_map += nose_bridge * 0.08
+    height_map -= chin_cleft * 0.03
     height_map += micro_skin
 
     normal_map = height_to_normal_map(height_map, scale=1.5)

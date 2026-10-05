@@ -354,12 +354,18 @@ def render_eli():
 # =============================================================================
 def render_astorga():
     print("-" * 60)
-    print("CONFIGURANDO Y RENDERIZANDO ÍCONO DE ASTORGA (astorga.png)")
+    print("CONFIGURANDO Y RENDERIZANDO ÍCONO DE ASTORGA (scratch/humans/astorga.png)")
     print("-" * 60)
     bpy.ops.wm.open_mainfile(filepath=ASTORGA_BLEND)
     scene = bpy.context.scene
     arm = bpy.data.objects.get("Skeleton3D")
     assert arm is not None, "Skeleton3D no encontrado en astorga.blend"
+
+    # Forzar sombreado suave en todas las mallas
+    for o in bpy.data.objects:
+        if o.type == 'MESH':
+            for p in o.data.polygons:
+                p.use_smooth = True
 
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.mode_set(mode='POSE')
@@ -368,35 +374,51 @@ def render_astorga():
         pb.rotation_mode = 'XYZ'
         pb.rotation_euler = (0, 0, 0)
 
-    # Pose de Astorga canónica según scratch/humans/astorga.png:
-    # 1. Torso erguido con leve giro de 3/4
-    arm.pose.bones['Chest'].rotation_euler = (0, math.radians(-8), 0)
+    # Pose canónica de Astorga según scratch/humans/astorga.png:
+    # 1. Torso erguido con leve giro 3/4
+    arm.pose.bones['Chest'].rotation_euler = (math.radians(-2), math.radians(-6), math.radians(2))
 
-    # 2. Cabeza orientada de frente con mirada serena
-    arm.pose.bones['Head'].rotation_euler = (math.radians(-3), math.radians(10), math.radians(4))
+    # 2. Cabeza orientada con aplomo sereno
+    arm.pose.bones['Head'].rotation_euler = (math.radians(-2), math.radians(8), math.radians(2))
 
-    # 3. Brazo izquierdo alzado sosteniendo el mástil del violín
-    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(-42), math.radians(-32), math.radians(38))
-    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(112), math.radians(-22), math.radians(-12))
-    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(-18), math.radians(-15), math.radians(-5))
+    # 3. Brazo en VIEWER'S RIGHT (Hand.R, -X): Sostiene el VIOLÍN en vertical junto al hombro / pecho alto
+    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(35), math.radians(15), math.radians(-25))
+    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(95), math.radians(10), math.radians(-15))
+    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(15), math.radians(-14), math.radians(25))
 
-    # 4. Brazo derecho empuñando el arco diagonalmente hacia el violín
-    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(-20), math.radians(18), math.radians(-24))
-    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(82), math.radians(14), math.radians(8))
-    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(8), math.radians(12), 0)
+    # 4. Brazo en VIEWER'S LEFT (Hand.L, +X): Sostiene el ARCO apuntando diagonal cruzado
+    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(12), math.radians(-10), math.radians(18))
+    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(45), math.radians(-12), math.radians(10))
+    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(18), math.radians(12), math.radians(-18))
 
-    # Importar el prop independiente del violín para la composición fotográfica
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.context.view_layer.update()
+
+    hand_l_mat = arm.matrix_world @ arm.pose.bones['Hand.L'].matrix
+    hand_r_mat = arm.matrix_world @ arm.pose.bones['Hand.R'].matrix
+    hand_l_loc = hand_l_mat.to_translation()
+    hand_r_loc = hand_r_mat.to_translation()
+
+    # Cargar Violín y Arco independientes
     VIOLIN_BLEND = os.path.join(PROJECT_ROOT, "godot_project/assets/props/violin.blend")
     if os.path.exists(VIOLIN_BLEND):
-        bpy.ops.object.mode_set(mode='OBJECT')
         with bpy.data.libraries.load(VIOLIN_BLEND, link=False) as (data_from, data_to):
-            data_to.objects = [o for o in data_from.objects if o == "Violin_Prop"]
+            data_to.objects = [o for o in data_from.objects if o in ("Violin_Prop", "Violin_Bow")]
         for o in data_to.objects:
             if o:
                 scene.collection.objects.link(o)
-                o.scale = (0.75, 0.75, 0.75)
-                o.location = Vector((0.10, 0.28, 1.30))
-                o.rotation_euler = Euler((math.radians(25), math.radians(-15), math.radians(70)), 'XYZ')
+                for p in o.data.polygons:
+                    p.use_smooth = True
+                if o.name == "Violin_Prop":
+                    o.scale = (0.76, 0.76, 0.76)
+                    # Violín vertical con el frente mirando a la cámara (+Y)
+                    o.rotation_euler = Euler((math.radians(-82), math.radians(172), math.radians(14)), 'XYZ')
+                    o.location = Vector((hand_r_loc.x + 0.010, hand_r_loc.y - 0.035, hand_r_loc.z - 0.290))
+                elif o.name == "Violin_Bow":
+                    o.scale = (0.78, 0.78, 0.78)
+                    # El arco sostenido en Hand.L apuntando diagonal ascendente hacia el pecho
+                    o.rotation_euler = Euler((math.radians(42), math.radians(-28), math.radians(-48)), 'XYZ')
+                    o.location = Vector((hand_l_loc.x - 0.010, hand_l_loc.y + 0.025, hand_l_loc.z - 0.010))
 
     clear_lights_and_cameras(scene)
 
@@ -406,17 +428,17 @@ def render_astorga():
     scene.collection.objects.link(cam_obj)
     scene.camera = cam_obj
 
-    cam_obj.location = Vector((0.0, 2.10, 1.28))
+    cam_obj.location = Vector((0.0, 2.15, 1.28))
     target = Vector((0.0, 0.0, 1.25))
     cam_obj.rotation_euler = (target - cam_obj.location).to_track_quat('-Z', 'Y').to_euler()
 
     head_t = (0.0, 0.0, 1.48)
-    chest_t = (0.0, 0.0, 1.20)
+    chest_t = (0.0, 0.0, 1.22)
 
-    add_directed_light(scene, 'KeyWarm', 'AREA', 180.0, (-0.9, 1.6, 1.6), chest_t, (1.0, 0.94, 0.88), size=1.4)
-    add_directed_light(scene, 'FillHall', 'AREA', 85.0, (1.1, 1.5, 1.4), head_t, (0.95, 0.96, 1.0), size=2.0)
-    add_directed_light(scene, 'RimHair', 'SPOT', 160.0, (0.1, -1.3, 1.9), head_t, (1.0, 0.98, 0.94))
-    add_directed_light(scene, 'DetailInstrument', 'AREA', 60.0, (0.2, 1.8, 1.22), chest_t, (1.0, 0.96, 0.90), size=1.0)
+    add_directed_light(scene, 'KeyWarm', 'AREA', 145.0, (-0.8, 1.6, 1.6), chest_t, (1.0, 0.94, 0.88), size=1.4)
+    add_directed_light(scene, 'FillHall', 'AREA', 65.0, (1.1, 1.5, 1.4), head_t, (0.92, 0.95, 1.0), size=2.0)
+    add_directed_light(scene, 'RimHair', 'SPOT', 130.0, (0.1, -1.3, 1.9), head_t, (1.0, 0.97, 0.92))
+    add_directed_light(scene, 'ViolinLight', 'AREA', 65.0, (-0.45, 1.7, 1.30), (-0.15, 0, 1.25), (1.0, 0.95, 0.88), size=1.0)
 
     # 1. Render Ícono Transparente RGBA
     setup_render_engine(scene, resolution=1024, samples=48, transparent=True)
