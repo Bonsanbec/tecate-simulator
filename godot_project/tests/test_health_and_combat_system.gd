@@ -34,6 +34,7 @@ func _run_tests() -> void:
 	test_vehicle_health_defaults_and_destruction()
 	test_destructible_prop_mechanics()
 	test_player_combat_and_elimination()
+	test_attack_arm_animation_and_kinematics()
 
 	_print_summary()
 	quit(0 if tests_failed == 0 else 1)
@@ -189,3 +190,72 @@ func test_player_combat_and_elimination() -> void:
 
 	player.free()
 	enemy_npc.free()
+
+func test_attack_arm_animation_and_kinematics() -> void:
+	print(INFO_COLOR + "--- Prueba 7: Animación Cinemática de Brazos y Alternancia de Ataques ---" + RESET_COLOR)
+
+	var player = PlayerControllerClass.new()
+	player.name = "TestCombatPlayer"
+	player.setup(1, false, "Jugador Animación")
+
+	assert_true(not player.is_attacking, "El jugador inicia sin ataque activo")
+	assert_true(player.attack_timer == 0.0, "Temporizador de ataque en reposo inicial")
+
+	# 1. Disparar golpe
+	var attack_triggered = player.trigger_melee_attack()
+	assert_true(attack_triggered, "trigger_melee_attack() exitoso")
+	assert_true(player.is_attacking, "is_attacking pasa a true")
+	assert_true(player.attack_timer > 0.0, "attack_timer es positivo (~0.32s)")
+
+	var first_hand = player.current_attack_hand
+	assert_true(first_hand == 0 or first_hand == 1, "Mano de ataque asignada correctamente")
+
+	# 2. Protección contra spam (Cooldown activo)
+	var spam_blocked = not player.trigger_melee_attack()
+	assert_true(spam_blocked, "Cooldown bloquea spam de ataques instantáneos")
+
+	# 3. Cinemática procedural y modificación articular de huesos en el punto de impacto
+	player._update_procedural_animations(0.15)
+	assert_true(player.skeleton != null, "Esqueleto 3D disponible para cinemática")
+
+	if player.skeleton:
+		var bone_strike = player.bone_upperarm_r if first_hand == 0 else player.bone_upperarm_l
+		if bone_strike != -1:
+			var strike_rot = player.skeleton.get_bone_pose_rotation(bone_strike)
+			var base_rot = player._base_rot_upperarm_r if first_hand == 0 else player._base_rot_upperarm_l
+			assert_true(not strike_rot.is_equal_approx(base_rot), "Hueso del brazo atacante se desplaza cinemáticamente de la pose base")
+
+	# 4. Conclusión de la animación
+	player._update_procedural_animations(0.35)
+	assert_true(not player.is_attacking, "Ataque concluye al expirar su duración")
+
+	# 5. Alternancia de puños (Combo rítmico: Puño alterno en el siguiente ataque)
+	# Esperar cooldown
+	player._process_attack_timers(0.30)
+	var next_attack = player.trigger_melee_attack()
+	assert_true(next_attack, "Segundo ataque ejecutado tras enfriamiento")
+	assert_true(player.current_attack_hand != first_hand, "Los puños alternan dinámicamente (Jab / Cross)")
+
+	# 6. Sacudida de cámara (Camera Shake)
+	if player.camera_director:
+		player.camera_director.apply_camera_shake(0.25, 0.15)
+		assert_true(player.camera_director.shake_timer > 0.0, "Sacudida de cámara registra timer activo")
+		player.camera_director._process(0.20)
+		assert_true(player.camera_director.shake_timer == 0.0, "Sacudida de cámara decae a 0 al finalizar la duración")
+
+	# 7. Entidades ciudadanas autónomas (CitizenEntity)
+	var npc = CitizenEntityClass.new()
+	npc.name = "CombatCitizen"
+	npc.setup(303, true, "Peatón Karateka")
+
+	assert_true(not npc.is_attacking, "Ciudadano inicia sin ataque activo")
+	var npc_atk = npc.trigger_melee_attack()
+	assert_true(npc_atk, "CitizenEntity ejecuta trigger_melee_attack()")
+	assert_true(npc.is_attacking, "CitizenEntity entra en estado is_attacking")
+
+	npc._update_procedural_locomotion(0.15, Vector3.ZERO)
+	assert_true(npc.skeleton != null, "Esqueleto del ciudadano actualizado cinemáticamente")
+
+	player.free()
+	npc.free()
+

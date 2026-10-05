@@ -55,6 +55,13 @@ var rot_pitch: float = 0.0
 var bob_phase: float = 0.0
 var current_bob_offset: Vector3 = Vector3.ZERO
 
+# Traumatismo y sacudida de impacto (Camera Shake)
+var shake_intensity: float = 0.0
+var shake_duration: float = 0.15
+var shake_timer: float = 0.0
+var _current_shake_offset: Vector3 = Vector3.ZERO
+var _current_shake_rot: Vector3 = Vector3.ZERO
+
 func setup(p_character: CharacterBody3D, p_mesh_body: MeshInstance3D, p_mesh_head: MeshInstance3D) -> void:
 	character_body = p_character
 	mesh_body = p_mesh_body
@@ -151,13 +158,43 @@ func handle_input(event: InputEvent) -> void:
 		# Aplicar cabeceo vertical a las cámaras
 		_update_camera_rotations()
 
+## Aplica un impulso de sacudida cinemática a la cámara activa (retroalimentación de combate o baches)
+func apply_camera_shake(intensity: float = 0.2, duration: float = 0.15) -> void:
+	shake_intensity = maxf(shake_intensity, intensity)
+	shake_duration = maxf(shake_duration, duration)
+	shake_timer = maxf(shake_timer, duration)
+
+func _process(delta: float) -> void:
+	if shake_timer > 0.0:
+		shake_timer -= delta
+		var trauma = clampf(shake_timer / shake_duration, 0.0, 1.0) * shake_intensity
+		_current_shake_rot = Vector3(
+			randf_range(-1.0, 1.0) * trauma * 3.5,
+			randf_range(-1.0, 1.0) * trauma * 2.5,
+			randf_range(-1.0, 1.0) * trauma * 2.0
+		)
+		_current_shake_offset = Vector3(
+			randf_range(-1.0, 1.0) * trauma * 0.05,
+			randf_range(-1.0, 1.0) * trauma * 0.05,
+			0.0
+		)
+		_update_camera_rotations()
+		if cam_1p:
+			cam_1p.position = Vector3(0.0, eye_height, -eye_forward_offset) + current_bob_offset + _current_shake_offset
+	elif not _current_shake_rot.is_zero_approx():
+		_current_shake_rot = Vector3.ZERO
+		_current_shake_offset = Vector3.ZERO
+		_update_camera_rotations()
+		if cam_1p:
+			cam_1p.position = Vector3(0.0, eye_height, -eye_forward_offset) + current_bob_offset
+
 func _update_camera_rotations() -> void:
 	if cam_1p:
-		cam_1p.rotation_degrees.x = rot_pitch
+		cam_1p.rotation_degrees = Vector3(rot_pitch + _current_shake_rot.x, _current_shake_rot.y, _current_shake_rot.z)
 	if spring_arm_3p:
-		spring_arm_3p.rotation_degrees.x = rot_pitch
+		spring_arm_3p.rotation_degrees = Vector3(rot_pitch + _current_shake_rot.x, _current_shake_rot.y, _current_shake_rot.z)
 	if pivot_2p:
-		pivot_2p.rotation_degrees.x = -rot_pitch * 0.4
+		pivot_2p.rotation_degrees = Vector3(-rot_pitch * 0.4 + _current_shake_rot.x, 180.0 + _current_shake_rot.y, _current_shake_rot.z)
 
 func cycle_perspective() -> void:
 	match current_mode:
@@ -205,4 +242,4 @@ func update_head_bob(delta: float, speed_ratio: float, is_grounded: bool) -> voi
 		current_bob_offset = current_bob_offset.lerp(target_bob, 14.0 * delta)
 
 	if cam_1p:
-		cam_1p.position = Vector3(0.0, eye_height, -eye_forward_offset) + current_bob_offset
+		cam_1p.position = Vector3(0.0, eye_height, -eye_forward_offset) + current_bob_offset + _current_shake_offset

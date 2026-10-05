@@ -53,6 +53,8 @@ var bone_upperarm_l: int = -1
 var bone_upperarm_r: int = -1
 var bone_forearm_l: int = -1
 var bone_forearm_r: int = -1
+var bone_hand_l: int = -1
+var bone_hand_r: int = -1
 var bone_upperleg_l: int = -1
 var bone_upperleg_r: int = -1
 var bone_lowerleg_l: int = -1
@@ -64,6 +66,8 @@ var _base_rot_upperarm_l: Quaternion = Quaternion.IDENTITY
 var _base_rot_upperarm_r: Quaternion = Quaternion.IDENTITY
 var _base_rot_forearm_l: Quaternion = Quaternion.IDENTITY
 var _base_rot_forearm_r: Quaternion = Quaternion.IDENTITY
+var _base_rot_hand_l: Quaternion = Quaternion.IDENTITY
+var _base_rot_hand_r: Quaternion = Quaternion.IDENTITY
 var _base_rot_upperleg_l: Quaternion = Quaternion.IDENTITY
 var _base_rot_upperleg_r: Quaternion = Quaternion.IDENTITY
 var _base_rot_lowerleg_l: Quaternion = Quaternion.IDENTITY
@@ -72,6 +76,24 @@ var _base_rot_chest: Quaternion = Quaternion.IDENTITY
 
 # Ciclo de locomoción biomecánico de extremidades
 var locomotion_phase: float = 0.0
+
+# Sistema de combate y animación cinemática de brazos
+signal attack_performed(hand: int)
+
+@export var attack_damage: float = 25.0
+@export var attack_range: float = 2.5
+@export var attack_duration: float = 0.32
+const ATTACK_COOLDOWN_TIME: float = 0.28
+
+var attack_timer: float = 0.0
+var attack_cooldown: float = 0.0
+var current_attack_hand: int = 0 # 0 = Derecha (Cross directo), 1 = Izquierda (Jab)
+var attack_combo_count: int = 0
+var attack_combo_reset_timer: float = 0.0
+
+var is_attacking: bool:
+	get:
+		return attack_timer > 0.0
 
 # Asientos
 var current_seat_node: Node = null
@@ -167,6 +189,8 @@ func is_dead() -> bool:
 	return health_component.is_dead() if health_component else false
 
 func _on_died(attacker: Node) -> void:
+	attack_timer = 0.0
+	attack_cooldown = 0.0
 	# Comportamiento predeterminado al morir: abatido / deshabilitar colisión temporal
 	if nameplate_label:
 		nameplate_label.modulate = Color(0.4, 0.4, 0.4, 0.6)
@@ -253,6 +277,8 @@ func _initialize_humanoid_rig() -> void:
 		bone_upperarm_r = skeleton.find_bone("UpperArm.R")
 		bone_forearm_l = skeleton.find_bone("Forearm.L")
 		bone_forearm_r = skeleton.find_bone("Forearm.R")
+		bone_hand_l = skeleton.find_bone("Hand.L")
+		bone_hand_r = skeleton.find_bone("Hand.R")
 		bone_upperleg_l = skeleton.find_bone("UpperLeg.L")
 		bone_upperleg_r = skeleton.find_bone("UpperLeg.R")
 		bone_lowerleg_l = skeleton.find_bone("LowerLeg.L")
@@ -263,6 +289,8 @@ func _initialize_humanoid_rig() -> void:
 		if bone_upperarm_r != -1: _base_rot_upperarm_r = skeleton.get_bone_pose_rotation(bone_upperarm_r)
 		if bone_forearm_l != -1: _base_rot_forearm_l = skeleton.get_bone_pose_rotation(bone_forearm_l)
 		if bone_forearm_r != -1: _base_rot_forearm_r = skeleton.get_bone_pose_rotation(bone_forearm_r)
+		if bone_hand_l != -1: _base_rot_hand_l = skeleton.get_bone_pose_rotation(bone_hand_l)
+		if bone_hand_r != -1: _base_rot_hand_r = skeleton.get_bone_pose_rotation(bone_hand_r)
 		if bone_upperleg_l != -1: _base_rot_upperleg_l = skeleton.get_bone_pose_rotation(bone_upperleg_l)
 		if bone_upperleg_r != -1: _base_rot_upperleg_r = skeleton.get_bone_pose_rotation(bone_upperleg_r)
 		if bone_lowerleg_l != -1: _base_rot_lowerleg_l = skeleton.get_bone_pose_rotation(bone_lowerleg_l)
@@ -279,6 +307,8 @@ func apply_identity(p_id: String) -> void:
 		mesh_body = null
 		mesh_head = null
 		mesh_props = null
+		bone_hand_l = -1
+		bone_hand_r = -1
 	_initialize_humanoid_rig()
 
 func _apply_skin_subsurface_scattering(head_node: MeshInstance3D) -> void:
@@ -422,9 +452,197 @@ func _sample_interpolated_state(current_time: float) -> Dictionary:
 		"velocity": inter_vel
 	}
 
+# =============================================================================
+# SISTEMA DE COMBATE CUERPO A CUERPO Y ANIMACIÓN CINEMÁTICA DE BRAZOS
+# =============================================================================
+
+## Dispara un golpe cuerpo a cuerpo iniciando la cinemática de ataque de los brazos
+func trigger_melee_attack(hand_override: int = -1) -> bool:
+	if is_dead() or attack_cooldown > 0.0 or current_seat_node != null:
+		return false
+
+	if hand_override >= 0:
+		current_attack_hand = hand_override
+	else:
+		# Alternancia rítmica de puños para sensación orgánica de combate
+		current_attack_hand = 1 if current_attack_hand == 0 else 0
+
+	attack_timer = attack_duration
+	attack_cooldown = ATTACK_COOLDOWN_TIME
+	attack_combo_count += 1
+	attack_combo_reset_timer = 1.0
+
+	attack_performed.emit(current_attack_hand)
+	return true
+
+## Ejecuta un ataque cuerpo a cuerpo frontal estándar para ciudadanos o adversarios NPC
+func perform_melee_attack_forward(target_range: float = 2.4) -> bool:
+	if not trigger_melee_attack():
+		return false
+
+	var from_pos = global_position + Vector3(0, 1.2, 0)
+	var forward_dir = -global_transform.basis.z.normalized()
+
+	if is_inside_tree() and get_world_3d():
+		var space_state = get_world_3d().direct_space_state
+		if space_state:
+			var query = PhysicsRayQueryParameters3D.create(from_pos, from_pos + forward_dir * target_range)
+			query.exclude = [self]
+			query.collision_mask = 1 | 2 | 4
+
+			var result = space_state.intersect_ray(query)
+			if result and result.has("collider") and is_instance_valid(result.collider):
+				var target = result.collider
+				if target.has_method("take_damage"):
+					target.take_damage(attack_damage, self)
+				elif target.get_node_or_null("HealthComponent"):
+					var hc = target.get_node_or_null("HealthComponent") as HealthComponentClass
+					if hc:
+						hc.take_damage(attack_damage, self)
+	return true
+
+## Actualiza los temporizadores de duración, cooldown y combo de ataque
+func _process_attack_timers(delta: float) -> void:
+	if attack_timer > 0.0:
+		attack_timer = maxf(0.0, attack_timer - delta)
+	if attack_cooldown > 0.0:
+		attack_cooldown = maxf(0.0, attack_cooldown - delta)
+	if attack_combo_reset_timer > 0.0:
+		attack_combo_reset_timer = maxf(0.0, attack_combo_reset_timer - delta)
+		if attack_combo_reset_timer <= 0.0:
+			attack_combo_count = 0
+			current_attack_hand = 0
+
+## Calcula las transformaciones cinemáticas de los brazos durante el golpe
+func _compute_attack_arm_pose(aim_pitch_rad: float = 0.0, first_person_bias: bool = false) -> Dictionary:
+	if attack_timer <= 0.0 or attack_duration <= 0.0:
+		return {"active": false}
+
+	var progress = 1.0 - clampf(attack_timer / attack_duration, 0.0, 1.0)
+	var extension = 0.0
+	var elbow_bend = 0.0
+	var chest_factor = 0.0
+	var guard_weight = 0.0
+
+	if progress < 0.20:
+		# Fase 1: Wind-up / Anticipación (retracción y preparación de la guardia)
+		var t = progress / 0.20
+		extension = lerpf(0.0, 0.22, t)
+		elbow_bend = lerpf(0.0, deg_to_rad(65.0), t)
+		chest_factor = lerpf(0.0, -0.25, t)
+		guard_weight = t
+	elif progress < 0.45:
+		# Fase 2: Proyección explosiva hacia el objetivo (golpe acelerado)
+		var t = (progress - 0.20) / 0.25
+		var ease_t = t * t * (3.0 - 2.0 * t) # Smoothstep
+		extension = lerpf(0.22, 1.0, ease_t)
+		elbow_bend = lerpf(deg_to_rad(65.0), deg_to_rad(7.0), ease_t)
+		chest_factor = lerpf(-0.25, 1.0, ease_t)
+		guard_weight = 1.0
+	elif progress < 0.55:
+		# Fase 3: Hold apical del impacto
+		extension = 1.0
+		elbow_bend = deg_to_rad(7.0)
+		chest_factor = 1.0
+		guard_weight = 1.0
+	else:
+		# Fase 4: Recuperación fluida a la postura previa
+		var t = (progress - 0.55) / 0.45
+		var ease_t = sin(t * PI * 0.5)
+		extension = lerpf(1.0, 0.0, ease_t)
+		elbow_bend = lerpf(deg_to_rad(7.0), 0.0, ease_t)
+		chest_factor = lerpf(1.0, 0.0, ease_t)
+		guard_weight = lerpf(1.0, 0.0, ease_t)
+
+	# Elevación del brazo hacia adelante (pitch X)
+	var punch_pitch = lerpf(0.0, deg_to_rad(-82.0), extension)
+	if first_person_bias:
+		punch_pitch += deg_to_rad(-6.0) * extension
+	punch_pitch += clampf(aim_pitch_rad * 0.70, deg_to_rad(-55.0), deg_to_rad(55.0)) * extension
+
+	var is_right = (current_attack_hand == 0)
+	var adduction_sign = 1.0 if is_right else -1.0
+	var adduction_angle = deg_to_rad(12.0) * extension * adduction_sign
+
+	var strike_upperarm_rot = Quaternion(Vector3(1, 0, 0), punch_pitch) * Quaternion(Vector3(0, 0, 1), adduction_angle)
+	var strike_forearm_rot = Quaternion(Vector3(1, 0, 0), elbow_bend)
+	var strike_hand_rot = Quaternion(Vector3(0, 1, 0), deg_to_rad(22.0) * extension * adduction_sign)
+
+	# Brazo opuesto en postura de guardia protectora
+	var guard_pitch = deg_to_rad(-28.0) * guard_weight
+	var guard_elbow = deg_to_rad(54.0) * guard_weight
+	var guard_upperarm_rot = Quaternion(Vector3(1, 0, 0), guard_pitch)
+	var guard_forearm_rot = Quaternion(Vector3(1, 0, 0), guard_elbow)
+
+	# Torsión cinemática del tórax para proyectar la clavícula hacia adelante
+	var chest_yaw = deg_to_rad(10.0) * chest_factor * (-adduction_sign)
+
+	return {
+		"active": true,
+		"is_right": is_right,
+		"strike_upperarm": strike_upperarm_rot,
+		"strike_forearm": strike_forearm_rot,
+		"strike_hand": strike_hand_rot,
+		"guard_upperarm": guard_upperarm_rot,
+		"guard_forearm": guard_forearm_rot,
+		"chest_yaw": chest_yaw
+	}
+
+## Aplica cinemáticamente las poses de ataque a los huesos del esqueleto
+func _apply_attack_arm_poses(atk: Dictionary, arm_angle_l: float, arm_angle_r: float, elbow_flex_l: float, elbow_flex_r: float, extra_chest_rot: Quaternion = Quaternion.IDENTITY) -> void:
+	var is_right = atk.get("is_right", true)
+	var strike_u: Quaternion = atk["strike_upperarm"]
+	var strike_f: Quaternion = atk["strike_forearm"]
+	var strike_h: Quaternion = atk["strike_hand"]
+	var guard_u: Quaternion = atk["guard_upperarm"]
+	var guard_f: Quaternion = atk["guard_forearm"]
+	var chest_yaw: float = atk["chest_yaw"]
+
+	if is_right:
+		# Brazo derecho: Ejecución del golpe
+		if bone_upperarm_r != -1:
+			skeleton.set_bone_pose_rotation(bone_upperarm_r, _base_rot_upperarm_r * strike_u)
+		if bone_forearm_r != -1:
+			skeleton.set_bone_pose_rotation(bone_forearm_r, _base_rot_forearm_r * strike_f)
+		if bone_hand_r != -1:
+			skeleton.set_bone_pose_rotation(bone_hand_r, _base_rot_hand_r * strike_h)
+
+		# Brazo izquierdo: Guardia defensiva fusionada con la marcha
+		if bone_upperarm_l != -1:
+			var walk_l = Quaternion(Vector3(1, 0, 0), arm_angle_l)
+			skeleton.set_bone_pose_rotation(bone_upperarm_l, _base_rot_upperarm_l * walk_l.slerp(guard_u, 0.75))
+		if bone_forearm_l != -1:
+			var flex_l = Quaternion(Vector3(1, 0, 0), elbow_flex_l)
+			skeleton.set_bone_pose_rotation(bone_forearm_l, _base_rot_forearm_l * flex_l.slerp(guard_f, 0.75))
+		if bone_hand_l != -1:
+			skeleton.set_bone_pose_rotation(bone_hand_l, _base_rot_hand_l)
+	else:
+		# Brazo izquierdo: Ejecución del golpe
+		if bone_upperarm_l != -1:
+			skeleton.set_bone_pose_rotation(bone_upperarm_l, _base_rot_upperarm_l * strike_u)
+		if bone_forearm_l != -1:
+			skeleton.set_bone_pose_rotation(bone_forearm_l, _base_rot_forearm_l * strike_f)
+		if bone_hand_l != -1:
+			skeleton.set_bone_pose_rotation(bone_hand_l, _base_rot_hand_l * strike_h)
+
+		# Brazo derecho: Guardia defensiva fusionada con la marcha
+		if bone_upperarm_r != -1:
+			var walk_r = Quaternion(Vector3(1, 0, 0), arm_angle_r)
+			skeleton.set_bone_pose_rotation(bone_upperarm_r, _base_rot_upperarm_r * walk_r.slerp(guard_u, 0.75))
+		if bone_forearm_r != -1:
+			var flex_r = Quaternion(Vector3(1, 0, 0), elbow_flex_r)
+			skeleton.set_bone_pose_rotation(bone_forearm_r, _base_rot_forearm_r * flex_r.slerp(guard_f, 0.75))
+		if bone_hand_r != -1:
+			skeleton.set_bone_pose_rotation(bone_hand_r, _base_rot_hand_r)
+
+	if bone_chest != -1:
+		skeleton.set_bone_pose_rotation(bone_chest, _base_rot_chest * extra_chest_rot * Quaternion(Vector3(0, 1, 0), chest_yaw))
+
 func _update_procedural_locomotion(delta: float, vel: Vector3) -> void:
 	if not skeleton:
 		return
+
+	_process_attack_timers(delta)
 
 	var h_speed = Vector2(vel.x, vel.z).length()
 	var is_moving = h_speed > 0.1
@@ -448,14 +666,7 @@ func _update_procedural_locomotion(delta: float, vel: Vector3) -> void:
 	var knee_flex_l = maxf(0.0, -sin(locomotion_phase)) * leg_amplitude * 0.85
 	var knee_flex_r = maxf(0.0, sin(locomotion_phase)) * leg_amplitude * 0.85
 
-	if bone_upperarm_l != -1:
-		skeleton.set_bone_pose_rotation(bone_upperarm_l, _base_rot_upperarm_l * Quaternion(Vector3(1, 0, 0), arm_angle_l))
-	if bone_upperarm_r != -1:
-		skeleton.set_bone_pose_rotation(bone_upperarm_r, _base_rot_upperarm_r * Quaternion(Vector3(1, 0, 0), arm_angle_r))
-	if bone_forearm_l != -1:
-		skeleton.set_bone_pose_rotation(bone_forearm_l, _base_rot_forearm_l * Quaternion(Vector3(1, 0, 0), elbow_flex_l))
-	if bone_forearm_r != -1:
-		skeleton.set_bone_pose_rotation(bone_forearm_r, _base_rot_forearm_r * Quaternion(Vector3(1, 0, 0), elbow_flex_r))
+	# Animación de Piernas (movimiento podal continuo y reactivo)
 	if bone_upperleg_l != -1:
 		skeleton.set_bone_pose_rotation(bone_upperleg_l, _base_rot_upperleg_l * Quaternion(Vector3(1, 0, 0), leg_angle_l))
 	if bone_upperleg_r != -1:
@@ -464,6 +675,26 @@ func _update_procedural_locomotion(delta: float, vel: Vector3) -> void:
 		skeleton.set_bone_pose_rotation(bone_lowerleg_l, _base_rot_lowerleg_l * Quaternion(Vector3(1, 0, 0), -knee_flex_l))
 	if bone_lowerleg_r != -1:
 		skeleton.set_bone_pose_rotation(bone_lowerleg_r, _base_rot_lowerleg_r * Quaternion(Vector3(1, 0, 0), -knee_flex_r))
+
+	# Animación de Brazos: Golpe / Ataque vs Locomoción estándar
+	var atk = _compute_attack_arm_pose(0.0)
+	if atk.get("active", false):
+		_apply_attack_arm_poses(atk, arm_angle_l, arm_angle_r, elbow_flex_l, elbow_flex_r)
+	else:
+		if bone_upperarm_l != -1:
+			skeleton.set_bone_pose_rotation(bone_upperarm_l, _base_rot_upperarm_l * Quaternion(Vector3(1, 0, 0), arm_angle_l))
+		if bone_upperarm_r != -1:
+			skeleton.set_bone_pose_rotation(bone_upperarm_r, _base_rot_upperarm_r * Quaternion(Vector3(1, 0, 0), arm_angle_r))
+		if bone_forearm_l != -1:
+			skeleton.set_bone_pose_rotation(bone_forearm_l, _base_rot_forearm_l * Quaternion(Vector3(1, 0, 0), elbow_flex_l))
+		if bone_forearm_r != -1:
+			skeleton.set_bone_pose_rotation(bone_forearm_r, _base_rot_forearm_r * Quaternion(Vector3(1, 0, 0), elbow_flex_r))
+		if bone_hand_l != -1:
+			skeleton.set_bone_pose_rotation(bone_hand_l, _base_rot_hand_l)
+		if bone_hand_r != -1:
+			skeleton.set_bone_pose_rotation(bone_hand_r, _base_rot_hand_r)
+		if bone_chest != -1:
+			skeleton.set_bone_pose_rotation(bone_chest, _base_rot_chest)
 
 # =============================================================================
 # SOPORTE DE ASIENTOS E INTERACCIÓN
@@ -507,4 +738,6 @@ func stand_up() -> bool:
 		if bone_upperleg_r != -1: skeleton.set_bone_pose_rotation(bone_upperleg_r, _base_rot_upperleg_r)
 		if bone_lowerleg_l != -1: skeleton.set_bone_pose_rotation(bone_lowerleg_l, _base_rot_lowerleg_l)
 		if bone_lowerleg_r != -1: skeleton.set_bone_pose_rotation(bone_lowerleg_r, _base_rot_lowerleg_r)
+		if bone_hand_l != -1: skeleton.set_bone_pose_rotation(bone_hand_l, _base_rot_hand_l)
+		if bone_hand_r != -1: skeleton.set_bone_pose_rotation(bone_hand_r, _base_rot_hand_r)
 	return true

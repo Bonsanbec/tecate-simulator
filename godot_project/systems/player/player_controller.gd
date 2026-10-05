@@ -274,38 +274,50 @@ func _on_respawn_after_death() -> void:
 	respawn()
 	input_enabled = true
 
-## Executa un golpe/ataque cuerpo a cuerpo hacia adelante
+## Ejecuta un golpe/ataque cuerpo a cuerpo hacia adelante con animación e impacto cinemático
 func perform_melee_attack() -> void:
 	if is_dead() or not input_enabled or is_sitting or is_f1_photo_mode:
 		return
+	if attack_cooldown > 0.0:
+		return
 
+	# Iniciar cinemática de ataque y alternancia dinámica de puños en el avatar
+	if not trigger_melee_attack():
+		return
+
+	# Retroalimentación cinética inicial en la cámara
 	if camera_director:
-		camera_director.apply_camera_shake(0.2, 0.15)
+		camera_director.apply_camera_shake(0.20, 0.14)
 
 	var from_pos = global_position + Vector3(0, 1.2, 0)
 	var forward_dir = -global_transform.basis.z.normalized()
 	if camera_director and camera_director.active_camera:
+		from_pos = camera_director.active_camera.global_position
 		forward_dir = -camera_director.active_camera.global_transform.basis.z.normalized()
 
 	var space_state = get_world_3d().direct_space_state
 	if space_state:
-		var query = PhysicsRayQueryParameters3D.create(from_pos, from_pos + forward_dir * 2.5)
+		var query = PhysicsRayQueryParameters3D.create(from_pos, from_pos + forward_dir * attack_range)
 		query.exclude = [self]
 		query.collision_mask = 1 | 2 | 4
 
 		var result = space_state.intersect_ray(query)
 		if result and result.has("collider") and is_instance_valid(result.collider):
 			var target = result.collider
-			var damage_amount: float = 25.0
+			var damage_amount: float = attack_damage
 
 			if target.has_method("take_damage"):
 				var dealt = target.take_damage(damage_amount, self)
 				print("[Combat] Golpe asestado a '%s': %.1f HP infligidos." % [target.name, dealt])
+				if camera_director:
+					camera_director.apply_camera_shake(0.38, 0.22)
 			elif target.get_node_or_null("HealthComponent"):
 				var hc = target.get_node_or_null("HealthComponent") as HealthComponentClass
 				if hc:
 					var dealt = hc.take_damage(damage_amount, self)
 					print("[Combat] Golpe asestado a HealthComponent de '%s': %.1f HP infligidos." % [target.name, dealt])
+					if camera_director:
+						camera_director.apply_camera_shake(0.38, 0.22)
 
 func toggle_f1_photo_mode() -> void:
 	is_f1_photo_mode = !is_f1_photo_mode
@@ -633,6 +645,8 @@ func _update_procedural_animations(delta: float) -> void:
 	if not skeleton:
 		return
 
+	_process_attack_timers(delta)
+
 	if is_sitting:
 		# Pose biomecánica anatómica SITTING:
 		# Muslos a ~85° hacia adelante en X (horizontales sobre el cojín)
@@ -660,6 +674,10 @@ func _update_procedural_animations(delta: float) -> void:
 			skeleton.set_bone_pose_rotation(bone_forearm_l, _base_rot_forearm_l * Quaternion(Vector3(1, 0, 0), sit_elbow_pitch))
 		if bone_forearm_r != -1:
 			skeleton.set_bone_pose_rotation(bone_forearm_r, _base_rot_forearm_r * Quaternion(Vector3(1, 0, 0), sit_elbow_pitch))
+		if bone_hand_l != -1:
+			skeleton.set_bone_pose_rotation(bone_hand_l, _base_rot_hand_l)
+		if bone_hand_r != -1:
+			skeleton.set_bone_pose_rotation(bone_hand_r, _base_rot_hand_r)
 
 		if bone_chest != -1:
 			skeleton.set_bone_pose_rotation(bone_chest, _base_rot_chest)
@@ -691,22 +709,19 @@ func _update_procedural_animations(delta: float) -> void:
 	var knee_flex_r = maxf(0.0, sin(locomotion_phase)) * leg_amplitude * 0.85
 
 	# Al mirar hacia abajo en 1P, elevar ligeramente los brazos para visibilidad natural de manos
-	var pitch_rad = deg_to_rad(camera_director.rot_pitch if camera_director else 0.0)
+	var pitch_deg = camera_director.rot_pitch if camera_director else 0.0
+	var pitch_rad = deg_to_rad(pitch_deg)
 	var hand_raise = 0.0
 	if pitch_rad < -0.35:
 		hand_raise = clampf((-pitch_rad - 0.35) * 0.40, 0.0, 0.35)
 
-	# 1. Animación de Brazos (cabeceo hacia adelante/atrás en eje X sin desvío lateral)
-	if bone_upperarm_l != -1:
-		skeleton.set_bone_pose_rotation(bone_upperarm_l, _base_rot_upperarm_l * Quaternion(Vector3(1, 0, 0), arm_angle_l - hand_raise))
-	if bone_upperarm_r != -1:
-		skeleton.set_bone_pose_rotation(bone_upperarm_r, _base_rot_upperarm_r * Quaternion(Vector3(1, 0, 0), arm_angle_r - hand_raise))
-	if bone_forearm_l != -1:
-		skeleton.set_bone_pose_rotation(bone_forearm_l, _base_rot_forearm_l * Quaternion(Vector3(1, 0, 0), elbow_flex_l))
-	if bone_forearm_r != -1:
-		skeleton.set_bone_pose_rotation(bone_forearm_r, _base_rot_forearm_r * Quaternion(Vector3(1, 0, 0), elbow_flex_r))
+	# Inclinación del tórax hacia adelante al ascender pendientes
+	var lean_angle = 0.0
+	if current_slope_angle > 5.0 and is_moving:
+		lean_angle = deg_to_rad(clampf(current_slope_angle * 0.5, 0.0, 15.0))
+	var slope_rot = Quaternion(Vector3(1, 0, 0), -lean_angle)
 
-	# 2. Animación de Piernas (zancada cruzada y flexión anatómica de rodilla hacia atrás)
+	# 1. Animación de Piernas (zancada cruzada y flexión anatómica de rodilla hacia atrás)
 	if bone_upperleg_l != -1:
 		skeleton.set_bone_pose_rotation(bone_upperleg_l, _base_rot_upperleg_l * Quaternion(Vector3(1, 0, 0), leg_angle_l))
 	if bone_upperleg_r != -1:
@@ -716,12 +731,26 @@ func _update_procedural_animations(delta: float) -> void:
 	if bone_lowerleg_r != -1:
 		skeleton.set_bone_pose_rotation(bone_lowerleg_r, _base_rot_lowerleg_r * Quaternion(Vector3(1, 0, 0), -knee_flex_r))
 
-	# 3. Inclinación del tórax hacia adelante al ascender pendientes
-	if bone_chest != -1:
-		var lean_angle = 0.0
-		if current_slope_angle > 5.0 and is_moving:
-			lean_angle = deg_to_rad(clampf(current_slope_angle * 0.5, 0.0, 15.0))
-		skeleton.set_bone_pose_rotation(bone_chest, _base_rot_chest * Quaternion(Vector3(1, 0, 0), -lean_angle))
+	# 2. Animación de Brazos: Ataque / Golpe vs Locomoción estándar
+	var is_1p = (camera_director and camera_director.current_mode == CameraDirector3D.PerspectiveMode.FIRST_PERSON)
+	var atk = _compute_attack_arm_pose(pitch_rad, is_1p)
+	if atk.get("active", false):
+		_apply_attack_arm_poses(atk, arm_angle_l - hand_raise, arm_angle_r - hand_raise, elbow_flex_l, elbow_flex_r, slope_rot)
+	else:
+		if bone_upperarm_l != -1:
+			skeleton.set_bone_pose_rotation(bone_upperarm_l, _base_rot_upperarm_l * Quaternion(Vector3(1, 0, 0), arm_angle_l - hand_raise))
+		if bone_upperarm_r != -1:
+			skeleton.set_bone_pose_rotation(bone_upperarm_r, _base_rot_upperarm_r * Quaternion(Vector3(1, 0, 0), arm_angle_r - hand_raise))
+		if bone_forearm_l != -1:
+			skeleton.set_bone_pose_rotation(bone_forearm_l, _base_rot_forearm_l * Quaternion(Vector3(1, 0, 0), elbow_flex_l))
+		if bone_forearm_r != -1:
+			skeleton.set_bone_pose_rotation(bone_forearm_r, _base_rot_forearm_r * Quaternion(Vector3(1, 0, 0), elbow_flex_r))
+		if bone_hand_l != -1:
+			skeleton.set_bone_pose_rotation(bone_hand_l, _base_rot_hand_l)
+		if bone_hand_r != -1:
+			skeleton.set_bone_pose_rotation(bone_hand_r, _base_rot_hand_r)
+		if bone_chest != -1:
+			skeleton.set_bone_pose_rotation(bone_chest, _base_rot_chest * slope_rot)
 
 func _update_telemetry(delta: float) -> void:
 	current_speed_kmh = Vector2(velocity.x, velocity.z).length() * 3.6
