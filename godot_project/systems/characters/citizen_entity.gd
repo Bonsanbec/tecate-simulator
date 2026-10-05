@@ -13,6 +13,9 @@ extends CharacterBody3D
 
 const CitizenProfileClass = preload("res://systems/characters/citizen_profile.gd")
 const CharacterCatalogClass = preload("res://systems/characters/character_catalog.gd")
+const HealthComponentClass = preload("res://systems/combat/health_component.gd")
+const HealthBar3DClass = preload("res://ui/health_bar_3d.gd")
+const EntityHealthDefaultsClass = preload("res://systems/combat/entity_health_defaults.gd")
 
 # Identidad y estado de control
 @export var entity_id: int = 0
@@ -20,6 +23,11 @@ const CharacterCatalogClass = preload("res://systems/characters/character_catalo
 @export var is_locally_controlled: bool = false
 @export var identity_id: String = ""
 @export var profile: Resource = null
+@export var custom_max_health: float = 0.0
+
+# Sistema de salud centralizado
+var health_component: HealthComponentClass = null
+var health_bar_3d: HealthBar3DClass = null
 
 # Parámetros antropométricos y físicos de Tecate
 @export var mass_kg: float = 75.0
@@ -80,6 +88,7 @@ func _ready() -> void:
 	_ensure_collision_shape()
 	_initialize_humanoid_rig()
 	_create_nameplate()
+	_initialize_health_system()
 
 func setup(id: int, is_npc: bool = true, display_name: String = "") -> void:
 	entity_id = id
@@ -94,6 +103,7 @@ func setup(id: int, is_npc: bool = true, display_name: String = "") -> void:
 	_ensure_collision_shape()
 	_initialize_humanoid_rig()
 	_create_nameplate()
+	_initialize_health_system()
 
 	if nameplate_label:
 		nameplate_label.text = citizen_name
@@ -101,6 +111,66 @@ func setup(id: int, is_npc: bool = true, display_name: String = "") -> void:
 			nameplate_label.modulate = Color(0.45, 1.0, 0.65, 1.0) # Verde cívico Tecate
 		else:
 			nameplate_label.modulate = Color(1.0, 0.9, 0.4, 1.0) # Amarillo cálido jugador
+
+func _initialize_health_system() -> void:
+	add_to_group("citizens")
+	add_to_group("damageable")
+	if is_locally_controlled:
+		add_to_group("players")
+
+	if health_component == null:
+		health_component = get_node_or_null("HealthComponent") as HealthComponentClass
+		if not health_component:
+			health_component = HealthComponentClass.new()
+			health_component.name = "HealthComponent"
+			health_component.auto_initialize = false
+			add_child(health_component)
+
+	var target_hp = custom_max_health if custom_max_health > 0.0 else EntityHealthDefaultsClass.HEALTH_PLAYER
+	health_component.initialize(target_hp)
+
+	if not health_component.died.is_connected(_on_died):
+		health_component.died.connect(_on_died)
+
+	if health_bar_3d == null:
+		health_bar_3d = get_node_or_null("HealthBar3D") as HealthBar3DClass
+		if not health_bar_3d:
+			health_bar_3d = HealthBar3DClass.new()
+			health_bar_3d.name = "HealthBar3D"
+			health_bar_3d.billboard_offset = Vector3(0, capsule_height + 0.35, 0)
+			add_child(health_bar_3d)
+
+	health_bar_3d.setup(health_component)
+
+## Recibe daño y lo transmite a su HealthComponent
+func take_damage(amount: float, attacker: Node = null) -> float:
+	if health_component:
+		return health_component.take_damage(amount, attacker)
+	return 0.0
+
+## Recibe curación
+func heal(amount: float) -> float:
+	if health_component:
+		return health_component.heal(amount)
+	return 0.0
+
+func get_health() -> float:
+	return health_component.current_health if health_component else 100.0
+
+func get_max_health() -> float:
+	return health_component.max_health if health_component else 100.0
+
+func get_health_percentage() -> float:
+	return health_component.get_health_percentage() if health_component else 1.0
+
+func is_dead() -> bool:
+	return health_component.is_dead() if health_component else false
+
+func _on_died(attacker: Node) -> void:
+	# Comportamiento predeterminado al morir: abatido / deshabilitar colisión temporal
+	if nameplate_label:
+		nameplate_label.modulate = Color(0.4, 0.4, 0.4, 0.6)
+
 
 func _setup_physics_properties() -> void:
 	collision_layer = 1

@@ -164,6 +164,11 @@ func _initialize_submodules() -> void:
 			hud.apply_character_theme(identity_id)
 		camera_director.perspective_changed.connect(_on_perspective_changed)
 
+	if health_component:
+		if not health_component.health_changed.is_connected(_on_player_health_changed):
+			health_component.health_changed.connect(_on_player_health_changed)
+		_on_player_health_changed(health_component.current_health, health_component.max_health)
+
 	# 5. Director de Cámaras para Vehículos (1P / 3P)
 	vehicle_camera_director = VehicleCameraDirectorClass.new()
 	vehicle_camera_director.name = "VehicleCameraDirector"
@@ -182,6 +187,10 @@ func _initialize_submodules() -> void:
 		if hud:
 			hud.update_network_status("TKT/1: CONECTANDO...", false)
 		network_client.start_connection()
+
+func _on_player_health_changed(current: float, max_h: float) -> void:
+	if hud and hud.has_method("update_player_health"):
+		hud.update_player_health(current, max_h)
 
 func apply_identity(p_id: String) -> void:
 	super.apply_identity(p_id)
@@ -233,6 +242,8 @@ func set_input_enabled(enabled: bool) -> void:
 			hud.hide_hud()
 
 func respawn() -> void:
+	if health_component:
+		health_component.reset_health()
 	global_position = spawn_position
 	velocity = Vector3.ZERO
 	is_flying = false
@@ -244,7 +255,57 @@ func respawn() -> void:
 	var main_node = get_parent()
 	if main_node and main_node.has_method("_snap_player"):
 		main_node._snap_player(self)
-	print("[PlayerController] Reaparecido en Parque Hidalgo: ", global_position)
+	print("[PlayerController] Reaparecido en Parque Hidalgo con salud restaurada: ", global_position)
+
+func _on_died(attacker: Node) -> void:
+	super._on_died(attacker)
+	var attacker_name = attacker.name if attacker else "daño ambiental"
+	print("[PlayerController] ¡Jugador local ha sido eliminado por %s!" % attacker_name)
+	input_enabled = false
+	if hud and hud.has_method("show_death_overlay"):
+		hud.show_death_overlay("ELIMINADO")
+
+	var timer = get_tree().create_timer(3.0)
+	timer.timeout.connect(_on_respawn_after_death)
+
+func _on_respawn_after_death() -> void:
+	if hud and hud.has_method("hide_death_overlay"):
+		hud.hide_death_overlay()
+	respawn()
+	input_enabled = true
+
+## Executa un golpe/ataque cuerpo a cuerpo hacia adelante
+func perform_melee_attack() -> void:
+	if is_dead() or not input_enabled or is_sitting or is_f1_photo_mode:
+		return
+
+	if camera_director:
+		camera_director.apply_camera_shake(0.2, 0.15)
+
+	var from_pos = global_position + Vector3(0, 1.2, 0)
+	var forward_dir = -global_transform.basis.z.normalized()
+	if camera_director and camera_director.active_camera:
+		forward_dir = -camera_director.active_camera.global_transform.basis.z.normalized()
+
+	var space_state = get_world_3d().direct_space_state
+	if space_state:
+		var query = PhysicsRayQueryParameters3D.create(from_pos, from_pos + forward_dir * 2.5)
+		query.exclude = [self]
+		query.collision_mask = 1 | 2 | 4
+
+		var result = space_state.intersect_ray(query)
+		if result and result.has("collider") and is_instance_valid(result.collider):
+			var target = result.collider
+			var damage_amount: float = 25.0
+
+			if target.has_method("take_damage"):
+				var dealt = target.take_damage(damage_amount, self)
+				print("[Combat] Golpe asestado a '%s': %.1f HP infligidos." % [target.name, dealt])
+			elif target.get_node_or_null("HealthComponent"):
+				var hc = target.get_node_or_null("HealthComponent") as HealthComponentClass
+				if hc:
+					var dealt = hc.take_damage(damage_amount, self)
+					print("[Combat] Golpe asestado a HealthComponent de '%s': %.1f HP infligidos." % [target.name, dealt])
 
 func toggle_f1_photo_mode() -> void:
 	is_f1_photo_mode = !is_f1_photo_mode
@@ -269,6 +330,13 @@ func _set_input_handled() -> void:
 		vp.set_input_as_handled()
 
 func _input(event: InputEvent) -> void:
+	# Ataque Cuerpo a Cuerpo (Pegar) [Clic Izquierdo en pantalla capturada o Teclas G / X]
+	if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED) or (event is InputEventKey and event.pressed and not event.is_echo() and (event.keycode == KEY_G or event.keycode == KEY_X)):
+		if not current_vehicle and not is_sitting and input_enabled and not is_f1_photo_mode:
+			perform_melee_attack()
+			_set_input_handled()
+			return
+
 	if event is InputEventKey:
 		if event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE:
 			_is_space_held = event.pressed

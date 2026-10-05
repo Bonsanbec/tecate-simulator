@@ -10,12 +10,16 @@ const FuelSystemClass = preload("res://systems/vehicles/core/fuel_system.gd")
 const SurfaceDetectorClass = preload("res://systems/vehicles/core/surface_detector.gd")
 const VehicleSeatClass = preload("res://systems/vehicles/core/vehicle_seat.gd")
 const SurfaceProfileClass = preload("res://systems/vehicles/core/surface_profile.gd")
+const HealthComponentClass = preload("res://systems/combat/health_component.gd")
+const HealthBar3DClass = preload("res://ui/health_bar_3d.gd")
+const EntityHealthDefaultsClass = preload("res://systems/combat/entity_health_defaults.gd")
 
 signal vehicle_entered(player: Node3D, seat: VehicleSeatClass)
 signal vehicle_exited(player: Node3D, seat: VehicleSeatClass)
 signal engine_state_changed(is_running: bool)
 signal lights_toggled(is_on: bool)
 signal gear_changed(old_gear: int, new_gear: int)
+signal vehicle_destroyed(attacker: Node)
 
 enum VehicleType {
 	CAR = 0,
@@ -30,6 +34,11 @@ enum VehicleType {
 @export var vehicle_id: int = 1001
 @export var vehicle_name: String = "Vehículo Genérico"
 @export var vehicle_type: VehicleType = VehicleType.CAR
+@export var custom_max_health: float = 0.0
+
+# Sistema de salud centralizado
+var health_component: HealthComponentClass = null
+var health_bar_3d: HealthBar3DClass = null
 
 @export_group("Transmisión Mecánica")
 @export var total_gears: int = 6
@@ -115,11 +124,80 @@ var default_gravity: float = ProjectSettings.get_setting("physics/3d/default_gra
 
 func _ready() -> void:
 	add_to_group("vehicles")
+	add_to_group("damageable")
 	var _fs = fuel_system # Dispara inicialización
 	_discover_doors()
 	_discover_seats()
 	_discover_suspension_rays()
 	_discover_lights()
+	_initialize_health_system()
+
+func _initialize_health_system() -> void:
+	if health_component == null:
+		health_component = get_node_or_null("HealthComponent") as HealthComponentClass
+		if not health_component:
+			health_component = HealthComponentClass.new()
+			health_component.name = "HealthComponent"
+			health_component.auto_initialize = false
+			add_child(health_component)
+
+	var target_hp = custom_max_health if custom_max_health > 0.0 else EntityHealthDefaultsClass.get_default_health_for_vehicle_type(int(vehicle_type))
+	health_component.initialize(target_hp)
+
+	if not health_component.died.is_connected(_on_vehicle_died):
+		health_component.died.connect(_on_vehicle_died)
+
+	if health_bar_3d == null:
+		health_bar_3d = get_node_or_null("HealthBar3D") as HealthBar3DClass
+		if not health_bar_3d:
+			health_bar_3d = HealthBar3DClass.new()
+			health_bar_3d.name = "HealthBar3D"
+			# Ajustar altura de la barra 3D según el tipo de vehículo
+			var offset_y = 3.4 if (vehicle_type == VehicleType.BUS_HEAVY or vehicle_type == VehicleType.BUS_LIGHT or vehicle_type == VehicleType.TRUCK) else 2.1
+			health_bar_3d.billboard_offset = Vector3(0, offset_y, 0)
+			add_child(health_bar_3d)
+
+	health_bar_3d.setup(health_component)
+
+## Transmite daño al HealthComponent del vehículo
+func take_damage(amount: float, attacker: Node = null) -> float:
+	if health_component:
+		return health_component.take_damage(amount, attacker)
+	return 0.0
+
+## Aplica curación/reparación al vehículo
+func heal(amount: float) -> float:
+	if health_component:
+		return health_component.heal(amount)
+	return 0.0
+
+func get_health() -> float:
+	return health_component.current_health if health_component else 500.0
+
+func get_max_health() -> float:
+	return health_component.max_health if health_component else 500.0
+
+func get_health_percentage() -> float:
+	return health_component.get_health_percentage() if health_component else 1.0
+
+func is_dead() -> bool:
+	return health_component.is_dead() if health_component else false
+
+func _on_vehicle_died(attacker: Node) -> void:
+	engine_running = false
+	engine_state_changed.emit(false)
+	vehicle_destroyed.emit(attacker)
+	# Desmontar ocupantes si los hay
+	_dismount_all_occupants()
+
+func _dismount_all_occupants() -> void:
+	for seat in seats:
+		if seat and seat.has_method("is_occupied") and seat.is_occupied():
+			var passenger = seat.occupant
+			if passenger and passenger.has_method("dismount_vehicle"):
+				passenger.dismount_vehicle()
+			elif seat.has_method("eject_occupant"):
+				seat.eject_occupant()
 
 func _initialize_components() -> void:
 	var _fs = fuel_system
