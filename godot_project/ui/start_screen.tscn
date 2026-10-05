@@ -145,7 +145,7 @@ theme_override_colors/font_shadow_color = Color(0.04, 0.04, 0.06, 0.75)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 18
-text = "ELIGE TU IDENTIDAD PARA RECORRER TECATE"
+text = "¿Quién quieres ser hoy?"
 horizontal_alignment = 1
 
 [node name="AccentCenterLine" type="ColorRect" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/TitleVBox"]
@@ -192,25 +192,18 @@ theme_override_font_sizes/font_size = 28
 text = "CAMARADA"
 horizontal_alignment = 1
 
-[node name="CodenameAxel" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.82, 0.38, 0.95)
-theme_override_font_sizes/font_size = 18
-text = "Axel"
-horizontal_alignment = 1
-
 [node name="DescAxel" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.82, 0.86, 0.9)
 theme_override_font_sizes/font_size = 14
-text = "Caminante y observador urbano"
+text = "Rechazo la debilidad."
 horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="BtnSelectAxel" type="Button" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox"]
 layout_mode = 2
 focus_neighbor_right = NodePath("../../../CardEli/Margin/VBox/BtnSelectEli")
-text = "Elegir Camarada"
+text = "Elegir"
 
 [node name="CardEli" type="PanelContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox"]
 custom_minimum_size = Vector2(280, 420)
@@ -245,25 +238,18 @@ theme_override_font_sizes/font_size = 28
 text = "DISEÑADOR"
 horizontal_alignment = 1
 
-[node name="CodenameEli" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.82, 0.38, 0.95)
-theme_override_font_sizes/font_size = 18
-text = "Eli"
-horizontal_alignment = 1
-
 [node name="DescEli" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.82, 0.86, 0.9)
 theme_override_font_sizes/font_size = 14
-text = "Elegancia y visión formal"
+text = "La IA crea una imagen, yo diseño una marca."
 horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="BtnSelectEli" type="Button" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox"]
 layout_mode = 2
 focus_neighbor_left = NodePath("../../../CardAxel/Margin/VBox/BtnSelectAxel")
-text = "Elegir Diseñador"
+text = "Elegir"
 
 [node name="ActionsHBox" type="HBoxContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox"]
 layout_mode = 2
@@ -273,7 +259,7 @@ alignment = 1
 [node name="BtnConfirmSelection" type="Button" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/ActionsHBox"]
 custom_minimum_size = Vector2(240, 48)
 layout_mode = 2
-text = "Confirmar y Explorar"
+text = "Confirmar"
 
 [node name="BtnBackToMain" type="Button" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/ActionsHBox"]
 custom_minimum_size = Vector2(160, 48)
