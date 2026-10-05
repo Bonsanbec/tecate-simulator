@@ -6,6 +6,15 @@ extends RefCounted
 ## Desacopla la definición de identidades, avatares, modelos 3D y recursos
 ## gráficos, eliminando cualquier referencia hardcoded en el simulador.
 
+const PUEBLO_MAGICO_LETTER_COLORS: Array[Color] = [
+	Color(0.85, 0.16, 0.16, 1.0), # T1: Rojo Tecate (#D82A2A)
+	Color(0.0, 0.33, 0.72, 1.0),  # E1: Azul Cobalto (#0055B8)
+	Color(0.94, 0.31, 0.14, 1.0), # C: Naranja Terracota (#EE4023)
+	Color(0.0, 0.53, 0.24, 1.0),  # A: Verde Rumorosa (#00873D)
+	Color(1.0, 0.72, 0.0, 1.0),   # T2: Dorado Sol (#FFB800)
+	Color(0.38, 0.15, 0.62, 1.0)  # E2: Morado Púrpura (#62259D)
+]
+
 const CHARACTERS: Dictionary = {
 	"axel": {
 		"id": "axel",
@@ -22,7 +31,8 @@ const CHARACTERS: Dictionary = {
 		"voice_pitch": 1.0,
 		"walk_speed_modifier": 1.0,
 		"sss_strength": 0.32,
-		"sss_color": Color(0.92, 0.45, 0.35, 1.0)
+		"sss_color": Color(0.92, 0.45, 0.35, 1.0),
+		"theme_color": Color(0.85, 0.16, 0.16, 1.0) # Rojo Tecate Firma
 	},
 	"eli": {
 		"id": "eli",
@@ -39,7 +49,8 @@ const CHARACTERS: Dictionary = {
 		"voice_pitch": 0.95,
 		"walk_speed_modifier": 0.98,
 		"sss_strength": 0.30,
-		"sss_color": Color(0.90, 0.44, 0.33, 1.0)
+		"sss_color": Color(0.90, 0.44, 0.33, 1.0),
+		"theme_color": Color(0.0, 0.33, 0.72, 1.0) # Azul Cobalto Firma
 	}
 }
 
@@ -66,9 +77,21 @@ static func get_all_characters() -> Array[Dictionary]:
 static func get_default_character_id() -> String:
 	return ORDERED_IDS[0]
 
+## Retorna el color firma distintivo centralizado de un personaje
+static func get_character_theme_color(p_id: String) -> Color:
+	var data = get_character_data(p_id)
+	return data.get("theme_color", Color(0.85, 0.16, 0.16, 1.0))
+
+## Genera el código BBCode del título principal con cada letra en su color oficial de Pueblo Mágico
+static func get_colored_title_bbcode(title_text: String = "TECATE") -> String:
+	var bbcode = ""
+	for i in range(title_text.length()):
+		var char_str = title_text[i]
+		var col = PUEBLO_MAGICO_LETTER_COLORS[i % PUEBLO_MAGICO_LETTER_COLORS.size()]
+		bbcode += "[color=#%s]%s[/color]" % [col.to_html(false), char_str]
+	return bbcode
+
 ## Retorna una identidad paramétrica determinista basada en el entity_id de la entidad.
-## Permite que ciudadanos no jugadores (NPCs) tengan diversidad estética balanceada
-## sin forzar a ningún personaje como placeholder monolítico.
 static func get_character_id_for_entity(entity_id: int) -> String:
 	if ORDERED_IDS.is_empty():
 		return "axel"

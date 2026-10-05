@@ -160,6 +160,8 @@ func _initialize_submodules() -> void:
 	if hud_res:
 		hud = hud_res.instantiate() as PlayerHUDClass
 		add_child(hud)
+		if hud.has_method("apply_character_theme"):
+			hud.apply_character_theme(identity_id)
 		camera_director.perspective_changed.connect(_on_perspective_changed)
 
 	# 5. Director de Cámaras para Vehículos (1P / 3P)
@@ -180,6 +182,11 @@ func _initialize_submodules() -> void:
 		if hud:
 			hud.update_network_status("TKT/1: CONECTANDO...", false)
 		network_client.start_connection()
+
+func apply_identity(p_id: String) -> void:
+	super.apply_identity(p_id)
+	if hud and hud.has_method("apply_character_theme"):
+		hud.apply_character_theme(p_id)
 
 func _initialize_humanoid_rig() -> void:
 	super._initialize_humanoid_rig()

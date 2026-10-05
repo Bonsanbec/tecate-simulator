@@ -40,7 +40,8 @@ func _process(_delta):
 		
 		# 2. UI y Textos
 		assert(_start_screen.title_label != null, "TitleLabel debe existir")
-		assert(_start_screen.title_label.text == "TECATE", "El título principal debe ser 'TECATE'")
+		var raw_title = _start_screen.title_label.get_parsed_text() if _start_screen.title_label.has_method("get_parsed_text") else _start_screen.title_label.text
+		assert(raw_title.contains("TECATE"), "El título principal debe contener 'TECATE'")
 		assert(_start_screen.btn_continue != null, "Botón Continuar debe existir")
 		assert(_start_screen.btn_continue.text == "Continuar", "Texto del botón debe ser 'Continuar'")
 		assert(_start_screen.btn_respawn != null, "Botón Reaparecer debe existir")

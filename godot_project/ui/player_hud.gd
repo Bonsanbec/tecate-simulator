@@ -15,13 +15,50 @@ extends CanvasLayer
 @onready var axes_gizmo: CompassAxesGizmo = $AxesGizmo
 @onready var network_label: Label = get_node_or_null("TopLeft/NetworkLabel") as Label
 
+const CharacterCatalogClass = preload("res://systems/characters/character_catalog.gd")
+
 var _cached_camera_mode: String = "1P - Vista Subjetiva"
 var _current_interaction_prompt: String = ""
 var _badge_fade_timer: float = 3.0
+var _current_theme_color: Color = Color(0.85, 0.16, 0.16, 1.0) # Rojo Tecate por defecto
 
 func _ready():
 	visible = false
 	_refresh_mode_badge()
+
+## Aplica dinámicamente el esquema de color firma del personaje elegido al HUD completo
+func apply_character_theme(character_id: String) -> void:
+	var color = CharacterCatalogClass.get_character_theme_color(character_id)
+	apply_theme_color(color)
+
+func apply_theme_color(theme_color: Color) -> void:
+	_current_theme_color = theme_color
+	_update_hud_theme_styles(_current_theme_color)
+
+func _update_hud_theme_styles(theme_color: Color) -> void:
+	var style_flat = StyleBoxFlat.new()
+	style_flat.bg_color = Color(0.08, 0.10, 0.13, 0.85)
+	style_flat.border_width_left = 2
+	style_flat.border_width_top = 2
+	style_flat.border_width_right = 2
+	style_flat.border_width_bottom = 2
+	style_flat.border_color = Color(theme_color.r, theme_color.g, theme_color.b, 0.85)
+	style_flat.corner_radius_top_left = 6
+	style_flat.corner_radius_top_right = 6
+	style_flat.corner_radius_bottom_right = 6
+	style_flat.corner_radius_bottom_left = 6
+	style_flat.content_margin_left = 14.0
+	style_flat.content_margin_top = 8.0
+	style_flat.content_margin_right = 14.0
+	style_flat.content_margin_bottom = 8.0
+
+	for panel_name in ["TopLeft", "TopCompass", "BottomLeft", "BottomRight"]:
+		var panel = get_node_or_null(panel_name) as PanelContainer
+		if panel:
+			panel.add_theme_stylebox_override("panel", style_flat)
+
+	if mode_badge:
+		mode_badge.add_theme_color_override("font_color", theme_color)
 
 func set_interaction_prompt(prompt_text: String) -> void:
 	_current_interaction_prompt = prompt_text

@@ -106,6 +106,13 @@ func _test_character_catalog() -> void:
 	var id_odd = CharacterCatalogClass.get_character_id_for_entity(3001)
 	assert_test(id_even != id_odd, "get_character_id_for_entity distribuye identidades alternadas entre IDs pares e impares")
 
+	# Colores firma centralizados
+	var col_axel = CharacterCatalogClass.get_character_theme_color("axel")
+	var col_eli = CharacterCatalogClass.get_character_theme_color("eli")
+	assert_test(col_axel != col_eli, "Axel y Eli tienen colores firma centralizados y diferenciados en el catálogo")
+	assert_test(col_axel == Color(0.85, 0.16, 0.16, 1.0), "Axel utiliza el esquema Rojo Tecate (#D82A2A)")
+	assert_test(col_eli == Color(0.0, 0.33, 0.72, 1.0), "Eli utiliza el esquema Azul Cobalto (#0055B8)")
+
 func _test_citizen_unification_and_no_axel_placeholder() -> void:
 	print("\n--- 2. Validación de CitizenEntity sin Axel como Placeholder Fijo ---")
 	var profile_axel = CitizenProfileClass.create_axel_profile()

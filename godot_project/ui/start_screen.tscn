@@ -48,15 +48,19 @@ theme_override_constants/separation = 16
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TitleLabel" type="Label" parent="CanvasLayer/RootControl/MarginContainer/VBox/TitleContainer"]
+[node name="TitleLabel" type="RichTextLabel" parent="CanvasLayer/RootControl/MarginContainer/VBox/TitleContainer"]
+custom_minimum_size = Vector2(400, 110)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.98, 0.98, 0.98, 1)
+theme_override_colors/default_color = Color(0.98, 0.98, 0.98, 1)
 theme_override_colors/font_shadow_color = Color(0.04, 0.04, 0.06, 0.85)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 3
 theme_override_constants/shadow_outline_size = 6
-theme_override_font_sizes/font_size = 96
-text = "TECATE"
+theme_override_font_sizes/normal_font_size = 96
+bbcode_enabled = true
+text = "[color=#d82a2a]T[/color][color=#0055b8]E[/color][color=#ee4023]C[/color][color=#00873d]A[/color][color=#ffb800]T[/color][color=#62259d]E[/color]"
+fit_content = true
+autowrap_mode = 0
 
 [node name="SubtitleLabel" type="Label" parent="CanvasLayer/RootControl/MarginContainer/VBox/TitleContainer"]
 layout_mode = 2

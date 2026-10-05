@@ -43,7 +43,7 @@ enum PendingAction {
 
 # Contenedor del Menú Principal
 @onready var main_menu_container: MarginContainer = $CanvasLayer/RootControl/MarginContainer
-@onready var title_label: Label = $CanvasLayer/RootControl/MarginContainer/VBox/TitleContainer/TitleLabel
+@onready var title_label: Control = $CanvasLayer/RootControl/MarginContainer/VBox/TitleContainer/TitleLabel
 @onready var subtitle_label: Label = $CanvasLayer/RootControl/MarginContainer/VBox/TitleContainer/SubtitleLabel
 @onready var btn_continue: Button = $CanvasLayer/RootControl/MarginContainer/VBox/ButtonsContainer/BtnContinue
 @onready var btn_respawn: Button = $CanvasLayer/RootControl/MarginContainer/VBox/ButtonsContainer/BtnRespawn
@@ -155,9 +155,17 @@ func _setup_button_hover_events(btn: Button) -> void:
 func _setup_ui_styles() -> void:
 	var din_font = load("res://assets/fonts/DIN_Condensed_Bold.ttf")
 
-	# Tipografía de títulos
+	# Tipografía y coloreado oficial de letras de Tecate Pueblo Mágico
+	if title_label:
+		if title_label.has_method("set_text"):
+			title_label.text = CharacterCatalogClass.get_colored_title_bbcode("TECATE")
+		if din_font:
+			if title_label is RichTextLabel:
+				title_label.add_theme_font_override("normal_font", din_font)
+			elif title_label.has_method("add_theme_font_override"):
+				title_label.add_theme_font_override("font", din_font)
+
 	if din_font:
-		if title_label: title_label.add_theme_font_override("font", din_font)
 		if subtitle_label: subtitle_label.add_theme_font_override("font", din_font)
 		if char_select_title: char_select_title.add_theme_font_override("font", din_font)
 		if char_select_subtitle: char_select_subtitle.add_theme_font_override("font", din_font)
@@ -184,7 +192,9 @@ func _setup_ui_styles() -> void:
 		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		_apply_action_button_style(btn)
 
-	# Estilos de tarjetas de personajes
+	# Aplicar tema inicial del personaje por defecto
+	var initial_id = selected_character_id if not selected_character_id.is_empty() else CharacterCatalogClass.get_default_character_id()
+	_apply_dynamic_ui_theme(CharacterCatalogClass.get_character_theme_color(initial_id))
 	_update_card_styles()
 
 func _apply_menu_button_style(btn: Button) -> void:
@@ -257,9 +267,31 @@ func _apply_action_button_style(btn: Button) -> void:
 	style_pressed.bg_color = Color(0.05, 0.07, 0.10, 0.95)
 	btn.add_theme_stylebox_override("pressed", style_pressed)
 
+## Aplica dinámicamente el esquema de acento en todo el UI de acuerdo al personaje activo o previsualizado
+func _apply_dynamic_ui_theme(theme_color: Color) -> void:
+	var accent_line = get_node_or_null("CanvasLayer/RootControl/MarginContainer/VBox/AccentLine") as ColorRect
+	if accent_line:
+		accent_line.color = theme_color
+
+	var accent_center_line = get_node_or_null("CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/TitleVBox/AccentCenterLine") as ColorRect
+	if accent_center_line:
+		accent_center_line.color = theme_color
+
+	for btn in [btn_confirm_selection, btn_back_to_main, btn_select_axel, btn_select_eli]:
+		if not btn: continue
+		btn.add_theme_color_override("font_hover_color", theme_color)
+		btn.add_theme_color_override("font_focus_color", theme_color)
+		var norm = btn.get_theme_stylebox("normal")
+		if norm is StyleBoxFlat:
+			var new_norm = norm.duplicate() as StyleBoxFlat
+			new_norm.border_color = Color(theme_color.r, theme_color.g, theme_color.b, 0.80)
+			btn.add_theme_stylebox_override("normal", new_norm)
+
 func _update_card_styles() -> void:
-	_style_card_panel(card_axel_panel, selected_character_id == "axel", Color(0.85, 0.16, 0.16, 1.0)) # Rojo Tecate
-	_style_card_panel(card_eli_panel, selected_character_id == "eli", Color(0.0, 0.33, 0.72, 1.0)) # Azul Cobalto
+	var axel_color = CharacterCatalogClass.get_character_theme_color("axel")
+	var eli_color = CharacterCatalogClass.get_character_theme_color("eli")
+	_style_card_panel(card_axel_panel, selected_character_id == "axel", axel_color)
+	_style_card_panel(card_eli_panel, selected_character_id == "eli", eli_color)
 
 func _style_card_panel(panel: PanelContainer, is_selected: bool, accent_color: Color = Color(1.0, 0.72, 0.0, 1.0)) -> void:
 	if not panel:
@@ -277,15 +309,15 @@ func _style_card_panel(panel: PanelContainer, is_selected: bool, accent_color: C
 		style.border_width_right = 3
 		style.border_width_bottom = 3
 		style.border_color = accent_color
-		style.shadow_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.35)
-		style.shadow_size = 14
+		style.shadow_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.40)
+		style.shadow_size = 16
 	else:
 		style.bg_color = Color(0.05, 0.06, 0.08, 0.70)
 		style.border_width_left = 1
 		style.border_width_top = 1
 		style.border_width_right = 1
 		style.border_width_bottom = 1
-		style.border_color = Color(0.35, 0.38, 0.44, 0.4)
+		style.border_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.25)
 		style.shadow_color = Color(0.0, 0.0, 0.0, 0.5)
 		style.shadow_size = 6
 
@@ -400,6 +432,8 @@ func _on_quit_pressed() -> void:
 
 func _select_character(char_id: String) -> void:
 	selected_character_id = char_id
+	var theme_color = CharacterCatalogClass.get_character_theme_color(char_id)
+	_apply_dynamic_ui_theme(theme_color)
 	_update_card_styles()
 
 func _on_confirm_selection_pressed() -> void:
