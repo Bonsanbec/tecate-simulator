@@ -67,3 +67,4 @@ blender_assets/*_adjusted.blend
 *.log
 /scratch/godot_home
 *.tiff
+*.heic
