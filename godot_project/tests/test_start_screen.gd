@@ -55,16 +55,18 @@ func _process(_delta):
 		print("✓ Fase 1 completada con éxito.")
 
 	elif _frames == 10:
-		print("\n[Fase 2] Probando acción 'Continuar'...")
+		print("\n[Fase 2] Probando acción 'Continuar' con Selección de Personaje...")
 		_start_screen.btn_continue.emit_signal("pressed")
+		assert(_start_screen.current_screen_state == StartScreenClass.MenuScreenState.CHARACTER_SELECT, "Continuar sin personaje transiciona a selección de personaje")
+		_start_screen.btn_confirm_selection.emit_signal("pressed")
 		
-		assert(not _start_screen.is_menu_active, "El menú debe quedar inactivo tras pulsar Continuar")
+		assert(not _start_screen.is_menu_active, "El menú debe quedar inactivo tras confirmar personaje")
 		assert(not _start_screen.canvas_layer.visible, "La interfaz debe ocultarse")
 		assert(_player.input_enabled, "El input del jugador debe activarse")
 		assert(_player.camera.current, "La cámara del jugador debe activarse")
 		if DisplayServer.get_name() != "headless":
 			assert(Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "El ratón debe ser capturado para jugar")
-		print("✓ Fase 2 completada con éxito: Continuar reanuda el juego.")
+		print("✓ Fase 2 completada con éxito: Continuar reanuda el juego tras selección de personaje.")
 
 	elif _frames == 14:
 		print("\n[Fase 3] Probando alternancia de menú (tecla Escape)...")
@@ -85,6 +87,8 @@ func _process(_delta):
 		_player.is_flying = true
 		
 		_start_screen.btn_respawn.emit_signal("pressed")
+		assert(_start_screen.current_screen_state == StartScreenClass.MenuScreenState.CHARACTER_SELECT, "Reaparecer transiciona siempre a selección de personaje")
+		_start_screen.btn_confirm_selection.emit_signal("pressed")
 		
 		assert(not _start_screen.is_menu_active, "El menú debe cerrarse tras reaparecer")
 		assert(_player.input_enabled, "El input del jugador debe estar activo")

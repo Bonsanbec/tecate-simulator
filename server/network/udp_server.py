@@ -209,6 +209,28 @@ class TKTGameServer:
             session.player_entity_id,
         )
 
+        # Enviar sincronización de personajes de otros jugadores ya conectados
+        for other_sess in self.session_manager:
+            if other_sess.session_id == session.session_id:
+                continue
+            other_ent = self.world.get_entity(other_sess.player_entity_id)
+            if other_ent and "character_id" in other_ent.properties:
+                c_id = other_ent.properties["character_id"]
+                char_ev = EventPayload.create_character_select(
+                    entity_id=other_sess.player_entity_id,
+                    character_id=c_id,
+                    event_id=0,
+                    timestamp=self.get_server_time_ms(),
+                )
+                char_hdr = PacketHeader(
+                    message_type=MessageType.EVENT,
+                    flags=PacketFlags.RELIABLE,
+                    session_id=session.session_id,
+                    sequence=session.next_sequence(),
+                    timestamp=self.get_server_time_ms(),
+                )
+                self.send_to(encode_packet(char_hdr, char_ev.pack()), addr)
+
     def _handle_input(self, session: ClientSession, payload_bytes: bytes) -> None:
         try:
             inp = InputPayload.unpack(payload_bytes)
@@ -320,6 +342,20 @@ class TKTGameServer:
                     )
             except Exception as exc:
                 logger.warning("Error procesando VEHICLE_REFUEL: %s", exc)
+
+        elif event.event_code == EventCode.CHARACTER_SELECT:
+            try:
+                char_id = event.unpack_character_select()
+                player_ent = self.world.get_entity(session.player_entity_id)
+                if player_ent:
+                    player_ent.properties["character_id"] = char_id
+                logger.info(
+                    "[Personaje] Jugador %d seleccionó personaje '%s'",
+                    session.player_entity_id,
+                    char_id,
+                )
+            except Exception as exc:
+                logger.warning("Error procesando CHARACTER_SELECT: %s", exc)
 
         # Despachar al SimulationManager para que los controladores actualicen su estado autoritativo
         target_entity_id = 0

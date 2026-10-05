@@ -84,6 +84,7 @@ class EventCode(IntEnum):
     VEHICLE_ENTER = 8
     VEHICLE_EXIT = 9
     VEHICLE_REFUEL = 10
+    CHARACTER_SELECT = 11
 
 
 class ChatChannel(IntEnum):

@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://c8y3m6xq4p9a1"]
+[gd_scene load_steps=4 format=3 uid="uid://c8y3m6xq4p9a1"]
 
 [ext_resource type="Script" path="res://ui/start_screen.gd" id="1_start_script"]
+[ext_resource type="Texture2D" path="res://assets/characters/icons/axel_card.png" id="2_axel_card"]
+[ext_resource type="Texture2D" path="res://assets/characters/icons/eli_card.png" id="3_eli_card"]
 
 [node name="StartScreen" type="Node3D"]
 script = ExtResource("1_start_script")
@@ -95,3 +97,185 @@ focus_neighbor_top = NodePath("../BtnRespawn")
 focus_neighbor_bottom = NodePath("../BtnContinue")
 text = "Salir"
 alignment = 0
+
+[node name="CharacterSelectContainer" type="Control" parent="CanvasLayer/RootControl"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="SelectionVBox" type="VBoxContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="TitleVBox" type="VBoxContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="CharSelectTitle" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/TitleVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.98, 0.98, 1)
+theme_override_colors/font_shadow_color = Color(0.04, 0.04, 0.06, 0.85)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 3
+theme_override_constants/shadow_outline_size = 6
+theme_override_font_sizes/font_size = 54
+text = "SELECCIÓN DE PERSONAJE"
+horizontal_alignment = 1
+
+[node name="CharSelectSubtitle" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/TitleVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.82, 0.38, 0.95)
+theme_override_colors/font_shadow_color = Color(0.04, 0.04, 0.06, 0.75)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 18
+text = "ELIGE TU IDENTIDAD PARA RECORRER TECATE"
+horizontal_alignment = 1
+
+[node name="AccentCenterLine" type="ColorRect" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/TitleVBox"]
+custom_minimum_size = Vector2(140, 2)
+layout_mode = 2
+size_flags_horizontal = 4
+color = Color(0.95, 0.82, 0.38, 0.75)
+
+[node name="CardsHBox" type="HBoxContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox"]
+layout_mode = 2
+theme_override_constants/separation = 48
+alignment = 1
+
+[node name="CardAxel" type="PanelContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox"]
+custom_minimum_size = Vector2(280, 420)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="TextureAxel" type="TextureRect" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox"]
+custom_minimum_size = Vector2(248, 248)
+layout_mode = 2
+texture = ExtResource("2_axel_card")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameAxel" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.98, 0.98, 1)
+theme_override_colors/font_shadow_color = Color(0.04, 0.04, 0.06, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 28
+text = "CAMARADA"
+horizontal_alignment = 1
+
+[node name="CodenameAxel" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.82, 0.38, 0.95)
+theme_override_font_sizes/font_size = 18
+text = "Axel"
+horizontal_alignment = 1
+
+[node name="DescAxel" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.82, 0.86, 0.9)
+theme_override_font_sizes/font_size = 14
+text = "Caminante y observador urbano"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="BtnSelectAxel" type="Button" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox"]
+layout_mode = 2
+focus_neighbor_right = NodePath("../../../CardEli/Margin/VBox/BtnSelectEli")
+text = "Elegir Camarada"
+
+[node name="CardEli" type="PanelContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox"]
+custom_minimum_size = Vector2(280, 420)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="TextureEli" type="TextureRect" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox"]
+custom_minimum_size = Vector2(248, 248)
+layout_mode = 2
+texture = ExtResource("3_eli_card")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameEli" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.98, 0.98, 1)
+theme_override_colors/font_shadow_color = Color(0.04, 0.04, 0.06, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 28
+text = "DISEÑADOR"
+horizontal_alignment = 1
+
+[node name="CodenameEli" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.82, 0.38, 0.95)
+theme_override_font_sizes/font_size = 18
+text = "Eli"
+horizontal_alignment = 1
+
+[node name="DescEli" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.82, 0.86, 0.9)
+theme_override_font_sizes/font_size = 14
+text = "Elegancia y visión formal"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="BtnSelectEli" type="Button" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox"]
+layout_mode = 2
+focus_neighbor_left = NodePath("../../../CardAxel/Margin/VBox/BtnSelectAxel")
+text = "Elegir Diseñador"
+
+[node name="ActionsHBox" type="HBoxContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox"]
+layout_mode = 2
+theme_override_constants/separation = 28
+alignment = 1
+
+[node name="BtnConfirmSelection" type="Button" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/ActionsHBox"]
+custom_minimum_size = Vector2(240, 48)
+layout_mode = 2
+text = "Confirmar y Explorar"
+
+[node name="BtnBackToMain" type="Button" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/ActionsHBox"]
+custom_minimum_size = Vector2(160, 48)
+layout_mode = 2
+text = "Volver"

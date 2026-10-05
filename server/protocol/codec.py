@@ -413,6 +413,29 @@ class EventPayload:
         v_id, fuel = struct.unpack("<If", self.data[:8])
         return (v_id, fuel)
 
+    @classmethod
+    def create_character_select(cls, entity_id: int, character_id: str, event_id: int = 0, timestamp: int = 0) -> EventPayload:
+        """Crea un EventPayload con código CHARACTER_SELECT."""
+        from server.protocol.constants import EventCode
+        c_bytes = character_id.encode("utf-8")
+        data = struct.pack(f"<H{len(c_bytes)}s", len(c_bytes), c_bytes)
+        return cls(
+            event_id=event_id,
+            event_code=EventCode.CHARACTER_SELECT,
+            entity_id=entity_id,
+            timestamp=timestamp,
+            data=data,
+        )
+
+    def unpack_character_select(self) -> str:
+        """Retorna el character_id desde data."""
+        if len(self.data) < 2:
+            raise ValueError(f"Datos insuficientes para CHARACTER_SELECT ({len(self.data)} < 2 bytes)")
+        str_len = struct.unpack("<H", self.data[:2])[0]
+        if len(self.data) < 2 + str_len:
+            raise ValueError(f"Longitud de string declarada no coincide: {str_len} > {len(self.data) - 2}")
+        return self.data[2 : 2 + str_len].decode("utf-8")
+
 
 # =============================================================================
 # FUNCIONES DE ALTO NIVEL PARA ARMAR / DESARMAR PAQUETES COMPLETOS

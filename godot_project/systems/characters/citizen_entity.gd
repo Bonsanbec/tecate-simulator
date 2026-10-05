@@ -12,12 +12,13 @@ extends CharacterBody3D
 ## autónomos y los jugadores remotos son instancias de esta misma entidad.
 
 const CitizenProfileClass = preload("res://systems/characters/citizen_profile.gd")
+const CharacterCatalogClass = preload("res://systems/characters/character_catalog.gd")
 
 # Identidad y estado de control
 @export var entity_id: int = 0
 @export var citizen_name: String = ""
 @export var is_locally_controlled: bool = false
-@export var identity_id: String = "axel"
+@export var identity_id: String = ""
 @export var profile: Resource = null
 
 # Parámetros antropométricos y físicos de Tecate
@@ -68,6 +69,13 @@ var locomotion_phase: float = 0.0
 var current_seat_node: Node = null
 
 func _ready() -> void:
+	if identity_id.is_empty():
+		if is_locally_controlled:
+			identity_id = CharacterCatalogClass.get_default_character_id()
+		else:
+			identity_id = CharacterCatalogClass.get_character_id_for_entity(entity_id)
+	if profile == null:
+		profile = CitizenProfileClass.get_profile_by_identity(identity_id)
 	_setup_physics_properties()
 	_ensure_collision_shape()
 	_initialize_humanoid_rig()
@@ -77,6 +85,10 @@ func setup(id: int, is_npc: bool = true, display_name: String = "") -> void:
 	entity_id = id
 	citizen_name = display_name if not display_name.is_empty() else (("Ciudadano #%d" if is_npc else "Jugador #%d") % id)
 	name = ("Citizen_%d" if is_npc else "RemotePlayer_%d") % id
+	if identity_id.is_empty():
+		identity_id = CharacterCatalogClass.get_character_id_for_entity(id)
+	if profile == null:
+		profile = CitizenProfileClass.get_profile_by_identity(identity_id)
 
 	_setup_physics_properties()
 	_ensure_collision_shape()
@@ -120,18 +132,24 @@ func _initialize_humanoid_rig() -> void:
 	if humanoid_scene:
 		return
 
-	# Resolver ruta del modelo según perfil o identidad
-	var model_path: String = "res://assets/characters/citizens/axel.glb"
+	# Resolver ruta del modelo según catálogo o perfil
+	if identity_id.is_empty():
+		if is_locally_controlled:
+			identity_id = CharacterCatalogClass.get_default_character_id()
+		else:
+			identity_id = CharacterCatalogClass.get_character_id_for_entity(entity_id)
+
+	var char_data = CharacterCatalogClass.get_character_data(identity_id)
+	var model_path: String = char_data.get("model_path", "")
 	if profile and not profile.model_path.is_empty():
 		model_path = profile.model_path
-	elif not identity_id.is_empty():
+	elif model_path.is_empty() or not ResourceLoader.exists(model_path):
 		var candidate = "res://assets/characters/citizens/%s.glb" % identity_id.to_lower()
 		if ResourceLoader.exists(candidate):
 			model_path = candidate
-		elif ResourceLoader.exists("res://assets/characters/citizens/axel.glb"):
-			model_path = "res://assets/characters/citizens/axel.glb"
 		else:
-			model_path = "res://assets/characters/humanoid_player.glb"
+			var fallback_id = CharacterCatalogClass.get_default_character_id()
+			model_path = CharacterCatalogClass.get_character_data(fallback_id).get("model_path", "res://assets/characters/humanoid_player.glb")
 
 	var model_res = load(model_path)
 	if not model_res:
@@ -183,6 +201,7 @@ func _initialize_humanoid_rig() -> void:
 
 func apply_identity(p_id: String) -> void:
 	identity_id = p_id
+	profile = CitizenProfileClass.get_profile_by_identity(p_id)
 	if humanoid_scene:
 		humanoid_scene.queue_free()
 		humanoid_scene = null

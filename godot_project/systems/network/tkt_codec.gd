@@ -65,7 +65,8 @@ enum EventCode {
 	PROPERTY_CHANGED = 7,
 	VEHICLE_ENTER = 8,
 	VEHICLE_EXIT = 9,
-	VEHICLE_REFUEL = 10
+	VEHICLE_REFUEL = 10,
+	CHARACTER_SELECT = 11
 }
 
 
@@ -385,4 +386,26 @@ static func decode_vehicle_refuel_data(data: PackedByteArray) -> Dictionary:
 		"vehicle_id": sp.get_u32(),
 		"fuel_amount": sp.get_float()
 	}
+
+static func encode_character_select_data(character_id: String) -> PackedByteArray:
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	var c_bytes = character_id.to_utf8_buffer()
+	sp.put_u16(c_bytes.size())
+	if c_bytes.size() > 0:
+		sp.put_data(c_bytes)
+	return sp.data_array
+
+static func decode_character_select_data(data: PackedByteArray) -> String:
+	if data.size() < 2:
+		return ""
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.data_array = data
+	var str_len = sp.get_u16()
+	if str_len > 0 and sp.get_position() + str_len <= data.size():
+		var res = sp.get_data(str_len)
+		if res[0] == OK:
+			return res[1].get_string_from_utf8()
+	return ""
 

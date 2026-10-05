@@ -13,12 +13,14 @@ signal player_count_changed(count: int)
 
 const CitizenEntityClass = preload("res://systems/characters/citizen_entity.gd")
 const RemoteNPCClass = preload("res://systems/network/remote_npc.gd")
+const CharacterCatalogClass = preload("res://systems/characters/character_catalog.gd")
 
 var network_client: NetworkClient
 var remote_entities_container: Node3D
 var active_remote_players: Dictionary = {}  # entity_id -> CitizenEntity
 var active_remote_vehicles: Dictionary = {} # entity_id -> RemoteVehicle
 var active_remote_npcs: Dictionary = {}     # entity_id -> CitizenEntity
+var active_player_characters: Dictionary = {} # entity_id -> character_id
 var _entity_last_seen: Dictionary = {}      # entity_id -> float (timestamp)
 
 const ENTITY_TIMEOUT: float = 3.0
@@ -95,9 +97,12 @@ func _on_snapshot_received(_server_tick: int, entities: Array[TKTCodec.EntityRec
 			if not remote_p:
 				remote_p = (citizen_entity_scene if citizen_entity_scene else remote_player_scene).instantiate() as CitizenEntityClass
 				remote_entities_container.add_child(remote_p)
+				var char_id = active_player_characters.get(rec.entity_id, "")
+				if not char_id.is_empty():
+					remote_p.identity_id = char_id
 				remote_p.setup(rec.entity_id, false, "Jugador #%d" % rec.entity_id)
 				active_remote_players[rec.entity_id] = remote_p
-				print("[MultiplayerManager] Nuevo jugador remoto avistado: ID=%d" % rec.entity_id)
+				print("[MultiplayerManager] Nuevo jugador remoto avistado: ID=%d (Personaje=%s)" % [rec.entity_id, remote_p.identity_id])
 				player_count_changed.emit(get_player_count())
 
 			remote_p.push_snapshot_record(rec, Time.get_ticks_msec())
@@ -109,9 +114,10 @@ func _on_snapshot_received(_server_tick: int, entities: Array[TKTCodec.EntityRec
 				remote_npc = (citizen_entity_scene if citizen_entity_scene else remote_npc_scene).instantiate() as CitizenEntityClass
 				remote_entities_container.add_child(remote_npc)
 				var c_name = _get_citizen_name_by_id(rec.entity_id)
+				remote_npc.identity_id = CharacterCatalogClass.get_character_id_for_entity(rec.entity_id)
 				remote_npc.setup(rec.entity_id, true, c_name)
 				active_remote_npcs[rec.entity_id] = remote_npc
-				print("[MultiplayerManager] Nuevo ciudadano remoto avistado: %s (ID=%d)" % [c_name, rec.entity_id])
+				print("[MultiplayerManager] Nuevo ciudadano remoto avistado: %s (ID=%d, Personaje=%s)" % [c_name, rec.entity_id, remote_npc.identity_id])
 
 			remote_npc.push_snapshot_record(rec, Time.get_ticks_msec())
 			_entity_last_seen[rec.entity_id] = now
@@ -175,11 +181,21 @@ func _on_event_received(ev: Dictionary) -> void:
 						entity_id, exit_data["vehicle_id"]
 					])
 
+		TKTCodec.EventCode.CHARACTER_SELECT:
+			var character_id = TKTCodec.decode_character_select_data(data)
+			if not character_id.is_empty():
+				active_player_characters[entity_id] = character_id
+				var remote_p = active_remote_players.get(entity_id)
+				if remote_p and remote_p.has_method("apply_identity"):
+					remote_p.apply_identity(character_id)
+				print("[MultiplayerManager] Jugador remoto %d sincronizó personaje '%s'" % [entity_id, character_id])
+
 func _remove_remote_player(entity_id: int) -> void:
 	var remote_p = active_remote_players.get(entity_id)
 	if remote_p:
 		remote_p.queue_free()
 		active_remote_players.erase(entity_id)
+		active_player_characters.erase(entity_id)
 		_entity_last_seen.erase(entity_id)
 		print("[MultiplayerManager] Jugador remoto removido: ID=%d" % entity_id)
 		player_count_changed.emit(get_player_count())
@@ -216,6 +232,7 @@ func _clear_all_remote_entities() -> void:
 			remote_npc.queue_free()
 	active_remote_npcs.clear()
 
+	active_player_characters.clear()
 	_entity_last_seen.clear()
 
 func get_player_count() -> int:

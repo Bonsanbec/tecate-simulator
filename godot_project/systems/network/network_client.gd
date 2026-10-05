@@ -34,6 +34,7 @@ var session_id: int = 0
 var player_entity_id: int = 0
 var sequence_out: int = 0
 var current_ping_ms: float = 0.0
+var local_character_id: String = ""
 
 # Temporizadores y contadores
 var _tick_timer: float = 0.0
@@ -220,6 +221,8 @@ func _process_welcome(payload: PackedByteArray) -> void:
 	player_entity_id = welcome["player_entity_id"]
 	state = ConnectionState.CONNECTED
 	print("[NetworkClient] ¡Conectado al servidor! SessionID=%d, PlayerEntityID=%d" % [session_id, player_entity_id])
+	if not local_character_id.is_empty():
+		send_character_select(local_character_id)
 	connected_to_server.emit(session_id, player_entity_id)
 
 func _process_snapshot(payload: PackedByteArray) -> void:
@@ -372,4 +375,14 @@ func send_vehicle_refuel(vehicle_id: int, fuel_amount: float) -> void:
 	send_event(TKTCodec.EventCode.VEHICLE_REFUEL, data)
 	if debug_logging:
 		print("[NetworkClient] Enviado VEHICLE_REFUEL: vehicle_id=%d, fuel=%.1f" % [vehicle_id, fuel_amount])
+
+func send_character_select(character_id: String) -> void:
+	local_character_id = character_id
+	if state != ConnectionState.CONNECTED or peer == null or not peer.is_socket_connected():
+		return
+
+	var data = TKTCodec.encode_character_select_data(character_id)
+	send_event(TKTCodec.EventCode.CHARACTER_SELECT, data)
+	if debug_logging:
+		print("[NetworkClient] Enviado CHARACTER_SELECT: character_id=%s" % character_id)
 
