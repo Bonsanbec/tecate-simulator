@@ -31,9 +31,9 @@ func update_network_status(status_text: String, is_connected: bool = false) -> v
 	if network_label:
 		network_label.text = status_text
 		if is_connected:
-			network_label.modulate = Color(0.55, 0.95, 0.65, 1.0)
+			network_label.modulate = Color(0.0, 0.75, 0.35, 1.0) # Verde Pueblo Mágico
 		else:
-			network_label.modulate = Color(0.85, 0.88, 0.92, 0.75)
+			network_label.modulate = Color(0.85, 0.82, 0.78, 0.85)
 
 func show_hud() -> void:
 	visible = true
@@ -154,7 +154,7 @@ func _get_cardinal_direction(deg: float) -> String:
 
 func _format_street_hint(street_name: String) -> String:
 	if street_name.is_empty():
-		return "Zona Urbana Tecate"
+		return "Zona Centro • Tecate, Pueblo Mágico"
 	return street_name
 
 func _get_landmark_hint(deg: float) -> String:

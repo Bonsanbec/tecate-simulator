@@ -56,11 +56,11 @@ enum PendingAction {
 @onready var card_axel_panel: PanelContainer = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel
 @onready var card_eli_panel: PanelContainer = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli
 @onready var name_axel_label: Label = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox/NameAxel
-@onready var codename_axel_label: Label = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox/CodenameAxel
+@onready var codename_axel_label: Label = get_node_or_null("CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox/CodenameAxel") as Label
 @onready var desc_axel_label: Label = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox/DescAxel
 @onready var btn_select_axel: Button = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox/BtnSelectAxel
 @onready var name_eli_label: Label = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox/NameEli
-@onready var codename_eli_label: Label = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox/CodenameEli
+@onready var codename_eli_label: Label = get_node_or_null("CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox/CodenameEli") as Label
 @onready var desc_eli_label: Label = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox/DescEli
 @onready var btn_select_eli: Button = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox/BtnSelectEli
 @onready var btn_confirm_selection: Button = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/ActionsHBox/BtnConfirmSelection
@@ -188,10 +188,10 @@ func _setup_ui_styles() -> void:
 	_update_card_styles()
 
 func _apply_menu_button_style(btn: Button) -> void:
-	btn.add_theme_color_override("font_color", Color(0.94, 0.94, 0.94, 1.0))
-	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.88, 0.42, 1.0))
-	btn.add_theme_color_override("font_focus_color", Color(1.0, 0.88, 0.42, 1.0))
-	btn.add_theme_color_override("font_pressed_color", Color(0.85, 0.72, 0.28, 1.0))
+	btn.add_theme_color_override("font_color", Color(0.96, 0.95, 0.92, 1.0))
+	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.78, 0.25, 1.0))
+	btn.add_theme_color_override("font_focus_color", Color(1.0, 0.78, 0.25, 1.0))
+	btn.add_theme_color_override("font_pressed_color", Color(0.85, 0.16, 0.16, 1.0))
 	btn.add_theme_color_override("font_shadow_color", Color(0.04, 0.05, 0.08, 0.85))
 	btn.add_theme_constant_override("shadow_offset_x", 1)
 	btn.add_theme_constant_override("shadow_offset_y", 2)
@@ -205,9 +205,9 @@ func _apply_menu_button_style(btn: Button) -> void:
 	btn.add_theme_stylebox_override("normal", style_normal)
 
 	var style_hover = StyleBoxFlat.new()
-	style_hover.bg_color = Color(0.06, 0.08, 0.12, 0.45)
+	style_hover.bg_color = Color(0.08, 0.10, 0.13, 0.65)
 	style_hover.border_width_left = 4
-	style_hover.border_color = Color(0.96, 0.82, 0.38, 1.0)
+	style_hover.border_color = Color(0.85, 0.16, 0.16, 1.0) # Rojo Tecate
 	style_hover.corner_radius_top_left = 2
 	style_hover.corner_radius_bottom_left = 2
 	style_hover.corner_radius_top_right = 6
@@ -220,22 +220,23 @@ func _apply_menu_button_style(btn: Button) -> void:
 	btn.add_theme_stylebox_override("focus", style_hover)
 
 	var style_pressed = style_hover.duplicate()
-	style_pressed.bg_color = Color(0.04, 0.06, 0.09, 0.7)
+	style_pressed.bg_color = Color(0.05, 0.07, 0.10, 0.85)
+	style_pressed.border_color = Color(1.0, 0.72, 0.0, 1.0) # Dorado Sol
 	btn.add_theme_stylebox_override("pressed", style_pressed)
 
 func _apply_action_button_style(btn: Button) -> void:
-	btn.add_theme_color_override("font_color", Color(0.96, 0.96, 0.96, 1.0))
-	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.90, 0.45, 1.0))
-	btn.add_theme_color_override("font_focus_color", Color(1.0, 0.90, 0.45, 1.0))
-	btn.add_theme_color_override("font_pressed_color", Color(0.85, 0.72, 0.28, 1.0))
+	btn.add_theme_color_override("font_color", Color(0.96, 0.95, 0.92, 1.0))
+	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.85, 0.35, 1.0))
+	btn.add_theme_color_override("font_focus_color", Color(1.0, 0.85, 0.35, 1.0))
+	btn.add_theme_color_override("font_pressed_color", Color(0.85, 0.16, 0.16, 1.0))
 
 	var style_normal = StyleBoxFlat.new()
-	style_normal.bg_color = Color(0.06, 0.08, 0.13, 0.75)
+	style_normal.bg_color = Color(0.08, 0.10, 0.14, 0.82)
 	style_normal.border_width_left = 2
 	style_normal.border_width_top = 2
 	style_normal.border_width_right = 2
 	style_normal.border_width_bottom = 2
-	style_normal.border_color = Color(0.85, 0.72, 0.32, 0.6)
+	style_normal.border_color = Color(0.85, 0.16, 0.16, 0.70) # Rojo Tecate
 	style_normal.corner_radius_top_left = 6
 	style_normal.corner_radius_bottom_left = 6
 	style_normal.corner_radius_top_right = 6
@@ -247,8 +248,8 @@ func _apply_action_button_style(btn: Button) -> void:
 	btn.add_theme_stylebox_override("normal", style_normal)
 
 	var style_hover = style_normal.duplicate()
-	style_hover.bg_color = Color(0.12, 0.15, 0.22, 0.88)
-	style_hover.border_color = Color(0.98, 0.85, 0.40, 1.0)
+	style_hover.bg_color = Color(0.12, 0.15, 0.20, 0.92)
+	style_hover.border_color = Color(1.0, 0.72, 0.0, 1.0) # Dorado Sol
 	btn.add_theme_stylebox_override("hover", style_hover)
 	btn.add_theme_stylebox_override("focus", style_hover)
 
@@ -257,10 +258,10 @@ func _apply_action_button_style(btn: Button) -> void:
 	btn.add_theme_stylebox_override("pressed", style_pressed)
 
 func _update_card_styles() -> void:
-	_style_card_panel(card_axel_panel, selected_character_id == "axel")
-	_style_card_panel(card_eli_panel, selected_character_id == "eli")
+	_style_card_panel(card_axel_panel, selected_character_id == "axel", Color(0.85, 0.16, 0.16, 1.0)) # Rojo Tecate
+	_style_card_panel(card_eli_panel, selected_character_id == "eli", Color(0.0, 0.33, 0.72, 1.0)) # Azul Cobalto
 
-func _style_card_panel(panel: PanelContainer, is_selected: bool) -> void:
+func _style_card_panel(panel: PanelContainer, is_selected: bool, accent_color: Color = Color(1.0, 0.72, 0.0, 1.0)) -> void:
 	if not panel:
 		return
 	var style = StyleBoxFlat.new()
@@ -270,21 +271,21 @@ func _style_card_panel(panel: PanelContainer, is_selected: bool) -> void:
 	style.corner_radius_bottom_right = 12
 
 	if is_selected:
-		style.bg_color = Color(0.08, 0.11, 0.17, 0.88)
+		style.bg_color = Color(0.08, 0.10, 0.14, 0.90)
 		style.border_width_left = 3
 		style.border_width_top = 3
 		style.border_width_right = 3
 		style.border_width_bottom = 3
-		style.border_color = Color(0.98, 0.86, 0.42, 1.0)
-		style.shadow_color = Color(0.96, 0.82, 0.38, 0.35)
+		style.border_color = accent_color
+		style.shadow_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.35)
 		style.shadow_size = 14
 	else:
-		style.bg_color = Color(0.04, 0.05, 0.08, 0.65)
+		style.bg_color = Color(0.05, 0.06, 0.08, 0.70)
 		style.border_width_left = 1
 		style.border_width_top = 1
 		style.border_width_right = 1
 		style.border_width_bottom = 1
-		style.border_color = Color(0.4, 0.45, 0.55, 0.4)
+		style.border_color = Color(0.35, 0.38, 0.44, 0.4)
 		style.shadow_color = Color(0.0, 0.0, 0.0, 0.5)
 		style.shadow_size = 6
 
