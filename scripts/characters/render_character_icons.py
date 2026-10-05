@@ -46,6 +46,8 @@ from mathutils import Vector, Euler
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 AXEL_BLEND = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/citizens/axel.blend")
 ELI_BLEND = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/citizens/eli.blend")
+ASTORGA_BLEND = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/citizens/astorga.blend")
+VIOLIN_GLB = os.path.join(PROJECT_ROOT, "godot_project/assets/props/violin.glb")
 ICONS_DIR = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/icons")
 
 def ensure_icons_dir():
@@ -73,6 +75,15 @@ def prepare_eli_background():
             "/Applications/Blender.app/Contents/MacOS/Blender", "-b", "--python", gen_script
         ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return eli_bg
+
+def prepare_astorga_background():
+    astorga_bg = os.path.join(PROJECT_ROOT, "scratch/fondo_astorga.png")
+    if not os.path.exists(astorga_bg):
+        gen_script = os.path.join(PROJECT_ROOT, "scripts/characters/generate_astorga_abstract_background.py")
+        subprocess.run([
+            "/Applications/Blender.app/Contents/MacOS/Blender", "-b", "--python", gen_script
+        ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return astorga_bg
 
 def composite_card_with_background(fg_png_path, bg_image_path, out_card_path):
     assert os.path.exists(fg_png_path), f"No existe foreground: {fg_png_path}"
@@ -338,12 +349,102 @@ def render_eli():
     bpy.ops.render.render(write_still=True)
     print(f"✓ Ícono transparente retrato guardado en: {out_portrait}")
 
+# =============================================================================
+# 3. RENDER DE ASTORGA (scratch/humans/astorga.png)
+# =============================================================================
+def render_astorga():
+    print("-" * 60)
+    print("CONFIGURANDO Y RENDERIZANDO ÍCONO DE ASTORGA (astorga.png)")
+    print("-" * 60)
+    bpy.ops.wm.open_mainfile(filepath=ASTORGA_BLEND)
+    scene = bpy.context.scene
+    arm = bpy.data.objects.get("Skeleton3D")
+    assert arm is not None, "Skeleton3D no encontrado en astorga.blend"
+
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode='POSE')
+
+    for pb in arm.pose.bones:
+        pb.rotation_mode = 'XYZ'
+        pb.rotation_euler = (0, 0, 0)
+
+    # Pose de Astorga canónica según scratch/humans/astorga.png:
+    # 1. Torso erguido con leve giro de 3/4
+    arm.pose.bones['Chest'].rotation_euler = (0, math.radians(-8), 0)
+
+    # 2. Cabeza orientada de frente con mirada serena
+    arm.pose.bones['Head'].rotation_euler = (math.radians(-3), math.radians(10), math.radians(4))
+
+    # 3. Brazo izquierdo alzado sosteniendo el mástil del violín
+    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(-42), math.radians(-32), math.radians(38))
+    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(112), math.radians(-22), math.radians(-12))
+    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(-18), math.radians(-15), math.radians(-5))
+
+    # 4. Brazo derecho empuñando el arco diagonalmente hacia el violín
+    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(-20), math.radians(18), math.radians(-24))
+    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(82), math.radians(14), math.radians(8))
+    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(8), math.radians(12), 0)
+
+    # Importar el prop independiente del violín para la composición fotográfica
+    VIOLIN_BLEND = os.path.join(PROJECT_ROOT, "godot_project/assets/props/violin.blend")
+    if os.path.exists(VIOLIN_BLEND):
+        bpy.ops.object.mode_set(mode='OBJECT')
+        with bpy.data.libraries.load(VIOLIN_BLEND, link=False) as (data_from, data_to):
+            data_to.objects = [o for o in data_from.objects if o == "Violin_Prop"]
+        for o in data_to.objects:
+            if o:
+                scene.collection.objects.link(o)
+                o.scale = (0.75, 0.75, 0.75)
+                o.location = Vector((0.10, 0.28, 1.30))
+                o.rotation_euler = Euler((math.radians(25), math.radians(-15), math.radians(70)), 'XYZ')
+
+    clear_lights_and_cameras(scene)
+
+    cam_data = bpy.data.cameras.new("AstorgaIconCamera")
+    cam_data.lens = 72.0
+    cam_obj = bpy.data.objects.new("AstorgaIconCamera", cam_data)
+    scene.collection.objects.link(cam_obj)
+    scene.camera = cam_obj
+
+    cam_obj.location = Vector((0.0, 2.10, 1.28))
+    target = Vector((0.0, 0.0, 1.25))
+    cam_obj.rotation_euler = (target - cam_obj.location).to_track_quat('-Z', 'Y').to_euler()
+
+    head_t = (0.0, 0.0, 1.48)
+    chest_t = (0.0, 0.0, 1.20)
+
+    add_directed_light(scene, 'KeyWarm', 'AREA', 180.0, (-0.9, 1.6, 1.6), chest_t, (1.0, 0.94, 0.88), size=1.4)
+    add_directed_light(scene, 'FillHall', 'AREA', 85.0, (1.1, 1.5, 1.4), head_t, (0.95, 0.96, 1.0), size=2.0)
+    add_directed_light(scene, 'RimHair', 'SPOT', 160.0, (0.1, -1.3, 1.9), head_t, (1.0, 0.98, 0.94))
+    add_directed_light(scene, 'DetailInstrument', 'AREA', 60.0, (0.2, 1.8, 1.22), chest_t, (1.0, 0.96, 0.90), size=1.0)
+
+    # 1. Render Ícono Transparente RGBA
+    setup_render_engine(scene, resolution=1024, samples=48, transparent=True)
+    out_icon = os.path.join(ICONS_DIR, "astorga_icon.png")
+    scene.render.filepath = out_icon
+    bpy.ops.render.render(write_still=True)
+    print(f"✓ Ícono transparente guardado en: {out_icon}")
+
+    # 2. Render Tarjeta con Fondo Cinemático Abstracto
+    bg_astorga = prepare_astorga_background()
+    out_card = os.path.join(ICONS_DIR, "astorga_card.png")
+    composite_card_with_background(out_icon, bg_astorga, out_card)
+
 def main():
+    import sys
     ensure_icons_dir()
-    render_axel()
-    render_eli()
+    args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    target = args[0].lower() if args else "all"
+
+    if target in ("axel", "all"):
+        render_axel()
+    if target in ("eli", "all"):
+        render_eli()
+    if target in ("astorga", "all"):
+        render_astorga()
+
     print("=" * 60)
-    print("✓ TODOS LOS RENDERS DE ÍCONOS DE PERSONAJES HAN SIDO GENERADOS EXITOSAMENTE")
+    print("✓ RENDERS DE ÍCONOS DE PERSONAJES PROCESADOS EXITOSAMENTE")
     print("=" * 60)
 
 if __name__ == "__main__":

@@ -50,6 +50,11 @@ func _process(_delta: float) -> bool:
 		_screen.btn_select_eli.emit_signal("pressed")
 		assert_test(_screen.selected_character_id == "eli", "Seleccionado personaje 'eli'")
 
+		# Simular selección de Músico (Astorga)
+		assert_test(_screen.btn_select_astorga != null, "btn_select_astorga existe en StartScreen")
+		_screen.btn_select_astorga.emit_signal("pressed")
+		assert_test(_screen.selected_character_id == "astorga", "Seleccionado personaje 'astorga'")
+
 		# Confirmar selección: debe cerrar el menú
 		_screen.btn_confirm_selection.emit_signal("pressed")
 		assert_test(_screen.has_chosen_character, "has_chosen_character se vuelve verdadero tras confirmar")
@@ -86,8 +91,8 @@ func assert_test(cond: bool, msg: String) -> void:
 func _test_character_catalog() -> void:
 	print("\n--- 1. Validación de CharacterCatalog Paramétrico ---")
 	var ids = CharacterCatalogClass.get_character_ids()
-	assert_test(ids.has("axel") and ids.has("eli"), "CharacterCatalog registra tanto 'axel' como 'eli'")
-	assert_test(ids.size() == 2, "CharacterCatalog contiene exactamente 2 personajes configurados")
+	assert_test(ids.has("axel") and ids.has("eli") and ids.has("astorga"), "CharacterCatalog registra 'axel', 'eli' y 'astorga'")
+	assert_test(ids.size() == 3, "CharacterCatalog contiene exactamente 3 personajes configurados")
 
 	var data_axel = CharacterCatalogClass.get_character_data("axel")
 	assert_test(data_axel["display_name"] == "Camarada", "Display name de Axel es 'Camarada'")
@@ -101,17 +106,26 @@ func _test_character_catalog() -> void:
 	assert_test(ResourceLoader.exists(data_eli["card_path"]), "Tarjeta gráfica eli_card.png existe en disco")
 	assert_test(ResourceLoader.exists(data_eli["model_path"]), "Modelo 3D eli.glb existe en disco")
 
+	var data_astorga = CharacterCatalogClass.get_character_data("astorga")
+	assert_test(data_astorga["display_name"] == "Músico", "Display name de Astorga es 'Músico'")
+	assert_test(data_astorga["codename"] == "Astorga", "Codename de Astorga es 'Astorga'")
+	assert_test(ResourceLoader.exists(data_astorga["card_path"]), "Tarjeta gráfica astorga_card.png existe en disco")
+	assert_test(ResourceLoader.exists(data_astorga["model_path"]), "Modelo 3D astorga.glb existe en disco")
+
 	# Diversidad paramétrica sin placeholder fijo
-	var id_even = CharacterCatalogClass.get_character_id_for_entity(3000)
-	var id_odd = CharacterCatalogClass.get_character_id_for_entity(3001)
-	assert_test(id_even != id_odd, "get_character_id_for_entity distribuye identidades alternadas entre IDs pares e impares")
+	var id_0 = CharacterCatalogClass.get_character_id_for_entity(3000)
+	var id_1 = CharacterCatalogClass.get_character_id_for_entity(3001)
+	var id_2 = CharacterCatalogClass.get_character_id_for_entity(3002)
+	assert_test(id_0 != id_1 and id_1 != id_2, "get_character_id_for_entity distribuye identidades rotativas entre entidades contiguas")
 
 	# Colores firma centralizados
 	var col_axel = CharacterCatalogClass.get_character_theme_color("axel")
 	var col_eli = CharacterCatalogClass.get_character_theme_color("eli")
-	assert_test(col_axel != col_eli, "Axel y Eli tienen colores firma centralizados y diferenciados en el catálogo")
+	var col_astorga = CharacterCatalogClass.get_character_theme_color("astorga")
+	assert_test(col_axel != col_eli and col_eli != col_astorga, "Axel, Eli y Astorga tienen colores firma centralizados y diferenciados")
 	assert_test(col_axel == Color(0.85, 0.16, 0.16, 1.0), "Axel utiliza el esquema Rojo Tecate (#D82A2A)")
 	assert_test(col_eli == Color(0.0, 0.33, 0.72, 1.0), "Eli utiliza el esquema Azul Cobalto (#0055B8)")
+	assert_test(col_astorga == Color(0.94, 0.31, 0.14, 1.0), "Astorga utiliza el esquema Naranja Terracota (#EE4023)")
 
 func _test_citizen_unification_and_no_axel_placeholder() -> void:
 	print("\n--- 2. Validación de CitizenEntity sin Axel como Placeholder Fijo ---")
@@ -120,6 +134,9 @@ func _test_citizen_unification_and_no_axel_placeholder() -> void:
 
 	var profile_eli = CitizenProfileClass.create_eli_profile()
 	assert_test(profile_eli != null and profile_eli.identity_id == "eli", "Perfil de Eli creado desde catálogo")
+
+	var profile_astorga = CitizenProfileClass.create_astorga_profile()
+	assert_test(profile_astorga != null and profile_astorga.identity_id == "astorga", "Perfil de Astorga creado desde catálogo")
 
 	var c_odd = CitizenEntityClass.new()
 	c_odd.setup(3001, true, "Ciudadano #3001")
@@ -139,6 +156,10 @@ func _test_citizen_unification_and_no_axel_placeholder() -> void:
 	assert_test(c_odd.identity_id == "eli", "CitizenEntity transicionó dinámicamente a Eli")
 	assert_test(c_odd.humanoid_scene != null, "HumanoidAvatar reconstruido para Eli")
 
+	c_odd.apply_identity("astorga")
+	assert_test(c_odd.identity_id == "astorga", "CitizenEntity transicionó dinámicamente a Astorga")
+	assert_test(c_odd.humanoid_scene != null, "HumanoidAvatar reconstruido para Astorga")
+
 	c_odd.apply_identity("axel")
 	assert_test(c_odd.identity_id == "axel", "CitizenEntity transicionó dinámicamente a Axel")
 
@@ -156,3 +177,7 @@ func _test_tkt_codec_character_select() -> void:
 	var enc_eli = TKTCodecClass.encode_character_select_data("eli")
 	var dec_eli = TKTCodecClass.decode_character_select_data(enc_eli)
 	assert_test(dec_eli == "eli", "Codificación y decodificación de personaje 'eli' preservada con fidelidad")
+
+	var enc_astorga = TKTCodecClass.encode_character_select_data("astorga")
+	var dec_astorga = TKTCodecClass.decode_character_select_data(enc_astorga)
+	assert_test(dec_astorga == "astorga", "Codificación y decodificación de personaje 'astorga' preservada con fidelidad")

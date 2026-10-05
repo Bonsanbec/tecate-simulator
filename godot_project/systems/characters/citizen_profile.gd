@@ -43,6 +43,9 @@ static func create_axel_profile() -> CitizenProfile:
 static func create_eli_profile() -> CitizenProfile:
 	return from_character_id("eli")
 
+static func create_astorga_profile() -> CitizenProfile:
+	return from_character_id("astorga")
+
 static func get_profile_by_identity(id: String) -> CitizenProfile:
 	var target_id = id.to_lower()
 	if not CharacterCatalogClass.has_character(target_id):

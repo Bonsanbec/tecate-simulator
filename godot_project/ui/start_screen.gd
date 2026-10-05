@@ -63,6 +63,11 @@ enum PendingAction {
 @onready var codename_eli_label: Label = get_node_or_null("CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox/CodenameEli") as Label
 @onready var desc_eli_label: Label = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox/DescEli
 @onready var btn_select_eli: Button = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox/BtnSelectEli
+@onready var card_astorga_panel: PanelContainer = get_node_or_null("CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAstorga") as PanelContainer
+@onready var name_astorga_label: Label = get_node_or_null("CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAstorga/Margin/VBox/NameAstorga") as Label
+@onready var codename_astorga_label: Label = get_node_or_null("CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAstorga/Margin/VBox/CodenameAstorga") as Label
+@onready var desc_astorga_label: Label = get_node_or_null("CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAstorga/Margin/VBox/DescAstorga") as Label
+@onready var btn_select_astorga: Button = get_node_or_null("CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAstorga/Margin/VBox/BtnSelectAstorga") as Button
 @onready var btn_confirm_selection: Button = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/ActionsHBox/BtnConfirmSelection
 @onready var btn_back_to_main: Button = $CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/ActionsHBox/BtnBackToMain
 
@@ -136,6 +141,10 @@ func _connect_signals() -> void:
 		btn_select_eli.pressed.connect(func(): _select_character("eli"))
 		_setup_button_hover_events(btn_select_eli)
 
+	if btn_select_astorga:
+		btn_select_astorga.pressed.connect(func(): _select_character("astorga"))
+		_setup_button_hover_events(btn_select_astorga)
+
 	if btn_confirm_selection:
 		btn_confirm_selection.pressed.connect(_on_confirm_selection_pressed)
 		_setup_button_hover_events(btn_confirm_selection)
@@ -173,6 +182,8 @@ func _setup_ui_styles() -> void:
 		if codename_axel_label: codename_axel_label.add_theme_font_override("font", din_font)
 		if name_eli_label: name_eli_label.add_theme_font_override("font", din_font)
 		if codename_eli_label: codename_eli_label.add_theme_font_override("font", din_font)
+		if name_astorga_label: name_astorga_label.add_theme_font_override("font", din_font)
+		if codename_astorga_label: codename_astorga_label.add_theme_font_override("font", din_font)
 
 	# Estilos de botones principales
 	for btn in [btn_continue, btn_respawn, btn_quit]:
@@ -184,7 +195,7 @@ func _setup_ui_styles() -> void:
 		_apply_menu_button_style(btn)
 
 	# Estilos de botones de selección
-	for btn in [btn_select_axel, btn_select_eli, btn_confirm_selection, btn_back_to_main]:
+	for btn in [btn_select_axel, btn_select_eli, btn_select_astorga, btn_confirm_selection, btn_back_to_main]:
 		if not btn: continue
 		if din_font: btn.add_theme_font_override("font", din_font)
 		btn.add_theme_font_size_override("font_size", 24)
@@ -277,7 +288,7 @@ func _apply_dynamic_ui_theme(theme_color: Color) -> void:
 	if accent_center_line:
 		accent_center_line.color = theme_color
 
-	for btn in [btn_confirm_selection, btn_back_to_main, btn_select_axel, btn_select_eli]:
+	for btn in [btn_confirm_selection, btn_back_to_main, btn_select_axel, btn_select_eli, btn_select_astorga]:
 		if not btn: continue
 		btn.add_theme_color_override("font_hover_color", theme_color)
 		btn.add_theme_color_override("font_focus_color", theme_color)
@@ -290,8 +301,10 @@ func _apply_dynamic_ui_theme(theme_color: Color) -> void:
 func _update_card_styles() -> void:
 	var axel_color = CharacterCatalogClass.get_character_theme_color("axel")
 	var eli_color = CharacterCatalogClass.get_character_theme_color("eli")
+	var astorga_color = CharacterCatalogClass.get_character_theme_color("astorga")
 	_style_card_panel(card_axel_panel, selected_character_id == "axel", axel_color)
 	_style_card_panel(card_eli_panel, selected_character_id == "eli", eli_color)
+	_style_card_panel(card_astorga_panel, selected_character_id == "astorga", astorga_color)
 
 func _style_card_panel(panel: PanelContainer, is_selected: bool, accent_color: Color = Color(1.0, 0.72, 0.0, 1.0)) -> void:
 	if not panel:

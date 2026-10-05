@@ -51,10 +51,28 @@ const CHARACTERS: Dictionary = {
 		"sss_strength": 0.30,
 		"sss_color": Color(0.90, 0.44, 0.33, 1.0),
 		"theme_color": Color(0.0, 0.33, 0.72, 1.0) # Azul Cobalto Firma
+	},
+	"astorga": {
+		"id": "astorga",
+		"display_name": "Músico",
+		"codename": "Astorga",
+		"title": "Músico",
+		"archetype": "classical_musician",
+		"description": "La música es la única arquitectura que desafía al tiempo.",
+		"greeting": "Buenas noches. Que la armonía guíe nuestro camino.",
+		"card_path": "res://assets/characters/icons/astorga_card.png",
+		"icon_path": "res://assets/characters/icons/astorga_icon.png",
+		"model_path": "res://assets/characters/citizens/astorga.glb",
+		"profile_path": "res://assets/characters/citizens/astorga_profile.tres",
+		"voice_pitch": 0.92,
+		"walk_speed_modifier": 0.96,
+		"sss_strength": 0.28,
+		"sss_color": Color(0.91, 0.46, 0.34, 1.0),
+		"theme_color": Color(0.94, 0.31, 0.14, 1.0) # Naranja Terracota Firma
 	}
 }
 
-const ORDERED_IDS: Array[String] = ["axel", "eli"]
+const ORDERED_IDS: Array[String] = ["axel", "eli", "astorga"]
 
 static func get_character_ids() -> Array[String]:
 	return ORDERED_IDS.duplicate()

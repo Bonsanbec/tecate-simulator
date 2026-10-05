@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://c8y3m6xq4p9a1"]
+[gd_scene load_steps=5 format=3 uid="uid://c8y3m6xq4p9a1"]
 
 [ext_resource type="Script" path="res://ui/start_screen.gd" id="1_start_script"]
 [ext_resource type="Texture2D" path="res://assets/characters/icons/axel_card.png" id="2_axel_card"]
 [ext_resource type="Texture2D" path="res://assets/characters/icons/eli_card.png" id="3_eli_card"]
+[ext_resource type="Texture2D" path="res://assets/characters/icons/astorga_card.png" id="4_astorga_card"]
 
 [node name="StartScreen" type="Node3D"]
 script = ExtResource("1_start_script")
@@ -160,11 +161,11 @@ color = Color(0.85, 0.16, 0.16, 0.95)
 
 [node name="CardsHBox" type="HBoxContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox"]
 layout_mode = 2
-theme_override_constants/separation = 48
+theme_override_constants/separation = 28
 alignment = 1
 
 [node name="CardAxel" type="PanelContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox"]
-custom_minimum_size = Vector2(280, 420)
+custom_minimum_size = Vector2(260, 420)
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel"]
@@ -180,7 +181,7 @@ theme_override_constants/separation = 12
 alignment = 1
 
 [node name="TextureAxel" type="TextureRect" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAxel/Margin/VBox"]
-custom_minimum_size = Vector2(248, 248)
+custom_minimum_size = Vector2(228, 228)
 layout_mode = 2
 texture = ExtResource("2_axel_card")
 expand_mode = 1
@@ -210,7 +211,7 @@ focus_neighbor_right = NodePath("../../../CardEli/Margin/VBox/BtnSelectEli")
 text = "Elegir"
 
 [node name="CardEli" type="PanelContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox"]
-custom_minimum_size = Vector2(280, 420)
+custom_minimum_size = Vector2(260, 420)
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli"]
@@ -226,7 +227,7 @@ theme_override_constants/separation = 12
 alignment = 1
 
 [node name="TextureEli" type="TextureRect" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox"]
-custom_minimum_size = Vector2(248, 248)
+custom_minimum_size = Vector2(228, 228)
 layout_mode = 2
 texture = ExtResource("3_eli_card")
 expand_mode = 1
@@ -253,6 +254,53 @@ autowrap_mode = 2
 [node name="BtnSelectEli" type="Button" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardEli/Margin/VBox"]
 layout_mode = 2
 focus_neighbor_left = NodePath("../../../CardAxel/Margin/VBox/BtnSelectAxel")
+focus_neighbor_right = NodePath("../../../CardAstorga/Margin/VBox/BtnSelectAstorga")
+text = "Elegir"
+
+[node name="CardAstorga" type="PanelContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox"]
+custom_minimum_size = Vector2(260, 420)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAstorga"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAstorga/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="TextureAstorga" type="TextureRect" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAstorga/Margin/VBox"]
+custom_minimum_size = Vector2(228, 228)
+layout_mode = 2
+texture = ExtResource("4_astorga_card")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameAstorga" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAstorga/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.98, 0.98, 1)
+theme_override_colors/font_shadow_color = Color(0.04, 0.04, 0.06, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 28
+text = "MÚSICO"
+horizontal_alignment = 1
+
+[node name="DescAstorga" type="Label" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAstorga/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.88, 0.84, 0.9)
+theme_override_font_sizes/font_size = 14
+text = "La música es la única arquitectura que desafía al tiempo."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="BtnSelectAstorga" type="Button" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/CardsHBox/CardAstorga/Margin/VBox"]
+layout_mode = 2
+focus_neighbor_left = NodePath("../../../CardEli/Margin/VBox/BtnSelectEli")
 text = "Elegir"
 
 [node name="ActionsHBox" type="HBoxContainer" parent="CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox"]

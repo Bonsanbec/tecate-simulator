@@ -56,6 +56,14 @@ class TestCharacterSync(unittest.TestCase):
         )
         self.assertEqual(payload_eli.unpack_character_select(), "eli")
 
+        payload_astorga = EventPayload.create_character_select(
+            entity_id=100,
+            character_id="astorga",
+            event_id=103,
+            timestamp=654322,
+        )
+        self.assertEqual(payload_astorga.unpack_character_select(), "astorga")
+
     def test_server_handles_character_select_and_broadcasts(self):
         """Verifica que el servidor guarde la propiedad y retransmita a otros clientes."""
         c1_addr = ("127.0.0.1", 50001)

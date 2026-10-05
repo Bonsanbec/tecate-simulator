@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CitizenProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://systems/characters/citizen_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+identity_id = "astorga"
+display_name = "Músico"
+model_path = "res://assets/characters/citizens/astorga.glb"
+archetype = "classical_musician"
+preferred_greeting = "Buenas noches. Que la armonía guíe nuestro camino."
+voice_pitch = 0.92
+walk_speed_modifier = 0.96
+icon_path = "res://assets/characters/icons/astorga_icon.png"
+enable_skin_sss = true
+sss_strength = 0.28
+sss_color = Color(0.91, 0.46, 0.34, 1)
