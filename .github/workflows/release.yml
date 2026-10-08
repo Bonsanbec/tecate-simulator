@@ -1,0 +1,171 @@
+name: Release on Stable
+
+on:
+  push:
+    branches:
+      - stable
+  workflow_dispatch:
+
+concurrency:
+  group: release-stable
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: "4.6.3"
+  RELEASE_TIMEZONE: "America/Tijuana"
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Paso 1: Cálculo de la versión canónica (YY.MM.DD-HH)
+  # ─────────────────────────────────────────────────────────────────────────────
+  prepare:
+    name: Determinar Versión
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.calc_version.outputs.version }}
+    steps:
+      - name: Calcular versión (YY.MM.DD-HH)
+        id: calc_version
+        run: |
+          VERSION=$(TZ="${RELEASE_TIMEZONE}" date +'%y.%m.%d-%H')
+          echo "Versión calculada: ${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Paso 2: Exportación paralela de binarios mediante matriz ultraeficiente
+  # ─────────────────────────────────────────────────────────────────────────────
+  build:
+    name: Exportar ${{ matrix.name }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            name: Windows
+            os: ubuntu-latest
+            artifact_dir: godot_project/build/windows
+          - platform: macos
+            name: macOS
+            os: ubuntu-latest
+            artifact_dir: godot_project/build/macos
+
+          # ─────────────────────────────────────────────────────────────────
+          # Extensibilidad para Android y iOS:
+          # Descomentar cuando se configuren las credenciales / certificados.
+          # ─────────────────────────────────────────────────────────────────
+          # - platform: android
+          #   name: Android
+          #   os: ubuntu-latest
+          #   artifact_dir: godot_project/build/android
+          # - platform: ios
+          #   name: iOS
+          #   os: macos-14
+          #   artifact_dir: godot_project/build/ios
+
+    steps:
+      - name: Clonar repositorio (shallow)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Configurar Godot Engine (${{ env.GODOT_VERSION }})
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: ${{ env.GODOT_VERSION }}
+          use-dotnet: false
+          include-templates: true
+
+      - name: Cache de importaciones de Godot (.godot/imported)
+        uses: actions/cache@v4
+        with:
+          path: godot_project/.godot/imported
+          key: godot-imported-${{ matrix.platform }}-${{ hashFiles('godot_project/project.godot', 'godot_project/export_presets.cfg') }}
+          restore-keys: |
+            godot-imported-${{ matrix.platform }}-
+
+      - name: Ejecutar exportación mediante export.sh (${{ matrix.name }})
+        run: |
+          chmod +x godot_project/export.sh
+          ./godot_project/export.sh ${{ matrix.platform }}
+
+      - name: Subir artefactos de ${{ matrix.name }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-${{ matrix.platform }}
+          path: |
+            ${{ matrix.artifact_dir }}/*.zip
+            ${{ matrix.artifact_dir }}/*.exe
+            ${{ matrix.artifact_dir }}/*.apk
+            ${{ matrix.artifact_dir }}/*.dmg
+          if-no-files-found: error
+          retention-days: 1
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Paso 3: Creación o actualización del Release en GitHub
+  # ─────────────────────────────────────────────────────────────────────────────
+  release:
+    name: Publicar o Actualizar Release (${{ needs.prepare.outputs.version }})
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Descargar artefactos compilados
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: release_assets
+          merge-multiple: true
+
+      - name: Listar binarios a publicar
+        run: |
+          echo "Binarios descargados para publicación:"
+          ls -lh release_assets/
+
+      - name: Publicar o actualizar Release en GitHub
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          echo "Procesando versión de Release: $VERSION"
+
+          # Configurar identidad de git para actualización de etiqueta
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -f "$VERSION" "${{ github.sha }}"
+          git push -f origin "$VERSION" || true
+
+          RELEASE_NOTES="### Compilación Automática — Tecate Simulator
+          - **Versión:** \`$VERSION\`
+          - **Rama:** \`stable\`
+          - **Commit:** \`${{ github.sha }}\`
+          - **Fecha de compilación:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+
+          #### Binarios incluidos (definidos por \`godot_project/export.sh\`):
+          $(for file in release_assets/*; do echo "- \`$(basename "$file")\` ($(du -h "$file" | cut -f1))"; done)"
+
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "El Release $VERSION ya existe. Actualizando binarios con --clobber y reasignando latest..."
+            gh release upload "$VERSION" release_assets/* --clobber
+            gh release edit "$VERSION" \
+              --title "Release $VERSION" \
+              --notes "$RELEASE_NOTES" \
+              --latest
+            echo "✅ Release $VERSION actualizado exitosamente como latest."
+          else
+            echo "El Release $VERSION no existe. Creando nuevo Release..."
+            gh release create "$VERSION" release_assets/* \
+              --title "Release $VERSION" \
+              --notes "$RELEASE_NOTES" \
+              --target "${{ github.sha }}" \
+              --latest
+            echo "✅ Nuevo Release $VERSION creado exitosamente como latest."
+          fi
