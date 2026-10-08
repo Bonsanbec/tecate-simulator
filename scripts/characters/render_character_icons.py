@@ -78,13 +78,8 @@ def prepare_eli_background():
     return eli_bg
 
 def prepare_astorga_background():
-    astorga_bg = os.path.join(PROJECT_ROOT, "scratch/fondo_astorga.png")
-    if not os.path.exists(astorga_bg):
-        gen_script = os.path.join(PROJECT_ROOT, "scripts/characters/generate_astorga_abstract_background.py")
-        subprocess.run([
-            "/Applications/Blender.app/Contents/MacOS/Blender", "-b", "--python", gen_script
-        ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return astorga_bg
+    astorga_tiff = os.path.join(PROJECT_ROOT, "scratch/fondo_astorga.tiff")
+    return astorga_tiff
 
 def composite_card_with_background(fg_png_path, bg_image_path, out_card_path):
     assert os.path.exists(fg_png_path), f"No existe foreground: {fg_png_path}"
@@ -473,7 +468,7 @@ def render_astorga():
     bpy.ops.render.render(write_still=True)
     print(f"✓ Ícono transparente guardado en: {out_icon}")
 
-    # 2. Render Tarjeta con Fondo Cinemático Abstracto
+    # 2. Render Tarjeta con Fondo de scratch/fondo_astorga.tiff (Crop to Fit)
     bg_astorga = prepare_astorga_background()
     out_card = os.path.join(ICONS_DIR, "astorga_card.png")
     composite_card_with_background(out_icon, bg_astorga, out_card)

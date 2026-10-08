@@ -9,7 +9,7 @@ ASTORGA_BLEND = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/citi
 VIOLIN_BLEND = os.path.join(PROJECT_ROOT, "godot_project/assets/props/violin.blend")
 SCRATCH_DIR = os.path.join(PROJECT_ROOT, "scratch")
 TEST_OUT = os.path.join(SCRATCH_DIR, "test_astorga_card_final.png")
-BG_PATH = os.path.join(SCRATCH_DIR, "fondo_astorga.png")
+BG_PATH = os.path.join(SCRATCH_DIR, "fondo_astorga.tiff")
 
 bpy.ops.wm.open_mainfile(filepath=ASTORGA_BLEND)
 scene = bpy.context.scene
