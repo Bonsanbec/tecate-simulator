@@ -808,11 +808,10 @@ def build_body_mesh(materials):
             lat_axis = Vector((0.0, 1.0, 0.0))
             palm_normal = Vector((-1.0, 0.0, 0.0))
         else:
-            # Mano R (sostiene el violín por el mástil junto a la barbilla):
-            # En la foto de Astorga, la mano sostiene el mástil con los dedos flexionados
-            # abrazando el diapasón con elegancia artística
+            # Mano R (en realidad izquierda del personaje, sostiene el violín por el mástil):
+            # Espejado anatómico canónico: el eje de flexión se invierte a -Y para curvar hacia la palma (+X)
             curl_angles_fingers = [math.radians(24), math.radians(38), math.radians(26)]
-            lat_axis = Vector((0.0, 1.0, 0.0))
+            lat_axis = Vector((0.0, -1.0, 0.0))
             palm_normal = Vector((1.0, 0.0, 0.0))
 
         for fname, fy, lens, rads in finger_data:
@@ -831,9 +830,10 @@ def build_body_mesh(materials):
             th_norm = Vector((-0.8, -0.3, 0.5)).normalized()
         else:
             # Pulgar de la mano del violín: se apoya en el borde posterior del mástil
+            # Espejado axial correcto: inversión de componentes paralelas al plano de reflexión
             th_curl = [math.radians(30), math.radians(35), math.radians(22)]
-            th_lat = Vector((0.4, 0.9, 0.2)).normalized()
-            th_norm = Vector((0.8, -0.3, 0.5)).normalized()
+            th_lat = Vector((-0.4, -0.9, -0.2)).normalized()
+            th_norm = Vector((-0.8, 0.3, -0.5)).normalized()
 
         add_curved_finger(th_knuckle, th_curl, th_lens, th_rads, th_lat, th_norm)
 
