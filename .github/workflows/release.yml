@@ -51,7 +51,7 @@ jobs:
             artifact_dir: godot_project/build/windows
           - platform: macos
             name: macOS
-            os: ubuntu-latest
+            os: macos-latest
             artifact_dir: godot_project/build/macos
 
           # ─────────────────────────────────────────────────────────────────

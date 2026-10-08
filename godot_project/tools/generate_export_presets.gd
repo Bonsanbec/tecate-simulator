@@ -84,6 +84,7 @@ func _init() -> void:
 
 	cfg.set_value("preset.2.options", "custom_template/debug", "")
 	cfg.set_value("preset.2.options", "custom_template/release", "")
+	cfg.set_value("preset.2.options", "binary_format/architecture", "universal")
 	cfg.set_value("preset.2.options", "application/bundle_identifier", "dev.bonsanbec.tecate")
 	cfg.set_value("preset.2.options", "application/short_version", "1.0")
 	cfg.set_value("preset.2.options", "application/version", "1")

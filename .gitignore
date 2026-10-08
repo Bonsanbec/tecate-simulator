@@ -60,7 +60,10 @@ blender_assets/*_adjusted.blend
 !server/routes/*.json
 !server/data/*.json
 !blender_assets/vehicles/*.blend
+# Branding e iconos del proyecto
+!godot_project/branding/icon.png
 *.import
+!godot_project/branding/icon.png.import
 /godot_project/build
 *.jpeg
 
