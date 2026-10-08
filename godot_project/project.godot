@@ -14,14 +14,14 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
-config/name="Tecate Simulator Facade MVP"
+config/name="Tecate: Pueblo Mágico y Social"
 run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://branding/icon.png"
 
 [dotnet]
 
-project/assembly_name="Tecate Simulator Facade MVP"
+project/assembly_name="tecate"
 
 [display]
 

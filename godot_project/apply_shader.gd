@@ -4,6 +4,9 @@ var lat_regex: RegEx
 var lon_regex: RegEx
 
 func _ready():
+	# Nombre oficial de la aplicación en ejecución para la ventana y el sistema operativo
+	DisplayServer.window_set_title("Tecate: Pueblo Mágico y Social")
+
 	lat_regex = RegEx.new()
 	lat_regex.compile("lat_(\\d+)_(\\d+)")
 	lon_regex = RegEx.new()

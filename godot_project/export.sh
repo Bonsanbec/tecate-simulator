@@ -77,6 +77,7 @@ echo "=== Generando ensamblados Mono ==="
 "$GODOT_PATH" --headless --path "$(pwd)" --no-window --quit || true
 
 # # -------------------------------------------------
+# # -------------------------------------------------
 # # 2) Exportar Android
 # # -------------------------------------------------
 # mkdir -p build/android
@@ -84,7 +85,7 @@ echo "=== Generando ensamblados Mono ==="
 # "$GODOT_PATH" \
 #   --headless \
 #   --path "$(pwd)" \
-#   --export-release "Android"
+#   --export-release "Android" "build/android/tecate.apk"
 
 # # -------------------------------------------------
 # # 3) Exportar iOS (Xcode project)
@@ -94,7 +95,7 @@ echo "=== Generando ensamblados Mono ==="
 # "$GODOT_PATH" \
 #   --headless \
 #   --path "$(pwd)" \
-#   --export-release "iOS"
+#   --export-release "iOS" "build/ios/tecate.xcodeproj"
 
 # -------------------------------------------------
 # 4) Exportar macOS
@@ -104,17 +105,27 @@ echo "=== Exportando a macOS ==="
 "$GODOT_PATH" \
   --headless \
   --path "$(pwd)" \
-  --export-release "macOS"
+  --export-release "macOS" "build/macos/tecate.app"
 
 # -------------------------------------------------
-# 5) Exportar macOS
+# 5) Exportar Windows
 # -------------------------------------------------
 mkdir -p build/windows
 echo "=== Exportando a Windows ==="
 "$GODOT_PATH" \
   --headless \
   --path "$(pwd)" \
-  --export-release "Windows"
+  --export-release "Windows" "build/windows/tecate.exe"
+
+# -------------------------------------------------
+# 6) Exportar Linux
+# -------------------------------------------------
+# mkdir -p build/linux
+# echo "=== Exportando a Linux ==="
+# "$GODOT_PATH" \
+#   --headless \
+#   --path "$(pwd)" \
+#   --export-release "Linux/X11" "build/linux/tecate.x86_64"
 
 # # -------------------------------------------------
 # # n) Compilar el proyecto Xcode (iOS) desde la CLI

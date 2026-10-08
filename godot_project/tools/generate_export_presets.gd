@@ -1,5 +1,5 @@
-## Script temporal para generar export_presets.cfg con los presets
-## Android e iOS correctamente formateados.
+## Script para generar export_presets.cfg con los presets
+## Android, iOS, macOS, Windows y Linux correctamente formateados.
 ## Uso: godot-mono --headless --path . --script res://tools/generate_export_presets.gd --quit
 @tool
 extends SceneTree
@@ -33,7 +33,7 @@ func _init() -> void:
 	cfg.set_value("preset.0.options", "version/code", 1)
 	cfg.set_value("preset.0.options", "version/name", "1.0.0")
 	cfg.set_value("preset.0.options", "package/unique_name", "dev.bonsanbec.tecate")
-	cfg.set_value("preset.0.options", "package/name", "Tecate Simulator")
+	cfg.set_value("preset.0.options", "package/name", "Tecate: Pueblo Mágico y Social")
 	cfg.set_value("preset.0.options", "screen/immersive_mode", true)
 	cfg.set_value("preset.0.options", "keystore/debug", "")
 	cfg.set_value("preset.0.options", "keystore/debug_user", "")
@@ -65,6 +65,77 @@ func _init() -> void:
 	cfg.set_value("preset.1.options", "application/app_store_team_id", "")
 	cfg.set_value("preset.1.options", "application/code_sign_identity_debug", "iPhone Developer")
 	cfg.set_value("preset.1.options", "application/code_sign_identity_release", "iPhone Distribution")
+	cfg.set_value("preset.1.options", "application/additional_plist_content", "<key>CFBundleDisplayName</key>\n<string>Tecate: Pueblo Mágico y Social</string>")
+
+	# ─── preset.2 : macOS ───────────────────────────────────────────
+	cfg.set_value("preset.2", "name", "macOS")
+	cfg.set_value("preset.2", "platform", "macOS")
+	cfg.set_value("preset.2", "runnable", true)
+	cfg.set_value("preset.2", "dedicated_server", false)
+	cfg.set_value("preset.2", "custom_features", "")
+	cfg.set_value("preset.2", "export_filter", "all_resources")
+	cfg.set_value("preset.2", "include_filter", "")
+	cfg.set_value("preset.2", "exclude_filter", "")
+	cfg.set_value("preset.2", "export_path", "build/macos/tecate.app")
+	cfg.set_value("preset.2", "encryption_include_filters", "")
+	cfg.set_value("preset.2", "encryption_exclude_filters", "")
+	cfg.set_value("preset.2", "encrypt_pck", false)
+	cfg.set_value("preset.2", "encrypt_directory", false)
+
+	cfg.set_value("preset.2.options", "custom_template/debug", "")
+	cfg.set_value("preset.2.options", "custom_template/release", "")
+	cfg.set_value("preset.2.options", "application/bundle_identifier", "dev.bonsanbec.tecate")
+	cfg.set_value("preset.2.options", "application/short_version", "1.0")
+	cfg.set_value("preset.2.options", "application/version", "1")
+	cfg.set_value("preset.2.options", "application/copyright", "Bonsanbec Developers")
+	cfg.set_value("preset.2.options", "application/signature", "")
+	cfg.set_value("preset.2.options", "application/entitlements", "")
+	cfg.set_value("preset.2.options", "application/team_id", "")
+	cfg.set_value("preset.2.options", "application/identifier", "")
+	cfg.set_value("preset.2.options", "application/additional_plist_content", "<key>CFBundleDisplayName</key>\n<string>Tecate: Pueblo Mágico y Social</string>")
+
+	# ─── preset.3 : Windows ─────────────────────────────────────────
+	cfg.set_value("preset.3", "name", "Windows")
+	cfg.set_value("preset.3", "platform", "Windows Desktop")
+	cfg.set_value("preset.3", "runnable", true)
+	cfg.set_value("preset.3", "dedicated_server", false)
+	cfg.set_value("preset.3", "custom_features", "")
+	cfg.set_value("preset.3", "export_filter", "all_resources")
+	cfg.set_value("preset.3", "include_filter", "")
+	cfg.set_value("preset.3", "exclude_filter", "")
+	cfg.set_value("preset.3", "export_path", "build/windows/tecate.exe")
+	cfg.set_value("preset.3", "encryption_include_filters", "")
+	cfg.set_value("preset.3", "encryption_exclude_filters", "")
+	cfg.set_value("preset.3", "encrypt_pck", false)
+	cfg.set_value("preset.3", "encrypt_directory", false)
+
+	cfg.set_value("preset.3.options", "custom_template/debug", "")
+	cfg.set_value("preset.3.options", "custom_template/release", "")
+	cfg.set_value("preset.3.options", "application/file_description", "Tecate: Pueblo Mágico y Social")
+	cfg.set_value("preset.3.options", "application/product_name", "Tecate: Pueblo Mágico y Social")
+	cfg.set_value("preset.3.options", "application/company_name", "Bonsanbec Developers")
+	cfg.set_value("preset.3.options", "application/copyright", "Bonsanbec Developers")
+	cfg.set_value("preset.3.options", "application/file_version", "1.0.0")
+	cfg.set_value("preset.3.options", "application/product_version", "1.0.0")
+
+	# ─── preset.4 : Linux/X11 ───────────────────────────────────────
+	cfg.set_value("preset.4", "name", "Linux/X11")
+	cfg.set_value("preset.4", "platform", "Linux/X11")
+	cfg.set_value("preset.4", "runnable", true)
+	cfg.set_value("preset.4", "dedicated_server", false)
+	cfg.set_value("preset.4", "custom_features", "")
+	cfg.set_value("preset.4", "export_filter", "all_resources")
+	cfg.set_value("preset.4", "include_filter", "")
+	cfg.set_value("preset.4", "exclude_filter", "")
+	cfg.set_value("preset.4", "export_path", "build/linux/tecate.x86_64")
+	cfg.set_value("preset.4", "encryption_include_filters", "")
+	cfg.set_value("preset.4", "encryption_exclude_filters", "")
+	cfg.set_value("preset.4", "encrypt_pck", false)
+	cfg.set_value("preset.4", "encrypt_directory", false)
+
+	cfg.set_value("preset.4.options", "custom_template/debug", "")
+	cfg.set_value("preset.4.options", "custom_template/release", "")
+	cfg.set_value("preset.4.options", "binary_format/embed_pck", false)
 
 	var err := cfg.save("res://export_presets.cfg")
 	if err == OK:
