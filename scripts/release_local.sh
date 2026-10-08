@@ -5,20 +5,29 @@ set -euo pipefail
 # scripts/release_local.sh
 # ------------------------------------------------------------------------------
 # Genera los binarios de release localmente con todos los assets integrados,
-# los empaqueta en .zip y gestiona la publicación inteligente en GitHub Releases:
+# los empaqueta en .zip y gestiona la publicación en GitHub Releases utilizando
+# `version_manifest.json` como Single Source of Truth (SSOT):
 #
 # 1. Caché Local (Anti-Regeneración):
-#    - Si las fuentes y assets no cambiaron y el .zip existe, omite la exportación.
+#    - Si las fuentes y assets no han cambiado y el .zip existe, omite la exportación.
 #
-# 2. Validación Remota (Tres Vías):
-#    - Si NINGÚN hash coincide: Crea una NUEVA release con formato YY.MM.DD-HH (latest).
-#    - Si ALGÚN hash coincide pero otros cambiaron: NO crea release nueva, sino que
-#      realiza un UPSERT actualizando únicamente los binarios que cambiaron en la
-#      release existente en GitHub.
-#    - Si TODOS los hashes coinciden: No realiza ninguna acción ni carga (evita duplicados).
+# 2. Evaluación SSOT con Referencia Cruzada:
+#    - Descarga el `version_manifest.json` del último release en GitHub.
+#    - Si TODOS los binarios coinciden: Cancela la operación sin subir duplicados.
+#    - Si algún binario cambió (o es nuevo):
+#      - Crea una NUEVA release con el tag actual (YY.MM.DD-HH) marcada como 'latest'.
+#      - Sube ÚNICAMENTE los binarios modificados/nuevos (ahorrando cientos de MB).
+#      - Para los binarios no modificados, genera referencias directas de descarga
+#        hacia su release de origen en las notas y en el manifiesto.
+#      - Publica el nuevo `version_manifest.json` (SSOT).
 #
 # Uso:
 #   ./scripts/release_local.sh [all|windows|macos|android|ios|linux] [VERSION_TAG] [--force]
+#
+# Opciones:
+#   all|windows|...   Plataforma a exportar (por defecto: all).
+#   VERSION_TAG       Etiqueta de versión para nuevos releases (por defecto: YY.MM.DD-HH).
+#   --force, -f       Fuerza la recompilación y subida de todos los binarios.
 # ==============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -38,7 +47,7 @@ for arg in "$@"; do
       echo "Opciones:"
       echo "  all|windows|...   Plataforma a exportar (por defecto: all)."
       echo "  VERSION_TAG       Etiqueta de versión para nuevos releases (por defecto: YY.MM.DD-HH)."
-      echo "  --force, -f       Fuerza la recompilación y publicación ignorando las cachés de hash."
+      echo "  --force, -f       Fuerza la recompilación y subida ignorando las cachés."
       exit 0
       ;;
     --force|-f)
@@ -63,7 +72,7 @@ HASH_MGR="scripts/release_hash_manager.py"
 chmod +x "$HASH_MGR" godot_project/export.sh
 
 echo "================================================================="
-echo "  TECATE SIMULATOR: PUBLICACIÓN LOCAL DE RELEASE"
+echo "  TECATE SIMULATOR: PUBLICACIÓN LOCAL DE RELEASE (SSOT)"
 echo "  Versión (Tag):     $TAG"
 echo "  Objetivo export:   $TARGET"
 echo "  Modo forzado:      $FORCE"
@@ -89,7 +98,7 @@ for t in "${TARGETS_TO_PROCESS[@]}"; do
     echo "🔨 [$t] Compilando y empaquetando binario..."
     ./godot_project/export.sh "$t"
     python3 "$HASH_MGR" update-local-cache --target "$t"
-    echo "✅ [$t] Exportación completada y registrada en caché."
+    echo "✅ [$t] Exportación completada y registrada en caché local."
   fi
 done
 
@@ -128,120 +137,87 @@ for f in "${BINARY_FILES[@]}"; do
 done
 
 # ------------------------------------------------------------------------------
-# 3. Validación de hashes contra el último release en GitHub
+# 3. Evaluación SSOT contra version_manifest.json del último release
 # ------------------------------------------------------------------------------
 if command -v gh >/dev/null 2>&1; then
-  echo "📡 [GitHub] Consultando el último release para verificar hashes..."
+  echo "📡 [GitHub] Consultando el último release para evaluar version_manifest.json..."
   
   LATEST_TAG="$(gh release view --json tagName -q .tagName 2>/dev/null || true)"
+  REMOTE_MANIFEST=""
   
-  if [[ -n "$LATEST_TAG" && "$FORCE" == false ]]; then
+  if [[ -n "$LATEST_TAG" ]]; then
     echo "ℹ️ Último release en GitHub detectado: $LATEST_TAG"
-    
-    # Intentar descargar SHA256SUMS.txt del último release
-    REMOTE_SUMS="$(gh release download "$LATEST_TAG" -p "SHA256SUMS.txt" -O - 2>/dev/null || true)"
-    
-    if [[ -n "$REMOTE_SUMS" ]]; then
-      set +e
-      COMPARE_JSON="$(python3 "$HASH_MGR" compare-remote --remote-sums "$REMOTE_SUMS" "${BINARY_FILES[@]}")"
-      COMPARE_STATUS=$?
-      set -e
-
-      case $COMPARE_STATUS in
-        2)
-          # CASO A: TODOS LOS HASHES COINCIDEN (NOTHING_TO_DO)
-          echo "================================================================="
-          echo "🟢 VALIDACIÓN REMOTA: TODOS LOS ARTEFACTOS ESTÁN AL DÍA"
-          echo "================================================================="
-          echo "Todos los binarios locales son idénticos a los existentes en el"
-          echo "último release de GitHub ($LATEST_TAG):"
-          echo "$COMPARE_JSON" | grep -A 10 '"matches"' || true
-          echo ""
-          echo "🛑 Se cancela la publicación. No se requieren cambios ni duplicados."
-          echo "   (Para forzar una nueva publicación, use: $0 --force)"
-          echo "================================================================="
-          exit 0
-          ;;
-
-        1)
-          # CASO B: AL MENOS UN HASH COINCIDE, PERO OTROS CAMBIARON (UPSERT_EXISTING)
-          echo "================================================================="
-          echo "🔄 VALIDACIÓN REMOTA: UPSERT EN EL RELEASE EXISTENTE ($LATEST_TAG)"
-          echo "================================================================="
-          echo "Se detectó coincidencia en al menos un binario. Por consiguiente,"
-          echo "NO se creará un release nuevo, sino que se actualizarán únicamente"
-          echo "los binarios modificados dentro del release actual ($LATEST_TAG):"
-          echo "$COMPARE_JSON" | grep -A 10 '"differs"' || true
-          echo "$COMPARE_JSON" | grep -A 10 '"new_files"' || true
-          echo "================================================================="
-
-          # Extraer archivos modificados de la respuesta JSON
-          CHANGED_FILES=($(echo "$COMPARE_JSON" | python3 -c "import sys, json; data=json.load(sys.stdin); print(' '.join(data.get('changed_files', [])))"))
-          
-          # Generar SHA256SUMS.txt fusionado (mantiene hashes no modificados y actualiza los nuevos)
-          MERGED_SUMS_FILE="$(python3 "$HASH_MGR" generate-checksums --merge-remote "$REMOTE_SUMS" "${BINARY_FILES[@]}")"
-          FILES_TO_UPSERT=("${CHANGED_FILES[@]}" "$MERGED_SUMS_FILE")
-
-          echo "🚀 Subiendo binarios modificados a $LATEST_TAG..."
-          gh release upload "$LATEST_TAG" "${FILES_TO_UPSERT[@]}" --clobber
-          gh release edit "$LATEST_TAG" --latest
-          
-          echo "✅ Upsert completado exitosamente en el release $LATEST_TAG:"
-          gh release view "$LATEST_TAG" --web 2>/dev/null || gh release view "$LATEST_TAG"
-          echo "🎉 Proceso finalizado con éxito."
-          exit 0
-          ;;
-
-        0)
-          # CASO C: NINGÚN HASH COINCIDE (CREATE_NEW)
-          echo "================================================================="
-          echo "🚀 VALIDACIÓN REMOTA: NINGÚN HASH COINCIDE (NUEVA VERSIÓN)"
-          echo "================================================================="
-          echo "Ningún binario coincide con los existentes en el último release ($LATEST_TAG)."
-          echo "Todos los artefactos representan una nueva versión completa."
-          echo "Creando nuevo release $TAG como 'latest'..."
-          echo "================================================================="
-          ;;
-      esac
-    else
-      echo "ℹ️ El release previo ($LATEST_TAG) no incluye SHA256SUMS.txt. Se procederá con la creación de la nueva versión."
-    fi
-  elif [[ "$FORCE" == true ]]; then
-    echo "⚡ Modo --force activo: Omitiendo validación contra el último release."
+    REMOTE_MANIFEST="$(gh release download "$LATEST_TAG" -p "version_manifest.json" -O - 2>/dev/null || true)"
   else
-    echo "ℹ️ No se encontraron releases previos en el repositorio. Creando el primer release."
+    echo "ℹ️ No se detectaron releases previos. Se inicializará el primer release del repositorio."
   fi
 
-  # ------------------------------------------------------------------------------
-  # 4. Creación de Nuevo Release en GitHub (Caso C o Primer Release)
-  # ------------------------------------------------------------------------------
-  # Generar sumas para el nuevo release
-  CHECKSUMS_FILE="$(python3 "$HASH_MGR" generate-checksums "${BINARY_FILES[@]}")"
-  ALL_RELEASE_FILES=("${BINARY_FILES[@]}" "$CHECKSUMS_FILE")
+  EVAL_ARGS=("--new-tag" "$TAG")
+  if [[ -n "$REMOTE_MANIFEST" ]]; then
+    EVAL_ARGS+=("--remote-manifest" "$REMOTE_MANIFEST")
+  fi
+  if [[ "$FORCE" == true ]]; then
+    EVAL_ARGS+=("--force")
+  fi
 
-  echo "🚀 Creando release $TAG en GitHub..."
-  
+  set +e
+  EVAL_JSON="$(python3 "$HASH_MGR" eval-release "${EVAL_ARGS[@]}" "${BINARY_FILES[@]}")"
+  EVAL_STATUS=$?
+  set -e
+
+  ACTION="$(echo "$EVAL_JSON" | python3 -c "import sys, json; print(json.load(sys.stdin).get('action', ''))")"
+  REASON="$(echo "$EVAL_JSON" | python3 -c "import sys, json; print(json.load(sys.stdin).get('reason', ''))")"
+
+  if [[ "$ACTION" == "NOTHING_TO_DO" ]]; then
+    echo "================================================================="
+    echo "🟢 VALIDACIÓN SSOT: TODOS LOS ARTEFACTOS ESTÁN AL DÍA"
+    echo "================================================================="
+    echo "$REASON"
+    echo ""
+    echo "🛑 Se cancela la publicación. No se requieren cambios ni duplicados."
+    echo "   (Para forzar una nueva versión, use: $0 --force)"
+    echo "================================================================="
+    exit 0
+  fi
+
+  # Extraer datos de la evaluación
+  FILES_TO_UPLOAD=($(echo "$EVAL_JSON" | python3 -c "import sys, json; print(' '.join(json.load(sys.stdin).get('files_to_upload', [])))"))
+  UPDATED_PLATS="$(echo "$EVAL_JSON" | python3 -c "import sys, json; print(', '.join(json.load(sys.stdin).get('updated_platforms', [])))")"
+  PRESERVED_PLATS="$(echo "$EVAL_JSON" | python3 -c "import sys, json; print(', '.join(json.load(sys.stdin).get('preserved_platforms', [])))")"
+  NOTES_FILE="$(echo "$EVAL_JSON" | python3 -c "import sys, json; print(json.load(sys.stdin).get('notes_path', ''))")"
+
+  echo "================================================================="
+  echo "🚀 PUBLICANDO NUEVO RELEASE: $TAG (latest)"
+  echo "================================================================="
+  echo "  - Plataformas actualizadas (se suben ahora): ${UPDATED_PLATS:-ninguna}"
+  echo "  - Plataformas preservadas  (referenciadas):  ${PRESERVED_PLATS:-ninguna}"
+  echo "  - Archivos a transferir:                     ${#FILES_TO_UPLOAD[@]}"
+  echo "================================================================="
+
+  # ------------------------------------------------------------------------------
+  # 4. Creación o actualización del Release en GitHub
+  # ------------------------------------------------------------------------------
   if gh release view "$TAG" >/dev/null 2>&1; then
-    echo "ℹ️ El release $TAG ya existe. Actualizando binarios con --clobber..."
-    gh release upload "$TAG" "${ALL_RELEASE_FILES[@]}" --clobber
-    gh release edit "$TAG" --latest --title "Tecate Simulator v$TAG"
+    echo "ℹ️ El release $TAG ya existe en GitHub. Actualizando activos con --clobber..."
+    gh release upload "$TAG" "${FILES_TO_UPLOAD[@]}" --clobber
+    gh release edit "$TAG" --notes-file "$NOTES_FILE" --latest --title "Tecate Simulator v$TAG"
   else
     echo "ℹ️ Creando nuevo release $TAG como 'latest'..."
-    gh release create "$TAG" "${ALL_RELEASE_FILES[@]}" \
+    gh release create "$TAG" "${FILES_TO_UPLOAD[@]}" \
       --title "Tecate Simulator v$TAG" \
-      --notes "Release con geometría urbana, terreno y edificios completos ($TAG)." \
+      --notes-file "$NOTES_FILE" \
       --latest
   fi
-  
-  echo "✅ Release publicado exitosamente:"
+
+  echo "✅ Release $TAG publicado exitosamente:"
   gh release view "$TAG" --web 2>/dev/null || gh release view "$TAG"
 
 else
   # Sin CLI de GitHub
-  CHECKSUMS_FILE="$(python3 "$HASH_MGR" generate-checksums "${BINARY_FILES[@]}")"
+  python3 "$HASH_MGR" eval-release --new-tag "$TAG" "${BINARY_FILES[@]}" >/dev/null
   echo "⚠️ Advertencia: 'gh' CLI no está instalada o no está en el PATH."
-  echo "   Los binarios y su archivo de sumas (SHA256SUMS.txt) están listos en 'godot_project/build/'."
+  echo "   Los binarios y 'version_manifest.json' están listos en 'godot_project/build/'."
   echo "   Para instalar GitHub CLI: brew install gh && gh auth login"
 fi
 
-echo "🎉 Proceso finalizado con éxito."
+echo "🎉 Proceso SSOT finalizado con éxito."
