@@ -49,6 +49,7 @@ ELI_BLEND = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/citizens
 ASTORGA_BLEND = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/citizens/astorga.blend")
 VIOLIN_GLB = os.path.join(PROJECT_ROOT, "godot_project/assets/props/violin.glb")
 ICONS_DIR = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/icons")
+SCRATCH_DIR = os.path.join(PROJECT_ROOT, "scratch")
 
 def ensure_icons_dir():
     os.makedirs(ICONS_DIR, exist_ok=True)
@@ -376,21 +377,23 @@ def render_astorga():
 
     # Pose canónica de Astorga según scratch/humans/astorga.png:
     # 1. Torso erguido con leve giro 3/4
-    arm.pose.bones['Chest'].rotation_euler = (math.radians(-2), math.radians(-6), math.radians(2))
+    arm.pose.bones['Chest'].rotation_euler = (math.radians(-2), math.radians(-5), math.radians(2))
 
     # 2. Cabeza orientada con aplomo sereno
-    arm.pose.bones['Head'].rotation_euler = (math.radians(-2), math.radians(8), math.radians(2))
+    arm.pose.bones['Head'].rotation_euler = (math.radians(-2), math.radians(6), math.radians(2))
 
     # 3. Brazo en VIEWER'S RIGHT (Hand.R, -X): Sostiene el VIOLÍN verticalmente junto al hombro / pecho alto
-    # Dedos flexionados abrazando el mástil/caja anatómica
-    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(38), math.radians(18), math.radians(-32))
-    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(98), math.radians(14), math.radians(-12))
-    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(25), math.radians(-22), math.radians(45))
+    # Dedos flexionados abrazando el mástil por el frente
+    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(34), math.radians(16), math.radians(-28))
+    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(96), math.radians(16), math.radians(-10))
+    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(24), math.radians(-18), math.radians(44))
 
-    # 4. Brazo en VIEWER'S LEFT (Hand.L, +X): Sostiene el ARCO apuntando cruzado diagonal hacia el pecho
-    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(22), math.radians(-6), math.radians(12))
-    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(56), math.radians(-10), math.radians(10))
-    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(26), math.radians(14), math.radians(-12))
+    # 4. Brazo en VIEWER'S LEFT (Hand.L, +X): Sostiene el ARCO apuntando cruzado diagonal hacia el hombro
+    # Clavícula acompaña levemente (+3°), hombro sin colapsar (cero deltoides sumido)
+    arm.pose.bones['Shoulder.L'].rotation_euler = (math.radians(3), math.radians(-1), math.radians(3))
+    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(20), math.radians(-5), math.radians(10))
+    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(52), math.radians(-8), math.radians(8))
+    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(24), math.radians(12), math.radians(-10))
 
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.context.view_layer.update()
@@ -412,14 +415,15 @@ def render_astorga():
                     p.use_smooth = True
                 if o.name == "Violin_Prop":
                     o.scale = (0.76, 0.76, 0.76)
-                    # Violín vertical sujetado anatómicamente en Hand.R (mástil y caja abrazados por los dedos)
-                    o.rotation_euler = Euler((math.radians(-78), math.radians(175), math.radians(18)), 'XYZ')
-                    o.location = Vector((hand_r_loc.x + 0.005, hand_r_loc.y - 0.015, hand_r_loc.z - 0.220))
+                    # Violín vertical sujetado anatómicamente en Hand.R:
+                    # El mástil pasa exactamente por el agarre de la mano derecha
+                    o.rotation_euler = Euler((math.radians(-76), math.radians(172), math.radians(18)), 'XYZ')
+                    o.location = Vector((hand_r_loc.x + 0.009, hand_r_loc.y + 0.006, hand_r_loc.z - 0.210))
                 elif o.name == "Violin_Bow":
                     o.scale = (0.70, 0.70, 0.70)
-                    # El arco apuntando diagonalmente hacia el pecho/violín dentro del encuadre
-                    o.rotation_euler = Euler((math.radians(24), math.radians(-4), math.radians(-18)), 'XYZ')
-                    o.location = Vector((hand_l_loc.x - 0.005, hand_l_loc.y + 0.015, hand_l_loc.z - 0.005))
+                    # El arco pasa exactamente a través del puño cerrado de Hand.L:
+                    o.rotation_euler = Euler((math.radians(26), math.radians(-4), math.radians(-18)), 'XYZ')
+                    o.location = Vector((hand_l_loc.x - 0.001, hand_l_loc.y + 0.016, hand_l_loc.z - 0.022))
 
     clear_lights_and_cameras(scene)
 
@@ -429,17 +433,17 @@ def render_astorga():
     scene.collection.objects.link(cam_obj)
     scene.camera = cam_obj
 
-    cam_obj.location = Vector((0.0, 2.15, 1.28))
-    target = Vector((0.0, 0.0, 1.25))
+    cam_obj.location = Vector((0.0, 2.15, 1.25))
+    target = Vector((0.0, 0.0, 1.22))
     cam_obj.rotation_euler = (target - cam_obj.location).to_track_quat('-Z', 'Y').to_euler()
 
     head_t = (0.0, 0.0, 1.48)
-    chest_t = (0.0, 0.0, 1.22)
+    chest_t = (0.0, 0.0, 1.20)
 
-    add_directed_light(scene, 'KeyWarm', 'AREA', 145.0, (-0.8, 1.6, 1.6), chest_t, (1.0, 0.94, 0.88), size=1.4)
+    add_directed_light(scene, 'KeyWarm', 'AREA', 140.0, (-0.8, 1.6, 1.6), chest_t, (1.0, 0.94, 0.88), size=1.4)
     add_directed_light(scene, 'FillHall', 'AREA', 65.0, (1.1, 1.5, 1.4), head_t, (0.92, 0.95, 1.0), size=2.0)
-    add_directed_light(scene, 'RimHair', 'SPOT', 130.0, (0.1, -1.3, 1.9), head_t, (1.0, 0.97, 0.92))
-    add_directed_light(scene, 'ViolinLight', 'AREA', 65.0, (-0.45, 1.7, 1.30), (-0.15, 0, 1.25), (1.0, 0.95, 0.88), size=1.0)
+    add_directed_light(scene, 'RimHair', 'SPOT', 125.0, (0.1, -1.3, 1.9), head_t, (1.0, 0.97, 0.92))
+    add_directed_light(scene, 'ViolinLight', 'AREA', 60.0, (-0.45, 1.7, 1.28), (-0.15, 0, 1.25), (1.0, 0.95, 0.88), size=1.0)
 
     # 1. Render Ícono Transparente RGBA
     setup_render_engine(scene, resolution=1024, samples=48, transparent=True)
@@ -452,6 +456,22 @@ def render_astorga():
     bg_astorga = prepare_astorga_background()
     out_card = os.path.join(ICONS_DIR, "astorga_card.png")
     composite_card_with_background(out_icon, bg_astorga, out_card)
+
+    # 3. Render de Cuerpo Completo en Pose (800x1200) para inspección de piernas y calzado
+    cam_data.lens = 52.0
+    cam_obj.location = Vector((0.0, 2.50, 0.96))
+    target_fb = Vector((0.0, 0.0, 0.88))
+    cam_obj.rotation_euler = (target_fb - cam_obj.location).to_track_quat('-Z', 'Y').to_euler()
+    setup_render_engine(scene, resolution=1200, samples=48, transparent=True)
+    scene.render.resolution_x = 800
+    scene.render.resolution_y = 1200
+    out_fb_icon = os.path.join(SCRATCH_DIR, "astorga_fullbody_pose_icon.png")
+    scene.render.filepath = out_fb_icon
+    bpy.ops.render.render(write_still=True)
+
+    out_fb_card = os.path.join(SCRATCH_DIR, "astorga_fullbody_pose.png")
+    composite_card_with_background(out_fb_icon, bg_astorga, out_fb_card)
+    print(f"✓ Render de cuerpo completo en pose guardado en: {out_fb_card}")
 
 def main():
     import sys
