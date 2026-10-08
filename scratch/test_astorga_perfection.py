@@ -1,35 +1,6 @@
 """
 =============================================================================
-GENERADOR CANÓNICO PROCEDURAL DE ALTA FIDELIDAD: ASTORGA (TECATE SIMULATOR)
-=============================================================================
-Reconstrucción fidedigna del personaje Astorga ("Músico") en Tecate Simulator:
-1. Cabeza, Rostro y Fenotipo Auténtico:
-   - Fisonomía facial expresiva (mentón firme, perfil nasal recto, mandíbula angular).
-   - Piel apiñonada cálida con textura PBR fidedigna ('scratch/humans/astorga.png').
-   - Ojos castaños profundos con párpados 3D y Shape Key 'blink'.
-   - Melena setentera continua y voluminosa en 360° con ondas orgánicas,
-     volumen amplio en sienes que cubre las orejas, flequillo peinado a los lados
-     y caída fluida hacia la nuca (sin huecos ni desconexiones desde ningún ángulo).
-2. Arquitectura de Sastrería en 3 Capas Físicas:
-   - Cuerpo Base: Piernas con pantalón formal recto de paño negro, calzado sastre
-     pulido con tacón y suela, pretina con cinturón y hebilla en Z = 0.94.
-   - Camisa Vinotinto: Prenda cilíndrica entallada continua independiente
-     desde el cuello hasta la cintura (Z = 0.94, fajada formalmente),
-     con cuello camisero 3D, tapeta y corbata negra con nudo Windsor.
-   - Saco Formal Sastre (Smoking Negro): Chaqueta tridimensional envolvente
-     (r_saco > r_camisa) que cubre espalda y costados (Z = 0.74 a 1.34).
-     Hombros y deltoides 100% negros estructurados.
-     Abierta en el frente: escote superior en V en el pecho, botón central
-     en Z = 1.05 y faldones que se abren en V invertida hacia las caderas,
-     revelando la camisa vinotinto fajada, el cinturón y los pantalones.
-     Solapas notch clásicas en relieve 3D.
-   - Brazos y Manos: Mangas estructuradas, puños vinotinto asomando,
-     muñecas y manos anatómicas con dedos y pulgar oponible calibrados.
-3. Rigging Canónico de 22 Huesos y Ponderación Armónica (Cero Deltoides Sumido):
-   - Transición radial continua basada en distancia euclidiana e interpolación armónica,
-     garantizando curvatura convexa sin colapso axilar, de codo ni de rodilla.
-4. Exportación Limpia a 'astorga.blend' y 'astorga.glb'.
-5. Renders de Control Multi-Ángulo con Cycles CPU.
+RECONSTRUCCIÓN INTEGRAL Y PERFECTA DE ASTORGA (TECATE SIMULATOR) - v2
 =============================================================================
 """
 
@@ -41,45 +12,27 @@ import bmesh
 from mathutils import Vector, Matrix, Euler
 
 PROJECT_ROOT = "/Users/hakkindavid/Documents/GitHub/tecate-simulator"
-ASSETS_DIR = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/citizens")
 TEXTURES_DIR = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/textures")
 SCRATCH_DIR = os.path.join(PROJECT_ROOT, "scratch")
+VIOLIN_BLEND = os.path.join(PROJECT_ROOT, "godot_project/assets/props/violin.blend")
 
-OUTPUT_BLEND = os.path.join(ASSETS_DIR, "astorga.blend")
-OUTPUT_GLB = os.path.join(ASSETS_DIR, "astorga.glb")
-PREVIEW_PNG = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/astorga_preview.png")
-
-os.makedirs(ASSETS_DIR, exist_ok=True)
-os.makedirs(SCRATCH_DIR, exist_ok=True)
-
-# =============================================================================
-# 0. CONFIGURACIÓN DE MATERIALES PBR
-# =============================================================================
 def clean_scene():
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    for obj in list(bpy.data.objects):
-        bpy.data.objects.remove(obj, do_unlink=True)
-    for mesh in list(bpy.data.meshes):
-        bpy.data.meshes.remove(mesh, do_unlink=True)
-    for arm in list(bpy.data.armatures):
-        bpy.data.armatures.remove(arm, do_unlink=True)
-    for mat in list(bpy.data.materials):
-        bpy.data.materials.remove(mat, do_unlink=True)
+    for obj in list(bpy.data.objects): bpy.data.objects.remove(obj, do_unlink=True)
+    for mesh in list(bpy.data.meshes): bpy.data.meshes.remove(mesh, do_unlink=True)
+    for mat in list(bpy.data.materials): bpy.data.materials.remove(mat, do_unlink=True)
+    for arm in list(bpy.data.armatures): bpy.data.armatures.remove(arm, do_unlink=True)
 
-def setup_pbr_material(name, diffuse_tex_path, normal_tex_path=None,
-                       base_color=(0.8, 0.8, 0.8, 1.0), roughness=0.6,
-                       metallic=0.0, specular=0.5):
+def setup_pbr_material(name, diffuse_path=None, normal_path=None, base_color=(1,1,1,1), roughness=0.5, metallic=0.0, specular=0.5):
     mat = bpy.data.materials.new(name=name)
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
     nodes.clear()
 
-    output_node = nodes.new(type='ShaderNodeOutputMaterial')
-    output_node.location = (400, 0)
-    bsdf = nodes.new(type='ShaderNodeBsdfPrincipled')
-    bsdf.location = (0, 0)
-    links.new(bsdf.outputs['BSDF'], output_node.inputs['Surface'])
+    out = nodes.new('ShaderNodeOutputMaterial')
+    bsdf = nodes.new('ShaderNodeBsdfPrincipled')
+    links.new(bsdf.outputs['BSDF'], out.inputs['Surface'])
 
     bsdf.inputs['Base Color'].default_value = base_color
     bsdf.inputs['Roughness'].default_value = roughness
@@ -87,22 +40,18 @@ def setup_pbr_material(name, diffuse_tex_path, normal_tex_path=None,
     if 'Specular IOR Level' in bsdf.inputs:
         bsdf.inputs['Specular IOR Level'].default_value = specular
 
-    if diffuse_tex_path and os.path.exists(diffuse_tex_path):
-        tex_node = nodes.new(type='ShaderNodeTexImage')
-        tex_node.location = (-400, 100)
-        img = bpy.data.images.load(diffuse_tex_path, check_existing=True)
-        tex_node.image = img
-        links.new(tex_node.outputs['Color'], bsdf.inputs['Base Color'])
+    if diffuse_path and os.path.exists(diffuse_path):
+        tex = nodes.new('ShaderNodeTexImage')
+        tex.image = bpy.data.images.load(diffuse_path)
+        links.new(tex.outputs['Color'], bsdf.inputs['Base Color'])
 
-    if normal_tex_path and os.path.exists(normal_tex_path):
-        norm_tex = nodes.new(type='ShaderNodeTexImage')
-        norm_tex.location = (-400, -200)
-        img_n = bpy.data.images.load(normal_tex_path, check_existing=True)
-        img_n.colorspace_settings.name = 'Non-Color'
-        norm_tex.image = img_n
-        norm_map = nodes.new(type='ShaderNodeNormalMap')
-        norm_map.location = (-150, -200)
-        links.new(norm_tex.outputs['Color'], norm_map.inputs['Color'])
+    if normal_path and os.path.exists(normal_path):
+        norm_img = nodes.new('ShaderNodeTexImage')
+        img_norm = bpy.data.images.load(normal_path)
+        img_norm.colorspace_settings.name = 'Non-Color'
+        norm_img.image = img_norm
+        norm_map = nodes.new('ShaderNodeNormalMap')
+        links.new(norm_img.outputs['Color'], norm_map.inputs['Color'])
         links.new(norm_map.outputs['Normal'], bsdf.inputs['Normal'])
 
     return mat
@@ -147,7 +96,7 @@ def create_materials():
     }
 
 # =============================================================================
-# 1. CABEZA, ROSTRO, OJOS, PÁRPADOS 3D Y MELENA SETENTERA CONTINUA 360°
+# 1. CABEZA, ROSTRO ANATÓMICO Y MELENA SETENTERA CONTINUA 360°
 # =============================================================================
 def build_head_mesh(materials):
     me = bpy.data.meshes.new("Player_Head_Mesh_Data")
@@ -159,6 +108,7 @@ def build_head_mesh(materials):
         v = 0.50 + (z - 1.485) / 0.240
         return (max(0.0, min(1.0, u)), max(0.0, min(1.0, v)))
 
+    # Perfil craneal de Astorga
     head_profile = [
         # z,      rx,    ry_front, ry_back, y_offset, is_face
         (1.365,  0.042, 0.042,    0.044,   -0.002,   False), # Base cuello
@@ -266,12 +216,15 @@ def build_head_mesh(materials):
             for loop in f.loops:
                 loop[uv_lay].uv = calc_face_uv(loop.vert.co.x, loop.vert.co.z)
 
-    # Melena setentera continua 360° con volumen lateral ondulado
+    # -------------------------------------------------------------------------
+    # MELENA SETENTERA CONTINUA 360° CON VOLUMEN LATERAL ONDULADO
+    # Auténtico estilo de Astorga: ondas ricas en sienes, cubre orejas, nuca fluida
+    # -------------------------------------------------------------------------
     hair_profile = [
         # z,      rx,    ry_front, ry_back, y_off,  is_closed
         (1.365,  0.082,  0.055,   0.098,   -0.024,  False), # Caída sobre cuello/espalda
         (1.405,  0.092,  0.068,   0.104,   -0.020,  False), # Mandíbula y base nuca
-        (1.445,  0.106,  0.082,   0.112,   -0.016,  False), # Orejas y pómulos (volumen lateral)
+        (1.445,  0.106,  0.082,   0.112,   -0.016,  False), # Orejas y pómulos (volumen setentero lateral)
         (1.485,  0.108,  0.086,   0.114,   -0.014,  False), # Sienes voluminosas
         (1.525,  0.102,  0.084,   0.110,   -0.012,  False), # Frente baja / cejas
         (1.555,  0.092,  0.080,   0.102,   -0.010,  True),  # Flequillo cerrado envolvente
@@ -853,6 +806,7 @@ def assign_weights(obj, is_head=False):
             elif co.z < 1.08:
                 obj.vertex_groups["Forearm" + side].add([idx], 1.0, 'REPLACE')
             elif co.z < 1.16:
+                # Transición armónica en el codo (cero desgarro)
                 t_e = (co.z - 1.08) / 0.08
                 obj.vertex_groups["Forearm" + side].add([idx], 1.0 - t_e, 'REPLACE')
                 obj.vertex_groups["UpperArm" + side].add([idx], t_e, 'REPLACE')
@@ -863,6 +817,7 @@ def assign_weights(obj, is_head=False):
         elif co.z < 0.40:
             obj.vertex_groups["LowerLeg.L" if co.x > 0 else "LowerLeg.R"].add([idx], 1.0, 'REPLACE')
         elif co.z < 0.48:
+            # Transición armónica en rodilla
             t_k = (co.z - 0.40) / 0.08
             side = ".L" if co.x > 0 else ".R"
             obj.vertex_groups["LowerLeg" + side].add([idx], 1.0 - t_k, 'REPLACE')
@@ -883,139 +838,154 @@ def attach_armature_modifier(obj, arm_obj):
     mod.object = arm_obj
     obj.parent = arm_obj
 
-# =============================================================================
-# 4. RENDERS DE CONTROL MULTI-ÁNGULO (CYCLES CPU)
-# =============================================================================
-def render_control_views():
+def apply_pose_and_render():
     scene = bpy.context.scene
-    scene.render.engine = 'CYCLES'
-    scene.cycles.device = 'CPU'
-    scene.cycles.samples = 32
-    scene.render.resolution_x = 800
-    scene.render.resolution_y = 1200
-    scene.render.film_transparent = False
+    arm = bpy.data.objects["Skeleton3D"]
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode='POSE')
 
-    for light in [o for o in scene.objects if o.type == 'LIGHT']:
-        bpy.data.objects.remove(light, do_unlink=True)
+    for pb in arm.pose.bones:
+        pb.rotation_mode = 'XYZ'
+        pb.rotation_euler = (0, 0, 0)
 
-    def add_light(name, ltype, energy, loc, color=(1.0, 1.0, 1.0), size=1.5):
+    # 1. Torso y cabeza con porte natural y sereno
+    arm.pose.bones['Spine'].rotation_euler = (math.radians(-1), math.radians(-1), math.radians(1))
+    arm.pose.bones['Chest'].rotation_euler = (math.radians(-2), math.radians(-3), math.radians(2))
+    arm.pose.bones['Head'].rotation_euler = (math.radians(-1), math.radians(4), math.radians(1))
+
+    # 2. Brazo violinista (Hand.R, -X, en pantalla a la derecha):
+    # Sostiene el violín por el clavijero / mástil superior con orgullo sereno
+    arm.pose.bones['Shoulder.R'].rotation_euler = (math.radians(2), math.radians(3), math.radians(-3))
+    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(36), math.radians(14), math.radians(-26))
+    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(92), math.radians(16), math.radians(-6))
+    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(14), math.radians(-4), math.radians(22))
+
+    # 3. Brazo del arco (Hand.L, +X, en pantalla a la izquierda):
+    # Sostiene la nuez del arco a la altura de la cintura/cadera, apuntando en diagonal al hombro
+    arm.pose.bones['Shoulder.L'].rotation_euler = (math.radians(-1), math.radians(-2), math.radians(1))
+    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(10), math.radians(-4), math.radians(6))
+    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(22), math.radians(-4), math.radians(2))
+    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(8), math.radians(4), math.radians(-2))
+
+    # 4. Postura natural de piernas (contrapposto sutil):
+    # Pierna derecha de apoyo, pierna izquierda relajada con leve rotación
+    arm.pose.bones['UpperLeg.L'].rotation_euler = (math.radians(-3), math.radians(2), math.radians(4))
+    arm.pose.bones['LowerLeg.L'].rotation_euler = (math.radians(5), 0, 0)
+    arm.pose.bones['Foot.L'].rotation_euler = (math.radians(-2), math.radians(-3), math.radians(-4))
+
+    arm.pose.bones['UpperLeg.R'].rotation_euler = (math.radians(1), math.radians(-1), math.radians(-2))
+    arm.pose.bones['Foot.R'].rotation_euler = (math.radians(-1), math.radians(2), math.radians(2))
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.context.view_layer.update()
+
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    body_obj = bpy.data.objects["Player_Body_Mesh"]
+    body_eval = body_obj.evaluated_get(depsgraph)
+    mesh_eval = body_eval.to_mesh()
+
+    vg_r = body_obj.vertex_groups.get("Hand.R")
+    hand_r_verts = [v.co for v in mesh_eval.vertices if any(g.group == vg_r.index and g.weight > 0.4 for g in body_obj.data.vertices[v.index].groups)]
+    avg_hand_r = sum(hand_r_verts, Vector((0,0,0))) / max(1, len(hand_r_verts))
+
+    vg_l = body_obj.vertex_groups.get("Hand.L")
+    hand_l_verts = [v.co for v in mesh_eval.vertices if any(g.group == vg_l.index and g.weight > 0.4 for g in body_obj.data.vertices[v.index].groups)]
+    avg_hand_l = sum(hand_l_verts, Vector((0,0,0))) / max(1, len(hand_l_verts))
+    body_eval.to_mesh_clear()
+
+    # Cargar Violín y Arco
+    if os.path.exists(VIOLIN_BLEND):
+        with bpy.data.libraries.load(VIOLIN_BLEND, link=False) as (data_from, data_to):
+            data_to.objects = [o for o in data_from.objects if o in ("Violin_Prop", "Violin_Bow")]
+        for o in data_to.objects:
+            if o:
+                scene.collection.objects.link(o)
+                for p in o.data.polygons: p.use_smooth = True
+                if o.name == "Violin_Prop":
+                    o.scale = (0.76, 0.76, 0.76)
+                    rot_v = Euler((math.radians(-76), math.radians(168), math.radians(16)), 'XYZ')
+                    o.rotation_euler = rot_v
+                    neck_local = Vector((0.0, 0.47, 0.015))
+                    neck_world_vec = rot_v.to_matrix() @ (Vector(o.scale) * neck_local)
+                    o.location = avg_hand_r - neck_world_vec + Vector((0.008, 0.010, -0.006))
+                elif o.name == "Violin_Bow":
+                    o.scale = (0.72, 0.72, 0.72)
+                    rot_b = Euler((math.radians(50), math.radians(-28), math.radians(58)), 'XYZ')
+                    o.rotation_euler = rot_b
+                    grip_local = Vector((0.0, 0.08, 0.0))
+                    grip_world_vec = rot_b.to_matrix() @ (Vector(o.scale) * grip_local)
+                    o.location = avg_hand_l - grip_world_vec + Vector((0.004, 0.006, -0.004))
+
+    for o in list(scene.objects):
+        if o.type in {'LIGHT', 'CAMERA'}: bpy.data.objects.remove(o, do_unlink=True)
+
+    def add_light(name, ltype, energy, loc, target, color=(1,1,1), size=1.4):
         ld = bpy.data.lights.new(name, ltype)
         ld.energy = energy
         ld.color = color
-        ld.size = size
+        if hasattr(ld, 'size'): ld.size = size
         lo = bpy.data.objects.new(name, ld)
-        lo.location = loc
+        lo.location = Vector(loc)
+        lo.rotation_euler = (Vector(target) - Vector(loc)).to_track_quat('-Z', 'Y').to_euler()
         scene.collection.objects.link(lo)
-        return lo
 
-    add_light("KeyLight",   'AREA', 180.0, ( 0.5,  1.8, 1.6), (1.0, 0.96, 0.92), size=1.8)
-    add_light("FillLight",  'AREA', 110.0, (-0.8,  1.6, 1.4), (0.95, 0.97, 1.0), size=2.2)
-    add_light("RimLight",   'AREA', 140.0, ( 0.0, -1.8, 1.6), (1.0, 0.98, 0.95), size=1.5)
-    add_light("HeadFill",   'AREA',  65.0, ( 0.0,  1.2, 1.7), (1.0, 0.96, 0.92), size=1.0)
+    chest_t = (0.0, 0.0, 1.20)
+    head_t = (0.0, 0.0, 1.48)
+    add_light('KeyWarm', 'AREA', 140.0, (-0.8, 1.6, 1.6), chest_t, (1.0, 0.94, 0.88), size=1.4)
+    add_light('FillHall', 'AREA', 65.0, (1.1, 1.5, 1.4), head_t, (0.92, 0.95, 1.0), size=2.0)
+    add_light('RimHair', 'SPOT', 125.0, (0.1, -1.3, 1.9), head_t, (1.0, 0.97, 0.92))
+    add_light('ViolinLight', 'AREA', 65.0, (-0.45, 1.7, 1.28), (-0.15, 0, 1.25), (1.0, 0.95, 0.88), size=1.0)
 
-    cam_data = bpy.data.cameras.new("RenderCam")
-    cam_data.lens = 52.0
-    cam_obj = bpy.data.objects.new("RenderCam", cam_data)
-    scene.collection.objects.link(cam_obj)
-    scene.camera = cam_obj
+    scene.render.engine = 'CYCLES'
+    scene.cycles.device = 'CPU'
+    scene.cycles.samples = 36
+    scene.render.film_transparent = True
 
-    target_pos = (0.0, 0.0, 0.90)
-    shots = [
-        ("astorga_preview.png",             ( 0.00,  1.85, 1.20), ( 0.00, 0.00, 1.20), PREVIEW_PNG),
-        ("astorga_master_front.png",        ( 0.00,  2.35, 0.95), target_pos, os.path.join(SCRATCH_DIR, "astorga_master_front.png")),
-        ("astorga_master_profile.png",      (-2.35,  0.00, 0.95), target_pos, os.path.join(SCRATCH_DIR, "astorga_master_profile.png")),
-        ("astorga_master_back.png",         ( 0.00, -2.35, 0.95), target_pos, os.path.join(SCRATCH_DIR, "astorga_master_back.png")),
-        ("astorga_master_threequarter.png", ( 1.45,  1.80, 1.05), target_pos, os.path.join(SCRATCH_DIR, "astorga_master_threequarter.png")),
-    ]
+    # 1. Cámara Retrato / Ícono (1024x1024)
+    cam_d = bpy.data.cameras.new("AstorgaCardCam")
+    cam_d.lens = 72.0
+    cam_o = bpy.data.objects.new("AstorgaCardCam", cam_d)
+    scene.collection.objects.link(cam_o)
+    scene.camera = cam_o
+    cam_o.location = Vector((0.0, 2.15, 1.25))
+    cam_o.rotation_euler = (Vector((0.0, 0.0, 1.22)) - cam_o.location).to_track_quat('-Z', 'Y').to_euler()
 
-    for name, c_pos, t_pos, out_p in shots:
-        cam_obj.location = Vector(c_pos)
-        direction = Vector(t_pos) - Vector(c_pos)
-        rot_quat = direction.to_track_quat('-Z', 'Y')
-        cam_obj.rotation_euler = rot_quat.to_euler()
-        scene.render.filepath = out_p
-        bpy.ops.render.render(write_still=True)
-        print(f"✓ Vista de control guardada: {out_p}")
+    scene.render.resolution_x = 1024
+    scene.render.resolution_y = 1024
+    out_icon = os.path.join(SCRATCH_DIR, "test_perfection_icon.png")
+    scene.render.filepath = out_icon
+    bpy.ops.render.render(write_still=True)
+    print(f"✓ Render de prueba guardado en: {out_icon}")
+
+    # 2. Cámara Cuerpo Completo (800x1200)
+    cam_d.lens = 48.0
+    cam_o.location = Vector((0.0, 2.45, 0.90))
+    cam_o.rotation_euler = (Vector((0.0, 0.0, 0.82)) - cam_o.location).to_track_quat('-Z', 'Y').to_euler()
+    scene.render.resolution_x = 800
+    scene.render.resolution_y = 1200
+    out_full = os.path.join(SCRATCH_DIR, "test_perfection_fullbody.png")
+    scene.render.filepath = out_full
+    bpy.ops.render.render(write_still=True)
+    print(f"✓ Render de cuerpo completo guardado en: {out_full}")
 
 def main():
-    print("=" * 65)
-    print("GENERANDO ASTORGA CANÓNICO CORREGIDO: SASTRERÍA 3D, MELENA 360 Y RIG 22")
-    print("=" * 65)
-
     clean_scene()
-
     all_mats = create_materials()
     mat_groups = {
-        "head": [
-            all_mats["skin"],
-            all_mats["eyes"],
-            all_mats["hair"]
-        ],
-        "body": [
-            all_mats["suit"],
-            all_mats["pants"],
-            all_mats["shoes"],
-            all_mats["skin"],
-            all_mats["shirt"],
-            all_mats["tie"],
-            all_mats["buttons"]
-        ]
+        "head": [all_mats["skin"], all_mats["eyes"], all_mats["hair"]],
+        "body": [all_mats["suit"], all_mats["pants"], all_mats["shoes"], all_mats["skin"], all_mats["shirt"], all_mats["tie"], all_mats["buttons"]]
     }
 
-    # 1. Esqueleto canónico de 22 huesos
     arm_obj = build_skeleton()
-    print("✓ Armature canónico construido con 22 huesos.")
-
-    # 2. Malla de Cabeza modular
     obj_head = build_head_mesh(mat_groups)
     assign_weights(obj_head, is_head=True)
     attach_armature_modifier(obj_head, arm_obj)
-    print("✓ Player_Head_Mesh generado con rostro auténtico y melena setentera continua 360°.")
 
-    # 3. Malla de Cuerpo modular
     obj_body = build_body_mesh(mat_groups)
     assign_weights(obj_body, is_head=False)
     attach_armature_modifier(obj_body, arm_obj)
-    print("✓ Player_Body_Mesh generado con proporciones esbeltas, sastrería 3D y camisa vinotinto.")
 
-    # Verificación matemática de pesos
-    vg_h_l = obj_body.vertex_groups.get("Hand.L")
-    vg_h_r = obj_body.vertex_groups.get("Hand.R")
-    leg_groups = [obj_body.vertex_groups[name].index for name in ["UpperLeg.L", "LowerLeg.L", "UpperLeg.R", "LowerLeg.R", "Foot.L", "Foot.R"] if name in obj_body.vertex_groups]
-    leaks = 0
-    if vg_h_l and vg_h_r:
-        hand_indices = {vg_h_l.index, vg_h_r.index}
-        for v in obj_body.data.vertices:
-            g_ids = {g.group for g in v.groups if g.weight > 0.01}
-            if hand_indices.intersection(g_ids) and any(lg in g_ids for lg in leg_groups):
-                leaks += 1
-    print(f"✓ Verificación matemática de pesos: {leaks} vértices de manos fugados a piernas.")
-
-    # Guardar archivo .blend canónico
-    bpy.ops.wm.save_as_mainfile(filepath=OUTPUT_BLEND)
-    print(f"✓ Guardado .blend en: {OUTPUT_BLEND}")
-
-    # Exportar archivo .glb canónico
-    bpy.ops.export_scene.gltf(
-        filepath=OUTPUT_GLB,
-        export_format='GLB',
-        use_selection=False,
-        export_apply=False,
-        export_animations=False,
-        export_skins=True,
-        export_morph=True,
-        export_materials='EXPORT',
-        export_cameras=False,
-        export_lights=False
-    )
-    print(f"✓ Exportado .glb canónico en: {OUTPUT_GLB}")
-
-    # Renders de validación multi-ángulo
-    render_control_views()
-
-    print("=" * 65)
-    print("PROCESO ASTORGA COMPLETADO EXITOSAMENTE")
-    print("=" * 65)
+    apply_pose_and_render()
 
 if __name__ == "__main__":
     main()

@@ -376,32 +376,50 @@ def render_astorga():
         pb.rotation_euler = (0, 0, 0)
 
     # Pose canónica de Astorga según scratch/humans/astorga.png:
-    # 1. Torso erguido con leve giro 3/4
-    arm.pose.bones['Chest'].rotation_euler = (math.radians(-2), math.radians(-5), math.radians(2))
+    # 1. Torso y cabeza con porte natural y sereno
+    arm.pose.bones['Spine'].rotation_euler = (math.radians(-1), math.radians(-1), math.radians(1))
+    arm.pose.bones['Chest'].rotation_euler = (math.radians(-2), math.radians(-3), math.radians(2))
+    arm.pose.bones['Head'].rotation_euler = (math.radians(-1), math.radians(4), math.radians(1))
 
-    # 2. Cabeza orientada con aplomo sereno
-    arm.pose.bones['Head'].rotation_euler = (math.radians(-2), math.radians(6), math.radians(2))
+    # 2. Brazo violinista (Hand.R, -X, en pantalla a la derecha):
+    # Sostiene el violín por el clavijero / mástil superior con orgullo sereno
+    arm.pose.bones['Shoulder.R'].rotation_euler = (math.radians(2), math.radians(3), math.radians(-3))
+    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(36), math.radians(14), math.radians(-26))
+    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(92), math.radians(16), math.radians(-6))
+    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(14), math.radians(-4), math.radians(22))
 
-    # 3. Brazo en VIEWER'S RIGHT (Hand.R, -X): Sostiene el VIOLÍN verticalmente junto al hombro / pecho alto
-    # Dedos flexionados abrazando el mástil por el frente
-    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(34), math.radians(16), math.radians(-28))
-    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(96), math.radians(16), math.radians(-10))
-    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(24), math.radians(-18), math.radians(44))
+    # 3. Brazo del arco (Hand.L, +X, en pantalla a la izquierda):
+    # Sostiene la nuez del arco a la altura de la cintura/cadera, apuntando en diagonal al hombro
+    arm.pose.bones['Shoulder.L'].rotation_euler = (math.radians(-1), math.radians(-2), math.radians(1))
+    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(10), math.radians(-4), math.radians(6))
+    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(22), math.radians(-4), math.radians(2))
+    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(8), math.radians(4), math.radians(-2))
 
-    # 4. Brazo en VIEWER'S LEFT (Hand.L, +X): Sostiene el ARCO apuntando cruzado diagonal hacia el hombro
-    # Clavícula acompaña levemente (+3°), hombro sin colapsar (cero deltoides sumido)
-    arm.pose.bones['Shoulder.L'].rotation_euler = (math.radians(3), math.radians(-1), math.radians(3))
-    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(20), math.radians(-5), math.radians(10))
-    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(52), math.radians(-8), math.radians(8))
-    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(24), math.radians(12), math.radians(-10))
+    # 4. Postura natural de piernas (contrapposto sutil):
+    arm.pose.bones['UpperLeg.L'].rotation_euler = (math.radians(-3), math.radians(2), math.radians(4))
+    arm.pose.bones['LowerLeg.L'].rotation_euler = (math.radians(5), 0, 0)
+    arm.pose.bones['Foot.L'].rotation_euler = (math.radians(-2), math.radians(-3), math.radians(-4))
+
+    arm.pose.bones['UpperLeg.R'].rotation_euler = (math.radians(1), math.radians(-1), math.radians(-2))
+    arm.pose.bones['Foot.R'].rotation_euler = (math.radians(-1), math.radians(2), math.radians(2))
 
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.context.view_layer.update()
 
-    hand_l_mat = arm.matrix_world @ arm.pose.bones['Hand.L'].matrix
-    hand_r_mat = arm.matrix_world @ arm.pose.bones['Hand.R'].matrix
-    hand_l_loc = hand_l_mat.to_translation()
-    hand_r_loc = hand_r_mat.to_translation()
+    # Cálculo de contacto milimétrico exacto usando la malla evaluada en pose
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    body_obj = bpy.data.objects.get("Player_Body_Mesh")
+    body_eval = body_obj.evaluated_get(depsgraph)
+    mesh_eval = body_eval.to_mesh()
+
+    vg_r = body_obj.vertex_groups.get("Hand.R")
+    hand_r_verts = [v.co for v in mesh_eval.vertices if any(g.group == vg_r.index and g.weight > 0.4 for g in body_obj.data.vertices[v.index].groups)]
+    avg_hand_r = sum(hand_r_verts, Vector((0,0,0))) / max(1, len(hand_r_verts))
+
+    vg_l = body_obj.vertex_groups.get("Hand.L")
+    hand_l_verts = [v.co for v in mesh_eval.vertices if any(g.group == vg_l.index and g.weight > 0.4 for g in body_obj.data.vertices[v.index].groups)]
+    avg_hand_l = sum(hand_l_verts, Vector((0,0,0))) / max(1, len(hand_l_verts))
+    body_eval.to_mesh_clear()
 
     # Cargar Violín y Arco independientes
     VIOLIN_BLEND = os.path.join(PROJECT_ROOT, "godot_project/assets/props/violin.blend")
@@ -415,15 +433,18 @@ def render_astorga():
                     p.use_smooth = True
                 if o.name == "Violin_Prop":
                     o.scale = (0.76, 0.76, 0.76)
-                    # Violín vertical sujetado anatómicamente en Hand.R:
-                    # El mástil pasa exactamente por el agarre de la mano derecha
-                    o.rotation_euler = Euler((math.radians(-76), math.radians(172), math.radians(18)), 'XYZ')
-                    o.location = Vector((hand_r_loc.x + 0.009, hand_r_loc.y + 0.006, hand_r_loc.z - 0.210))
+                    rot_v = Euler((math.radians(-76), math.radians(168), math.radians(16)), 'XYZ')
+                    o.rotation_euler = rot_v
+                    neck_local = Vector((0.0, 0.47, 0.015))
+                    neck_world_vec = rot_v.to_matrix() @ (Vector(o.scale) * neck_local)
+                    o.location = avg_hand_r - neck_world_vec + Vector((0.008, 0.010, -0.006))
                 elif o.name == "Violin_Bow":
-                    o.scale = (0.70, 0.70, 0.70)
-                    # El arco pasa exactamente a través del puño cerrado de Hand.L:
-                    o.rotation_euler = Euler((math.radians(26), math.radians(-4), math.radians(-18)), 'XYZ')
-                    o.location = Vector((hand_l_loc.x - 0.001, hand_l_loc.y + 0.016, hand_l_loc.z - 0.022))
+                    o.scale = (0.72, 0.72, 0.72)
+                    rot_b = Euler((math.radians(50), math.radians(-28), math.radians(58)), 'XYZ')
+                    o.rotation_euler = rot_b
+                    grip_local = Vector((0.0, 0.08, 0.0))
+                    grip_world_vec = rot_b.to_matrix() @ (Vector(o.scale) * grip_local)
+                    o.location = avg_hand_l - grip_world_vec + Vector((0.004, 0.006, -0.004))
 
     clear_lights_and_cameras(scene)
 

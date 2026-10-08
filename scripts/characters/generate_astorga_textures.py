@@ -262,8 +262,8 @@ def generate_hair_textures():
     x = np.linspace(0.0, 1.0, w)[None, :]
     y = np.linspace(0.0, 1.0, h)[:, None]
 
-    base_hair = np.array([0.09, 0.07, 0.06], dtype=np.float32)
-    highlight_hair = np.array([0.18, 0.14, 0.11], dtype=np.float32)
+    base_hair = np.array([0.025, 0.020, 0.018], dtype=np.float32)
+    highlight_hair = np.array([0.060, 0.048, 0.040], dtype=np.float32)
 
     # Ondas sinoidales superpuestas simulando mechones densos
     wave = np.sin(x * 40.0 + np.sin(y * 18.0) * 2.5) * 0.5 + 0.5
@@ -297,18 +297,18 @@ def generate_suit_textures():
     x = np.linspace(0.0, 1.0, w)[None, :]
     y = np.linspace(0.0, 1.0, h)[:, None]
 
-    # Paño sastre negro carbón profundo con matices grafito
-    suit_base = np.array([0.082, 0.088, 0.096], dtype=np.float32)
-    lapel_highlight = np.array([0.125, 0.132, 0.142], dtype=np.float32)
+    # Paño sastre negro carbón profundo auténtico de esmoquin
+    suit_base = np.array([0.024, 0.025, 0.028], dtype=np.float32)
+    lapel_highlight = np.array([0.038, 0.040, 0.044], dtype=np.float32)
 
     # Trama textil fina ortogonal
-    weave = (np.sin(x * 512.0 * np.pi) * np.sin(y * 512.0 * np.pi)) * 0.018
+    weave = (np.sin(x * 512.0 * np.pi) * np.sin(y * 512.0 * np.pi)) * 0.005
 
-    # Detalle de solapas sastre y costuras frontales
+    # Detalle sutil de solapas sastre y costuras frontales
     lapel_v = np.clip(1.0 - np.abs(x - 0.50) / 0.35, 0.0, 1.0) * np.clip((y - 0.30) / 0.70, 0.0, 1.0)
 
     for c in range(3):
-        diffuse[:, :, c] = suit_base[c] + weave + lapel_highlight[c] * (lapel_v * 0.15)
+        diffuse[:, :, c] = suit_base[c] + weave + (lapel_highlight[c] - suit_base[c]) * (lapel_v * 0.4)
     diffuse[:, :, 3] = 1.0
 
     height_suit = weave * 2.0
@@ -335,12 +335,12 @@ def generate_shirt_textures():
     y = np.linspace(0.0, 1.0, h)[:, None]
 
     # Borgoña / vino tinto elegante según scratch/humans/astorga.png
-    shirt_base = np.array([0.295, 0.075, 0.105], dtype=np.float32)
-    shirt_highlight = np.array([0.385, 0.115, 0.145], dtype=np.float32)
+    shirt_base = np.array([0.280, 0.045, 0.065], dtype=np.float32)
+    shirt_highlight = np.array([0.350, 0.065, 0.090], dtype=np.float32)
 
     # Trama de algodón formal de alta densidad
-    cotton_weave = (np.sin(x * 640.0 * np.pi) * np.sin(y * 640.0 * np.pi)) * 0.015
-    collar_fold = np.sin(y * 8.0 * np.pi) * 0.03
+    cotton_weave = (np.sin(x * 640.0 * np.pi) * np.sin(y * 640.0 * np.pi)) * 0.012
+    collar_fold = np.sin(y * 8.0 * np.pi) * 0.02
 
     for c in range(3):
         diffuse[:, :, c] = shirt_base[c] + cotton_weave + (shirt_highlight[c] - shirt_base[c]) * (collar_fold + 0.03)
@@ -369,9 +369,9 @@ def generate_tie_textures():
     x = np.linspace(0.0, 1.0, w)[None, :]
     y = np.linspace(0.0, 1.0, h)[:, None]
 
-    # Seda oscura con reflejo satinado
-    tie_base = np.array([0.090, 0.055, 0.065], dtype=np.float32)
-    satin_diagonal = np.sin((x + y) * 128.0 * np.pi) * 0.018
+    # Seda negra carbón con brillo satinado
+    tie_base = np.array([0.016, 0.016, 0.018], dtype=np.float32)
+    satin_diagonal = np.sin((x + y) * 128.0 * np.pi) * 0.008
 
     for c in range(3):
         diffuse[:, :, c] = tie_base[c] + satin_diagonal
@@ -399,11 +399,11 @@ def generate_pants_textures():
     x = np.linspace(0.0, 1.0, w)[None, :]
     y = np.linspace(0.0, 1.0, h)[:, None]
 
-    pants_base = np.array([0.078, 0.082, 0.090], dtype=np.float32)
-    weave = (np.sin(x * 512.0 * np.pi) * np.sin(y * 512.0 * np.pi)) * 0.015
+    pants_base = np.array([0.024, 0.025, 0.028], dtype=np.float32)
+    weave = (np.sin(x * 512.0 * np.pi) * np.sin(y * 512.0 * np.pi)) * 0.005
 
     # Raya vertical de planchado sastre
-    crease = np.exp(-((x - 0.50)**2 / 0.002)) * 0.04
+    crease = np.exp(-((x - 0.50)**2 / 0.002)) * 0.015
 
     for c in range(3):
         diffuse[:, :, c] = pants_base[c] + weave + crease
@@ -432,8 +432,8 @@ def generate_shoes_textures():
     x = np.linspace(0.0, 1.0, w)[None, :]
     y = np.linspace(0.0, 1.0, h)[:, None]
 
-    shoes_base = np.array([0.055, 0.058, 0.062], dtype=np.float32)
-    leather_grain = np.sin(x * 800.0) * np.cos(y * 800.0) * 0.012
+    shoes_base = np.array([0.015, 0.015, 0.018], dtype=np.float32)
+    leather_grain = np.sin(x * 800.0) * np.cos(y * 800.0) * 0.005
 
     for c in range(3):
         diffuse[:, :, c] = shoes_base[c] + leather_grain
