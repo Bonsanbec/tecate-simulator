@@ -30,6 +30,10 @@ if [[ -z "${GODOT_PATH:-}" ]]; then
     GODOT_PATH="$(command -v godot)"
   elif command -v godot4 >/dev/null 2>&1; then
     GODOT_PATH="$(command -v godot4)"
+  elif [[ -x "/Applications/Godot_mono.app/Contents/MacOS/Godot" ]]; then
+    GODOT_PATH="/Applications/Godot_mono.app/Contents/MacOS/Godot"
+  elif [[ -x "/Applications/Godot.app/Contents/MacOS/Godot" ]]; then
+    GODOT_PATH="/Applications/Godot.app/Contents/MacOS/Godot"
   else
     GODOT_PATH="godot"
   fi
