@@ -381,15 +381,16 @@ def render_astorga():
     # 2. Cabeza orientada con aplomo sereno
     arm.pose.bones['Head'].rotation_euler = (math.radians(-2), math.radians(8), math.radians(2))
 
-    # 3. Brazo en VIEWER'S RIGHT (Hand.R, -X): Sostiene el VIOLÍN en vertical junto al hombro / pecho alto
-    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(35), math.radians(15), math.radians(-25))
-    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(95), math.radians(10), math.radians(-15))
-    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(15), math.radians(-14), math.radians(25))
+    # 3. Brazo en VIEWER'S RIGHT (Hand.R, -X): Sostiene el VIOLÍN verticalmente junto al hombro / pecho alto
+    # Dedos flexionados abrazando el mástil/caja anatómica
+    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(38), math.radians(18), math.radians(-32))
+    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(98), math.radians(14), math.radians(-12))
+    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(25), math.radians(-22), math.radians(45))
 
-    # 4. Brazo en VIEWER'S LEFT (Hand.L, +X): Sostiene el ARCO apuntando diagonal cruzado
-    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(12), math.radians(-10), math.radians(18))
-    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(45), math.radians(-12), math.radians(10))
-    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(18), math.radians(12), math.radians(-18))
+    # 4. Brazo en VIEWER'S LEFT (Hand.L, +X): Sostiene el ARCO apuntando cruzado diagonal hacia el pecho
+    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(22), math.radians(-6), math.radians(12))
+    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(56), math.radians(-10), math.radians(10))
+    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(26), math.radians(14), math.radians(-12))
 
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.context.view_layer.update()
@@ -411,14 +412,14 @@ def render_astorga():
                     p.use_smooth = True
                 if o.name == "Violin_Prop":
                     o.scale = (0.76, 0.76, 0.76)
-                    # Violín vertical con el frente mirando a la cámara (+Y)
-                    o.rotation_euler = Euler((math.radians(-82), math.radians(172), math.radians(14)), 'XYZ')
-                    o.location = Vector((hand_r_loc.x + 0.010, hand_r_loc.y - 0.035, hand_r_loc.z - 0.290))
+                    # Violín vertical sujetado anatómicamente en Hand.R (mástil y caja abrazados por los dedos)
+                    o.rotation_euler = Euler((math.radians(-78), math.radians(175), math.radians(18)), 'XYZ')
+                    o.location = Vector((hand_r_loc.x + 0.005, hand_r_loc.y - 0.015, hand_r_loc.z - 0.220))
                 elif o.name == "Violin_Bow":
-                    o.scale = (0.78, 0.78, 0.78)
-                    # El arco sostenido en Hand.L apuntando diagonal ascendente hacia el pecho
-                    o.rotation_euler = Euler((math.radians(42), math.radians(-28), math.radians(-48)), 'XYZ')
-                    o.location = Vector((hand_l_loc.x - 0.010, hand_l_loc.y + 0.025, hand_l_loc.z - 0.010))
+                    o.scale = (0.70, 0.70, 0.70)
+                    # El arco apuntando diagonalmente hacia el pecho/violín dentro del encuadre
+                    o.rotation_euler = Euler((math.radians(24), math.radians(-4), math.radians(-18)), 'XYZ')
+                    o.location = Vector((hand_l_loc.x - 0.005, hand_l_loc.y + 0.015, hand_l_loc.z - 0.005))
 
     clear_lights_and_cameras(scene)
 

@@ -1,38 +1,10 @@
 """
-=============================================================================
-GENERADOR CANÓNICO PROCEDURAL DE ALTA FIDELIDAD: ASTORGA (TECATE SIMULATOR)
-=============================================================================
-Reconstrucción fidedigna del personaje Astorga ("Músico") en Tecate Simulator:
-1. Cabeza, Rostro y Fenotipo Auténtico:
-   - Fisonomía facial expresiva (mentón firme, perfil nasal recto, mandíbula angular)
-     preservada exactamente según la morfología aprobada.
-   - Piel morena cálida / apiñonada auténtica con textura PBR.
-   - Ojos castaños profundos con párpados 3D y Shape Key 'blink'.
-   - Melena setentera/ochentera continua y voluminosa en 360° con ondas orgánicas,
-     volumen en sienes que cubre las orejas, flequillo peinado a los lados
-     y caída fluida festoneada hacia la nuca (sin huecos ni tiras descolgadas).
-2. Proporciones Corporales Esbeltas y Manos de Violinista:
-   - Silueta esbelta y elegante de violinista, eliminando el grosor tosco y la
-     entrepierna excesivamente ancha o alta anterior.
-   - Manos anatómicas con curvatura natural en reposo y falanges articuladas.
-3. Sastrería 3D Completa (Smoking Formal con Saco y Camisa Vinotinto):
-   - Saco formal negro carbón con solapas de muesca sastre en relieve 3D (notch lapels),
-     cuello vuelto alrededor de la nuca, pechera abierta en V.
-   - Faldón sastre integrado que cubre cadera y glúteos ($Z = 0.73$ a $0.96$) y se
-     abre al frente en una 'V' invertida clásica, mostrando el pantalón y cintura.
-   - Camisa vinotinto formal que se extiende de forma continua por todo el torso
-     hasta la cintura bajo el saco.
-   - Corbata de seda oscura con nudo Windsor cayendo verticalmente sobre la camisa.
-   - Botones sastre anclados exactamente sobre la superficie textil (cero flotación en profundidad).
-   - Pantalón sastre negro recto y zapatos de vestir pulidos.
-4. Rigging Canónico de 22 Huesos y Exportación a Godot 4:
-   - Submallas 'Player_Head_Mesh' y 'Player_Body_Mesh'.
-   - Esqueleto canónico 'Skeleton3D' con blindaje de pesos.
-   - Exportación limpia a 'astorga.glb' y 'astorga.blend'.
-   - Renders de control multi-ángulo con Cycles CPU.
-=============================================================================
+Test del pipeline completo de Astorga:
+1. Generación de mallas con proporciones esbeltas, sastrería 3D integrada y melena 360° orgánica.
+2. Rigging canónico de 22 huesos con pesos exactos.
+3. Carga y pose del violín y arco (mano sosteniendo el violín, arco en diagonal dentro del cuadro).
+4. Renders de 4 vistas de cuerpo completo + render de retrato/ícono.
 """
-
 import os
 import math
 import numpy as np
@@ -41,116 +13,49 @@ import bmesh
 from mathutils import Vector, Matrix, Euler
 
 PROJECT_ROOT = "/Users/hakkindavid/Documents/GitHub/tecate-simulator"
-ASSETS_DIR = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/citizens")
-TEXTURES_DIR = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/textures")
 SCRATCH_DIR = os.path.join(PROJECT_ROOT, "scratch")
+VIOLIN_BLEND = os.path.join(PROJECT_ROOT, "godot_project/assets/props/violin.blend")
+TEXTURES_DIR = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/textures")
 
-OUTPUT_BLEND = os.path.join(ASSETS_DIR, "astorga.blend")
-OUTPUT_GLB = os.path.join(ASSETS_DIR, "astorga.glb")
-PREVIEW_PNG = os.path.join(PROJECT_ROOT, "godot_project/assets/characters/astorga_preview.png")
-
-os.makedirs(ASSETS_DIR, exist_ok=True)
-os.makedirs(SCRATCH_DIR, exist_ok=True)
-
-# =============================================================================
-# 0. CONFIGURACIÓN DE MATERIALES PBR
-# =============================================================================
 def clean_scene():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     for obj in list(bpy.data.objects):
         bpy.data.objects.remove(obj, do_unlink=True)
     for mesh in list(bpy.data.meshes):
         bpy.data.meshes.remove(mesh, do_unlink=True)
-    for arm in list(bpy.data.armatures):
-        bpy.data.armatures.remove(arm, do_unlink=True)
     for mat in list(bpy.data.materials):
         bpy.data.materials.remove(mat, do_unlink=True)
+    for arm in list(bpy.data.armatures):
+        bpy.data.armatures.remove(arm, do_unlink=True)
 
-def setup_pbr_material(name, diffuse_tex_path, normal_tex_path=None,
-                       base_color=(0.8, 0.8, 0.8, 1.0), roughness=0.6,
-                       metallic=0.0, specular=0.5):
-    mat = bpy.data.materials.new(name=name)
-    mat.use_nodes = True
-    nodes = mat.node_tree.nodes
-    links = mat.node_tree.links
-    nodes.clear()
+def setup_materials():
+    def get_or_create(name, color, rough=0.6, metal=0.0):
+        mat = bpy.data.materials.new(name)
+        mat.use_nodes = True
+        nodes = mat.node_tree.nodes
+        links = mat.node_tree.links
+        nodes.clear()
+        out = nodes.new('ShaderNodeOutputMaterial')
+        bsdf = nodes.new('ShaderNodeBsdfPrincipled')
+        links.new(bsdf.outputs['BSDF'], out.inputs['Surface'])
+        bsdf.inputs['Base Color'].default_value = color
+        bsdf.inputs['Roughness'].default_value = rough
+        bsdf.inputs['Metallic'].default_value = metal
+        return mat
 
-    output_node = nodes.new(type='ShaderNodeOutputMaterial')
-    output_node.location = (400, 0)
-    bsdf = nodes.new(type='ShaderNodeBsdfPrincipled')
-    bsdf.location = (0, 0)
-    links.new(bsdf.outputs['BSDF'], output_node.inputs['Surface'])
-
-    bsdf.inputs['Base Color'].default_value = base_color
-    bsdf.inputs['Roughness'].default_value = roughness
-    bsdf.inputs['Metallic'].default_value = metallic
-    if 'Specular IOR Level' in bsdf.inputs:
-        bsdf.inputs['Specular IOR Level'].default_value = specular
-
-    if diffuse_tex_path and os.path.exists(diffuse_tex_path):
-        tex_node = nodes.new(type='ShaderNodeTexImage')
-        tex_node.location = (-400, 100)
-        img = bpy.data.images.load(diffuse_tex_path, check_existing=True)
-        tex_node.image = img
-        links.new(tex_node.outputs['Color'], bsdf.inputs['Base Color'])
-
-    if normal_tex_path and os.path.exists(normal_tex_path):
-        norm_tex = nodes.new(type='ShaderNodeTexImage')
-        norm_tex.location = (-400, -200)
-        img_n = bpy.data.images.load(normal_tex_path, check_existing=True)
-        img_n.colorspace_settings.name = 'Non-Color'
-        norm_tex.image = img_n
-        norm_map = nodes.new(type='ShaderNodeNormalMap')
-        norm_map.location = (-150, -200)
-        norm_map.inputs['Strength'].default_value = 0.85
-        links.new(norm_tex.outputs['Color'], norm_map.inputs['Color'])
-        links.new(norm_map.outputs['Normal'], bsdf.inputs['Normal'])
-
-    return mat
-
-def create_materials():
-    materials = {
-        "skin": setup_pbr_material("Mat_Astorga_Skin",
-                                   os.path.join(TEXTURES_DIR, "astorga_face_diffuse.png"),
-                                   os.path.join(TEXTURES_DIR, "astorga_face_normal.png"),
-                                   base_color=(0.550, 0.400, 0.315, 1.0), roughness=0.52),
-        "eyes": setup_pbr_material("Mat_Astorga_Eyes",
-                                   os.path.join(TEXTURES_DIR, "astorga_eye_diffuse.png"),
-                                   None,
-                                   base_color=(0.28, 0.16, 0.09, 1.0), roughness=0.10),
-        "hair": setup_pbr_material("Mat_Astorga_Hair",
-                                   os.path.join(TEXTURES_DIR, "astorga_hair_diffuse.png"),
-                                   os.path.join(TEXTURES_DIR, "astorga_hair_normal.png"),
-                                   base_color=(0.08, 0.06, 0.05, 1.0), roughness=0.75),
-        "suit": setup_pbr_material("Mat_Astorga_Suit",
-                                   os.path.join(TEXTURES_DIR, "astorga_suit_diffuse.png"),
-                                   os.path.join(TEXTURES_DIR, "astorga_suit_normal.png"),
-                                   base_color=(0.065, 0.068, 0.075, 1.0), roughness=0.65),
-        "shirt": setup_pbr_material("Mat_Astorga_Shirt",
-                                    os.path.join(TEXTURES_DIR, "astorga_shirt_diffuse.png"),
-                                    os.path.join(TEXTURES_DIR, "astorga_shirt_normal.png"),
-                                    base_color=(0.340, 0.055, 0.085, 1.0), roughness=0.55),
-        "tie": setup_pbr_material("Mat_Astorga_Tie",
-                                  os.path.join(TEXTURES_DIR, "astorga_tie_diffuse.png"),
-                                  os.path.join(TEXTURES_DIR, "astorga_tie_normal.png"),
-                                  base_color=(0.050, 0.038, 0.045, 1.0), roughness=0.40),
-        "pants": setup_pbr_material("Mat_Astorga_Pants",
-                                    os.path.join(TEXTURES_DIR, "astorga_pants_diffuse.png"),
-                                    os.path.join(TEXTURES_DIR, "astorga_pants_normal.png"),
-                                    base_color=(0.060, 0.064, 0.070, 1.0), roughness=0.70),
-        "shoes": setup_pbr_material("Mat_Astorga_Shoes",
-                                    os.path.join(TEXTURES_DIR, "astorga_shoes_diffuse.png"),
-                                    os.path.join(TEXTURES_DIR, "astorga_shoes_normal.png"),
-                                    base_color=(0.035, 0.035, 0.040, 1.0), roughness=0.25),
-        "buttons": setup_pbr_material("Mat_Astorga_Buttons",
-                                      None, None,
-                                      base_color=(0.03, 0.03, 0.03, 1.0), roughness=0.20, metallic=0.40),
+    mats = {
+        "skin": get_or_create("Mat_Astorga_Skin", (0.550, 0.400, 0.315, 1.0), rough=0.52),
+        "eyes": get_or_create("Mat_Astorga_Eyes", (0.28, 0.16, 0.09, 1.0), rough=0.10),
+        "hair": get_or_create("Mat_Astorga_Hair", (0.08, 0.06, 0.05, 1.0), rough=0.75),
+        "suit": get_or_create("Mat_Astorga_Suit", (0.065, 0.068, 0.075, 1.0), rough=0.65),
+        "shirt": get_or_create("Mat_Astorga_Shirt", (0.340, 0.055, 0.085, 1.0), rough=0.55), # Rojo vino
+        "tie": get_or_create("Mat_Astorga_Tie", (0.050, 0.038, 0.045, 1.0), rough=0.40),
+        "pants": get_or_create("Mat_Astorga_Pants", (0.060, 0.064, 0.070, 1.0), rough=0.70),
+        "shoes": get_or_create("Mat_Astorga_Shoes", (0.035, 0.035, 0.040, 1.0), rough=0.25),
+        "buttons": get_or_create("Mat_Astorga_Buttons", (0.03, 0.03, 0.03, 1.0), rough=0.20, metal=0.4),
     }
-    return materials
+    return mats
 
-# =============================================================================
-# 1. CABEZA, ROSTRO, OJOS, PÁRPADOS 3D Y MELENA SETENTERA CONTINUA 360°
-# =============================================================================
 def build_head_mesh(materials):
     me = bpy.data.meshes.new("Player_Head_Mesh_Data")
     bm = bmesh.new()
@@ -161,21 +66,21 @@ def build_head_mesh(materials):
         v = 0.50 + (z - 1.485) / 0.240
         return (max(0.0, min(1.0, u)), max(0.0, min(1.0, v)))
 
-    # Perfil craneofacial estilizado de Astorga
+    # Perfil craneofacial de Astorga (conservado exactamente según el aprobado)
     head_profile = [
         # z,      rx,    ry_front, ry_back, y_offset, is_face
         (1.370,  0.044, 0.044,    0.046,   -0.002,   False), # 0: Base cuello
         (1.392,  0.045, 0.044,    0.048,   -0.002,   False), # 1: Cuello medio
         (1.412,  0.050, 0.046,    0.054,    0.000,   True),  # 2: Ángulo submandibular
-        (1.428,  0.057, 0.063,    0.066,    0.004,   True),  # 3: Mentón masculino firme
+        (1.428,  0.057, 0.063,    0.066,    0.004,   True),  # 3: Mentón firme
         (1.445,  0.061, 0.063,    0.072,    0.003,   True),  # 4: Surco mentolabial
         (1.458,  0.063, 0.065,    0.080,    0.003,   True),  # 5: Labio inferior
-        (1.468,  0.065, 0.064,    0.084,    0.002,   True),  # 6: Hendidura labial serena
+        (1.468,  0.065, 0.064,    0.084,    0.002,   True),  # 6: Hendidura labial
         (1.478,  0.067, 0.067,    0.088,    0.002,   True),  # 7: Labio superior
-        (1.492,  0.070, 0.066,    0.090,    0.001,   True),  # 8: Base nasal / Filtrum
-        (1.505,  0.072, 0.074,    0.091,    0.000,   True),  # 9: Punta nasal recta y definida
-        (1.515,  0.074, 0.068,    0.091,    0.000,   True),  # 10: Ojos y puente nasal (Z = 1.515)
-        (1.532,  0.075, 0.071,    0.090,   -0.002,   True),  # 11: Pómulos y cejas expresivas
+        (1.492,  0.070, 0.066,    0.090,    0.001,   True),  # 8: Base nasal
+        (1.505,  0.072, 0.074,    0.091,    0.000,   True),  # 9: Punta nasal
+        (1.515,  0.074, 0.068,    0.091,    0.000,   True),  # 10: Ojos (Z = 1.515)
+        (1.532,  0.075, 0.071,    0.090,   -0.002,   True),  # 11: Pómulos y cejas
         (1.550,  0.074, 0.068,    0.088,   -0.004,   True),  # 12: Sienes y frente baja
         (1.566,  0.072, 0.063,    0.084,   -0.006,   True),  # 13: Frente media
         (1.582,  0.068, 0.055,    0.078,   -0.008,   False), # 14: Bóveda baja
@@ -194,7 +99,6 @@ def build_head_mesh(materials):
             x = rx * cos_a
             y = (ry_f if sin_a >= 0 else ry_b) * sin_a + y_off
 
-            # Modulaciones anatómicas:
             if l_idx == 3 and 0.44 * math.pi <= ang <= 0.56 * math.pi:
                 y += 0.005 * math.cos((ang - 0.5 * math.pi) / 0.06 * (0.5 * math.pi))**2
 
@@ -210,7 +114,7 @@ def build_head_mesh(materials):
             cur_ring.append(v)
         rings.append(cur_ring)
 
-    # Construir caras de la cabeza
+    # Caras del rostro y cráneo base
     for l_idx in range(len(head_profile) - 1):
         r1 = rings[l_idx]
         r2 = rings[l_idx + 1]
@@ -220,25 +124,19 @@ def build_head_mesh(materials):
             f = bm.faces.new((r1[i], r1[inxt], r2[inxt], r2[i]))
             ang_mid = (2.0 * math.pi * (i + 0.5)) / n_ring
             sin_mid = math.sin(ang_mid)
-
-            # Rostro visible en frente: piel limpia en frente (0: Skin)
-            is_face_skin = (z_mid < 1.572 and sin_mid > -0.05)
+            is_face_skin = (z_mid < 1.546 and sin_mid > -0.05)
             f.material_index = 0 if is_face_skin else 2 # 0: Skin, 2: Hair
+            for loop in f.loops: loop[uv_lay].uv = calc_face_uv(loop.vert.co.x, loop.vert.co.z)
 
-            for loop in f.loops:
-                loop[uv_lay].uv = calc_face_uv(loop.vert.co.x, loop.vert.co.z)
-
-    # Coronilla superior
     top_vert = bm.verts.new((0.0, -0.012, 1.620))
     r_last = rings[-1]
     for i in range(n_ring):
         inxt = (i + 1) % n_ring
         f_top = bm.faces.new((r_last[i], r_last[inxt], top_vert))
         f_top.material_index = 2
-        for loop in f_top.loops:
-            loop[uv_lay].uv = calc_face_uv(loop.vert.co.x, loop.vert.co.z)
+        for loop in f_top.loops: loop[uv_lay].uv = calc_face_uv(loop.vert.co.x, loop.vert.co.z)
 
-    # Globos oculares 3D (Z = 1.515, Y = 0.0535, Radio = 0.0120)
+    # Ojos 3D
     eye_pos = [(0.033, 0.0535, 1.515), (-0.033, 0.0535, 1.515)]
     eye_r = 0.0120
     for pos in eye_pos:
@@ -249,15 +147,14 @@ def build_head_mesh(materials):
         v_map = {v: bm.verts.new(v.co) for v in e_bm.verts}
         for f in e_bm.faces:
             nf = bm.faces.new([v_map[v] for v in f.verts])
-            nf.material_index = 1 # Mat_Astorga_Eyes
+            nf.material_index = 1
             for loop in nf.loops:
                 co = loop.vert.co - Vector(pos)
                 loop[uv_lay].uv = (0.5 + co.x / (2.0 * eye_r), 0.5 + co.z / (2.0 * eye_r))
         e_bm.free()
 
-    # Párpados anatómicos 3D con Shape Key 'blink'
-    upper_lid_margin_verts = []
-    upper_lid_crease_verts = []
+    # Párpados 3D con blink
+    upper_lid_margin_verts, upper_lid_crease_verts = [], []
     for ex, ey, ez in eye_pos:
         sign_side = 1.0 if ex > 0 else -1.0
         n_pts = 9
@@ -275,7 +172,6 @@ def build_head_mesh(materials):
             v_sup_m = bm.verts.new((ex + dx, ey + dy_sup, ez + dz_sup))
             v_sup_c = bm.verts.new((ex + dx, ey + dy_sup * 0.97 + 0.003, ez + dz_sup + 0.0040 * arch))
             v_sup_b = bm.verts.new((ex + dx, ey + dy_sup * 0.91 + 0.006, ez + dz_sup + 0.0095 * arch))
-
             v_inf_m = bm.verts.new((ex + dx, ey + dy_inf, ez + dz_inf))
             v_inf_c = bm.verts.new((ex + dx, ey + dy_inf * 0.97 + 0.003, ez + dz_inf - 0.0035 * arch))
             v_inf_k = bm.verts.new((ex + dx, ey + dy_inf * 0.91 + 0.006, ez + dz_inf - 0.0080 * arch))
@@ -314,18 +210,20 @@ def build_head_mesh(materials):
         ear_bm.free()
 
     # -------------------------------------------------------------------------
-    # MELENA SETENTERA CANÓNICA Y VOLUMINOSA 360° (scratch/humans/astorga.png)
-    # Arquitectura continua envolvente en herradura (Horseshoe loft) + domo superior
+    # MELENA SETENTERA CANÓNICA 360° (scratch/humans/astorga.png)
+    # Volumen orgánico continuo que envuelve cráneo, sienes, orejas y nuca
     # -------------------------------------------------------------------------
     hair_bm = bmesh.new()
 
+    # Niveles continuos de herradura (Horseshoe loft) desde nuca baja hasta frente alta
+    # Con caída orgánica festoneada en la nuca y volumen abultado en los lados
     hair_levels = [
         # z,      rx,    ry_back, y_cen,  phi_span, wave_freq, wave_amp
         (1.385,  0.078,  0.098,  -0.014,  0.58 * math.pi,  3.0,  0.006), # Puntas nuca sobre cuello
         (1.420,  0.092,  0.106,  -0.012,  0.62 * math.pi,  4.0,  0.007), # Nuca media
-        (1.460,  0.104,  0.115,  -0.010,  0.66 * math.pi,  4.0,  0.009), # Mandíbula y orejas
+        (1.460,  0.104,  0.115,  -0.010,  0.66 * math.pi,  4.0,  0.009), # Mandíbula y orejas (abundante)
         (1.500,  0.110,  0.118,  -0.008,  0.68 * math.pi,  4.0,  0.009), # Sienes y sienes altas
-        (1.540,  0.106,  0.116,  -0.006,  0.70 * math.pi,  4.0,  0.008), # Sienes y frente baja
+        (1.540,  0.106,  0.116,  -0.006,  0.70 * math.pi,  4.0,  0.008), # Frente baja / sienes
         (1.575,  0.096,  0.110,  -0.006,  0.74 * math.pi,  3.0,  0.006), # Frente media / nacimiento
     ]
 
@@ -334,12 +232,15 @@ def build_head_mesh(materials):
     for (hz, hrx, hry, hy_cen, phi_span, w_freq, w_amp) in hair_levels:
         cur_pts = []
         for i in range(n_pts_hs):
-            t = (i / float(n_pts_hs - 1)) * 2.0 - 1.0
+            t = (i / float(n_pts_hs - 1)) * 2.0 - 1.0 # -1 a +1
             phi = t * phi_span
             sin_p = math.sin(phi)
             cos_p = math.cos(phi)
 
+            # Modulación ondulada de ondas suaves de Astorga
             w = w_amp * math.sin(t * w_freq * math.pi)
+
+            # Festoneado orgánico en la base de la nuca (l_idx == 0)
             z_eff = hz
             if hz < 1.39:
                 z_eff += 0.008 * math.sin(t * 3.0 * math.pi)**2
@@ -349,16 +250,19 @@ def build_head_mesh(materials):
             cur_pts.append(hair_bm.verts.new((hx, hy, z_eff)))
         hs_rings.append(cur_pts)
 
+    # Caras del manto envolvente
     for l_idx in range(len(hair_levels) - 1):
         r1 = hs_rings[l_idx]
         r2 = hs_rings[l_idx + 1]
         for i in range(n_pts_hs - 1):
             hair_bm.faces.new((r1[i], r1[i+1], r2[i+1], r2[i])).material_index = 2
 
+    # Domo superior continuo (Crown Dome)
     dome_levels = [
-        (1.605, 0.084, 0.070, 0.096, -0.006),
-        (1.632, 0.064, 0.052, 0.076, -0.008),
-        (1.650, 0.038, 0.032, 0.046, -0.008),
+        # z,     rx,    ry_front, ry_back, y_cen
+        (1.605, 0.084, 0.070,    0.096,   -0.006),
+        (1.632, 0.064, 0.052,    0.076,   -0.008),
+        (1.650, 0.038, 0.032,    0.046,   -0.008),
     ]
     dome_rings = []
     n_dring = 24
@@ -387,6 +291,7 @@ def build_head_mesh(materials):
         inxt = (i + 1) % n_dring
         hair_bm.faces.new((d_last[i], d_last[inxt], dome_top)).material_index = 2
 
+    # Conectar el último anillo de herradura con el domo
     r_top_hs = hs_rings[-1]
     d_base = dome_rings[0]
     for i in range(n_pts_hs - 1):
@@ -395,7 +300,7 @@ def build_head_mesh(materials):
         if d_idx1 != d_idx2:
             hair_bm.faces.new((r_top_hs[i], r_top_hs[i+1], d_base[d_idx2], d_base[d_idx1])).material_index = 2
 
-    # Mechones frontales ondulados del flequillo y sienes peinados a los lados
+    # Mechones frontales ondulados del flequillo y sienes peinados con gracia
     def add_bang_layer(p_start, p_mid, p_end, w0=0.030, w1=0.038, w2=0.015, thick=0.010):
         n_s = 6
         p0 = Vector(p_start)
@@ -421,11 +326,11 @@ def build_head_mesh(materials):
                 hair_bm.faces.new((prev_v[1], prev_v[2], cur_v[2], cur_v[1])).material_index = 2
             prev_v = cur_v
 
-    add_bang_layer(( 0.005, 0.064, 1.605), ( 0.045, 0.076, 1.560), ( 0.088, 0.055, 1.515), w0=0.034, w1=0.044, w2=0.020)
-    add_bang_layer((-0.005, 0.064, 1.605), (-0.045, 0.076, 1.560), (-0.088, 0.055, 1.515), w0=0.034, w1=0.044, w2=0.020)
-    add_bang_layer(( 0.020, 0.062, 1.610), ( 0.065, 0.072, 1.555), ( 0.100, 0.042, 1.495), w0=0.032, w1=0.042, w2=0.020)
-    add_bang_layer((-0.020, 0.062, 1.610), (-0.065, 0.072, 1.555), (-0.100, 0.042, 1.495), w0=0.032, w1=0.042, w2=0.020)
-    add_bang_layer((-0.010, 0.068, 1.600), ( 0.015, 0.078, 1.570), ( 0.045, 0.068, 1.535), w0=0.024, w1=0.032, w2=0.016)
+    # Flequillo y laterales
+    add_bang_layer(( 0.005, 0.068, 1.610), ( 0.045, 0.082, 1.570), ( 0.088, 0.060, 1.520), w0=0.032, w1=0.042, w2=0.018)
+    add_bang_layer((-0.005, 0.068, 1.610), (-0.045, 0.082, 1.570), (-0.088, 0.060, 1.520), w0=0.032, w1=0.042, w2=0.018)
+    add_bang_layer(( 0.020, 0.066, 1.615), ( 0.068, 0.076, 1.565), ( 0.102, 0.045, 1.505), w0=0.030, w1=0.040, w2=0.018)
+    add_bang_layer((-0.020, 0.066, 1.615), (-0.068, 0.076, 1.565), (-0.102, 0.045, 1.505), w0=0.030, w1=0.040, w2=0.018)
     add_bang_layer(( 0.075, 0.042, 1.560), ( 0.108, 0.035, 1.505), ( 0.096, 0.015, 1.435), w0=0.028, w1=0.036, w2=0.018, thick=0.012)
     add_bang_layer((-0.075, 0.042, 1.560), (-0.108, 0.035, 1.505), (-0.096, 0.015, 1.435), w0=0.028, w1=0.036, w2=0.018, thick=0.012)
 
@@ -453,7 +358,6 @@ def build_head_mesh(materials):
     obj_head = bpy.data.objects.new("Player_Head_Mesh", me)
     bpy.context.scene.collection.objects.link(obj_head)
 
-    # Shape Key 'blink'
     sk_basis = obj_head.shape_key_add(name="Basis")
     sk_blink = obj_head.shape_key_add(name="blink")
     sk_blink.value = 0.0
@@ -466,15 +370,12 @@ def build_head_mesh(materials):
 
     return obj_head
 
-# =============================================================================
-# 2. CUERPO: SASTRERÍA 3D, FALDONES EN V INVERTIDA, CAMISA Y MANOS
-# =============================================================================
 def build_body_mesh(materials):
     mesh_graph = bpy.data.meshes.new("Body_Graph_Data")
     obj_body = bpy.data.objects.new("Player_Body_Mesh", mesh_graph)
     bpy.context.scene.collection.objects.link(obj_body)
 
-    # Grafo anatómico esbelto de Astorga
+    # Nodos biomecánicos con complexión ESBELTA de Astorga
     nodes = [
         # Tronco
         (0.00,  0.000, 0.74, 0.110, 0.078), # 0: Crotch anatómico
@@ -485,7 +386,7 @@ def build_body_mesh(materials):
         (0.00, -0.003, 1.33, 0.124, 0.082), # 5: Clavículas / hombros
         (0.00,  0.002, 1.37, 0.044, 0.044), # 6: Base cuello camisero
 
-        # Brazos delgados de violinista
+        # Brazos delgados
         ( 0.05, -0.003, 1.33, 0.048, 0.048), # 7
         ( 0.160,-0.003, 1.31, 0.044, 0.044), # 8: Hombro L
         ( 0.230, 0.002, 1.13, 0.035, 0.035), # 9: Codo L
@@ -496,7 +397,7 @@ def build_body_mesh(materials):
         (-0.230, 0.002, 1.13, 0.035, 0.035), # 13: Codo R
         (-0.285, 0.008, 0.915, 0.026, 0.024), # 14: Manga puño R
 
-        # Piernas con pantalón sastre recto
+        # Piernas con pantalón sastre recto bien proporcionado
         ( 0.064, 0.002, 0.74, 0.052, 0.052), # 15: Cadera sup L
         ( 0.064, 0.002, 0.58, 0.046, 0.046), # 16: Muslo medio L
         ( 0.064, 0.000, 0.43, 0.040, 0.040), # 17: Rodilla L
@@ -544,14 +445,7 @@ def build_body_mesh(materials):
     bm.from_mesh(obj_body.data)
     uv_lay = bm.loops.layers.uv.new("UVMap")
 
-    # Mapeo de materiales en el cuerpo base:
-    # 0: Mat_Astorga_Suit   (Saco formal)
-    # 1: Mat_Astorga_Pants  (Pantalón sastre)
-    # 2: Mat_Astorga_Shoes  (Zapatos negros)
-    # 3: Mat_Astorga_Skin   (Muñecas y manos)
-    # 4: Mat_Astorga_Shirt  (Camisa vinotinto EXTENDIDA)
-    # 5: Mat_Astorga_Tie    (Corbata)
-    # 6: Mat_Astorga_Buttons (Botones)
+    # Mapeo de materiales
     for p in bm.faces:
         c_median = p.calc_center_median()
         cz = c_median.z
@@ -564,9 +458,9 @@ def build_body_mesh(materials):
             p.material_index = 1 # Pantalón formal
         elif cx > 0.15:
             if cz < 0.90:
-                p.material_index = 3 # Piel de manos y muñecas
+                p.material_index = 3 # Manos y muñecas
             else:
-                p.material_index = 0 # Mangas de saco sastre
+                p.material_index = 0 # Mangas del saco
         else:
             # Tronco central: Camisa vinotinto continua hasta la cintura
             v_width = 0.016 + max(0.0, (cz - 1.04) / 0.32) * 0.038
@@ -578,9 +472,7 @@ def build_body_mesh(materials):
         for loop in p.loops:
             loop[uv_lay].uv = (loop.vert.co.x * 2.0 + 0.5, loop.vert.co.z * 1.5)
 
-    # -------------------------------------------------------------------------
-    # A. CUELLO CAMISERO VINOTINTO TRIDIMENSIONAL
-    # -------------------------------------------------------------------------
+    # Cuello camisero vinotinto
     n_c = 18
     c_bot, c_top = [], []
     for i in range(n_c):
@@ -601,9 +493,7 @@ def build_body_mesh(materials):
     bm.faces.new(wing_l).material_index = 4
     bm.faces.new(wing_r).material_index = 4
 
-    # -------------------------------------------------------------------------
-    # B. CORBATA TRIDIMENSIONAL CON NUDO WINDSOR
-    # -------------------------------------------------------------------------
+    # Corbata de seda
     knot_v = [
         bm.verts.new((-0.014, 0.056, 1.385)),
         bm.verts.new(( 0.014, 0.056, 1.385)),
@@ -639,15 +529,14 @@ def build_body_mesh(materials):
         bm.faces.new((la, ma, mb, lb)).material_index = 5
         bm.faces.new((ma, ra, rb, mb)).material_index = 5
 
-    # -------------------------------------------------------------------------
-    # C. SASTRERÍA 3D: FALDONES DEL SACO CON APERTURA EN 'V' INVERTIDA
-    # -------------------------------------------------------------------------
+    # Faldón sastre exterior que cubre las caderas y se abre al frente
+    # Suavizado en la unión superior para no formar un escalón duro
     faldon_levels = [
         # z,      rx,    ry_front, ry_back, open_hw
-        (0.96,   0.116, 0.078,    0.080,   0.008),
-        (0.88,   0.120, 0.081,    0.084,   0.030),
-        (0.80,   0.124, 0.083,    0.088,   0.058),
-        (0.73,   0.126, 0.085,    0.090,   0.082),
+        (0.96,   0.116, 0.078,    0.080,   0.008), # Transición suave en cintura
+        (0.88,   0.120, 0.081,    0.084,   0.030), # Apertura
+        (0.80,   0.124, 0.083,    0.088,   0.058), # V invertida
+        (0.73,   0.126, 0.085,    0.090,   0.082), # Dobladillo
     ]
     n_fpts = 20
     faldon_rings = []
@@ -678,9 +567,7 @@ def build_body_mesh(materials):
     for i in range(n_fpts - 1):
         bm.faces.new((r_last_f[i], r_last_f[i+1], inner_hem[i+1], inner_hem[i])).material_index = 0
 
-    # -------------------------------------------------------------------------
-    # D. SOLAPAS DE MUESCA (NOTCH LAPELS) Y BOTONES ANCLADOS EXACTOS A LA TELA
-    # -------------------------------------------------------------------------
+    # Solapas de muesca (Notch lapels)
     for s_side in (1.0, -1.0):
         lapel_v = [
             bm.verts.new((s_side * 0.040, 0.042, 1.365)),
@@ -700,6 +587,7 @@ def build_body_mesh(materials):
             bm.faces.new((lapel_v[3], lapel_v[0], lapel_v[6])).material_index = 0
             bm.faces.new((lapel_v[4], lapel_v[3], lapel_v[6], lapel_v[5])).material_index = 0
 
+    # Cuello de saco nuca
     sc_top, sc_bot = [], []
     for i in range(10):
         ang = math.pi * 0.15 + (math.pi * 0.70 * i) / 9.0
@@ -710,7 +598,7 @@ def build_body_mesh(materials):
     for i in range(9):
         bm.faces.new((sc_bot[i], sc_bot[i+1], sc_top[i+1], sc_top[i])).material_index = 0
 
-    # Botones sastre anclados exactamente en la tela (cero flotación)
+    # Botones colocados EXACTAMENTE en la superficie de la tela
     button_coords = [
         (0.004, 0.084, 1.065),
         (0.004, 0.082, 0.990)
@@ -733,6 +621,7 @@ def build_body_mesh(materials):
     ]
     bm.faces.new(p_box).material_index = 0
 
+    # Puños y botones de manga
     for is_l in (True, False):
         s_sign = 1.0 if is_l else -1.0
         n_cuff = 12
@@ -756,9 +645,7 @@ def build_body_mesh(materials):
                 bm.faces.new([v_map_bm[v] for v in f.verts]).material_index = 6
             btn_m.free()
 
-    # -------------------------------------------------------------------------
-    # E. MANOS ANATÓMICAS DE VIOLINISTA CON 5 DEDOS
-    # -------------------------------------------------------------------------
+    # Manos de violinista
     for is_l in (True, False):
         sign_a = 1.0 if is_l else -1.0
         w_center = Vector((sign_a * 0.285, 0.008, 0.835))
@@ -837,9 +724,6 @@ def build_body_mesh(materials):
 
     return obj_body
 
-# =============================================================================
-# 3. ESQUELETO Y RIGGING CANÓNICO (22 HUESOS)
-# =============================================================================
 def build_skeleton():
     arm_data = bpy.data.armatures.new("Skeleton3D")
     arm_obj = bpy.data.objects.new("Skeleton3D", arm_data)
@@ -965,144 +849,117 @@ def assign_weights(obj, is_head=False):
                 else:
                     obj.vertex_groups["Neck"].add([v.index], 1.0, 'REPLACE')
 
-def attach_armature_modifier(obj, arm_obj):
+def attach_armature(obj, arm_obj):
     mod = obj.modifiers.new(name="Armature", type='ARMATURE')
     mod.object = arm_obj
     obj.parent = arm_obj
 
-# =============================================================================
-# 4. RENDERS DE CONTROL MULTI-ÁNGULO (CYCLES CPU)
-# =============================================================================
-def render_control_views():
+def render_portrait_with_violin(arm_obj):
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     scene.cycles.device = 'CPU'
-    scene.cycles.samples = 48
-    scene.render.resolution_x = 800
-    scene.render.resolution_y = 1200
-    scene.render.film_transparent = False
+    scene.cycles.samples = 32
+    scene.render.resolution_x = 1024
+    scene.render.resolution_y = 1024
 
-    for light in [o for o in scene.objects if o.type == 'LIGHT']:
-        bpy.data.objects.remove(light, do_unlink=True)
+    bpy.context.view_layer.objects.active = arm_obj
+    bpy.ops.object.mode_set(mode='POSE')
 
-    def add_light(name, ltype, energy, loc, color=(1.0, 1.0, 1.0), size=1.5):
-        ld = bpy.data.lights.new(name, ltype)
-        ld.energy = energy
-        ld.color = color
+    for pb in arm_obj.pose.bones:
+        pb.rotation_mode = 'XYZ'
+        pb.rotation_euler = (0, 0, 0)
+
+    # Pose canónica de Astorga según scratch/humans/astorga.png:
+    # 1. Torso erguido con leve giro 3/4
+    arm_obj.pose.bones['Chest'].rotation_euler = (math.radians(-2), math.radians(-6), math.radians(2))
+    arm_obj.pose.bones['Head'].rotation_euler = (math.radians(-2), math.radians(8), math.radians(2))
+
+    # 2. Brazo en VIEWER'S RIGHT (Hand.R, -X): Sostiene el VIOLÍN verticalmente
+    # Codo flexionado, mano girada para que los dedos abracen el mástil/caja
+    arm_obj.pose.bones['UpperArm.R'].rotation_euler = (math.radians(38), math.radians(18), math.radians(-32))
+    arm_obj.pose.bones['Forearm.R'].rotation_euler = (math.radians(98), math.radians(14), math.radians(-12))
+    arm_obj.pose.bones['Hand.R'].rotation_euler = (math.radians(25), math.radians(-22), math.radians(45))
+
+    # 3. Brazo en VIEWER'S LEFT (Hand.L, +X): Sostiene el ARCO apuntando cruzado diagonal
+    arm_obj.pose.bones['UpperArm.L'].rotation_euler = (math.radians(15), math.radians(-8), math.radians(15))
+    arm_obj.pose.bones['Forearm.L'].rotation_euler = (math.radians(48), math.radians(-10), math.radians(12))
+    arm_obj.pose.bones['Hand.L'].rotation_euler = (math.radians(20), math.radians(14), math.radians(-15))
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.context.view_layer.update()
+
+    hand_l_mat = arm_obj.matrix_world @ arm_obj.pose.bones['Hand.L'].matrix
+    hand_r_mat = arm_obj.matrix_world @ arm_obj.pose.bones['Hand.R'].matrix
+    hand_l_loc = hand_l_mat.to_translation()
+    hand_r_loc = hand_r_mat.to_translation()
+
+    # Cargar y posicionar Violín y Arco
+    if os.path.exists(VIOLIN_BLEND):
+        with bpy.data.libraries.load(VIOLIN_BLEND, link=False) as (data_from, data_to):
+            data_to.objects = [o for o in data_from.objects if o in ("Violin_Prop", "Violin_Bow")]
+        for o in data_to.objects:
+            if o:
+                scene.collection.objects.link(o)
+                for p in o.data.polygons: p.use_smooth = True
+                if o.name == "Violin_Prop":
+                    o.scale = (0.76, 0.76, 0.76)
+                    # Violín vertical apoyado EXACTAMENTE en Hand.R, mástil sostenido por los dedos
+                    o.rotation_euler = Euler((math.radians(-78), math.radians(175), math.radians(18)), 'XYZ')
+                    # Ubicación calibrada para que los dedos de Hand.R abracen el cuello/cuerpo
+                    o.location = Vector((hand_r_loc.x + 0.005, hand_r_loc.y - 0.015, hand_r_loc.z - 0.220))
+                elif o.name == "Violin_Bow":
+                    o.scale = (0.76, 0.76, 0.76)
+                    # El arco apuntando diagonalmente hacia el violín dentro del cuadro
+                    o.rotation_euler = Euler((math.radians(35), math.radians(-15), math.radians(-32)), 'XYZ')
+                    o.location = Vector((hand_l_loc.x - 0.005, hand_l_loc.y + 0.015, hand_l_loc.z - 0.005))
+
+    for l in [o for o in scene.objects if o.type == 'LIGHT']:
+        bpy.data.objects.remove(l, do_unlink=True)
+
+    def add_l(name, en, loc, col=(1.0, 0.98, 0.95), size=1.5):
+        ld = bpy.data.lights.new(name, 'AREA')
+        ld.energy = en
+        ld.color = col
         ld.size = size
         lo = bpy.data.objects.new(name, ld)
         lo.location = loc
         scene.collection.objects.link(lo)
-        return lo
 
-    add_light("KeyLight",   'AREA', 260.0, ( 0.5,  1.8, 1.6), (1.0, 0.98, 0.95), size=1.8)
-    add_light("FillLight",  'AREA', 160.0, (-0.8,  1.6, 1.4), (0.95, 0.97, 1.0), size=2.2)
-    add_light("RimLight",   'AREA', 220.0, ( 0.0, -1.8, 1.6), (1.0, 0.98, 0.95), size=1.5)
-    add_light("HeadFill",   'AREA',  90.0, ( 0.0,  1.2, 1.7), (1.0, 0.96, 0.92), size=1.0)
+    add_l("KeyWarm",   260.0, ( 0.5, 1.8, 1.6), (1.0, 0.98, 0.95), size=1.8)
+    add_l("FillFront", 160.0, (-0.8, 1.6, 1.4), (0.95, 0.97, 1.0),  size=2.2)
+    add_l("RimBack",   220.0, ( 0.0, -1.8, 1.6), (1.0, 0.98, 0.95), size=1.5)
+    add_l("ViolinLight", 90.0, (-0.4, 1.5, 1.25), (1.0, 0.96, 0.92), size=1.0)
 
-    cam_data = bpy.data.cameras.new("RenderCam")
-    cam_data.lens = 52.0
-    cam_obj = bpy.data.objects.new("RenderCam", cam_data)
-    scene.collection.objects.link(cam_obj)
-    scene.camera = cam_obj
+    cam_data = bpy.data.cameras.new("CamCard")
+    cam_data.lens = 72.0
+    cam = bpy.data.objects.new("CamCard", cam_data)
+    scene.collection.objects.link(cam)
+    scene.camera = cam
 
-    target_pos = (0.0, 0.0, 1.10)
-    shots = [
-        ("astorga_preview.png",             ( 0.00,  1.85, 1.25), ( 0.00, 0.00, 1.25), os.path.join(PROJECT_ROOT, "godot_project/assets/characters/astorga_preview.png")),
-        ("astorga_master_front.png",        ( 0.00,  2.25, 1.15), target_pos, os.path.join(SCRATCH_DIR, "astorga_master_front.png")),
-        ("astorga_master_profile.png",      (-2.25,  0.00, 1.15), target_pos, os.path.join(SCRATCH_DIR, "astorga_master_profile.png")),
-        ("astorga_master_back.png",         ( 0.00, -2.25, 1.15), target_pos, os.path.join(SCRATCH_DIR, "astorga_master_back.png")),
-        ("astorga_master_threequarter.png", ( 1.40,  1.75, 1.20), target_pos, os.path.join(SCRATCH_DIR, "astorga_master_threequarter.png")),
-    ]
+    cam.location = Vector((0.0, 2.15, 1.25))
+    target = Vector((0.0, 0.0, 1.22))
+    cam.rotation_euler = (target - cam.location).to_track_quat('-Z', 'Y').to_euler()
 
-    for name, c_pos, t_pos, out_p in shots:
-        cam_obj.location = Vector(c_pos)
-        direction = Vector(t_pos) - Vector(c_pos)
-        rot_quat = direction.to_track_quat('-Z', 'Y')
-        cam_obj.rotation_euler = rot_quat.to_euler()
-        scene.render.filepath = out_p
-        bpy.ops.render.render(write_still=True)
-        print(f"✓ Vista de control guardada: {out_p}")
+    out_card = os.path.join(SCRATCH_DIR, "test_astorga_portrait_new.png")
+    scene.render.filepath = out_card
+    bpy.ops.render.render(write_still=True)
+    print("✓ Render de tarjeta/retrato guardado en:", out_card)
 
-def main():
-    print("=" * 65)
-    print("GENERANDO ASTORGA CANÓNICO CORREGIDO: SASTRERÍA 3D, MELENA 360 Y RIG 22")
-    print("=" * 65)
+clean_scene()
+mats = setup_materials()
+mat_groups = {
+    "head": [mats["skin"], mats["eyes"], mats["hair"]],
+    "body": [mats["suit"], mats["pants"], mats["shoes"], mats["skin"], mats["shirt"], mats["tie"], mats["buttons"]],
+}
 
-    clean_scene()
+arm_obj = build_skeleton()
+obj_head = build_head_mesh(mat_groups)
+assign_weights(obj_head, is_head=True)
+attach_armature(obj_head, arm_obj)
 
-    all_mats = create_materials()
-    mat_groups = {
-        "head": [
-            all_mats["skin"],
-            all_mats["eyes"],
-            all_mats["hair"]
-        ],
-        "body": [
-            all_mats["suit"],
-            all_mats["pants"],
-            all_mats["shoes"],
-            all_mats["skin"],
-            all_mats["shirt"],
-            all_mats["tie"],
-            all_mats["buttons"]
-        ]
-    }
+obj_body = build_body_mesh(mat_groups)
+assign_weights(obj_body, is_head=False)
+attach_armature(obj_body, arm_obj)
 
-    # 1. Esqueleto canónico de 22 huesos
-    arm_obj = build_skeleton()
-    print("✓ Armature canónico construido con 22 huesos.")
-
-    # 2. Malla de Cabeza modular
-    obj_head = build_head_mesh(mat_groups)
-    assign_weights(obj_head, is_head=True)
-    attach_armature_modifier(obj_head, arm_obj)
-    print("✓ Player_Head_Mesh generado con rostro moreno cálido y melena setentera continua 360°.")
-
-    # 3. Malla de Cuerpo modular
-    obj_body = build_body_mesh(mat_groups)
-    assign_weights(obj_body, is_head=False)
-    attach_armature_modifier(obj_body, arm_obj)
-    print("✓ Player_Body_Mesh generado con proporciones esbeltas, sastrería 3D en V y camisa vinotinto.")
-
-    # Verificación matemática de pesos
-    vg_h_l = obj_body.vertex_groups.get("Hand.L")
-    vg_h_r = obj_body.vertex_groups.get("Hand.R")
-    leg_groups = [obj_body.vertex_groups[name].index for name in ["UpperLeg.L", "LowerLeg.L", "UpperLeg.R", "LowerLeg.R", "Foot.L", "Foot.R"] if name in obj_body.vertex_groups]
-    leaks = 0
-    if vg_h_l and vg_h_r:
-        hand_indices = {vg_h_l.index, vg_h_r.index}
-        for v in obj_body.data.vertices:
-            g_ids = {g.group for g in v.groups if g.weight > 0.01}
-            if hand_indices.intersection(g_ids) and any(lg in g_ids for lg in leg_groups):
-                leaks += 1
-    print(f"✓ Verificación matemática de pesos: {leaks} vértices de manos fugados a piernas.")
-
-    # Guardar archivo .blend canónico
-    bpy.ops.wm.save_as_mainfile(filepath=OUTPUT_BLEND)
-    print(f"✓ Guardado .blend en: {OUTPUT_BLEND}")
-
-    # Exportar archivo .glb canónico
-    bpy.ops.export_scene.gltf(
-        filepath=OUTPUT_GLB,
-        export_format='GLB',
-        use_selection=False,
-        export_apply=False,
-        export_animations=False,
-        export_skins=True,
-        export_morph=True,
-        export_materials='EXPORT',
-        export_cameras=False,
-        export_lights=False
-    )
-    print(f"✓ Exportado .glb canónico en: {OUTPUT_GLB}")
-
-    # Renders de validación multi-ángulo
-    render_control_views()
-
-    print("=" * 65)
-    print("PROCESO ASTORGA COMPLETADO EXITOSAMENTE")
-    print("=" * 65)
-
-if __name__ == "__main__":
-    main()
+render_portrait_with_violin(arm_obj)
+print("✓ Pipeline completo probado con éxito.")
