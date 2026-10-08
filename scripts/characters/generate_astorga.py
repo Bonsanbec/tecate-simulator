@@ -266,79 +266,109 @@ def build_head_mesh(materials):
             for loop in f.loops:
                 loop[uv_lay].uv = calc_face_uv(loop.vert.co.x, loop.vert.co.z)
 
-    # Melena setentera continua 360° con volumen lateral ondulado
-    hair_profile = [
-        # z,      rx,    ry_front, ry_back, y_off,  is_closed
-        (1.365,  0.082,  0.055,   0.098,   -0.024,  False), # Caída sobre cuello/espalda
-        (1.405,  0.092,  0.068,   0.104,   -0.020,  False), # Mandíbula y base nuca
-        (1.445,  0.106,  0.082,   0.112,   -0.016,  False), # Orejas y pómulos (volumen lateral)
-        (1.485,  0.108,  0.086,   0.114,   -0.014,  False), # Sienes voluminosas
-        (1.525,  0.102,  0.084,   0.110,   -0.012,  False), # Frente baja / cejas
-        (1.555,  0.092,  0.080,   0.102,   -0.010,  True),  # Flequillo cerrado envolvente
-        (1.585,  0.078,  0.068,   0.088,   -0.010,  True),  # Bóveda media
-        (1.616,  0.046,  0.040,   0.052,   -0.010,  True),  # Cúspide
+    # -------------------------------------------------------------------------
+    # MELENA SETENTERA CANÓNICA ORIGINAL (commit 45957b5: 'fix hair astorga')
+    # 9 niveles concéntricos con volumen en sienes + capas de flequillo y ondas
+    # -------------------------------------------------------------------------
+    hair_bm = bmesh.new()
+    hair_rings_spec = [
+        # z,     rx,    ry_front, ry_back, y_offset, face_open
+        (1.636, 0.035, 0.030,    0.035,   -0.010,   0.00), # Coronilla alta redondeada
+        (1.618, 0.070, 0.055,    0.075,   -0.010,   0.00), # Bóveda superior
+        (1.592, 0.098, 0.074,    0.102,   -0.008,   0.00), # Coronilla media
+        (1.562, 0.118, 0.080,    0.114,   -0.006,   0.20), # Flequillo cae hacia los lados
+        (1.528, 0.126, 0.068,    0.122,   -0.006,   0.50), # Sienes muy anchas y voluminosas (foto)
+        (1.490, 0.124, 0.054,    0.120,   -0.008,   0.68), # Orejas cubiertas completamente
+        (1.450, 0.114, 0.040,    0.116,   -0.010,   0.80), # Caída hacia mandíbula y nuca
+        (1.412, 0.098, 0.026,    0.108,   -0.012,   0.88), # Nuca baja
+        (1.380, 0.082, 0.012,    0.098,   -0.014,   0.94), # Puntas sobre cuello de saco
     ]
 
-    n_h = 32
+    n_hverts = 32
     h_rings = []
-    for l_idx, (hz, hrx, hry_f, hry_b, hy_off, is_c) in enumerate(hair_profile):
+    for l_idx, (hz, hrx, hry_f, hry_b, hy_off, f_open) in enumerate(hair_rings_spec):
         cur_ring = []
-        for i in range(n_h):
-            ang = (2.0 * math.pi * i) / n_h
-            ca = math.cos(ang)
-            sa = math.sin(ang)
+        for i in range(n_hverts):
+            ang = (2.0 * math.pi * i) / n_hverts
+            cos_a = math.cos(ang)
+            sin_a = math.sin(ang)
 
-            if not is_c and sa > 0.46:
-                face_t = (sa - 0.46) / 0.54
-                wave = 0.004 * math.sin(ang * 4.0 + l_idx * 0.8)
-                vx = (hrx + wave) * ca
-                vy = (hry_f * (0.95 - 0.26 * face_t)) + hy_off
-                vz = hz + 0.003 * math.sin(ang * 3.0)
+            # Ondulación setentera orgánica
+            wave = 0.006 * math.sin(ang * 4.0 + l_idx * 0.75) + 0.003 * math.cos(ang * 6.0)
+
+            hx = (hrx + wave) * cos_a
+            hy_base = (hry_f if sin_a >= 0 else hry_b) + wave
+            hy = hy_base * sin_a + hy_off
+
+            if f_open > 0 and sin_a > 0:
+                center_factor = math.exp(-((cos_a / 0.52)**2))
+                hy -= f_open * 0.060 * center_factor
+                hx *= (1.0 + f_open * 0.14 * center_factor)
+
+            if l_idx == len(hair_rings_spec) - 1:
+                hz_eff = hz + 0.008 * math.sin(ang * 5.0)**2
             else:
-                wave = 0.006 * math.sin(ang * 3.5 + l_idx * 0.7) + 0.003 * math.cos(ang * 2.0)
-                vx = (hrx + wave) * ca
-                vy = ((hry_f if sa >= 0 else hry_b) + wave) * sa + hy_off
-                vz = hz + 0.003 * math.sin(ang * 2.5)
+                hz_eff = hz
 
-            cur_ring.append(bm.verts.new((vx, vy, vz)))
+            v = hair_bm.verts.new((hx, hy, hz_eff))
+            cur_ring.append(v)
         h_rings.append(cur_ring)
 
-    for l_idx in range(len(hair_profile) - 1):
+    for l_idx in range(len(hair_rings_spec) - 1):
         r1 = h_rings[l_idx]
         r2 = h_rings[l_idx + 1]
-        for i in range(n_h):
-            inxt = (i + 1) % n_h
-            is_face_opening = (l_idx < 4) and (math.sin((2.0 * math.pi * i) / n_h) > 0.50)
-            if not is_face_opening:
-                f = bm.faces.new((r1[i], r1[inxt], r2[inxt], r2[i]))
-                f.material_index = 2
-                for loop in f.loops:
-                    loop[uv_lay].uv = (loop.vert.co.x * 2.5 + 0.5, loop.vert.co.z * 2.0)
+        for i in range(n_hverts):
+            inxt = (i + 1) % n_hverts
+            hair_bm.faces.new((r1[i], r1[inxt], r2[inxt], r2[i])).material_index = 2
 
-    hair_top = bm.verts.new((0.0, -0.010, 1.626))
-    r_last = h_rings[-1]
-    for i in range(n_h):
-        inxt = (i + 1) % n_h
-        f = bm.faces.new((r_last[inxt], r_last[i], hair_top))
-        f.material_index = 2
-        for loop in f.loops:
-            loop[uv_lay].uv = (loop.vert.co.x * 2.5 + 0.5, loop.vert.co.z * 2.0)
+    # Ápice
+    apex_top = hair_bm.verts.new((0.0, -0.010, 1.640))
+    r_top = h_rings[0]
+    for i in range(n_hverts):
+        inxt = (i + 1) % n_hverts
+        hair_bm.faces.new((r_top[i], apex_top, r_top[inxt])).material_index = 2
 
-    # Flequillo orgánico suave en la frente peinado a los lados
-    bang_v = [
-        bm.verts.new((-0.042, 0.076, 1.550)),
-        bm.verts.new((-0.018, 0.082, 1.540)),
-        bm.verts.new(( 0.018, 0.082, 1.542)),
-        bm.verts.new(( 0.042, 0.076, 1.552)),
-        bm.verts.new(( 0.000, 0.086, 1.562)),
-    ]
-    f_b1 = bm.faces.new((bang_v[0], bang_v[1], bang_v[4]))
-    f_b2 = bm.faces.new((bang_v[1], bang_v[2], bang_v[4]))
-    f_b3 = bm.faces.new((bang_v[2], bang_v[3], bang_v[4]))
-    for fb in (f_b1, f_b2, f_b3):
-        fb.material_index = 2
-        for loop in fb.loops:
-            loop[uv_lay].uv = (loop.vert.co.x * 2.5 + 0.5, loop.vert.co.z * 2.0)
+    # Mechones frontales ondulados del flequillo y sienes peinados a los lados
+    def add_bang_layer(p_start, p_mid, p_end, w0=0.030, w1=0.038, w2=0.015, thick=0.010):
+        n_s = 6
+        p0 = Vector(p_start)
+        p1 = Vector(p_mid)
+        p2 = Vector(p_end)
+        prev_v = None
+        for s in range(n_s + 1):
+            t = s / float(n_s)
+            p = (1.0 - t)**2 * p0 + 2.0 * (1.0 - t) * t * p1 + t**2 * p2
+            tang = (2.0 * (1.0 - t) * (p1 - p0) + 2.0 * t * (p2 - p1)).normalized()
+            up = Vector((0, 0, 1))
+            side = tang.cross(up).normalized()
+            nor = side.cross(tang).normalized()
+            w = w0 + (w1 - w0) * math.sin(t * math.pi)
+            tk = thick * (1.0 - 0.3 * t)
+
+            v_l = hair_bm.verts.new(p - side * (w * 0.5))
+            v_c = hair_bm.verts.new(p + nor * tk)
+            v_r = hair_bm.verts.new(p + side * (w * 0.5))
+            cur_v = [v_l, v_c, v_r]
+            if prev_v:
+                hair_bm.faces.new((prev_v[0], prev_v[1], cur_v[1], cur_v[0])).material_index = 2
+                hair_bm.faces.new((prev_v[1], prev_v[2], cur_v[2], cur_v[1])).material_index = 2
+            prev_v = cur_v
+
+    add_bang_layer(( 0.005, 0.064, 1.585), ( 0.045, 0.076, 1.550), ( 0.088, 0.055, 1.510), w0=0.034, w1=0.044, w2=0.020)
+    add_bang_layer((-0.005, 0.064, 1.585), (-0.045, 0.076, 1.550), (-0.088, 0.055, 1.510), w0=0.034, w1=0.044, w2=0.020)
+    add_bang_layer(( 0.020, 0.062, 1.590), ( 0.065, 0.072, 1.545), ( 0.100, 0.042, 1.490), w0=0.032, w1=0.042, w2=0.020)
+    add_bang_layer((-0.020, 0.062, 1.590), (-0.065, 0.072, 1.545), (-0.100, 0.042, 1.490), w0=0.032, w1=0.042, w2=0.020)
+    add_bang_layer((-0.010, 0.068, 1.580), ( 0.015, 0.078, 1.555), ( 0.045, 0.068, 1.525), w0=0.024, w1=0.032, w2=0.016)
+    add_bang_layer(( 0.075, 0.042, 1.550), ( 0.108, 0.035, 1.500), ( 0.096, 0.015, 1.430), w0=0.028, w1=0.036, w2=0.018, thick=0.012)
+    add_bang_layer((-0.075, 0.042, 1.550), (-0.108, 0.035, 1.500), (-0.096, 0.015, 1.430), w0=0.028, w1=0.036, w2=0.018, thick=0.012)
+
+    v_map_h = {v: bm.verts.new(v.co) for v in hair_bm.verts}
+    for f in hair_bm.faces:
+        nf = bm.faces.new([v_map_h[v] for v in f.verts])
+        nf.material_index = 2
+        for loop in nf.loops:
+            loop[uv_lay].uv = (0.5 + loop.vert.co.x * 2.2, 0.5 + (loop.vert.co.z - 1.50) * 2.2)
+    hair_bm.free()
 
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.normal_update()
@@ -412,18 +442,16 @@ def build_body_mesh(materials):
         (-0.096, 0.002, 0.12, 0.048, 0.048), # 25: Tobillo R
         (-0.096, 0.045, 0.03, 0.050, 0.105), # 26: Zapato formal R
 
-        # Muñecas y palmas anatómicas
-        ( 0.285,  0.010, 0.865, 0.021, 0.017), # 27: Muñeca L
-        ( 0.285,  0.010, 0.820, 0.026, 0.015), # 28: Palma L
-        (-0.285,  0.010, 0.865, 0.021, 0.017), # 29: Muñeca R
-        (-0.285,  0.010, 0.820, 0.026, 0.015), # 30: Palma R
+        # Muñecas anatómicas estructuradas (fin de manga)
+        ( 0.285,  0.010, 0.852, 0.014, 0.022), # 27: Muñeca L
+        (-0.285,  0.010, 0.852, 0.014, 0.022), # 28: Muñeca R
     ]
     edges = [
         (0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6),
-        (5, 7), (7, 8), (8, 9), (9, 10), (10, 27), (27, 28),
-        (5, 11), (11, 12), (12, 13), (13, 14), (14, 29), (29, 30),
+        (5, 7), (7, 8), (8, 9), (9, 10), (10, 27),
+        (5, 11), (11, 12), (12, 13), (13, 14), (14, 28),
         (0, 15), (15, 16), (16, 17), (17, 18), (18, 19), (19, 20),
-        (0, 21), (21, 22), (22, 23), (23, 24), (24, 25), (25, 26),
+        (0, 21), (21, 22), (22, 23), (23, 24), (24, 25), (26, 26) if False else (25, 26),
     ]
 
     verts = [Vector((n[0], n[1], n[2])) for n in nodes]
@@ -660,84 +688,154 @@ def build_body_mesh(materials):
         bm.faces.new([v_map_b[v] for v in f.verts]).material_index = 6
     btn_bm.free()
 
-    # Dedos anatómicos articulados
+    # =========================================================================
+    # MODELADO ANATÓMICO CANÓNICO DE MANOS: 5 DEDOS INDEPENDIENTES Y SUJECIÓN
+    # =========================================================================
+    # Se genera una palma anatómica trapezoidal suave desde la muñeca (Z = 0.850)
+    # hasta los nudillos (Z = 0.785), y 5 dedos articulados con 3 falanges cada uno:
+    # - Pulgar: oponible, grueso (r=0.0068), longitud 0.048 m
+    # - Índice: r=0.0054, longitud 0.068 m
+    # - Medio:  r=0.0058, longitud 0.078 m (el más largo)
+    # - Anular: r=0.0053, longitud 0.070 m
+    # - Meñique: r=0.0044, longitud 0.052 m (claramente más corto y estilizado)
+    # =========================================================================
+
+    def add_curved_finger(p_knuckle, curl_angles, seg_lengths, radii, lat_axis, palm_normal):
+        """
+        Crea un dedo con articulaciones independientes (falanges) que se curvan
+        naturalmente alrededor de un eje.
+        curl_angles: lista de 3 ángulos de flexión en radianes (nudillo, PIP, DIP).
+        seg_lengths: lista de longitudes de las 3 falanges.
+        radii: lista de radios en cada nudo (4 valores: base, pip, dip, yema).
+        """
+        rings = []
+        cur_pos = Vector(p_knuckle)
+        # Dirección inicial del dedo (hacia abajo -Z en reposo)
+        cur_dir = Vector((0.0, 0.0, -1.0))
+
+        # Eje de flexión (lateral al dedo, perpendicular a la flexión palmar)
+        flex_axis = lat_axis.normalized()
+        norm_axis = palm_normal.normalized()
+
+        for s in range(4):
+            # Posición del anillo
+            if s > 0:
+                angle = curl_angles[s-1]
+                # Rotar la dirección alrededor del eje de flexión
+                rot_m = Matrix.Rotation(angle, 3, flex_axis)
+                cur_dir = rot_m @ cur_dir
+                cur_pos = cur_pos + cur_dir * seg_lengths[s-1]
+
+            r = radii[s]
+            ring_v = []
+            # 8 vértices para un cilindro suave y orgánico
+            u_dir = flex_axis
+            v_dir = cur_dir.cross(u_dir).normalized()
+            for k in range(8):
+                ang = (2.0 * math.pi * k) / 8.0
+                offset = (u_dir * math.cos(ang) + v_dir * math.sin(ang)) * r
+                ring_v.append(bm.verts.new(cur_pos + offset))
+            rings.append(ring_v)
+
+        # Conectar segmentos
+        for s in range(3):
+            r1, r2 = rings[s], rings[s+1]
+            for k in range(8):
+                knxt = (k + 1) % 8
+                f = bm.faces.new((r1[k], r1[knxt], r2[knxt], r2[k]))
+                f.material_index = 3
+                f.smooth = True
+
+        # Yema redondeada
+        tip_pos = cur_pos + cur_dir * (radii[-1] * 0.6)
+        tip_v = bm.verts.new(tip_pos)
+        r_last = rings[-1]
+        for k in range(8):
+            knxt = (k + 1) % 8
+            f = bm.faces.new((r_last[knxt], r_last[k], tip_v))
+            f.material_index = 3
+            f.smooth = True
+
     for is_l in (True, False):
         sign = 1.0 if is_l else -1.0
-        w_center = Vector((sign * 0.285, 0.010, 0.820))
-        z_knuckles = 0.820
+        # Centro de la muñeca
+        wx = sign * 0.285
+        wy = 0.010
+        wz_top = 0.852
+        wz_knuckles = 0.785
 
-        finger_specs = [
-            ("Index",   w_center.y + 0.012, 0.046, 0.0048),
-            ("Middle",  w_center.y + 0.003, 0.050, 0.0050),
-            ("Ring",    w_center.y - 0.005, 0.045, 0.0048),
-            ("Pinky",   w_center.y - 0.013, 0.036, 0.0042),
+        # 1. Palma de la mano (Palmar wedge)
+        # Dorso en +X para L, -X para R; Palma interior en -X para L, +X para R
+        # Ancho Y: de -0.026 a +0.030 (span de 5.6 cm)
+        # Espesor X: ±0.012 (2.4 cm)
+        p_top_verts = [
+            bm.verts.new((wx - sign * 0.011, wy - 0.018, wz_top)),
+            bm.verts.new((wx + sign * 0.011, wy - 0.018, wz_top)),
+            bm.verts.new((wx + sign * 0.011, wy + 0.022, wz_top)),
+            bm.verts.new((wx - sign * 0.011, wy + 0.022, wz_top)),
+        ]
+        p_bot_verts = [
+            bm.verts.new((wx - sign * 0.010, wy - 0.028, wz_knuckles)),
+            bm.verts.new((wx + sign * 0.010, wy - 0.028, wz_knuckles)),
+            bm.verts.new((wx + sign * 0.010, wy + 0.034, wz_knuckles)),
+            bm.verts.new((wx - sign * 0.010, wy + 0.034, wz_knuckles)),
+        ]
+        # Caras de la palma
+        f_p1 = bm.faces.new((p_top_verts[0], p_top_verts[1], p_bot_verts[1], p_bot_verts[0]))
+        f_p2 = bm.faces.new((p_top_verts[1], p_top_verts[2], p_bot_verts[2], p_bot_verts[1]))
+        f_p3 = bm.faces.new((p_top_verts[2], p_top_verts[3], p_bot_verts[3], p_bot_verts[2]))
+        f_p4 = bm.faces.new((p_top_verts[3], p_top_verts[0], p_bot_verts[0], p_bot_verts[3]))
+        f_p5 = bm.faces.new((p_top_verts[0], p_top_verts[3], p_top_verts[2], p_top_verts[1]))
+        f_p6 = bm.faces.new((p_bot_verts[0], p_bot_verts[1], p_bot_verts[2], p_bot_verts[3]))
+        for fp in (f_p1, f_p2, f_p3, f_p4, f_p5, f_p6):
+            fp.material_index = 3
+            fp.smooth = True
+
+        # 2. Los 4 Dedos (Meñique, Anular, Medio, Índice)
+        # Separación clara en Y para que no se fundan:
+        finger_data = [
+            # Nombre, dy_nudillo, [l1, l2, l3], [r0, r1, r2, r3]
+            ("Pinky",  wy - 0.021, [0.022, 0.016, 0.013], [0.0046, 0.0042, 0.0038, 0.0034]), # Meñique corto
+            ("Ring",   wy - 0.007, [0.028, 0.022, 0.017], [0.0054, 0.0050, 0.0045, 0.0040]), # Anular
+            ("Middle", wy + 0.008, [0.032, 0.025, 0.019], [0.0058, 0.0054, 0.0048, 0.0042]), # Medio más largo
+            ("Index",  wy + 0.023, [0.028, 0.021, 0.016], [0.0055, 0.0051, 0.0046, 0.0040]), # Índice
         ]
 
         if is_l:
-            curl_dir = Vector((-0.25, 0.85, -0.40)).normalized()
+            # Mano L (sostiene la vara del arco en la cadera):
+            # Los dedos se curvan suavemente envolviendo la vara
+            curl_angles_fingers = [math.radians(28), math.radians(42), math.radians(24)]
+            lat_axis = Vector((0.0, 1.0, 0.0))
+            palm_normal = Vector((-1.0, 0.0, 0.0))
         else:
-            curl_dir = Vector(( 0.35, 0.70, -0.30)).normalized()
+            # Mano R (sostiene el violín por el mástil junto a la barbilla):
+            # En la foto de Astorga, la mano sostiene el mástil con los dedos flexionados
+            # abrazando el diapasón con elegancia artística
+            curl_angles_fingers = [math.radians(24), math.radians(38), math.radians(26)]
+            lat_axis = Vector((0.0, 1.0, 0.0))
+            palm_normal = Vector((1.0, 0.0, 0.0))
 
-        for fname, fy, f_len, f_rad in finger_specs:
-            fx = sign * 0.285 + (sign * 0.012 if fname == "Index" else 0.0)
-            n_seg = 3
-            prev_fring = None
-            for s in range(n_seg + 1):
-                t = s / float(n_seg)
-                if is_l:
-                    fz = z_knuckles - f_len * (t**0.90) * 0.60
-                    cur_y = fy + curl_dir.y * (f_len * 0.85 * (t**1.10))
-                    cur_x = fx + curl_dir.x * (f_len * 0.50 * (t**1.10))
-                else:
-                    fz = z_knuckles - f_len * (t**0.88) * 0.50
-                    cur_y = fy + curl_dir.y * (f_len * 0.90 * (t**1.05))
-                    cur_x = fx + curl_dir.x * (f_len * 0.55 * (t**1.05))
-                r_cur = f_rad * (1.0 - 0.25 * t)
+        for fname, fy, lens, rads in finger_data:
+            knuckle_pos = Vector((wx, fy, wz_knuckles))
+            add_curved_finger(knuckle_pos, curl_angles_fingers, lens, rads, lat_axis, palm_normal)
 
-                cur_fring = []
-                for k in range(6):
-                    fang = (2.0 * math.pi * k) / 6.0
-                    v = bm.verts.new((cur_x + r_cur * math.cos(fang),
-                                      cur_y + r_cur * math.sin(fang),
-                                      fz + curl_dir.z * (f_len * 0.30 * t)))
-                    cur_fring.append(v)
-                if prev_fring:
-                    for k in range(6):
-                        knxt = (k + 1) % 6
-                        bm.faces.new((prev_fring[k], prev_fring[knxt], cur_fring[knxt], cur_fring[k])).material_index = 3
-                prev_fring = cur_fring
+        # 3. Quinto Dedo: Pulgar Oponible (Thumb)
+        # Nace en la eminencia tenar (mitad de la palma en Z = 0.825, cara anterior Y = +0.020)
+        th_knuckle = Vector((wx - sign * 0.012, wy + 0.022, 0.825))
+        th_lens = [0.026, 0.020, 0.012]
+        th_rads = [0.0068, 0.0062, 0.0054, 0.0046]
+        if is_l:
+            # Pulgar de la mano del arco: se opone a los dedos por debajo de la vara
+            th_curl = [math.radians(35), math.radians(30), math.radians(20)]
+            th_lat = Vector((-0.4, 0.9, 0.2)).normalized()
+            th_norm = Vector((-0.8, -0.3, 0.5)).normalized()
+        else:
+            # Pulgar de la mano del violín: se apoya en el borde posterior del mástil
+            th_curl = [math.radians(30), math.radians(35), math.radians(22)]
+            th_lat = Vector((0.4, 0.9, 0.2)).normalized()
+            th_norm = Vector((0.8, -0.3, 0.5)).normalized()
 
-            tip_v = bm.verts.new((cur_x + curl_dir.x * 0.004, cur_y + curl_dir.y * 0.004, fz - 0.004))
-            for k in range(6):
-                knxt = (k + 1) % 6
-                bm.faces.new((prev_fring[knxt], prev_fring[k], tip_v)).material_index = 3
-
-        th_root = Vector((sign * (0.285 - 0.014), w_center.y + 0.008, 0.825))
-        prev_th = None
-        th_curl = Vector((-sign * 0.45, 0.68, -0.32)).normalized()
-        for s in range(3):
-            t = s / 2.0
-            tx = th_root.x + th_curl.x * 0.024 * t
-            ty = th_root.y + th_curl.y * 0.024 * t
-            tz = th_root.z - 0.018 * t
-            trad = 0.0054 * (1.0 - 0.22 * t)
-            cur_th = []
-            for k in range(6):
-                tang = (2.0 * math.pi * k) / 6.0
-                v = bm.verts.new((tx + trad * math.cos(tang),
-                                  ty + trad * math.sin(tang),
-                                  tz))
-                cur_th.append(v)
-            if prev_th:
-                for k in range(6):
-                    knxt = (k + 1) % 6
-                    bm.faces.new((prev_th[k], prev_th[knxt], cur_th[knxt], cur_th[k])).material_index = 3
-            prev_th = cur_th
-
-        tip_th = bm.verts.new((tx + th_curl.x * 0.003, ty + th_curl.y * 0.003, tz - 0.003))
-        for k in range(6):
-            knxt = (k + 1) % 6
-            bm.faces.new((prev_th[knxt], prev_th[k], tip_th)).material_index = 3
+        add_curved_finger(th_knuckle, th_curl, th_lens, th_rads, th_lat, th_norm)
 
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.normal_update()

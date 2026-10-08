@@ -382,18 +382,18 @@ def render_astorga():
     arm.pose.bones['Head'].rotation_euler = (math.radians(-1), math.radians(4), math.radians(1))
 
     # 2. Brazo violinista (Hand.R, -X, en pantalla a la derecha):
-    # Sostiene el violín por el clavijero / mástil superior con orgullo sereno
-    arm.pose.bones['Shoulder.R'].rotation_euler = (math.radians(2), math.radians(3), math.radians(-3))
-    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(36), math.radians(14), math.radians(-26))
-    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(92), math.radians(16), math.radians(-6))
-    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(14), math.radians(-4), math.radians(22))
+    # Sostiene el mástil del violín junto al hombro derecho/mejilla, enmarcando el rostro con orgullo
+    arm.pose.bones['Shoulder.R'].rotation_euler = (math.radians(2), math.radians(4), math.radians(-4))
+    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(34), math.radians(8), math.radians(-38))
+    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(98), math.radians(12), math.radians(-14))
+    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(12), math.radians(-8), math.radians(32))
 
     # 3. Brazo del arco (Hand.L, +X, en pantalla a la izquierda):
-    # Sostiene la nuez del arco a la altura de la cintura/cadera, apuntando en diagonal al hombro
+    # Sostiene el arco junto a la cintura/cadera, con la mano orientada de modo que los dedos envuelvan la vara
     arm.pose.bones['Shoulder.L'].rotation_euler = (math.radians(-1), math.radians(-2), math.radians(1))
-    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(10), math.radians(-4), math.radians(6))
-    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(22), math.radians(-4), math.radians(2))
-    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(8), math.radians(4), math.radians(-2))
+    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(14), math.radians(-6), math.radians(10))
+    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(28), math.radians(-4), math.radians(4))
+    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(18), math.radians(14), math.radians(-12))
 
     # 4. Postura natural de piernas (contrapposto sutil):
     arm.pose.bones['UpperLeg.L'].rotation_euler = (math.radians(-3), math.radians(2), math.radians(4))
@@ -433,18 +433,18 @@ def render_astorga():
                     p.use_smooth = True
                 if o.name == "Violin_Prop":
                     o.scale = (0.76, 0.76, 0.76)
-                    rot_v = Euler((math.radians(-76), math.radians(168), math.radians(16)), 'XYZ')
+                    rot_v = Euler((math.radians(-70), math.radians(160), math.radians(24)), 'XYZ')
                     o.rotation_euler = rot_v
-                    neck_local = Vector((0.0, 0.47, 0.015))
+                    neck_local = Vector((0.0, 0.44, 0.012))
                     neck_world_vec = rot_v.to_matrix() @ (Vector(o.scale) * neck_local)
-                    o.location = avg_hand_r - neck_world_vec + Vector((0.008, 0.010, -0.006))
+                    o.location = avg_hand_r - neck_world_vec + Vector((0.000, 0.005, -0.008))
                 elif o.name == "Violin_Bow":
                     o.scale = (0.72, 0.72, 0.72)
-                    rot_b = Euler((math.radians(50), math.radians(-28), math.radians(58)), 'XYZ')
+                    rot_b = Euler((math.radians(40), math.radians(-22), math.radians(50)), 'XYZ')
                     o.rotation_euler = rot_b
-                    grip_local = Vector((0.0, 0.08, 0.0))
+                    grip_local = Vector((0.0, 0.06, 0.006))
                     grip_world_vec = rot_b.to_matrix() @ (Vector(o.scale) * grip_local)
-                    o.location = avg_hand_l - grip_world_vec + Vector((0.004, 0.006, -0.004))
+                    o.location = avg_hand_l - grip_world_vec + Vector((-0.002, 0.018, -0.012))
 
     clear_lights_and_cameras(scene)
 

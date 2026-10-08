@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 """
-Prueba definitiva de Astorga:
-1. Melena setentera canónica (commit 45957b5: 9 niveles + add_bang_layer).
-2. Manos anatómicas con palma plana y ancha, y CINCO dedos claramente diferenciados (longitudes y grosores).
-3. Agarre milimétrico y visible del violín y del arco.
-4. Renderizado de close-ups de ambas manos, vista de tarjeta/ícono y cuerpo completo.
+Prueba de alta fidelidad: Manos de 5 dedos, Agarre canónico y Cabello favorito de Astorga.
+Renderiza close-ups de ambas manos y la pose completa para verificación visual rigurosa.
 """
 import os
 import sys
@@ -27,10 +24,7 @@ def reset_scene():
     return scene
 
 def create_materials():
-    materials = {
-        "head": [],
-        "body": []
-    }
+    mats = {}
     defs = {
         "Suit":        ((0.015, 0.015, 0.016, 1.0), 0.85),
         "Pants":       ((0.015, 0.015, 0.016, 1.0), 0.88),
@@ -43,7 +37,6 @@ def create_materials():
         "EyeWhite":    ((0.920, 0.920, 0.900, 1.0), 0.20),
         "EyeIris":     ((0.140, 0.080, 0.050, 1.0), 0.30),
     }
-    mats = {}
     for name, (col, rough) in defs.items():
         m = bpy.data.materials.new(name=name)
         m.use_nodes = True
@@ -52,19 +45,14 @@ def create_materials():
             bsdf.inputs['Base Color'].default_value = col
             bsdf.inputs['Roughness'].default_value = rough
         mats[name] = m
+    return mats
 
-    materials["head"] = [mats["Skin"], mats["EyeWhite"], mats["HairBlack"]]
-    materials["body"] = [mats["Suit"], mats["Pants"], mats["Shoes"], mats["Skin"], mats["ShirtWine"], mats["TieBlack"], mats["GoldBuckle"]]
-    return materials, mats
-
-# =============================================================================
-# 1. CABEZA, ROSTRO DETALLADO Y CABELLO CANÓNICO FAVORITO (45957b5)
-# =============================================================================
-def build_head(materials):
+def build_head(mats):
     me = bpy.data.meshes.new("Player_Head_Mesh")
     bm = bmesh.new()
     uv_lay = bm.loops.layers.uv.new("UVMap")
 
+    # Cráneo / rostro
     head_rings = [
         (1.410, 0.040, 0.044, -0.010),
         (1.440, 0.062, 0.066, -0.008),
@@ -103,7 +91,7 @@ def build_head(materials):
         for loop in f.loops:
             loop[uv_lay].uv = (0.5 + loop.vert.co.x * 2.5, 0.5 + (loop.vert.co.z - 1.50) * 2.0)
 
-    # Ojos 3D con iris y párpados
+    # Ojos 3D
     eye_radius = 0.0125
     eye_z = 1.508
     eye_x = 0.033
@@ -111,55 +99,12 @@ def build_head(materials):
     for sign in (1.0, -1.0):
         eye_bm = bmesh.new()
         bmesh.ops.create_uvsphere(eye_bm, u_segments=16, v_segments=12, radius=eye_radius)
-        bmesh.ops.rotate(eye_bm, verts=eye_bm.verts, cent=(0,0,0),
-                         matrix=Euler((0, 0, math.radians(-sign * 3)), 'XYZ').to_matrix())
         bmesh.ops.translate(eye_bm, verts=eye_bm.verts, vec=(sign * eye_x, eye_y, eye_z))
         v_map = {v: bm.verts.new(v.co) for v in eye_bm.verts}
         for f in eye_bm.faces:
             nf = bm.faces.new([v_map[v] for v in f.verts])
             nf.material_index = 1
         eye_bm.free()
-
-    upper_lid_margin_verts = []
-    upper_lid_crease_verts = []
-    n_lid = 8
-    for sign in (1.0, -1.0):
-        m_ring, c_ring = [], []
-        for i in range(n_lid):
-            t = i / float(n_lid - 1)
-            ang = math.pi * 0.08 + t * (math.pi * 0.84)
-            dx = sign * eye_radius * 1.05 * math.cos(ang)
-            dy = eye_radius * 1.04 * math.sin(ang)
-            dz = eye_radius * 1.04 * math.sin(ang) * 0.40
-            vm = bm.verts.new((sign * eye_x + dx, eye_y + dy + 0.0015, eye_z + dz))
-            vc = bm.verts.new((sign * eye_x + dx * 1.15, eye_y + dy + 0.0035, eye_z + dz + 0.007))
-            m_ring.append(vm)
-            c_ring.append(vc)
-            upper_lid_margin_verts.append(vm)
-            upper_lid_crease_verts.append(vc)
-        for i in range(n_lid - 1):
-            bm.faces.new((m_ring[i], m_ring[i+1], c_ring[i+1], c_ring[i])).material_index = 0
-
-    # Nariz y labios
-    nose_pts = [
-        bm.verts.new(( 0.000, 0.082, 1.488)),
-        bm.verts.new(( 0.008, 0.076, 1.478)),
-        bm.verts.new((-0.008, 0.076, 1.478)),
-        bm.verts.new(( 0.000, 0.084, 1.476)),
-        bm.verts.new(( 0.000, 0.076, 1.468)),
-    ]
-    bm.faces.new((nose_pts[0], nose_pts[1], nose_pts[3])).material_index = 0
-    bm.faces.new((nose_pts[0], nose_pts[3], nose_pts[2])).material_index = 0
-    bm.faces.new((nose_pts[1], nose_pts[4], nose_pts[3])).material_index = 0
-    bm.faces.new((nose_pts[2], nose_pts[3], nose_pts[4])).material_index = 0
-
-    lip_pts = [
-        bm.verts.new((-0.016, 0.071, 1.450)),
-        bm.verts.new(( 0.000, 0.074, 1.453)),
-        bm.verts.new(( 0.016, 0.071, 1.450)),
-        bm.verts.new(( 0.000, 0.073, 1.442)),
-    ]
-    bm.faces.new((lip_pts[0], lip_pts[1], lip_pts[2], lip_pts[3])).material_index = 0
 
     # -------------------------------------------------------------------------
     # MELENA SETENTERA CANÓNICA ORIGINAL (commit 45957b5: 'fix hair astorga')
@@ -252,87 +197,74 @@ def build_head(materials):
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.normal_update()
     for f in bm.faces: f.smooth = True
-
-    bm.verts.ensure_lookup_table()
-    margin_v_indices = [v.index for v in upper_lid_margin_verts]
-    crease_v_indices = [v.index for v in upper_lid_crease_verts]
-
     bm.to_mesh(me)
     bm.free()
 
-    for mat in materials["head"]: me.materials.append(mat)
-    obj_head = bpy.data.objects.new("Player_Head_Mesh", me)
-    bpy.context.scene.collection.objects.link(obj_head)
+    me.materials.append(mats["Skin"])
+    me.materials.append(mats["EyeWhite"])
+    me.materials.append(mats["HairBlack"])
 
-    sk_basis = obj_head.shape_key_add(name="Basis")
-    sk_blink = obj_head.shape_key_add(name="blink")
-    sk_blink.value = 0.0
-    for v_idx in margin_v_indices:
-        sk_blink.data[v_idx].co.z -= 0.0105
-        sk_blink.data[v_idx].co.y += 0.0010
-    for v_idx in crease_v_indices:
-        sk_blink.data[v_idx].co.z -= 0.0055
-        sk_blink.data[v_idx].co.y += 0.0005
+    obj = bpy.data.objects.new("Player_Head_Mesh", me)
+    bpy.context.scene.collection.objects.link(obj)
+    return obj
 
-    return obj_head
-
-# =============================================================================
-# 2. CUERPO CANÓNICO CON MANOS ANATÓMICAS DE 5 DEDOS
-# =============================================================================
-def build_body_mesh(materials):
-    mesh_graph = bpy.data.meshes.new("Body_Graph_Data")
+def build_body_and_hands(mats):
+    mesh_graph = bpy.data.meshes.new("Graph_Body")
     obj_body = bpy.data.objects.new("Player_Body_Mesh", mesh_graph)
     bpy.context.scene.collection.objects.link(obj_body)
 
-    # Nodos de proporciones de 1.65 m
-    # Nota clave: La palma anatómica es PLANA en X (radio 0.012) y ANCHA en Y (radio 0.034)
+    # Esqueleto estructural para Skin Modifier
+    # Detenemos el brazo en la muñeca (Z = 0.84) para generar las manos y 5 dedos limpios en BMesh
     nodes = [
-        # Tronco
-        (0.00,  0.000, 0.76, 0.128, 0.092), # 0: Crotch anatómico
-        (0.00,  0.002, 0.88, 0.126, 0.088), # 1: Caderas / Cintura baja
-        (0.00,  0.004, 1.00, 0.122, 0.084), # 2: Cintura sastre
-        (0.00, -0.004, 1.14, 0.130, 0.090), # 3: Tórax / costillas
-        (0.00, -0.006, 1.25, 0.140, 0.096), # 4: Pectorales y espalda
-        (0.00, -0.003, 1.33, 0.130, 0.088), # 5: Clavículas / hombros
-        (0.00,  0.002, 1.37, 0.046, 0.046), # 6: Base cuello camisero
+        # Torso
+        ( 0.000, 0.002, 0.76, 0.098, 0.082), # 0: Pelvis
+        ( 0.000, 0.002, 0.94, 0.092, 0.078), # 1: Cintura
+        ( 0.000, 0.002, 1.08, 0.102, 0.084), # 2: Pecho bajo
+        ( 0.000, 0.000, 1.20, 0.114, 0.088), # 3: Pecho medio
+        ( 0.000, 0.000, 1.30, 0.118, 0.086), # 4: Clavícula
+        ( 0.000, 0.000, 1.34, 0.046, 0.044), # 5: Cuello
+        ( 0.000, 0.000, 1.40, 0.042, 0.040), # 6: Cabeza base
 
-        # Brazos sastre
-        ( 0.06, -0.003, 1.33, 0.058, 0.058), # 7
-        ( 0.180,-0.003, 1.30, 0.050, 0.050), # 8: Hombro L
-        ( 0.245, 0.002, 1.12, 0.040, 0.040), # 9: Codo L
-        ( 0.285, 0.008, 0.90, 0.030, 0.028), # 10: Manga puño L
+        # Brazo L (+X)
+        ( 0.180, 0.002, 1.30, 0.052, 0.048), # 7: Hombro L
+        ( 0.245, 0.002, 1.26, 0.044, 0.042), # 8: Deltoides L
+        ( 0.260, 0.002, 1.12, 0.038, 0.036), # 9: Codo L
+        ( 0.270, 0.005, 1.05, 0.034, 0.032), # 10: Codo inf L
+        ( 0.280, 0.008, 0.98, 0.030, 0.028), # 11: Antebrazo L
+        ( 0.285, 0.010, 0.90, 0.026, 0.024), # 12: Antebrazo bajo L
+        ( 0.285, 0.010, 0.84, 0.022, 0.018), # 13: Muñeca L (fin de manga)
 
-        (-0.06, -0.003, 1.33, 0.058, 0.058), # 11
-        (-0.180,-0.003, 1.30, 0.050, 0.050), # 12: Hombro R
-        (-0.245, 0.002, 1.12, 0.040, 0.040), # 13: Codo R
-        (-0.285, 0.008, 0.90, 0.030, 0.028), # 14: Manga puño R
+        # Brazo R (-X)
+        (-0.180, 0.002, 1.30, 0.052, 0.048), # 14: Hombro R
+        (-0.245, 0.002, 1.26, 0.044, 0.042), # 15: Deltoides R
+        (-0.260, 0.002, 1.12, 0.038, 0.036), # 16: Codo R
+        (-0.270, 0.005, 1.05, 0.034, 0.032), # 17: Codo inf R
+        (-0.280, 0.008, 0.98, 0.030, 0.028), # 18: Antebrazo R
+        (-0.285, 0.010, 0.90, 0.026, 0.024), # 19: Antebrazo bajo R
+        (-0.285, 0.010, 0.84, 0.022, 0.018), # 20: Muñeca R (fin de manga)
 
-        # Piernas con pantalón formal (1.65 m)
-        ( 0.088, 0.002, 0.76, 0.076, 0.074), # 15: Cadera sup L
-        ( 0.090, 0.002, 0.60, 0.070, 0.068), # 16: Muslo medio L
-        ( 0.092, 0.000, 0.44, 0.062, 0.060), # 17: Rodilla L
-        ( 0.094, 0.000, 0.28, 0.056, 0.054), # 18: Pantorrilla L
-        ( 0.096, 0.002, 0.12, 0.048, 0.048), # 19: Tobillo L
-        ( 0.096, 0.045, 0.03, 0.050, 0.105), # 20: Zapato formal L
+        # Pierna L (+X)
+        ( 0.088, 0.002, 0.76, 0.076, 0.074), # 21: Cadera sup L
+        ( 0.090, 0.002, 0.60, 0.070, 0.068), # 22: Muslo medio L
+        ( 0.092, 0.000, 0.44, 0.062, 0.060), # 23: Rodilla L
+        ( 0.094, 0.000, 0.28, 0.056, 0.054), # 24: Pantorrilla L
+        ( 0.096, 0.002, 0.12, 0.048, 0.048), # 25: Tobillo L
+        ( 0.096, 0.045, 0.03, 0.050, 0.105), # 26: Zapato formal L
 
-        (-0.088, 0.002, 0.76, 0.076, 0.074), # 21: Cadera sup R
-        (-0.090, 0.002, 0.60, 0.070, 0.068), # 22: Muslo medio R
-        (-0.092, 0.000, 0.44, 0.062, 0.060), # 23: Rodilla R
-        (-0.094, 0.000, 0.28, 0.056, 0.054), # 24: Pantorrilla R
-        (-0.096, 0.002, 0.12, 0.048, 0.048), # 25: Tobillo R
-        (-0.096, 0.045, 0.03, 0.050, 0.105), # 26: Zapato formal R
-
-        # Muñeca anatómica: fina en X (0.014), proporcionada en Y (0.022)
-        # Detenemos el Skin modifier en Z = 0.850 para construir la palma y 5 dedos con geometría limpia en BMesh
-        ( 0.285,  0.010, 0.852, 0.014, 0.022), # 27: Muñeca L
-        (-0.285,  0.010, 0.852, 0.014, 0.022), # 28: Muñeca R
+        # Pierna R (-X)
+        (-0.088, 0.002, 0.76, 0.076, 0.074), # 27: Cadera sup R
+        (-0.090, 0.002, 0.60, 0.070, 0.068), # 28: Muslo medio R
+        (-0.092, 0.000, 0.44, 0.062, 0.060), # 29: Rodilla R
+        (-0.094, 0.000, 0.28, 0.056, 0.054), # 30: Pantorrilla R
+        (-0.096, 0.002, 0.12, 0.048, 0.048), # 31: Tobillo R
+        (-0.096, 0.045, 0.03, 0.050, 0.105), # 32: Zapato formal R
     ]
     edges = [
         (0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6),
-        (5, 7), (7, 8), (8, 9), (9, 10), (10, 27),
-        (5, 11), (11, 12), (12, 13), (13, 14), (14, 28),
-        (0, 15), (15, 16), (16, 17), (17, 18), (18, 19), (19, 20),
+        (4, 7), (7, 8), (8, 9), (9, 10), (10, 11), (11, 12), (12, 13),
+        (4, 14), (14, 15), (15, 16), (16, 17), (17, 18), (18, 19), (19, 20),
         (0, 21), (21, 22), (22, 23), (23, 24), (24, 25), (25, 26),
+        (0, 27), (27, 28), (28, 29), (29, 30), (30, 31), (31, 32),
     ]
 
     verts = [Vector((n[0], n[1], n[2])) for n in nodes]
@@ -354,28 +286,28 @@ def build_body_mesh(materials):
     bm.from_mesh(obj_body.data)
     uv_lay = bm.loops.layers.uv.new("UVMap")
 
-    # Mapeo de materiales: 0: suit, 1: pants, 2: shoes, 3: skin, 4: shirt, 5: tie, 6: buttons
+    # Asignar materiales: 0: Suit, 1: Pants, 2: Shoes, 3: Skin, 4: Shirt, 5: Tie, 6: Gold
     for p in bm.faces:
         c_median = p.calc_center_median()
         cz, cx, cy = c_median.z, abs(c_median.x), c_median.y
         if cz < 0.12:
             p.material_index = 2 # Zapatos
         elif cz < 0.94 and cx < 0.20:
-            p.material_index = 1 # Pantalón sastre
+            p.material_index = 1 # Pantalón
         elif cx > 0.16 or (cz > 1.24 and cx > 0.05):
-            if cz < 0.865 and cx > 0.22:
-                p.material_index = 4 # Puños vinotinto de camisa
+            if cz < 0.86 and cx > 0.22:
+                p.material_index = 4 # Puño vinotinto asomando
             else:
-                p.material_index = 0 # Saco negro
+                p.material_index = 0 # Saco
         else:
             if cy > 0.01 and cx < 0.07 and cz >= 0.94:
-                p.material_index = 4 # Camisa vinotinto pecho
+                p.material_index = 4 # Camisa vinotinto
             else:
                 p.material_index = 0
         for loop in p.loops:
             loop[uv_lay].uv = (loop.vert.co.x * 2.0 + 0.5, loop.vert.co.z * 1.5)
 
-    # Cinturón negro en Z = 0.94
+    # Cinturón negro y hebilla dorada
     n_pelv = 24
     belt_ring = []
     for i in range(n_pelv):
@@ -388,7 +320,6 @@ def build_body_mesh(materials):
         bm.faces.new((belt_ring[i], belt_ring[i+1], belt_ring[i+3], belt_ring[i+2])).material_index = 2
     bm.faces.new((belt_ring[-2], belt_ring[-1], belt_ring[1], belt_ring[0])).material_index = 2
 
-    # Hebilla dorada
     buckle_bm = bmesh.new()
     bmesh.ops.create_cube(buckle_bm, size=1.0)
     bmesh.ops.scale(buckle_bm, verts=buckle_bm.verts, vec=(0.014, 0.003, 0.010))
@@ -398,7 +329,7 @@ def build_body_mesh(materials):
         nf.material_index = 6
     buckle_bm.free()
 
-    # Cuello camisero vinotinto
+    # Cuello y solapas
     n_c = 18
     c_bot, c_top = [], []
     for i in range(n_c):
@@ -488,13 +419,15 @@ def build_body_mesh(materials):
         v2_r = suit_levels_verts[l_idx + 1][0]
         v1_in = bm.verts.new((v1_r.co.x * 0.95, v1_r.co.y - 0.005, v1_r.co.z))
         v2_in = bm.verts.new((v2_r.co.x * 0.95, v2_r.co.y - 0.005, v2_r.co.z))
-        bm.faces.new((v1_r, v2_r, v2_in, v1_in)).material_index = 0
+        f_r = bm.faces.new((v1_r, v2_r, v2_in, v1_in))
+        f_r.material_index = 0
 
         v1_l = suit_levels_verts[l_idx][-1]
         v2_l = suit_levels_verts[l_idx + 1][-1]
         v1_lin = bm.verts.new((v1_l.co.x * 0.95, v1_l.co.y - 0.005, v1_l.co.z))
         v2_lin = bm.verts.new((v2_l.co.x * 0.95, v2_l.co.y - 0.005, v2_l.co.z))
-        bm.faces.new((v1_l, v1_lin, v2_lin, v2_l)).material_index = 0
+        f_l = bm.faces.new((v1_l, v1_lin, v2_lin, v2_l))
+        f_l.material_index = 0
 
     r_bot = suit_levels_verts[0]
     for i in range(n_suit_pts - 1):
@@ -527,6 +460,7 @@ def build_body_mesh(materials):
             for loop in f.loops:
                 loop[uv_lay].uv = (loop.vert.co.x * 2.0 + 0.5, loop.vert.co.z * 1.5)
 
+    # Botón de cierre
     btn_bm = bmesh.new()
     bmesh.ops.create_uvsphere(btn_bm, u_segments=8, v_segments=6, radius=0.005)
     bmesh.ops.scale(btn_bm, verts=btn_bm.verts, vec=(1.0, 0.30, 1.0))
@@ -537,153 +471,120 @@ def build_body_mesh(materials):
     btn_bm.free()
 
     # =========================================================================
-    # MODELADO ANATÓMICO CANÓNICO DE MANOS: 5 DEDOS INDEPENDIENTES Y SUJECIÓN
+    # CONSTRUCCIÓN DE LAS MANOS Y 5 DEDOS ANATÓMICOS DE ALTA RESOLUCIÓN
     # =========================================================================
-    # Se genera una palma anatómica trapezoidal suave desde la muñeca (Z = 0.850)
-    # hasta los nudillos (Z = 0.785), y 5 dedos articulados con 3 falanges cada uno:
-    # - Pulgar: oponible, grueso (r=0.0068), longitud 0.048 m
-    # - Índice: r=0.0054, longitud 0.068 m
-    # - Medio:  r=0.0058, longitud 0.078 m (el más largo)
-    # - Anular: r=0.0053, longitud 0.070 m
-    # - Meñique: r=0.0044, longitud 0.052 m (claramente más corto y estilizado)
+    # Para cada mano construimos una palma prismática limpia con conexión a la
+    # muñeca (Z = 0.84) y 5 dedos diferenciados:
+    # - Pulgar: nace a mitad de la palma, grueso (r=0.0072), 2 falanges, oponible
+    # - Índice: r=0.0058, largo=0.068
+    # - Medio: r=0.0062, largo=0.078 (el más largo con diferencia)
+    # - Anular: r=0.0056, largo=0.070
+    # - Meñique: r=0.0048, largo=0.052 (visiblemente más corto y estilizado)
     # =========================================================================
 
-    def add_curved_finger(p_knuckle, curl_angles, seg_lengths, radii, lat_axis, palm_normal):
-        """
-        Crea un dedo con articulaciones independientes (falanges) que se curvan
-        naturalmente alrededor de un eje.
-        curl_angles: lista de 3 ángulos de flexión en radianes (nudillo, PIP, DIP).
-        seg_lengths: lista de longitudes de las 3 falanges.
-        radii: lista de radios en cada nudo (4 valores: base, pip, dip, yema).
-        """
-        rings = []
-        cur_pos = Vector(p_knuckle)
-        # Dirección inicial del dedo (hacia abajo -Z en reposo)
-        cur_dir = Vector((0.0, 0.0, -1.0))
+    def create_finger_mesh(base_pt, dir_vec, length, radius, n_segments=3, lateral_normal=Vector((1,0,0))):
+        """Genera un dedo poligonal de 6 lados con falanges y engrosamiento en nudillos."""
+        f_rings = []
+        dir_norm = dir_vec.normalized()
+        up_norm = dir_norm.cross(lateral_normal).normalized()
+        lat_norm = up_norm.cross(dir_norm).normalized()
 
-        # Eje de flexión (lateral al dedo, perpendicular a la flexión palmar)
-        flex_axis = lat_axis.normalized()
-        norm_axis = palm_normal.normalized()
+        for s in range(n_segments + 1):
+            t = s / float(n_segments)
+            # Conicidad anatómica y sutil curvatura articular
+            cur_pt = base_pt + dir_norm * (length * t)
+            # Radio decreciente hacia la yema (con pequeño engrosamiento en articulaciones)
+            joint_bulge = 0.0006 * math.sin(t * math.pi * (n_segments))
+            r_cur = radius * (1.0 - 0.28 * t) + joint_bulge
 
-        for s in range(4):
-            # Posición del anillo
-            if s > 0:
-                angle = curl_angles[s-1]
-                # Rotar la dirección alrededor del eje de flexión
-                rot_m = Matrix.Rotation(angle, 3, flex_axis)
-                cur_dir = rot_m @ cur_dir
-                cur_pos = cur_pos + cur_dir * seg_lengths[s-1]
-
-            r = radii[s]
             ring_v = []
-            # 8 vértices para un cilindro suave y orgánico
-            u_dir = flex_axis
-            v_dir = cur_dir.cross(u_dir).normalized()
-            for k in range(8):
-                ang = (2.0 * math.pi * k) / 8.0
-                offset = (u_dir * math.cos(ang) + v_dir * math.sin(ang)) * r
-                ring_v.append(bm.verts.new(cur_pos + offset))
-            rings.append(ring_v)
+            for k in range(6):
+                ang = (2.0 * math.pi * k) / 6.0
+                rad_offset = lat_norm * (r_cur * math.cos(ang)) + up_norm * (r_cur * math.sin(ang))
+                ring_v.append(bm.verts.new(cur_pt + rad_offset))
+            f_rings.append(ring_v)
 
-        # Conectar segmentos
-        for s in range(3):
-            r1, r2 = rings[s], rings[s+1]
-            for k in range(8):
-                knxt = (k + 1) % 8
-                f = bm.faces.new((r1[k], r1[knxt], r2[knxt], r2[k]))
-                f.material_index = 3
-                f.smooth = True
+        for s in range(n_segments):
+            r1, r2 = f_rings[s], f_rings[s+1]
+            for k in range(6):
+                knxt = (k + 1) % 6
+                bm.faces.new((r1[k], r1[knxt], r2[knxt], r2[k])).material_index = 3
 
-        # Yema redondeada
-        tip_pos = cur_pos + cur_dir * (radii[-1] * 0.6)
-        tip_v = bm.verts.new(tip_pos)
-        r_last = rings[-1]
-        for k in range(8):
-            knxt = (k + 1) % 8
-            f = bm.faces.new((r_last[knxt], r_last[k], tip_v))
-            f.material_index = 3
-            f.smooth = True
+        # Punta redondeada
+        tip_pt = base_pt + dir_norm * (length + radius * 0.40)
+        tip_v = bm.verts.new(tip_pt)
+        r_last = f_rings[-1]
+        for k in range(6):
+            knxt = (k + 1) % 6
+            bm.faces.new((r_last[knxt], r_last[k], tip_v)).material_index = 3
 
     for is_l in (True, False):
         sign = 1.0 if is_l else -1.0
-        # Centro de la muñeca
-        wx = sign * 0.285
-        wy = 0.010
-        wz_top = 0.852
-        wz_knuckles = 0.785
+        # Muñeca base
+        w_center = Vector((sign * 0.285, 0.010, 0.840))
 
-        # 1. Palma de la mano (Palmar wedge)
-        # Dorso en +X para L, -X para R; Palma interior en -X para L, +X para R
-        # Ancho Y: de -0.026 a +0.030 (span de 5.6 cm)
-        # Espesor X: ±0.012 (2.4 cm)
-        p_top_verts = [
-            bm.verts.new((wx - sign * 0.011, wy - 0.018, wz_top)),
-            bm.verts.new((wx + sign * 0.011, wy - 0.018, wz_top)),
-            bm.verts.new((wx + sign * 0.011, wy + 0.022, wz_top)),
-            bm.verts.new((wx - sign * 0.011, wy + 0.022, wz_top)),
-        ]
-        p_bot_verts = [
-            bm.verts.new((wx - sign * 0.010, wy - 0.028, wz_knuckles)),
-            bm.verts.new((wx + sign * 0.010, wy - 0.028, wz_knuckles)),
-            bm.verts.new((wx + sign * 0.010, wy + 0.034, wz_knuckles)),
-            bm.verts.new((wx - sign * 0.010, wy + 0.034, wz_knuckles)),
-        ]
-        # Caras de la palma
-        f_p1 = bm.faces.new((p_top_verts[0], p_top_verts[1], p_bot_verts[1], p_bot_verts[0]))
-        f_p2 = bm.faces.new((p_top_verts[1], p_top_verts[2], p_bot_verts[2], p_bot_verts[1]))
-        f_p3 = bm.faces.new((p_top_verts[2], p_top_verts[3], p_bot_verts[3], p_bot_verts[2]))
-        f_p4 = bm.faces.new((p_top_verts[3], p_top_verts[0], p_bot_verts[0], p_bot_verts[3]))
-        f_p5 = bm.faces.new((p_top_verts[0], p_top_verts[3], p_top_verts[2], p_top_verts[1]))
-        f_p6 = bm.faces.new((p_bot_verts[0], p_bot_verts[1], p_bot_verts[2], p_bot_verts[3]))
-        for fp in (f_p1, f_p2, f_p3, f_p4, f_p5, f_p6):
-            fp.material_index = 3
-            fp.smooth = True
+        # 1. Palma de la mano (anatómicamente sólida)
+        # Altura: Z = 0.840 a Z = 0.775 (6.5 cm)
+        # Ancho Y: -0.030 a +0.030 (6.0 cm)
+        # Grosor X: ±0.012 (2.4 cm)
+        palm_z_top = 0.840
+        palm_z_bot = 0.775
 
-        # 2. Los 4 Dedos (Meñique, Anular, Medio, Índice)
-        # Separación clara en Y para que no se fundan:
-        finger_data = [
-            # Nombre, dy_nudillo, [l1, l2, l3], [r0, r1, r2, r3]
-            ("Pinky",  wy - 0.021, [0.022, 0.016, 0.013], [0.0046, 0.0042, 0.0038, 0.0034]), # Meñique corto
-            ("Ring",   wy - 0.007, [0.028, 0.022, 0.017], [0.0054, 0.0050, 0.0045, 0.0040]), # Anular
-            ("Middle", wy + 0.008, [0.032, 0.025, 0.019], [0.0058, 0.0054, 0.0048, 0.0042]), # Medio más largo
-            ("Index",  wy + 0.023, [0.028, 0.021, 0.016], [0.0055, 0.0051, 0.0046, 0.0040]), # Índice
+        # Generar prisma de palma conectado
+        p_verts = []
+        p_corners = [
+            # Base muñeca (top)
+            Vector((sign * 0.285 - 0.012, -0.018, palm_z_top)),
+            Vector((sign * 0.285 + 0.012, -0.018, palm_z_top)),
+            Vector((sign * 0.285 + 0.012,  0.022, palm_z_top)),
+            Vector((sign * 0.285 - 0.012,  0.022, palm_z_top)),
+            # Línea de nudillos (bottom)
+            Vector((sign * 0.285 - 0.010, -0.032, palm_z_bot)),
+            Vector((sign * 0.285 + 0.010, -0.032, palm_z_bot)),
+            Vector((sign * 0.285 + 0.010,  0.032, palm_z_bot)),
+            Vector((sign * 0.285 - 0.010,  0.032, palm_z_bot)),
         ]
+        bm_p = [bm.verts.new(v) for v in p_corners]
 
+        # Caras laterales de la palma
+        bm.faces.new((bm_p[0], bm_p[1], bm_p[5], bm_p[4])).material_index = 3 # Posterior / meñique
+        bm.faces.new((bm_p[1], bm_p[2], bm_p[6], bm_p[5])).material_index = 3 # Dorso
+        bm.faces.new((bm_p[2], bm_p[3], bm_p[7], bm_p[6])).material_index = 3 # Anterior / índice
+        bm.faces.new((bm_p[3], bm_p[0], bm_p[4], bm_p[7])).material_index = 3 # Palma interna
+        bm.faces.new((bm_p[0], bm_p[3], bm_p[2], bm_p[1])).material_index = 3 # Tapa muñeca
+
+        # 2. Los 4 Dedos Principales (Meñique, Anular, Medio, Índice)
+        # Nacen a lo largo de la línea de nudillos en Z = 0.775
+        # En reposo anatómico, los dedos se proyectan hacia abajo (-Z) con suave flexión palmar (-X para mano L, +X para mano R)
         if is_l:
-            # Mano L (sostiene la vara del arco en la cadera):
-            # Los dedos se curvan suavemente envolviendo la vara
-            curl_angles_fingers = [math.radians(28), math.radians(42), math.radians(24)]
-            lat_axis = Vector((0.0, 1.0, 0.0))
-            palm_normal = Vector((-1.0, 0.0, 0.0))
+            # Mano L (arco): dedos semi-cerrados envolviendo la nuez del arco
+            # Flexión hacia el interior (-X) y ligeramente hacia adelante (+Y)
+            f_curl_dir = Vector((-0.55, 0.15, -0.82)).normalized()
+            th_dir = Vector((-0.25, -0.40, -0.88)).normalized()
         else:
-            # Mano R (sostiene el violín por el mástil junto a la barbilla):
-            # En la foto de Astorga, la mano sostiene el mástil con los dedos flexionados
-            # abrazando el diapasón con elegancia artística
-            curl_angles_fingers = [math.radians(24), math.radians(38), math.radians(26)]
-            lat_axis = Vector((0.0, 1.0, 0.0))
-            palm_normal = Vector((1.0, 0.0, 0.0))
+            # Mano R (violín): dedos flexionados en garra elegante abrazando el mástil
+            # Se curvan hacia el interior (+X) y hacia adelante (+Y)
+            f_curl_dir = Vector((0.60, 0.25, -0.75)).normalized()
+            th_dir = Vector((-0.30, 0.40, -0.86)).normalized()
 
-        for fname, fy, lens, rads in finger_data:
-            knuckle_pos = Vector((wx, fy, wz_knuckles))
-            add_curved_finger(knuckle_pos, curl_angles_fingers, lens, rads, lat_axis, palm_normal)
+        # Especificaciones de los 4 dedos: (Nombre, dy_nudillo, largo, radio)
+        fingers = [
+            ("Pinky",  -0.024, 0.052, 0.0048),
+            ("Ring",   -0.008, 0.068, 0.0055),
+            ("Middle",  0.008, 0.078, 0.0062),
+            ("Index",   0.024, 0.068, 0.0058),
+        ]
+
+        for fname, dy, f_len, f_rad in fingers:
+            knuckle_pt = Vector((sign * 0.285, dy, palm_z_bot))
+            create_finger_mesh(knuckle_pt, f_curl_dir, f_len, f_rad, n_segments=3,
+                               lateral_normal=Vector((0, 1, 0)))
 
         # 3. Quinto Dedo: Pulgar Oponible (Thumb)
-        # Nace en la eminencia tenar (mitad de la palma en Z = 0.825, cara anterior Y = +0.020)
-        th_knuckle = Vector((wx - sign * 0.012, wy + 0.022, 0.825))
-        th_lens = [0.026, 0.020, 0.012]
-        th_rads = [0.0068, 0.0062, 0.0054, 0.0046]
-        if is_l:
-            # Pulgar de la mano del arco: se opone a los dedos por debajo de la vara
-            th_curl = [math.radians(35), math.radians(30), math.radians(20)]
-            th_lat = Vector((-0.4, 0.9, 0.2)).normalized()
-            th_norm = Vector((-0.8, -0.3, 0.5)).normalized()
-        else:
-            # Pulgar de la mano del violín: se apoya en el borde posterior del mástil
-            th_curl = [math.radians(30), math.radians(35), math.radians(22)]
-            th_lat = Vector((0.4, 0.9, 0.2)).normalized()
-            th_norm = Vector((0.8, -0.3, 0.5)).normalized()
-
-        add_curved_finger(th_knuckle, th_curl, th_lens, th_rads, th_lat, th_norm)
+        # Nace a mitad de la palma en la cara interna/anterior (Z = 0.815, Y = 0.016)
+        th_base = Vector((sign * 0.285 - sign * 0.010, 0.016, 0.815))
+        create_finger_mesh(th_base, th_dir, 0.050, 0.0072, n_segments=2,
+                           lateral_normal=Vector((0, 0, 1)))
 
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.normal_update()
@@ -692,14 +593,11 @@ def build_body_mesh(materials):
     bm.to_mesh(obj_body.data)
     bm.free()
 
-    for mat in materials["body"]:
-        obj_body.data.materials.append(mat)
+    for mat_name in ["Suit", "Pants", "Shoes", "Skin", "ShirtWine", "TieBlack", "GoldBuckle"]:
+        obj_body.data.materials.append(mats[mat_name])
 
     return obj_body
 
-# =============================================================================
-# 3. ESQUELETO Y RIGGING
-# =============================================================================
 def build_skeleton():
     arm_data = bpy.data.armatures.new("Skeleton3D")
     arm_obj = bpy.data.objects.new("Skeleton3D", arm_data)
@@ -790,11 +688,11 @@ def assign_weights(obj, is_head=False):
         # 2. EXTREMIDADES SUPERIORES (BRAZOS Y MANOS CON DEDOS)
         elif ax > 0.16 and co.z < 1.38:
             side = ".L" if co.x > 0 else ".R"
-            if co.z < 0.86:
-                # TODA la mano (palma y los 5 dedos) se mueve rígidamente con Hand
+            if co.z < 0.85:
+                # TODA la mano (palma y 5 dedos) sujeta rígidamente al hueso Hand
                 obj.vertex_groups["Hand" + side].add([idx], 1.0, 'REPLACE')
-            elif co.z < 0.90:
-                t_w = (co.z - 0.86) / 0.04
+            elif co.z < 0.88:
+                t_w = (co.z - 0.85) / 0.03
                 obj.vertex_groups["Forearm" + side].add([idx], t_w, 'REPLACE')
                 obj.vertex_groups["Hand" + side].add([idx], 1.0 - t_w, 'REPLACE')
             elif co.z < 1.08:
@@ -846,18 +744,19 @@ def apply_pose_and_setup_scene():
     arm.pose.bones['Head'].rotation_euler = (math.radians(-1), math.radians(4), math.radians(1))
 
     # 2. Brazo violinista (Hand.R, -X, en pantalla a la derecha):
-    # Sostiene el mástil del violín junto al hombro derecho/mejilla, enmarcando el rostro con orgullo
-    arm.pose.bones['Shoulder.R'].rotation_euler = (math.radians(2), math.radians(4), math.radians(-4))
-    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(34), math.radians(8), math.radians(-38))
-    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(98), math.radians(12), math.radians(-14))
-    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(12), math.radians(-8), math.radians(32))
+    # Sostiene el mástil del violín erguido junto al hombro/cuello
+    # Orientamos la mano para que el dorso y los 4 dedos miren hacia el frente (cámara)
+    arm.pose.bones['Shoulder.R'].rotation_euler = (math.radians(2), math.radians(3), math.radians(-3))
+    arm.pose.bones['UpperArm.R'].rotation_euler = (math.radians(40), math.radians(18), math.radians(-28))
+    arm.pose.bones['Forearm.R'].rotation_euler = (math.radians(96), math.radians(22), math.radians(-12))
+    arm.pose.bones['Hand.R'].rotation_euler = (math.radians(24), math.radians(-12), math.radians(45))
 
     # 3. Brazo del arco (Hand.L, +X, en pantalla a la izquierda):
-    # Sostiene el arco junto a la cintura/cadera, con la mano orientada de modo que los dedos envuelvan la vara
+    # Sostiene el arco junto a la cintura/cadera
     arm.pose.bones['Shoulder.L'].rotation_euler = (math.radians(-1), math.radians(-2), math.radians(1))
-    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(14), math.radians(-6), math.radians(10))
-    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(28), math.radians(-4), math.radians(4))
-    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(18), math.radians(14), math.radians(-12))
+    arm.pose.bones['UpperArm.L'].rotation_euler = (math.radians(12), math.radians(-4), math.radians(8))
+    arm.pose.bones['Forearm.L'].rotation_euler = (math.radians(26), math.radians(-6), math.radians(4))
+    arm.pose.bones['Hand.L'].rotation_euler = (math.radians(14), math.radians(12), math.radians(-8))
 
     # 4. Piernas en contrapposto sutil
     arm.pose.bones['UpperLeg.L'].rotation_euler = (math.radians(-3), math.radians(2), math.radians(4))
@@ -894,27 +793,28 @@ def apply_pose_and_setup_scene():
                 for p in o.data.polygons: p.use_smooth = True
                 if o.name == "Violin_Prop":
                     o.scale = (0.76, 0.76, 0.76)
-                    rot_v = Euler((math.radians(-70), math.radians(160), math.radians(24)), 'XYZ')
+                    rot_v = Euler((math.radians(-72), math.radians(164), math.radians(22)), 'XYZ')
                     o.rotation_euler = rot_v
-                    # Calibración milimétrica para que el mástil descanse en la mano
-                    # y los 4 dedos abracen visiblemente el mástil por el frente
-                    neck_local = Vector((0.0, 0.44, 0.012))
+                    # Calibración milimétrica: el mástil descansa en la palma y los 4 dedos abrazan el frente
+                    neck_local = Vector((0.0, 0.42, 0.010))
                     neck_world_vec = rot_v.to_matrix() @ (Vector(o.scale) * neck_local)
-                    o.location = avg_hand_r - neck_world_vec + Vector((0.000, 0.005, -0.008))
+                    # Colocar el violín ligeramente desplazado hacia la izquierda del personaje (-X) para que los dedos queden al frente
+                    o.location = avg_hand_r - neck_world_vec + Vector((-0.016, -0.012, -0.010))
                 elif o.name == "Violin_Bow":
                     o.scale = (0.72, 0.72, 0.72)
-                    rot_b = Euler((math.radians(40), math.radians(-22), math.radians(50)), 'XYZ')
+                    rot_b = Euler((math.radians(44), math.radians(-24), math.radians(52)), 'XYZ')
                     o.rotation_euler = rot_b
-                    # La vara pasa por dentro del agarre de los dedos
-                    grip_local = Vector((0.0, 0.06, 0.006))
+                    # La vara pasa por el interior de los 4 dedos cerrados y el pulgar
+                    grip_local = Vector((0.0, 0.07, 0.0))
                     grip_world_vec = rot_b.to_matrix() @ (Vector(o.scale) * grip_local)
-                    o.location = avg_hand_l - grip_world_vec + Vector((-0.002, 0.018, -0.012))
+                    o.location = avg_hand_l - grip_world_vec + Vector((0.005, 0.006, 0.002))
 
     return avg_hand_r, avg_hand_l
 
 def setup_lights(scene):
-    head_t = (0.0, 0.0, 1.48)
-    chest_t = (0.0, 0.0, 1.20)
+    # Luces de estudio
+    head_t = (-0.02, 0.0, 1.48)
+    chest_t = (-0.02, 0.0, 1.18)
 
     def add_light(name, ltype, power, loc, target, col=(1,1,1), size=1.0):
         l_data = bpy.data.lights.new(name, ltype)
@@ -927,16 +827,16 @@ def setup_lights(scene):
         l_obj.rotation_euler = (Vector(target) - l_obj.location).to_track_quat('-Z', 'Y').to_euler()
         return l_obj
 
-    add_light('KeyWarm', 'AREA', 140.0, (-0.8, 1.6, 1.6), chest_t, (1.0, 0.94, 0.88), size=1.4)
-    add_light('FillHall', 'AREA', 65.0, (1.1, 1.5, 1.4), head_t, (0.92, 0.95, 1.0), size=2.0)
-    add_light('RimHair', 'SPOT', 125.0, (0.1, -1.3, 1.9), head_t, (1.0, 0.97, 0.92))
-    add_light('ViolinLight', 'AREA', 60.0, (-0.45, 1.7, 1.28), (-0.15, 0, 1.25), (1.0, 0.95, 0.88), size=1.0)
+    add_light('KeyLight', 'AREA', 240.0, (-1.2, 1.8, 1.6), chest_t, (1.0, 0.88, 0.72), size=1.2)
+    add_light('FillLight', 'AREA', 110.0, (1.2, 1.8, 1.3), head_t, (0.92, 0.96, 1.0), size=2.0)
+    add_light('RimLight', 'SPOT', 180.0, (0.2, -1.3, 1.9), head_t, (1.0, 0.98, 0.92))
+    add_light('DetailLight', 'AREA', 60.0, (-0.1, 2.0, 1.2), chest_t, (1.0, 0.98, 0.96), size=1.0)
 
 def main():
     scene = reset_scene()
-    materials, mats = create_materials()
-    head = build_head(materials)
-    body = build_body_mesh(materials)
+    mats = create_materials()
+    head = build_head(mats)
+    body = build_body_and_hands(mats)
     arm = build_skeleton()
 
     assign_weights(head, is_head=True)
@@ -956,7 +856,7 @@ def main():
     # 1. Close-up de la Mano del Violín (Hand.R)
     scene.render.resolution_x = 800
     scene.render.resolution_y = 800
-    cam_obj.location = avg_hand_r + Vector((-0.18, 0.65, 0.02))
+    cam_obj.location = avg_hand_r + Vector((-0.15, 0.70, 0.05))
     cam_obj.rotation_euler = (avg_hand_r - cam_obj.location).to_track_quat('-Z', 'Y').to_euler()
     out_violin_hand = os.path.join(SCRATCH_DIR, "test_hand_violin_closeup.png")
     scene.render.filepath = out_violin_hand
@@ -964,7 +864,7 @@ def main():
     print(f"✓ Close-up mano violín: {out_violin_hand}")
 
     # 2. Close-up de la Mano del Arco (Hand.L)
-    cam_obj.location = avg_hand_l + Vector((0.18, 0.65, 0.02))
+    cam_obj.location = avg_hand_l + Vector((0.15, 0.70, 0.05))
     cam_obj.rotation_euler = (avg_hand_l - cam_obj.location).to_track_quat('-Z', 'Y').to_euler()
     out_bow_hand = os.path.join(SCRATCH_DIR, "test_hand_bow_closeup.png")
     scene.render.filepath = out_bow_hand
@@ -974,24 +874,13 @@ def main():
     # 3. Vista de Busto / Tarjeta
     scene.render.resolution_x = 1024
     scene.render.resolution_y = 1024
-    cam_obj.location = Vector((-0.24, 2.15, 1.28))
-    target = Vector((-0.02, 0.0, 1.25))
+    cam_obj.location = Vector((-0.22, 2.15, 1.25))
+    target = Vector((-0.02, 0.0, 1.22))
     cam_obj.rotation_euler = (target - cam_obj.location).to_track_quat('-Z', 'Y').to_euler()
-    out_icon = os.path.join(SCRATCH_DIR, "test_astorga_icon_v3.png")
+    out_icon = os.path.join(SCRATCH_DIR, "test_astorga_icon_v2.png")
     scene.render.filepath = out_icon
     bpy.ops.render.render(write_still=True)
-    print(f"✓ Vista icono v3: {out_icon}")
-
-    # 4. Vista de Cuerpo Completo
-    scene.render.resolution_x = 800
-    scene.render.resolution_y = 1200
-    cam_obj.location = Vector((0.00, 2.35, 0.95))
-    target_full = Vector((0.00, 0.00, 0.90))
-    cam_obj.rotation_euler = (target_full - cam_obj.location).to_track_quat('-Z', 'Y').to_euler()
-    out_full = os.path.join(SCRATCH_DIR, "test_astorga_fullbody_v3.png")
-    scene.render.filepath = out_full
-    bpy.ops.render.render(write_still=True)
-    print(f"✓ Vista fullbody v3: {out_full}")
+    print(f"✓ Vista icono v2: {out_icon}")
 
 if __name__ == "__main__":
     main()
