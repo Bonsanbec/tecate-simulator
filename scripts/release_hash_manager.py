@@ -320,6 +320,11 @@ def evaluate_release(local_files, remote_manifest_text, new_tag, force=False):
         b = new_binaries[pid]
         size_mb = f"{b['size_bytes'] / (1024 * 1024):.1f} MB" if b["size_bytes"] else "N/A"
         sha_short = b["sha256"][:12] + "..." if b["sha256"] else "N/A"
+        
+        if b["status"] == "UPDATED":
+            link_label = f"Descargar (v{new_tag})"
+        else:
+            link_label = f"Descargar (v{b['origin_release']})"
 
         url = b.get("download_url", "#")
         notes_lines.append(
