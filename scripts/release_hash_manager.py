@@ -316,24 +316,18 @@ def evaluate_release(local_files, remote_manifest_text, new_tag, force=False):
         "",
         "### 📦 Binarios y Plataformas Disponibles",
         "",
-        "| Plataforma | Estado | Archivo | Tamaño | SHA-256 | Descarga Directa |",
-        "| :--- | :--- | :--- | :--- | :--- | :--- |"
+        "| Plataforma | Archivo | Tamaño | SHA-256 | Descarga |",
+        "| :--- | :--- | :--- | :--- | :--- |"
     ]
 
     for pid in sorted(new_binaries.keys()):
         b = new_binaries[pid]
         size_mb = f"{b['size_bytes'] / (1024 * 1024):.1f} MB" if b["size_bytes"] else "N/A"
         sha_short = b["sha256"][:12] + "..." if b["sha256"] else "N/A"
-        if b["status"] == "UPDATED":
-            status_badge = "🆕 **Actualizado**"
-            link_label = f"Descargar (v{new_tag})"
-        else:
-            status_badge = f"⏩ *Sin cambios (v{b['origin_release']})*"
-            link_label = f"Descargar (v{b['origin_release']})"
 
         url = b.get("download_url", "#")
         notes_lines.append(
-            f"| **{b.get('display_name', pid)}** | {status_badge} | `{b['filename']}` | {size_mb} | `{sha_short}` | [{link_label}]({url}) |"
+            f"| **{b.get('display_name', pid)}** | `{b['filename']}` | {size_mb} | `{sha_short}` | [{link_label}]({url}) |"
         )
 
     # Archivos que se deben subir físicamente al nuevo release:
