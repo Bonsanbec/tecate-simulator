@@ -331,6 +331,9 @@ def evaluate_release(local_files, remote_manifest_text, new_tag, force=False):
             f"| **{b.get('display_name', pid)}** | `{b['filename']}` | {size_mb} | `{sha_short}` | [{link_label}]({url}) |"
         )
 
+    with open(RELEASE_NOTES_FILE, "w", encoding="utf-8") as f:
+        f.write("\n".join(notes_lines) + "\n")
+
     # Archivos que se deben subir físicamente al nuevo release:
     # 1. Los binarios que SÍ cambiaron
     # 2. El nuevo version_manifest.json (SSOT)
