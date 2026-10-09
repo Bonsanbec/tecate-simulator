@@ -336,17 +336,6 @@ def evaluate_release(local_files, remote_manifest_text, new_tag, force=False):
             f"| **{b.get('display_name', pid)}** | {status_badge} | `{b['filename']}` | {size_mb} | `{sha_short}` | [{link_label}]({url}) |"
         )
 
-    notes_lines.extend([
-        "",
-        "> [!NOTE]",
-        "> Los binarios marcados como *Sin cambios* preservan su integridad criptográfica y su enlace de origen para evitar re-cargas innecesarias y optimizar la descarga de actualizaciones.",
-        "",
-        f"El manifiesto único de integridad se encuentra en [`version_manifest.json`](https://github.com/{repo}/releases/download/{new_tag}/version_manifest.json)."
-    ])
-
-    with open(RELEASE_NOTES_FILE, "w", encoding="utf-8") as f:
-        f.write("\n".join(notes_lines) + "\n")
-
     # Archivos que se deben subir físicamente al nuevo release:
     # 1. Los binarios que SÍ cambiaron
     # 2. El nuevo version_manifest.json (SSOT)
