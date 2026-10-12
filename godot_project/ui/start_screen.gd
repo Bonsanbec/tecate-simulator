@@ -73,6 +73,7 @@ enum PendingAction {
 
 var player: CharacterBody3D = null
 var network_client: Node = null
+var auth_service: AuthService = null
 var is_menu_active: bool = true
 var current_screen_state: MenuScreenState = MenuScreenState.MAIN_MENU
 var _pending_action: PendingAction = PendingAction.NONE
@@ -96,6 +97,18 @@ func _ready() -> void:
 		network_client = get_node(network_client_path)
 	elif get_parent() and get_parent().has_node("NetworkClient"):
 		network_client = get_parent().get_node("NetworkClient")
+
+	# Localizar o enlazar AuthService
+	if network_client and "auth_service" in network_client and network_client.auth_service:
+		auth_service = network_client.auth_service
+	elif get_parent():
+		auth_service = get_parent().find_child("AuthService", true, false) as AuthService
+
+	if auth_service:
+		if auth_service.is_loaded:
+			_on_auth_identity_loaded(auth_service.player_uuid, auth_service.display_name, auth_service.preferred_character_id)
+		else:
+			auth_service.identity_loaded.connect(_on_auth_identity_loaded)
 
 	# Configuración inicial de cámara orientada al Cuchumá
 	if menu_camera:
@@ -449,12 +462,20 @@ func _select_character(char_id: String) -> void:
 	_apply_dynamic_ui_theme(theme_color)
 	_update_card_styles()
 
+func _on_auth_identity_loaded(_uuid: String, _name: String, character_id: String) -> void:
+	if not character_id.is_empty():
+		_select_character(character_id)
+
 func _on_confirm_selection_pressed() -> void:
 	if selected_character_id.is_empty():
 		selected_character_id = CharacterCatalogClass.get_default_character_id()
 
 	has_chosen_character = true
 	_update_card_styles()
+
+	# Guardar selección de manera asíncrona no bloqueante
+	if auth_service:
+		auth_service.save_identity_async(auth_service.display_name, selected_character_id)
 
 	# Aplicar identidad al jugador local
 	if player and player.has_method("apply_identity"):

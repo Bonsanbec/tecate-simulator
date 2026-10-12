@@ -15,6 +15,8 @@ class ClientSession:
     addr: tuple[str, int]
     client_version: str = "1.0"
     auth_token: str = ""
+    player_uuid: str = ""
+    display_name: str = ""
     connected_at: float = field(default_factory=time.time)
     last_seen: float = field(default_factory=time.time)
     sequence_out: int = 0

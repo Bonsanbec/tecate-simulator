@@ -66,7 +66,14 @@ enum EventCode {
 	VEHICLE_ENTER = 8,
 	VEHICLE_EXIT = 9,
 	VEHICLE_REFUEL = 10,
-	CHARACTER_SELECT = 11
+	CHARACTER_SELECT = 11,
+	MINIGAME_SUMMON = 20,
+	MINIGAME_JOIN = 21,
+	MINIGAME_START = 22,
+	MINIGAME_ACTION = 23,
+	MINIGAME_ELIMINATE = 24,
+	MINIGAME_END = 25,
+	MINIGAME_CANCEL = 26
 }
 
 
@@ -408,4 +415,194 @@ static func decode_character_select_data(data: PackedByteArray) -> String:
 		if res[0] == OK:
 			return res[1].get_string_from_utf8()
 	return ""
+
+# =============================================================================
+# CODECS DE MINIJUEGOS (TKT/1)
+# =============================================================================
+
+static func encode_minigame_summon_data(game_id: int, mode: int, max_players: int, arena_id: int) -> PackedByteArray:
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.put_u16(game_id)
+	sp.put_u8(mode)
+	sp.put_u8(max_players)
+	sp.put_u16(arena_id)
+	sp.put_u32(0) # reserved
+	return sp.data_array
+
+static func decode_minigame_summon_data(data: PackedByteArray) -> Dictionary:
+	if data.size() < 10:
+		return {}
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.data_array = data
+	return {
+		"game_id": sp.get_u16(),
+		"mode": sp.get_u8(),
+		"max_players": sp.get_u8(),
+		"arena_id": sp.get_u16(),
+		"reserved": sp.get_u32()
+	}
+
+static func encode_minigame_join_data(game_id: int, accepted: bool) -> PackedByteArray:
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.put_u16(game_id)
+	sp.put_u8(1 if accepted else 0)
+	sp.put_u8(0) # reserved
+	return sp.data_array
+
+static func decode_minigame_join_data(data: PackedByteArray) -> Dictionary:
+	if data.size() < 4:
+		return {}
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.data_array = data
+	return {
+		"game_id": sp.get_u16(),
+		"accepted": (sp.get_u8() == 1),
+		"reserved": sp.get_u8()
+	}
+
+static func encode_minigame_start_data(game_id: int, countdown_seconds: int, participants: Array) -> PackedByteArray:
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.put_u16(game_id)
+	sp.put_u8(countdown_seconds)
+	sp.put_u8(participants.size())
+	for p in participants:
+		sp.put_u32(p.get("entity_id", 0))
+		sp.put_float(p.get("spawn_x", 0.0))
+		sp.put_float(p.get("spawn_y", 0.0))
+		sp.put_float(p.get("spawn_z", 0.0))
+		sp.put_float(p.get("spawn_yaw", 0.0))
+	return sp.data_array
+
+static func decode_minigame_start_data(data: PackedByteArray) -> Dictionary:
+	if data.size() < 4:
+		return {}
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.data_array = data
+	var game_id = sp.get_u16()
+	var countdown = sp.get_u8()
+	var count = sp.get_u8()
+	var participants = []
+	for i in range(count):
+		if sp.get_position() + 20 > data.size():
+			break
+		participants.append({
+			"entity_id": sp.get_u32(),
+			"spawn_x": sp.get_float(),
+			"spawn_y": sp.get_float(),
+			"spawn_z": sp.get_float(),
+			"spawn_yaw": sp.get_float()
+		})
+	return {
+		"game_id": game_id,
+		"countdown_seconds": countdown,
+		"participants": participants
+	}
+
+static func encode_minigame_action_data(action_type: int, target_entity_id: int, param_float: float, dir: Vector3) -> PackedByteArray:
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.put_u8(action_type)
+	sp.put_u32(target_entity_id)
+	sp.put_float(param_float)
+	sp.put_float(dir.x)
+	sp.put_float(dir.y)
+	sp.put_float(dir.z)
+	return sp.data_array
+
+static func decode_minigame_action_data(data: PackedByteArray) -> Dictionary:
+	if data.size() < 21:
+		return {}
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.data_array = data
+	return {
+		"action_type": sp.get_u8(),
+		"target_entity_id": sp.get_u32(),
+		"param_float": sp.get_float(),
+		"dir": Vector3(sp.get_float(), sp.get_float(), sp.get_float())
+	}
+
+static func encode_minigame_eliminate_data(game_id: int, eliminated_entity_id: int, reason: int) -> PackedByteArray:
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.put_u16(game_id)
+	sp.put_u32(eliminated_entity_id)
+	sp.put_u8(reason)
+	sp.put_u8(0) # reserved
+	return sp.data_array
+
+static func decode_minigame_eliminate_data(data: PackedByteArray) -> Dictionary:
+	if data.size() < 8:
+		return {}
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.data_array = data
+	return {
+		"game_id": sp.get_u16(),
+		"eliminated_entity_id": sp.get_u32(),
+		"reason": sp.get_u8(),
+		"reserved": sp.get_u8()
+	}
+
+static func encode_minigame_end_data(game_id: int, winner_entity_id: int, rankings: Array) -> PackedByteArray:
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.put_u16(game_id)
+	sp.put_u32(winner_entity_id)
+	sp.put_u8(rankings.size())
+	for r in rankings:
+		sp.put_u32(r.get("entity_id", 0))
+		sp.put_32(r.get("score", 0))
+		sp.put_u16(r.get("coins_rewarded", 0))
+	return sp.data_array
+
+static func decode_minigame_end_data(data: PackedByteArray) -> Dictionary:
+	if data.size() < 7:
+		return {}
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.data_array = data
+	var game_id = sp.get_u16()
+	var winner_id = sp.get_u32()
+	var count = sp.get_u8()
+	var rankings = []
+	for i in range(count):
+		if sp.get_position() + 10 > data.size():
+			break
+		rankings.append({
+			"entity_id": sp.get_u32(),
+			"score": sp.get_32(),
+			"coins_rewarded": sp.get_u16()
+		})
+	return {
+		"game_id": game_id,
+		"winner_entity_id": winner_id,
+		"rankings": rankings
+	}
+
+static func encode_minigame_cancel_data(game_id: int, reason: int) -> PackedByteArray:
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.put_u16(game_id)
+	sp.put_u8(reason)
+	sp.put_u8(0) # reserved
+	return sp.data_array
+
+static func decode_minigame_cancel_data(data: PackedByteArray) -> Dictionary:
+	if data.size() < 4:
+		return {}
+	var sp = StreamPeerBuffer.new()
+	sp.big_endian = false
+	sp.data_array = data
+	return {
+		"game_id": sp.get_u16(),
+		"reason": sp.get_u8(),
+		"reserved": sp.get_u8()
+	}
 

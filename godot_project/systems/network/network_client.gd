@@ -32,9 +32,12 @@ var debug_logging: bool = false
 # Estado de Sesión
 var session_id: int = 0
 var player_entity_id: int = 0
+const AuthServiceClass = preload("res://systems/network/auth_service.gd")
+
 var sequence_out: int = 0
 var current_ping_ms: float = 0.0
 var local_character_id: String = ""
+var auth_service: Node = null
 
 # Temporizadores y contadores
 var _tick_timer: float = 0.0
@@ -51,7 +54,26 @@ func _init():
 	peer = PacketPeerUDP.new()
 
 func _ready():
+	_ensure_auth_service()
 	_load_configuration()
+	if auth_service:
+		if auth_service.is_loaded:
+			_on_auth_identity_loaded(auth_service.player_uuid, auth_service.display_name, auth_service.preferred_character_id)
+		else:
+			auth_service.identity_loaded.connect(_on_auth_identity_loaded)
+
+func _on_auth_identity_loaded(_uuid: String, _name: String, character_id: String) -> void:
+	if local_character_id.is_empty():
+		local_character_id = character_id
+
+func _ensure_auth_service() -> void:
+	auth_service = get_node_or_null("AuthService")
+	if not auth_service and get_parent():
+		auth_service = get_parent().find_child("AuthService", true, false)
+	if not auth_service:
+		auth_service = AuthServiceClass.new()
+		auth_service.name = "AuthService"
+		add_child(auth_service)
 
 func _load_configuration() -> void:
 	## Lee desde el Autoload NetworkConfig (nodo en /root/NetworkConfig).
@@ -265,7 +287,11 @@ func _send_hello() -> void:
 	if peer == null or not peer.is_socket_connected():
 		return
 
-	var hello_payload = TKTCodec.encode_hello("1.0", "")
+	var auth_token: String = ""
+	if auth_service:
+		auth_token = auth_service.get_auth_token()
+
+	var hello_payload = TKTCodec.encode_hello("1.0", auth_token)
 	var hdr = TKTCodec.Header.new()
 	hdr.message_type = TKTCodec.MessageType.HELLO
 	hdr.flags = TKTCodec.PacketFlags.RELIABLE

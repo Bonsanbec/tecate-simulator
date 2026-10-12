@@ -13,9 +13,6 @@ extends CharacterBody3D
 
 const CitizenProfileClass = preload("res://systems/characters/citizen_profile.gd")
 const CharacterCatalogClass = preload("res://systems/characters/character_catalog.gd")
-const HealthComponentClass = preload("res://systems/combat/health_component.gd")
-const HealthBar3DClass = preload("res://ui/health_bar_3d.gd")
-const EntityHealthDefaultsClass = preload("res://systems/combat/entity_health_defaults.gd")
 
 # Identidad y estado de control
 @export var entity_id: int = 0
@@ -23,11 +20,11 @@ const EntityHealthDefaultsClass = preload("res://systems/combat/entity_health_de
 @export var is_locally_controlled: bool = false
 @export var identity_id: String = ""
 @export var profile: Resource = null
-@export var custom_max_health: float = 0.0
 
-# Sistema de salud centralizado
-var health_component: HealthComponentClass = null
-var health_bar_3d: HealthBar3DClass = null
+# Cinemática Slapstick y Retroceso (Minecraft-style pop & knockback)
+signal knockback_received(source_pos: Vector3, force_h: float, force_v: float)
+var _knockback_flash_timer: float = 0.0
+var _original_albedo_colors: Dictionary = {}
 
 # Parámetros antropométricos y físicos de Tecate
 @export var mass_kg: float = 75.0
@@ -110,7 +107,7 @@ func _ready() -> void:
 	_ensure_collision_shape()
 	_initialize_humanoid_rig()
 	_create_nameplate()
-	_initialize_health_system()
+	_initialize_entity_groups()
 
 func setup(id: int, is_npc: bool = true, display_name: String = "") -> void:
 	entity_id = id
@@ -125,7 +122,7 @@ func setup(id: int, is_npc: bool = true, display_name: String = "") -> void:
 	_ensure_collision_shape()
 	_initialize_humanoid_rig()
 	_create_nameplate()
-	_initialize_health_system()
+	_initialize_entity_groups()
 
 	if nameplate_label:
 		nameplate_label.text = citizen_name
@@ -134,66 +131,49 @@ func setup(id: int, is_npc: bool = true, display_name: String = "") -> void:
 		else:
 			nameplate_label.modulate = Color(1.0, 0.9, 0.4, 1.0) # Amarillo cálido jugador
 
-func _initialize_health_system() -> void:
+func _initialize_entity_groups() -> void:
 	add_to_group("citizens")
-	add_to_group("damageable")
 	if is_locally_controlled:
 		add_to_group("players")
 
-	if health_component == null:
-		health_component = get_node_or_null("HealthComponent") as HealthComponentClass
-		if not health_component:
-			health_component = HealthComponentClass.new()
-			health_component.name = "HealthComponent"
-			health_component.auto_initialize = false
-			add_child(health_component)
+## Aplica cinemática de retroceso slapstick idéntica a Minecraft:
+## Impulso horizontal opuesto al atacante y un salto vertical involuntario (+Y) que despega la entidad del suelo.
+func apply_impact_knockback(source_pos: Vector3, force_h: float = 6.5, force_v: float = 4.0) -> void:
+	var my_pos = global_position if is_inside_tree() else position
+	var diff = my_pos - source_pos
+	var dir_h = Vector3(diff.x, 0.0, diff.z)
+	if dir_h.length_squared() < 0.0001:
+		dir_h = (-global_transform.basis.z) if is_inside_tree() else (-transform.basis.z)
+	else:
+		dir_h = dir_h.normalized()
 
-	var target_hp = custom_max_health if custom_max_health > 0.0 else EntityHealthDefaultsClass.HEALTH_PLAYER
-	health_component.initialize(target_hp)
+	velocity.x = dir_h.x * force_h
+	velocity.z = dir_h.z * force_h
+	velocity.y = force_v
 
-	if not health_component.died.is_connected(_on_died):
-		health_component.died.connect(_on_died)
+	_trigger_impact_flash()
+	knockback_received.emit(source_pos, force_h, force_v)
 
-	if health_bar_3d == null:
-		health_bar_3d = get_node_or_null("HealthBar3D") as HealthBar3DClass
-		if not health_bar_3d:
-			health_bar_3d = HealthBar3DClass.new()
-			health_bar_3d.name = "HealthBar3D"
-			health_bar_3d.billboard_offset = Vector3(0, capsule_height + 0.35, 0)
-			add_child(health_bar_3d)
+func _trigger_impact_flash() -> void:
+	_knockback_flash_timer = 0.15
+	_set_damage_flash_color(Color(1.0, 0.35, 0.35, 1.0))
 
-	health_bar_3d.setup(health_component)
+func _set_damage_flash_color(color: Color) -> void:
+	for m in [mesh_body, mesh_head, mesh_props]:
+		if m and is_instance_valid(m):
+			var mat = m.material_override as StandardMaterial3D
+			if mat:
+				if not _original_albedo_colors.has(m):
+					_original_albedo_colors[m] = mat.albedo_color
+				mat.albedo_color = color
 
-## Recibe daño y lo transmite a su HealthComponent
-func take_damage(amount: float, attacker: Node = null) -> float:
-	if health_component:
-		return health_component.take_damage(amount, attacker)
-	return 0.0
-
-## Recibe curación
-func heal(amount: float) -> float:
-	if health_component:
-		return health_component.heal(amount)
-	return 0.0
-
-func get_health() -> float:
-	return health_component.current_health if health_component else 100.0
-
-func get_max_health() -> float:
-	return health_component.max_health if health_component else 100.0
-
-func get_health_percentage() -> float:
-	return health_component.get_health_percentage() if health_component else 1.0
-
-func is_dead() -> bool:
-	return health_component.is_dead() if health_component else false
-
-func _on_died(attacker: Node) -> void:
-	attack_timer = 0.0
-	attack_cooldown = 0.0
-	# Comportamiento predeterminado al morir: abatido / deshabilitar colisión temporal
-	if nameplate_label:
-		nameplate_label.modulate = Color(0.4, 0.4, 0.4, 0.6)
+func _restore_mesh_colors() -> void:
+	for m in _original_albedo_colors.keys():
+		if m and is_instance_valid(m):
+			var mat = m.material_override as StandardMaterial3D
+			if mat:
+				mat.albedo_color = _original_albedo_colors[m]
+	_original_albedo_colors.clear()
 
 
 func _setup_physics_properties() -> void:
@@ -458,7 +438,7 @@ func _sample_interpolated_state(current_time: float) -> Dictionary:
 
 ## Dispara un golpe cuerpo a cuerpo iniciando la cinemática de ataque de los brazos
 func trigger_melee_attack(hand_override: int = -1) -> bool:
-	if is_dead() or attack_cooldown > 0.0 or current_seat_node != null:
+	if attack_cooldown > 0.0 or current_seat_node != null:
 		return false
 
 	if hand_override >= 0:
@@ -493,16 +473,17 @@ func perform_melee_attack_forward(target_range: float = 2.4) -> bool:
 			var result = space_state.intersect_ray(query)
 			if result and result.has("collider") and is_instance_valid(result.collider):
 				var target = result.collider
-				if target.has_method("take_damage"):
-					target.take_damage(attack_damage, self)
-				elif target.get_node_or_null("HealthComponent"):
-					var hc = target.get_node_or_null("HealthComponent") as HealthComponentClass
-					if hc:
-						hc.take_damage(attack_damage, self)
+				if target.has_method("apply_impact_knockback"):
+					target.apply_impact_knockback(global_position, 6.5, 4.0)
 	return true
 
 ## Actualiza los temporizadores de duración, cooldown y combo de ataque
 func _process_attack_timers(delta: float) -> void:
+	if _knockback_flash_timer > 0.0:
+		_knockback_flash_timer = maxf(0.0, _knockback_flash_timer - delta)
+		if _knockback_flash_timer <= 0.0:
+			_restore_mesh_colors()
+
 	if attack_timer > 0.0:
 		attack_timer = maxf(0.0, attack_timer - delta)
 	if attack_cooldown > 0.0:

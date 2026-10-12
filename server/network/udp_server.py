@@ -8,6 +8,7 @@ import time
 from typing import Any
 
 from server.config import ServerConfig
+from server.core.auth_manager import ServerAuthManager
 from server.core.entity import DynamicEntity
 from server.core.session import ClientSession
 from server.core.session_manager import SessionManager
@@ -25,6 +26,7 @@ from server.protocol.codec import (
     decode_packet,
     encode_packet,
 )
+from server.minigames.orchestrator import MinigameOrchestrator
 from server.protocol.constants import ChatChannel, EventCode, MessageType, PacketFlags, PlayerFlags, VehicleFlags
 
 
@@ -69,12 +71,18 @@ class TKTGameServer:
 
     def __init__(self, config: ServerConfig | None = None) -> None:
         self.config = config or ServerConfig()
+        self.auth_manager = ServerAuthManager()
         self.session_manager = SessionManager(max_clients=self.config.max_clients)
         self.world = SharedWorld(
             cell_size=self.config.spatial_cell_size,
             broadcast_radius=self.config.broadcast_radius_cells,
         )
         self.world.spawn_default_vehicles()
+        self.minigame_orchestrator = MinigameOrchestrator(
+            auth_manager=self.auth_manager,
+            session_manager=self.session_manager,
+            broadcast_callback=self.broadcast_event,
+        )
         self.protocol: TKTServerProtocol | None = None
 
         self.transport: asyncio.DatagramTransport | None = None
@@ -83,6 +91,22 @@ class TKTGameServer:
         self.current_tick: int = 0
         self.start_time: float = time.time()
         self._last_purge_time: float = time.time()
+
+    def broadcast_event(self, event: EventPayload, exclude_session_id: int | None = None) -> None:
+        """Difunde un EventPayload fiable a todas las sesiones conectadas."""
+        now_ms = self.get_server_time_ms()
+        event_bytes = event.pack()
+        for session in self.session_manager:
+            if exclude_session_id is not None and session.session_id == exclude_session_id:
+                continue
+            hdr = PacketHeader(
+                message_type=MessageType.EVENT,
+                flags=PacketFlags.RELIABLE,
+                session_id=session.session_id,
+                sequence=session.next_sequence(),
+                timestamp=now_ms,
+            )
+            self.send_to(encode_packet(hdr, event_bytes), session.addr)
 
     def get_server_time_ms(self) -> int:
         """Devuelve el tiempo transcurrido del servidor en milisegundos."""
@@ -169,21 +193,44 @@ class TKTGameServer:
         except Exception:
             hello = HelloPayload()
 
+        auth_ok, profile, auth_msg = self.auth_manager.authenticate_or_register(
+            hello.auth_token, fallback_nickname="Ciudadano"
+        )
+        if not auth_ok:
+            logger.warning("[Auth] Rechazando conexión de %s:%d: %s", addr[0], addr[1], auth_msg)
+            return
+
+        player_uuid = profile.get("player_uuid", "")
+        display_name = profile.get("display_name", "Ciudadano")
+        char_id = profile.get("preferred_character_id", "axel")
+
         session = self.session_manager.create_or_renew_session(
             addr=addr,
             client_version=hello.client_version,
             auth_token=hello.auth_token,
+            player_uuid=player_uuid,
+            display_name=display_name,
         )
 
-        # Registrar entidad del jugador en el mundo compartido
-        entity = DynamicEntity(
-            entity_id=session.player_entity_id,
-            pos_x=0.0,
-            pos_y=400.0,
-            pos_z=0.0,
-            last_update_tick=self.current_tick,
-            last_update_time=time.time(),
-        )
+        # Recuperar última posición conocida o default en Parque Hidalgo
+        saved_pos = self.auth_manager.get_player_position(player_uuid)
+        pos_x, pos_y, pos_z, yaw = saved_pos if saved_pos else (-6.684, 401.80, 2.688, 90.0)
+
+        # Registrar o reanclar entidad del jugador en el mundo compartido
+        entity = self.world.get_entity(session.player_entity_id)
+        if not entity:
+            entity = DynamicEntity(
+                entity_id=session.player_entity_id,
+                pos_x=pos_x,
+                pos_y=pos_y,
+                pos_z=pos_z,
+                yaw=yaw,
+                last_update_tick=self.current_tick,
+                last_update_time=time.time(),
+            )
+        entity.properties["character_id"] = char_id
+        entity.properties["player_uuid"] = player_uuid
+        entity.properties["display_name"] = display_name
         self.world.upsert_entity(entity)
 
         # Enviar respuesta WELCOME
@@ -255,6 +302,9 @@ class TKTGameServer:
         entity.last_update_time = time.time()
 
         self.world.upsert_entity(entity)
+
+        if session.player_uuid and (inp.tick % 150 == 0):
+            self.auth_manager.save_player_position(session.player_uuid, inp.pos_x, inp.pos_y, inp.pos_z, inp.yaw)
 
         # Si el jugador está al volante de un vehículo, sincronizar la cinemática del vehículo
         if inp.flags & PlayerFlags.DRIVING_VEHICLE:
@@ -349,13 +399,40 @@ class TKTGameServer:
                 player_ent = self.world.get_entity(session.player_entity_id)
                 if player_ent:
                     player_ent.properties["character_id"] = char_id
+                if session.player_uuid:
+                    self.auth_manager.update_character_id(session.player_uuid, char_id)
                 logger.info(
-                    "[Personaje] Jugador %d seleccionó personaje '%s'",
+                    "[Personaje] Jugador %d (UUID=%s) seleccionó personaje '%s'",
                     session.player_entity_id,
+                    session.player_uuid,
                     char_id,
                 )
             except Exception as exc:
                 logger.warning("Error procesando CHARACTER_SELECT: %s", exc)
+
+        elif event.event_code == EventCode.MINIGAME_SUMMON:
+            try:
+                summon_data = event.unpack_minigame_summon()
+                self.minigame_orchestrator.handle_summon(session, summon_data, self.world)
+            except Exception as exc:
+                logger.warning("Error procesando MINIGAME_SUMMON: %s", exc)
+            return
+
+        elif event.event_code == EventCode.MINIGAME_JOIN:
+            try:
+                join_data = event.unpack_minigame_join()
+                self.minigame_orchestrator.handle_join(session, join_data, self.world)
+            except Exception as exc:
+                logger.warning("Error procesando MINIGAME_JOIN: %s", exc)
+            return
+
+        elif event.event_code == EventCode.MINIGAME_ACTION:
+            try:
+                action_data = event.unpack_minigame_action()
+                self.minigame_orchestrator.handle_action(session, action_data, self.world)
+            except Exception as exc:
+                logger.warning("Error procesando MINIGAME_ACTION: %s", exc)
+            return
 
         # Despachar al SimulationManager para que los controladores actualicen su estado autoritativo
         target_entity_id = 0
@@ -445,6 +522,9 @@ class TKTGameServer:
             self.send_to(encode_packet(hdr, chat_bytes), other_session.addr)
 
     def _handle_goodbye(self, session: ClientSession, payload_bytes: bytes) -> None:
+        ent = self.world.get_entity(session.player_entity_id)
+        if ent and session.player_uuid:
+            self.auth_manager.save_player_position(session.player_uuid, ent.pos_x, ent.pos_y, ent.pos_z, ent.yaw)
         v = self.world.get_vehicle_by_driver(session.player_entity_id)
         if v:
             v.driver_id = None
@@ -464,17 +544,23 @@ class TKTGameServer:
             # 1. Avanzar la simulación autoritativa de entidades (vehículos de ruta, vehículos libres, NPCs)
             self.world.simulation_manager.update(interval, self.world)
 
+            # 2. Avanzar el árbitro autoritativo de minijuegos y físicas activas
+            self.minigame_orchestrator.tick(interval, self.world)
+
             # Purgar sesiones inactivas cada segundo
             if (time.time() - self._last_purge_time) >= 1.0:
                 self._last_purge_time = time.time()
                 timed_out = self.session_manager.purge_timed_out(self.config.session_timeout)
                 for s in timed_out:
+                    ent = self.world.get_entity(s.player_entity_id)
+                    if ent and s.player_uuid:
+                        self.auth_manager.save_player_position(s.player_uuid, ent.pos_x, ent.pos_y, ent.pos_z, ent.yaw)
                     v = self.world.get_vehicle_by_driver(s.player_entity_id)
                     if v:
                         v.driver_id = None
                         v.flags &= ~VehicleFlags.HAS_DRIVER
                     self.world.remove_entity(s.player_entity_id)
-                    logger.info("Sesión %d expirada por inactividad", s.session_id)
+                    logger.info("Sesión %d (UUID=%s) expirada por inactividad", s.session_id, s.player_uuid)
 
 
             # Despachar SNAPSHOT a cada sesión conectada

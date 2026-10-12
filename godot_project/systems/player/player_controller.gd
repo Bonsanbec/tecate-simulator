@@ -164,11 +164,6 @@ func _initialize_submodules() -> void:
 			hud.apply_character_theme(identity_id)
 		camera_director.perspective_changed.connect(_on_perspective_changed)
 
-	if health_component:
-		if not health_component.health_changed.is_connected(_on_player_health_changed):
-			health_component.health_changed.connect(_on_player_health_changed)
-		_on_player_health_changed(health_component.current_health, health_component.max_health)
-
 	# 5. Director de Cámaras para Vehículos (1P / 3P)
 	vehicle_camera_director = VehicleCameraDirectorClass.new()
 	vehicle_camera_director.name = "VehicleCameraDirector"
@@ -187,10 +182,6 @@ func _initialize_submodules() -> void:
 		if hud:
 			hud.update_network_status("TKT/1: CONECTANDO...", false)
 		network_client.start_connection()
-
-func _on_player_health_changed(current: float, max_h: float) -> void:
-	if hud and hud.has_method("update_player_health"):
-		hud.update_player_health(current, max_h)
 
 func apply_identity(p_id: String) -> void:
 	super.apply_identity(p_id)
@@ -242,8 +233,6 @@ func set_input_enabled(enabled: bool) -> void:
 			hud.hide_hud()
 
 func respawn() -> void:
-	if health_component:
-		health_component.reset_health()
 	global_position = spawn_position
 	velocity = Vector3.ZERO
 	is_flying = false
@@ -255,28 +244,11 @@ func respawn() -> void:
 	var main_node = get_parent()
 	if main_node and main_node.has_method("_snap_player"):
 		main_node._snap_player(self)
-	print("[PlayerController] Reaparecido en Parque Hidalgo con salud restaurada: ", global_position)
+	print("[PlayerController] Reaparecido en Parque Hidalgo: ", global_position)
 
-func _on_died(attacker: Node) -> void:
-	super._on_died(attacker)
-	var attacker_name = attacker.name if attacker else "daño ambiental"
-	print("[PlayerController] ¡Jugador local ha sido eliminado por %s!" % attacker_name)
-	input_enabled = false
-	if hud and hud.has_method("show_death_overlay"):
-		hud.show_death_overlay("ELIMINADO")
-
-	var timer = get_tree().create_timer(3.0)
-	timer.timeout.connect(_on_respawn_after_death)
-
-func _on_respawn_after_death() -> void:
-	if hud and hud.has_method("hide_death_overlay"):
-		hud.hide_death_overlay()
-	respawn()
-	input_enabled = true
-
-## Ejecuta un golpe/ataque cuerpo a cuerpo hacia adelante con animación e impacto cinemático
+## Ejecuta un golpe/ataque cuerpo a cuerpo hacia adelante con animación e impacto cinemático slapstick
 func perform_melee_attack() -> void:
-	if is_dead() or not input_enabled or is_sitting or is_f1_photo_mode:
+	if not input_enabled or is_sitting or is_f1_photo_mode:
 		return
 	if attack_cooldown > 0.0:
 		return
@@ -304,20 +276,11 @@ func perform_melee_attack() -> void:
 		var result = space_state.intersect_ray(query)
 		if result and result.has("collider") and is_instance_valid(result.collider):
 			var target = result.collider
-			var damage_amount: float = attack_damage
-
-			if target.has_method("take_damage"):
-				var dealt = target.take_damage(damage_amount, self)
-				print("[Combat] Golpe asestado a '%s': %.1f HP infligidos." % [target.name, dealt])
+			if target.has_method("apply_impact_knockback"):
+				target.apply_impact_knockback(global_position, 7.5, 4.2)
+				print("[Combat] Golpe slapstick asestado a '%s': retroceso Minecraft aplicado." % target.name)
 				if camera_director:
 					camera_director.apply_camera_shake(0.38, 0.22)
-			elif target.get_node_or_null("HealthComponent"):
-				var hc = target.get_node_or_null("HealthComponent") as HealthComponentClass
-				if hc:
-					var dealt = hc.take_damage(damage_amount, self)
-					print("[Combat] Golpe asestado a HealthComponent de '%s': %.1f HP infligidos." % [target.name, dealt])
-					if camera_director:
-						camera_director.apply_camera_shake(0.38, 0.22)
 
 func toggle_f1_photo_mode() -> void:
 	is_f1_photo_mode = !is_f1_photo_mode

@@ -436,6 +436,153 @@ class EventPayload:
             raise ValueError(f"Longitud de string declarada no coincide: {str_len} > {len(self.data) - 2}")
         return self.data[2 : 2 + str_len].decode("utf-8")
 
+    # --- Métodos de serialización y deserialización para Minijuegos ---
+
+    @classmethod
+    def create_minigame_summon(
+        cls, entity_id: int, game_id: int, mode: int, max_players: int, arena_id: int, event_id: int = 0, timestamp: int = 0
+    ) -> EventPayload:
+        from server.protocol.constants import EventCode
+        data = struct.pack("<HBBHI", game_id, mode, max_players, arena_id, 0)
+        return cls(event_id=event_id, event_code=EventCode.MINIGAME_SUMMON, entity_id=entity_id, timestamp=timestamp, data=data)
+
+    def unpack_minigame_summon(self) -> dict:
+        if len(self.data) < 10:
+            raise ValueError(f"Datos insuficientes para MINIGAME_SUMMON ({len(self.data)} < 10 bytes)")
+        game_id, mode, max_players, arena_id, reserved = struct.unpack("<HBBHI", self.data[:10])
+        return {"game_id": game_id, "mode": mode, "max_players": max_players, "arena_id": arena_id}
+
+    @classmethod
+    def create_minigame_join(cls, entity_id: int, game_id: int, accepted: bool, event_id: int = 0, timestamp: int = 0) -> EventPayload:
+        from server.protocol.constants import EventCode
+        data = struct.pack("<HBB", game_id, 1 if accepted else 0, 0)
+        return cls(event_id=event_id, event_code=EventCode.MINIGAME_JOIN, entity_id=entity_id, timestamp=timestamp, data=data)
+
+    def unpack_minigame_join(self) -> dict:
+        if len(self.data) < 4:
+            raise ValueError(f"Datos insuficientes para MINIGAME_JOIN ({len(self.data)} < 4 bytes)")
+        game_id, accepted_val, reserved = struct.unpack("<HBB", self.data[:4])
+        return {"game_id": game_id, "accepted": bool(accepted_val)}
+
+    @classmethod
+    def create_minigame_start(
+        cls, entity_id: int, game_id: int, countdown_seconds: int, participants: list[dict], event_id: int = 0, timestamp: int = 0
+    ) -> EventPayload:
+        from server.protocol.constants import EventCode
+        data = bytearray(struct.pack("<HBB", game_id, countdown_seconds, len(participants)))
+        for p in participants:
+            data.extend(
+                struct.pack(
+                    "<Iffff",
+                    p["entity_id"],
+                    float(p.get("spawn_x", 0.0)),
+                    float(p.get("spawn_y", 0.0)),
+                    float(p.get("spawn_z", 0.0)),
+                    float(p.get("spawn_yaw", 0.0)),
+                )
+            )
+        return cls(event_id=event_id, event_code=EventCode.MINIGAME_START, entity_id=entity_id, timestamp=timestamp, data=bytes(data))
+
+    def unpack_minigame_start(self) -> dict:
+        if len(self.data) < 4:
+            raise ValueError(f"Datos insuficientes para MINIGAME_START ({len(self.data)} < 4 bytes)")
+        game_id, countdown, count = struct.unpack("<HBB", self.data[:4])
+        offset = 4
+        participants = []
+        for _ in range(count):
+            if offset + 20 > len(self.data):
+                break
+            e_id, sx, sy, sz, syaw = struct.unpack("<Iffff", self.data[offset : offset + 20])
+            participants.append({"entity_id": e_id, "spawn_x": sx, "spawn_y": sy, "spawn_z": sz, "spawn_yaw": syaw})
+            offset += 20
+        return {"game_id": game_id, "countdown_seconds": countdown, "participants": participants}
+
+    @classmethod
+    def create_minigame_action(
+        cls,
+        entity_id: int,
+        action_type: int,
+        target_entity_id: int,
+        param_float: float,
+        dir_vec: tuple[float, float, float] = (0.0, 0.0, 0.0),
+        event_id: int = 0,
+        timestamp: int = 0,
+    ) -> EventPayload:
+        from server.protocol.constants import EventCode
+        data = struct.pack(
+            "<BIffff",
+            action_type,
+            target_entity_id,
+            float(param_float),
+            float(dir_vec[0]),
+            float(dir_vec[1]),
+            float(dir_vec[2]),
+        )
+        return cls(event_id=event_id, event_code=EventCode.MINIGAME_ACTION, entity_id=entity_id, timestamp=timestamp, data=data)
+
+    def unpack_minigame_action(self) -> dict:
+        if len(self.data) < 21:
+            raise ValueError(f"Datos insuficientes para MINIGAME_ACTION ({len(self.data)} < 21 bytes)")
+        act_type, target_id, p_float, dx, dy, dz = struct.unpack("<BIffff", self.data[:21])
+        return {
+            "action_type": act_type,
+            "target_entity_id": target_id,
+            "param_float": p_float,
+            "dir": (dx, dy, dz),
+        }
+
+    @classmethod
+    def create_minigame_eliminate(
+        cls, entity_id: int, game_id: int, eliminated_entity_id: int, reason: int, event_id: int = 0, timestamp: int = 0
+    ) -> EventPayload:
+        from server.protocol.constants import EventCode
+        data = struct.pack("<HIBB", game_id, eliminated_entity_id, reason, 0)
+        return cls(event_id=event_id, event_code=EventCode.MINIGAME_ELIMINATE, entity_id=entity_id, timestamp=timestamp, data=data)
+
+    def unpack_minigame_eliminate(self) -> dict:
+        if len(self.data) < 8:
+            raise ValueError(f"Datos insuficientes para MINIGAME_ELIMINATE ({len(self.data)} < 8 bytes)")
+        game_id, elim_id, reason, reserved = struct.unpack("<HIBB", self.data[:8])
+        return {"game_id": game_id, "eliminated_entity_id": elim_id, "reason": reason}
+
+    @classmethod
+    def create_minigame_end(
+        cls, entity_id: int, game_id: int, winner_entity_id: int, rankings: list[dict], event_id: int = 0, timestamp: int = 0
+    ) -> EventPayload:
+        from server.protocol.constants import EventCode
+        data = bytearray(struct.pack("<HIB", game_id, winner_entity_id, len(rankings)))
+        for r in rankings:
+            data.extend(struct.pack("<IiH", r["entity_id"], int(r.get("score", 0)), int(r.get("coins_rewarded", 0))))
+        return cls(event_id=event_id, event_code=EventCode.MINIGAME_END, entity_id=entity_id, timestamp=timestamp, data=bytes(data))
+
+    def unpack_minigame_end(self) -> dict:
+        if len(self.data) < 7:
+            raise ValueError(f"Datos insuficientes para MINIGAME_END ({len(self.data)} < 7 bytes)")
+        game_id, winner_id, count = struct.unpack("<HIB", self.data[:7])
+        offset = 7
+        rankings = []
+        for _ in range(count):
+            if offset + 10 > len(self.data):
+                break
+            e_id, score, coins = struct.unpack("<IiH", self.data[offset : offset + 10])
+            rankings.append({"entity_id": e_id, "score": score, "coins_rewarded": coins})
+            offset += 10
+        return {"game_id": game_id, "winner_entity_id": winner_id, "rankings": rankings}
+
+    @classmethod
+    def create_minigame_cancel(
+        cls, entity_id: int, game_id: int, reason: int, event_id: int = 0, timestamp: int = 0
+    ) -> EventPayload:
+        from server.protocol.constants import EventCode
+        data = struct.pack("<HBB", game_id, reason, 0)
+        return cls(event_id=event_id, event_code=EventCode.MINIGAME_CANCEL, entity_id=entity_id, timestamp=timestamp, data=data)
+
+    def unpack_minigame_cancel(self) -> dict:
+        if len(self.data) < 4:
+            raise ValueError(f"Datos insuficientes para MINIGAME_CANCEL ({len(self.data)} < 4 bytes)")
+        game_id, reason, reserved = struct.unpack("<HBB", self.data[:4])
+        return {"game_id": game_id, "reason": reason}
+
 
 # =============================================================================
 # FUNCIONES DE ALTO NIVEL PARA ARMAR / DESARMAR PAQUETES COMPLETOS
