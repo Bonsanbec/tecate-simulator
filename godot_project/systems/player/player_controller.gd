@@ -14,16 +14,29 @@ const PlayerNetworkSyncClass = preload("res://systems/network/player_network_syn
 const PlayerHUDClass = preload("res://ui/player_hud.gd")
 const VehicleCameraDirectorClass = preload("res://systems/vehicles/camera/vehicle_camera_director.gd")
 
-# Estados de Vehículo, Asientos e Interacción
+# Estados de Locomoción, Postura, Vehículo y Asientos (Sin vuelo libre)
 enum PlayerState {
 	NORMAL = 0,
-	FLYING = 1,
+	CROUCHING = 1,
 	SITTING = 2
 }
 var player_state: PlayerState = PlayerState.NORMAL
 var is_sitting: bool:
 	get:
 		return player_state == PlayerState.SITTING
+
+var is_crouching: bool:
+	get:
+		return player_state == PlayerState.CROUCHING
+	set(val):
+		set_crouching(val)
+
+# Propiedad de solo lectura para garantizar que el vuelo esté permanentemente desactivado
+var is_flying: bool:
+	get:
+		return false
+	set(_val):
+		pass
 
 var current_vehicle: VehicleBase = null
 var current_vehicle_seat: VehicleSeat = null
@@ -36,30 +49,27 @@ var _nearby_pump_zone: Node = null
 var _near_exit_door: bool = false
 var _vehicle_scan_timer: float = 0.0
 
-# Parámetros Biomecánicos de Marcha y Carrera
-@export var walk_speed: float = 2.40       # ~8.6 km/h (caminata urbana fluida)
+# Parámetros Biomecánicos de Marcha, Sigilo (Crouch) y Carrera (Estilo Fortnite)
+@export var crouch_speed: float = 1.60     # ~5.8 km/h (avance agachado / sigilo Fortnite)
+@export var walk_speed: float = 2.40       # ~8.6 km/h (trote base urbano)
 @export var jog_speed: float = 3.80        # ~13.7 km/h
-@export var sprint_speed: float = 6.20     # ~22.3 km/h
+@export var sprint_speed: float = 6.20     # ~22.3 km/h (sprint táctico con Left Shift)
 @export var acceleration: float = 14.0     # m/s^2 aceleración ágil y reactiva
 @export var braking_deceleration: float = 16.0
 @export var jump_velocity: float = 5.4
 @export var max_step_height: float = 0.24  # Altura de banquetas de Tecate
 @export var mouse_sensitivity: float = 0.15
-
-# Vuelo libre (Modo utilitario / Minecraft)
-@export var fly_speed: float = 25.0
-@export var fly_sprint_speed: float = 65.0
-@export var fly_vertical_speed: float = 22.0
+@export var standing_capsule_height: float = 1.75
+@export var crouching_capsule_height: float = 1.25
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity", 9.8)
 
-# Estados de control y locomoción
+# Estados de control y locomoción (Keybindings por defecto de Fortnite)
 var input_enabled: bool = true
 var is_f1_photo_mode: bool = false
 var _prev_avatar_visible: bool = true
-var is_flying: bool = false
-var space_press_timer: float = 0.0
-const DOUBLE_TAP_WINDOW: float = 0.35
+var is_auto_running: bool = false
+var _jump_requested: bool = false
 
 # Variables de telemetría y topografía de Tecate
 var current_slope_angle: float = 0.0
@@ -86,10 +96,6 @@ var _net_tick: int = 0
 var _net_tick_timer: float = 0.0
 const NET_TICK_RATE: float = 30.0
 
-# Banderas de estado de teclas continuas para alta fidelidad en vuelo
-var _is_space_held: bool = false
-var _is_shift_held: bool = false
-
 # Compatibilidad con scripts existentes que buscan player.camera, player.rot_x y player.rot_y
 var camera: Camera3D:
 	get:
@@ -115,6 +121,7 @@ var rot_y: float:
 
 func _ready():
 	is_locally_controlled = true
+	ensure_fortnite_input_map()
 	super._ready()
 
 	spawn_position = global_position
@@ -137,6 +144,51 @@ func _ready():
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		if hud:
 			hud.show_hud()
+
+## Registra en el InputMap las acciones con los keybindings por defecto de Fortnite en PC
+static func ensure_fortnite_input_map() -> void:
+	var key_bindings := {
+		"move_forward": [KEY_W, KEY_UP],
+		"move_backward": [KEY_S, KEY_DOWN],
+		"move_left": [KEY_A, KEY_LEFT],
+		"move_right": [KEY_D, KEY_RIGHT],
+		"jump": [KEY_SPACE],
+		"sprint": [KEY_SHIFT],
+		"crouch": [KEY_CTRL, KEY_C],
+		"auto_run": [KEY_EQUAL, KEY_NUMLOCK],
+		"interact": [KEY_E],
+		"reload": [KEY_R],
+		"harvesting_tool": [KEY_F, KEY_1],
+		"emote": [KEY_B, KEY_T],
+		"camera_perspective": [KEY_V, KEY_F5],
+		"vehicle_boost": [KEY_SHIFT],
+		"vehicle_handbrake": [KEY_SPACE],
+		"vehicle_switch_seat": [KEY_CTRL],
+		"vehicle_horn": [KEY_B, KEY_H],
+		"vehicle_lights": [KEY_L],
+		"photo_mode": [KEY_F1],
+		"pause_menu": [KEY_ESCAPE]
+	}
+	for action_name in key_bindings.keys():
+		if not InputMap.has_action(action_name):
+			InputMap.add_action(action_name)
+		for k in key_bindings[action_name]:
+			var ev := InputEventKey.new()
+			ev.keycode = k
+			if not InputMap.action_has_event(action_name, ev):
+				InputMap.action_add_event(action_name, ev)
+
+	var mouse_bindings := {
+		"primary_fire": MOUSE_BUTTON_LEFT,
+		"aim_down_sights": MOUSE_BUTTON_RIGHT
+	}
+	for action_name in mouse_bindings.keys():
+		if not InputMap.has_action(action_name):
+			InputMap.add_action(action_name)
+		var ev := InputEventMouseButton.new()
+		ev.button_index = mouse_bindings[action_name]
+		if not InputMap.action_has_event(action_name, ev):
+			InputMap.action_add_event(action_name, ev)
 
 func _initialize_submodules() -> void:
 	# 1. Director de Cámaras (1P / 2P / 3P con F5)
@@ -233,9 +285,12 @@ func set_input_enabled(enabled: bool) -> void:
 			hud.hide_hud()
 
 func respawn() -> void:
+	if is_sitting:
+		stand_up()
+	set_crouching(false)
+	is_auto_running = false
 	global_position = spawn_position
 	velocity = Vector3.ZERO
-	is_flying = false
 	rotation_degrees.y = spawn_rotation_y
 	if camera_director:
 		camera_director.rot_yaw = spawn_rotation_y
@@ -245,6 +300,41 @@ func respawn() -> void:
 	if main_node and main_node.has_method("_snap_player"):
 		main_node._snap_player(self)
 	print("[PlayerController] Reaparecido en Parque Hidalgo: ", global_position)
+
+## Alterna el estado de agachado (Crouch Toggle estilo Fortnite con Left Ctrl / C)
+func toggle_crouch() -> void:
+	if is_sitting or current_vehicle != null:
+		return
+	set_crouching(not is_crouching)
+
+## Establece la postura de agachado ajustando cápsula física y altura de cámara
+func set_crouching(crouched: bool) -> void:
+	if is_sitting:
+		return
+	if crouched:
+		player_state = PlayerState.CROUCHING
+		is_auto_running = false
+	else:
+		if player_state == PlayerState.CROUCHING:
+			player_state = PlayerState.NORMAL
+
+	if camera_director:
+		camera_director.is_crouching = (player_state == PlayerState.CROUCHING)
+
+	if collision_shape and collision_shape.shape is CapsuleShape3D:
+		var cap := collision_shape.shape as CapsuleShape3D
+		var target_h := crouching_capsule_height if (player_state == PlayerState.CROUCHING) else standing_capsule_height
+		cap.height = target_h
+		collision_shape.position = Vector3(0.0, target_h * 0.5, 0.0)
+
+## Alterna la carrera automática (Auto-Run estilo Fortnite con [=] o [NumLock])
+func toggle_auto_run() -> void:
+	if is_sitting or current_vehicle != null:
+		is_auto_running = false
+		return
+	is_auto_running = not is_auto_running
+	if is_auto_running and is_crouching:
+		set_crouching(false)
 
 ## Ejecuta un golpe/ataque cuerpo a cuerpo hacia adelante con animación e impacto cinemático slapstick
 func perform_melee_attack() -> void:
@@ -305,18 +395,29 @@ func _set_input_handled() -> void:
 		vp.set_input_as_handled()
 
 func _input(event: InputEvent) -> void:
-	# Ataque Cuerpo a Cuerpo (Pegar) [Clic Izquierdo en pantalla capturada o Teclas G / X]
-	if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED) or (event is InputEventKey and event.pressed and not event.is_echo() and (event.keycode == KEY_G or event.keycode == KEY_X)):
+	# 1. Ataque Cuerpo a Cuerpo / Pico (Fortnite Default: Clic Izquierdo, Tecla F o 1; más alias G / X)
+	var is_lmb_attack = (
+		event is InputEventMouseButton
+		and event.button_index == MOUSE_BUTTON_LEFT
+		and event.pressed
+		and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or DisplayServer.get_name() == "headless")
+	)
+	var is_key_attack = (
+		event is InputEventKey
+		and event.pressed
+		and not event.is_echo()
+		and (
+			event.keycode == KEY_F
+			or event.keycode == KEY_1
+			or event.keycode == KEY_G
+			or event.keycode == KEY_X
+		)
+	)
+	if is_lmb_attack or is_key_attack:
 		if not current_vehicle and not is_sitting and input_enabled and not is_f1_photo_mode:
 			perform_melee_attack()
 			_set_input_handled()
 			return
-
-	if event is InputEventKey:
-		if event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE:
-			_is_space_held = event.pressed
-		elif event.keycode == KEY_SHIFT or event.physical_keycode == KEY_SHIFT:
-			_is_shift_held = event.pressed
 
 	if event is InputEventKey and event.pressed and not event.is_echo():
 		# Modo Screenshot (F1): Oculta HUD y avatar, suspende inputs
@@ -328,6 +429,7 @@ func _input(event: InputEvent) -> void:
 		if is_f1_photo_mode:
 			return
 
+		# Menú Principal / Pausa [Esc]
 		if event.keycode == KEY_ESCAPE:
 			var tree = get_tree()
 			var start_screen = tree.root.find_child("StartScreen", true, false) if (tree and tree.root) else null
@@ -341,23 +443,48 @@ func _input(event: InputEvent) -> void:
 				else:
 					Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
-		# Alternar modo Vuelo Libre [F]
-		if event.keycode == KEY_F and not current_vehicle and not is_sitting:
-			is_flying = !is_flying
-			if is_flying:
-				player_state = PlayerState.FLYING
-				velocity.y = fly_vertical_speed * 0.6
-				floor_snap_length = 0.0
-			else:
-				player_state = PlayerState.NORMAL
-				floor_snap_length = DEFAULT_SNAP_LENGTH
+		if not input_enabled:
+			return
+
+		# Cancelar Auto-Run si el jugador presiona W o S manualmente
+		if event.keycode == KEY_W or event.keycode == KEY_S or event.keycode == KEY_UP or event.keycode == KEY_DOWN:
+			is_auto_running = false
+
+		# Carrera Automática (Auto-Run de Fortnite: [=] o [NumLock])
+		if event.keycode == KEY_EQUAL or event.keycode == KEY_NUMLOCK:
+			toggle_auto_run()
 			_set_input_handled()
 			return
 
-		# Tecla de Interacción [E]: Sentarse, Levantarse, Abordar o Descender
+		# Sprint Táctico [Left Shift]: Si está agachado a pie, se incorpora para correr (estilo Fortnite)
+		if (event.keycode == KEY_SHIFT or event.physical_keycode == KEY_SHIFT) and not current_vehicle and not is_sitting:
+			if is_crouching:
+				set_crouching(false)
+
+		# Agacharse / Cambiar de Asiento [Left Ctrl o C] (Fortnite Default):
+		# - En vehículo: Left Ctrl cambia al siguiente asiento disponible (Conductor <-> Pasajero).
+		# - A pie: Left Ctrl o C alterna el estado de agachado (Crouch Toggle).
+		if event.keycode == KEY_CTRL or event.physical_keycode == KEY_CTRL or event.keycode == KEY_C:
+			if current_vehicle != null and (event.keycode == KEY_CTRL or event.physical_keycode == KEY_CTRL):
+				if cycle_vehicle_seat():
+					_set_input_handled()
+					return
+			elif not current_vehicle and not is_sitting:
+				toggle_crouch()
+				_set_input_handled()
+				return
+
+		# Tecla Usar / Interactuar [E] (Fortnite Default):
+		# Abordar, Sentarse, Levantarse, Salir de Vehículo o Repostar
 		if event.keycode == KEY_E:
 			if is_sitting:
-				stand_up()
+				# Si es un automóvil particular sin pasillo interior, [E] baja directamente a la calle
+				if current_vehicle and current_vehicle.doors.is_empty() and current_vehicle.vehicle_type != 2:
+					stand_up()
+					if current_vehicle and current_vehicle.current_speed_kmh <= 15.0:
+						dismount_vehicle()
+				else:
+					stand_up()
 				_set_input_handled()
 				return
 			elif _nearby_seat:
@@ -373,42 +500,37 @@ func _input(event: InputEvent) -> void:
 				board_vehicle(_nearby_vehicle, _nearby_seat_type)
 				_set_input_handled()
 				return
+			elif _nearby_pump_zone and _nearby_pump_zone.has_method("start_refueling"):
+				_nearby_pump_zone.start_refueling()
+				_set_input_handled()
+				return
 
-		# Tecla de Timbre / Parada [T]: Solicitar descenso en autobús
-		if event.keycode == KEY_T:
+		# Gesto / Emote / Solicitar Parada en Autobús [B o T] (En Fortnite [B] es Emote / Señal)
+		if event.keycode == KEY_B or event.keycode == KEY_T:
 			if _try_request_bus_stop():
 				_set_input_handled()
 				return
 
-		# Tecla de Repostaje [R]: Cargar combustible si está en una estación de servicio
+		# Recargar / Repostar Combustible [R] (Fortnite Reload)
 		if event.keycode == KEY_R and _nearby_pump_zone and current_vehicle:
 			if _nearby_pump_zone.has_method("start_refueling"):
 				_nearby_pump_zone.start_refueling()
 				_set_input_handled()
 				return
 
-		# Barra espaciadora:
-		# Si está sentado, levantarse inmediatamente
-		if (event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE or event.is_action_pressed("ui_accept")) and is_sitting:
-			stand_up()
-			_set_input_handled()
-			return
-
-		# Barra espaciadora: doble tap en el suelo/aire inicia vuelo; en vuelo, impulsa ascenso vertical inmediato
-		if (event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE or event.is_action_pressed("ui_accept")) and not current_vehicle and not is_sitting:
-			var current_time = Time.get_ticks_msec() / 1000.0
-			if not is_flying:
-				if (current_time - space_press_timer) < DOUBLE_TAP_WINDOW:
-					is_flying = true
-					player_state = PlayerState.FLYING
-					velocity.y = fly_vertical_speed * 0.6 # Impulso inicial de despegue
-					floor_snap_length = 0.0
-					space_press_timer = 0.0
-				else:
-					space_press_timer = current_time
-			else:
-				# Estando en vuelo, presionar barra espaciadora siempre añade elevación inmediata
-				velocity.y = maxf(velocity.y + 8.0, fly_vertical_speed)
+		# Barra Espaciadora [Space] (Fortnite Jump):
+		# - Si está sentado: levantarse inmediatamente.
+		# - Si está agachado: incorporarse y saltar.
+		# - En el suelo: salto único inmediato (sin vuelo).
+		if event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE or event.is_action_pressed("ui_accept"):
+			if is_sitting:
+				stand_up()
+				_set_input_handled()
+				return
+			elif not current_vehicle:
+				if is_crouching:
+					set_crouching(false)
+				_jump_requested = true
 
 	if is_f1_photo_mode or not input_enabled:
 		return
@@ -426,8 +548,6 @@ func _physics_process(delta: float) -> void:
 		_process_sitting(delta)
 	elif current_vehicle:
 		_process_riding_vehicle(delta)
-	elif is_flying:
-		_process_flying(delta)
 	else:
 		_process_walking(delta)
 
@@ -435,7 +555,7 @@ func _physics_process(delta: float) -> void:
 
 	# Actualizar cinemática inversa de pies y adaptación al suelo
 	if foot_ik:
-		foot_ik.update_ik(delta, is_on_floor() and not is_flying and not is_sitting)
+		foot_ik.update_ik(delta, is_on_floor() and not is_sitting)
 
 	# Actualizar animación procedural de brazos, piernas y torso
 	_update_procedural_animations(delta)
@@ -466,8 +586,8 @@ func _physics_process(delta: float) -> void:
 				send_vel = current_vehicle.velocity
 			else:
 				if is_on_floor(): flags |= 1
-				if Input.is_key_pressed(KEY_SHIFT): flags |= 2
-				if is_flying: flags |= 4
+				if Input.is_key_pressed(KEY_SHIFT) and not is_crouching: flags |= 2
+				if is_crouching: flags |= 8
 
 			network_client.send_player_input(_net_tick, send_pos, yaw, pitch, send_vel, flags)
 
@@ -486,17 +606,34 @@ func _process_walking(delta: float) -> void:
 			velocity.y = 0.0
 		floor_snap_length = DEFAULT_SNAP_LENGTH
 
-	# 3. Salto
-	if (Input.is_key_pressed(KEY_SPACE) or Input.is_action_just_pressed("ui_accept")) and is_on_floor():
+	# 3. Salto único estilo Fortnite (Barra Espaciadora)
+	var want_jump = _jump_requested or Input.is_key_pressed(KEY_SPACE) or Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("ui_accept")
+	_jump_requested = false
+	if want_jump and is_on_floor():
+		if is_crouching:
+			set_crouching(false)
 		velocity.y = jump_velocity
 		floor_snap_length = 0.0
 
-	# 4. Modificadores de velocidad (Caminar / Trotar / Sprint)
-	var is_sprint = Input.is_key_pressed(KEY_SHIFT) or Input.is_key_pressed(KEY_CTRL)
-	var active_speed = sprint_speed if is_sprint else walk_speed
+	# 4. Modificadores de velocidad estilo Fortnite:
+	#    - Left Shift: Esprintar (desactiva agachado automáticamente al avanzar)
+	#    - Left Ctrl / C: Agachado (crouch_speed)
+	#    - Clic Derecho (ADS): Paso firme de puntería
+	var input_dir = _get_input_direction()
+	var is_sprint = (Input.is_key_pressed(KEY_SHIFT) or is_auto_running) and input_dir != Vector2.ZERO
+	if is_sprint and is_crouching:
+		set_crouching(false)
+
+	var is_ads = camera_director.is_aiming if camera_director else false
+	var active_speed = walk_speed
+	if is_crouching:
+		active_speed = crouch_speed
+	elif is_ads:
+		active_speed = walk_speed * 0.78
+	elif is_sprint:
+		active_speed = sprint_speed
 
 	# 5. Penalización biomecánica al subir pendientes empinadas
-	var input_dir = _get_input_direction()
 	var forward = -global_transform.basis.z
 	var right = global_transform.basis.x
 	var move_dir = (forward * -input_dir.y + right * input_dir.x).normalized()
@@ -530,50 +667,9 @@ func _process_walking(delta: float) -> void:
 		var spd_ratio = Vector2(velocity.x, velocity.z).length() / sprint_speed
 		camera_director.update_head_bob(delta, spd_ratio, is_on_floor())
 
-func _process_flying(delta: float) -> void:
-	floor_snap_length = 0.0
-
-	# Aterrizaje suave al descender hasta tocar el piso
-	if is_on_floor() and (_is_shift_held or Input.is_key_pressed(KEY_SHIFT) or Input.is_physical_key_pressed(KEY_SHIFT)):
-		is_flying = false
-		floor_snap_length = DEFAULT_SNAP_LENGTH
-		return
-
-	var is_sprint = Input.is_key_pressed(KEY_CTRL) or Input.is_physical_key_pressed(KEY_CTRL) or Input.is_action_pressed("ui_focus_next")
-	var active_h_speed = fly_sprint_speed if is_sprint else fly_speed
-	var active_v_speed = fly_vertical_speed * 1.8 if is_sprint else fly_vertical_speed
-
-	var input_dir = _get_input_direction()
-	var forward = -global_transform.basis.z
-	var right = global_transform.basis.x
-	var move_dir = (forward * -input_dir.y + right * input_dir.x).normalized()
-
-	var vert_input = 0.0
-	# Barra espaciadora: Ascenso constante y potente
-	var space_pressed = _is_space_held or Input.is_key_pressed(KEY_SPACE) or Input.is_physical_key_pressed(KEY_SPACE) or Input.is_action_pressed("ui_accept")
-	if space_pressed:
-		vert_input += 1.0
-
-	# Shift o C: Descenso controlado
-	var down_pressed = _is_shift_held or Input.is_key_pressed(KEY_SHIFT) or Input.is_physical_key_pressed(KEY_SHIFT) or Input.is_action_pressed("ui_select")
-	if down_pressed:
-		vert_input -= 1.0
-
-	var target_h_vel = move_dir * active_h_speed
-	velocity.x = lerp(velocity.x, target_h_vel.x, 14.0 * delta)
-	velocity.z = lerp(velocity.z, target_h_vel.z, 14.0 * delta)
-
-	if vert_input != 0.0:
-		var target_v_vel = vert_input * active_v_speed
-		velocity.y = move_toward(velocity.y, target_v_vel, active_v_speed * 5.0 * delta)
-	else:
-		velocity.y = move_toward(velocity.y, 0.0, 24.0 * delta)
-
-	move_and_slide()
-
 func _get_input_direction() -> Vector2:
 	var dir = Vector2.ZERO
-	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP) or Input.is_action_pressed("ui_up"):
+	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP) or Input.is_action_pressed("ui_up") or is_auto_running:
 		dir.y -= 1.0
 	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN) or Input.is_action_pressed("ui_down"):
 		dir.y += 1.0
@@ -647,7 +743,7 @@ func _update_procedural_animations(delta: float) -> void:
 		return
 
 	var h_speed = Vector2(velocity.x, velocity.z).length()
-	var is_moving = h_speed > 0.1 and is_on_floor() and not is_flying
+	var is_moving = h_speed > 0.1 and is_on_floor()
 
 	if is_moving:
 		locomotion_phase += h_speed * 3.8 * delta
@@ -671,6 +767,11 @@ func _update_procedural_animations(delta: float) -> void:
 	var knee_flex_l = maxf(0.0, -sin(locomotion_phase)) * leg_amplitude * 0.85
 	var knee_flex_r = maxf(0.0, sin(locomotion_phase)) * leg_amplitude * 0.85
 
+	# Postura biomecánica de Agachado (Crouch estilo Fortnite con Left Ctrl / C)
+	var crouch_thigh_offset = deg_to_rad(38.0) if is_crouching else 0.0
+	var crouch_knee_offset = deg_to_rad(46.0) if is_crouching else 0.0
+	var crouch_chest_lean = deg_to_rad(14.0) if is_crouching else 0.0
+
 	# Al mirar hacia abajo en 1P, elevar ligeramente los brazos para visibilidad natural de manos
 	var pitch_deg = camera_director.rot_pitch if camera_director else 0.0
 	var pitch_rad = deg_to_rad(pitch_deg)
@@ -678,21 +779,21 @@ func _update_procedural_animations(delta: float) -> void:
 	if pitch_rad < -0.35:
 		hand_raise = clampf((-pitch_rad - 0.35) * 0.40, 0.0, 0.35)
 
-	# Inclinación del tórax hacia adelante al ascender pendientes
-	var lean_angle = 0.0
+	# Inclinación del tórax hacia adelante al ascender pendientes o al agacharse
+	var lean_angle = crouch_chest_lean
 	if current_slope_angle > 5.0 and is_moving:
-		lean_angle = deg_to_rad(clampf(current_slope_angle * 0.5, 0.0, 15.0))
+		lean_angle += deg_to_rad(clampf(current_slope_angle * 0.5, 0.0, 15.0))
 	var slope_rot = Quaternion(Vector3(1, 0, 0), -lean_angle)
 
 	# 1. Animación de Piernas (zancada cruzada y flexión anatómica de rodilla hacia atrás)
 	if bone_upperleg_l != -1:
-		skeleton.set_bone_pose_rotation(bone_upperleg_l, _base_rot_upperleg_l * Quaternion(Vector3(1, 0, 0), leg_angle_l))
+		skeleton.set_bone_pose_rotation(bone_upperleg_l, _base_rot_upperleg_l * Quaternion(Vector3(1, 0, 0), leg_angle_l + crouch_thigh_offset))
 	if bone_upperleg_r != -1:
-		skeleton.set_bone_pose_rotation(bone_upperleg_r, _base_rot_upperleg_r * Quaternion(Vector3(1, 0, 0), leg_angle_r))
+		skeleton.set_bone_pose_rotation(bone_upperleg_r, _base_rot_upperleg_r * Quaternion(Vector3(1, 0, 0), leg_angle_r + crouch_thigh_offset))
 	if bone_lowerleg_l != -1:
-		skeleton.set_bone_pose_rotation(bone_lowerleg_l, _base_rot_lowerleg_l * Quaternion(Vector3(1, 0, 0), -knee_flex_l))
+		skeleton.set_bone_pose_rotation(bone_lowerleg_l, _base_rot_lowerleg_l * Quaternion(Vector3(1, 0, 0), -(knee_flex_l + crouch_knee_offset)))
 	if bone_lowerleg_r != -1:
-		skeleton.set_bone_pose_rotation(bone_lowerleg_r, _base_rot_lowerleg_r * Quaternion(Vector3(1, 0, 0), -knee_flex_r))
+		skeleton.set_bone_pose_rotation(bone_lowerleg_r, _base_rot_lowerleg_r * Quaternion(Vector3(1, 0, 0), -(knee_flex_r + crouch_knee_offset)))
 
 	# 2. Animación de Brazos: Ataque / Golpe vs Locomoción estándar
 	var is_1p = (camera_director and camera_director.current_mode == CameraDirector3D.PerspectiveMode.FIRST_PERSON)
@@ -736,7 +837,7 @@ func _update_telemetry(delta: float) -> void:
 	var nearest_street: String = _cached_street_name
 
 	if hud:
-		var is_1p = camera_director.current_mode == CameraDirectorClass.PerspectiveMode.FIRST_PERSON if camera_director else true
+		var show_reticle = camera_director.current_mode != CameraDirectorClass.PerspectiveMode.SECOND_PERSON if camera_director else true
 		var mode_str = "1P"
 		if camera_director:
 			match camera_director.current_mode:
@@ -748,7 +849,7 @@ func _update_telemetry(delta: float) -> void:
 			current_altitude_msnm,
 			current_slope_angle,
 			mode_str,
-			is_1p,
+			show_reticle,
 			nearest_street
 		)
 		# Actualizar gizmo de ejes con la orientación de la cámara activa
@@ -765,12 +866,14 @@ func sit_in_seat(seat: Node) -> bool:
 		print("[PlayerController] El asiento '%s' ya está ocupado" % (seat.seat_name if "seat_name" in seat else "Asiento"))
 		return false
 
+	set_crouching(false)
+	is_auto_running = false
+
 	if seat.has_method("occupy"):
 		seat.occupy(self)
 
 	current_seat = seat
 	player_state = PlayerState.SITTING
-	is_flying = false
 	velocity = Vector3.ZERO
 
 	# Si el asiento pertenece a un vehículo, vincular vehículo
@@ -822,11 +925,40 @@ func sit_in_seat(seat: Node) -> bool:
 	var s_name = seat.seat_name if "seat_name" in seat else "Asiento"
 	if hud:
 		var prompt = "[E] o [Espacio] Levantarse"
+		if current_vehicle and current_vehicle.seats.size() > 1:
+			prompt += "  |  [Ctrl] Cambiar Asiento"
 		if _get_riding_bus():
-			prompt += "  |  [T] Solicitar Parada"
+			prompt += "  |  [B / T] Solicitar Parada"
 		hud.set_interaction_prompt(prompt)
 	print("[PlayerController] Sentado con éxito en: %s" % s_name)
 	return true
+
+## Alterna cíclicamente al siguiente asiento disponible dentro del vehículo actual ([Left Ctrl] en Fortnite)
+func cycle_vehicle_seat() -> bool:
+	if not current_vehicle or current_vehicle.seats.is_empty():
+		return false
+
+	var seats_list: Array = current_vehicle.seats
+	var count := seats_list.size()
+	var start_idx := -1
+	if current_seat:
+		start_idx = seats_list.find(current_seat)
+
+	var next_seat: Node = null
+	for i in range(1, count + 1):
+		var candidate_idx := (start_idx + i) % count
+		var candidate = seats_list[candidate_idx]
+		if candidate and candidate != current_seat:
+			if not (candidate.has_method("is_occupied") and candidate.is_occupied()):
+				next_seat = candidate
+				break
+
+	if not next_seat:
+		return false
+
+	if is_sitting:
+		stand_up()
+	return sit_in_seat(next_seat)
 
 ## Permite levantarse de cualquier asiento a la posición de pie en el pasillo sin salir del vehículo
 func stand_up() -> bool:
@@ -897,6 +1029,9 @@ func board_vehicle(vehicle: VehicleBase, preferred_type: int = 0) -> bool:
 	if not vehicle or is_sitting:
 		return false
 
+	set_crouching(false)
+	is_auto_running = false
+
 	# Si el vehículo tiene soporte de puertas o es autobús de pasajeros, ingresar a pie al pasillo interior
 	if vehicle.doors.size() > 0 or vehicle.vehicle_type == 2:
 		var entry_pos = vehicle.get_interior_entry_position()
@@ -905,7 +1040,6 @@ func board_vehicle(vehicle: VehicleBase, preferred_type: int = 0) -> bool:
 		current_seat = null
 		current_vehicle_seat = null
 		player_state = PlayerState.NORMAL
-		is_flying = false
 		velocity = vehicle.velocity
 		vehicle.vehicle_entered.emit(self, null)
 		print("[PlayerController] Abordado %s por la puerta al pasillo interior." % vehicle.vehicle_name)
@@ -948,9 +1082,9 @@ func dismount_vehicle() -> bool:
 
 	# Si está en movimiento a alta velocidad por carretera, sugerir parada previa
 	if current_vehicle.current_speed_kmh > 15.0:
-		print("[PlayerController] Vehículo a alta velocidad (%.1f km/h). Use [T] para solicitar parada antes de descender." % current_vehicle.current_speed_kmh)
+		print("[PlayerController] Vehículo a alta velocidad (%.1f km/h). Use [B / T] para solicitar parada antes de descender." % current_vehicle.current_speed_kmh)
 		if hud:
-			hud.set_interaction_prompt("Vehículo en marcha. [T] Solicitar Parada")
+			hud.set_interaction_prompt("Vehículo en marcha. [B / T] Solicitar Parada")
 		return false
 
 	var exit_pos = current_vehicle.get_exterior_exit_position()
@@ -1146,7 +1280,7 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 			else:
 				_near_exit_door = true
 
-	# 3. Escaneo de estaciones de servicio (para repostaje [R])
+	# 3. Escaneo de estaciones de servicio (para repostaje [R / E])
 	for pz in get_tree().get_nodes_in_group("pump_zones"):
 		if pz is Area3D and pz.is_inside_tree():
 			var d_sq = my_pos.distance_squared_to(pz.global_position)
@@ -1160,9 +1294,13 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 
 	if is_sitting:
 		var prompt = "[E] o [Espacio] Levantarse"
+		if current_vehicle and current_vehicle.seats.size() > 1:
+			prompt += "  |  [Ctrl] Cambiar Asiento"
 		var bus_on_board = _get_riding_bus()
 		if bus_on_board:
-			prompt += "  |  [T] Solicitar Parada"
+			prompt += "  |  [B / T] Solicitar Parada"
+		elif _nearby_pump_zone and current_vehicle:
+			prompt += "  |  [R] Repostar"
 		hud.set_interaction_prompt(prompt)
 	elif current_vehicle != null:
 		if _nearby_seat:
@@ -1170,15 +1308,15 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 			var prompt = "[E] Sentarse en %s" % s_name
 			var bus_on_board = _get_riding_bus()
 			if bus_on_board:
-				prompt += "  |  [T] Solicitar Parada"
+				prompt += "  |  [B / T] Solicitar Parada"
 			hud.set_interaction_prompt(prompt)
 		elif _near_exit_door:
 			if current_vehicle.current_speed_kmh > 15.0:
-				hud.set_interaction_prompt("Vehículo en marcha (%.0f km/h)  |  [T] Solicitar Parada" % current_vehicle.current_speed_kmh)
+				hud.set_interaction_prompt("Vehículo en marcha (%.0f km/h)  |  [B / T] Solicitar Parada" % current_vehicle.current_speed_kmh)
 			else:
-				hud.set_interaction_prompt("[E] Descender a la calle  |  [T] Solicitar Parada")
+				hud.set_interaction_prompt("[E] Descender a la calle  |  [B / T] Solicitar Parada")
 		else:
-			hud.set_interaction_prompt("[T] Solicitar Parada")
+			hud.set_interaction_prompt("[B / T] Solicitar Parada")
 	elif _nearby_seat:
 		var s_name = _nearby_seat.seat_name if "seat_name" in _nearby_seat else "Asiento"
 		hud.set_interaction_prompt("[E] Sentarse en %s" % s_name)

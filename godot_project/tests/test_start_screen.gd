@@ -82,10 +82,10 @@ func _process(_delta):
 
 	elif _frames == 18:
 		print("\n[Fase 4] Probando acción 'Reaparecer'...")
-		# Mover jugador a una posición lejana
+		# Mover jugador a una posición lejana y agachado
 		_player.global_position = Vector3(500.0, 480.0, 300.0)
 		_player.velocity = Vector3(10.0, 5.0, -10.0)
-		_player.is_flying = true
+		_player.set_crouching(true)
 		
 		_start_screen.btn_respawn.emit_signal("pressed")
 		assert(_start_screen.current_screen_state == StartScreenClass.MenuScreenState.CHARACTER_SELECT, "Reaparecer transiciona siempre a selección de personaje")
@@ -93,7 +93,7 @@ func _process(_delta):
 		
 		assert(not _start_screen.is_menu_active, "El menú debe cerrarse tras reaparecer")
 		assert(_player.input_enabled, "El input del jugador debe estar activo")
-		assert(not _player.is_flying, "El vuelo debe restablecerse al reaparecer")
+		assert(not _player.is_crouching, "El estado de agachado debe restablecerse al reaparecer")
 		assert(_player.velocity == Vector3.ZERO, "La velocidad debe ser cero al reaparecer")
 		
 		var dist_to_spawn = _player.global_position.distance_to(_player.spawn_position)

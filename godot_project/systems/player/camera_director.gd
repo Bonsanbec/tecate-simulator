@@ -20,12 +20,18 @@ enum PerspectiveMode {
 
 # Parámetros Primera Persona (1P)
 @export var eye_height: float = 1.68
+@export var crouch_eye_height: float = 1.15
 @export var eye_forward_offset: float = 0.16
 @export var fov_1p: float = 75.0
+@export var ads_fov_1p: float = 55.0
 
-# Parámetros Tercera Persona (3P)
+# Parámetros Tercera Persona (3P - Hombro Derecho estilo Fortnite)
 @export var spring_arm_length: float = 3.2
-@export var shoulder_offset: Vector3 = Vector3(0.38, 0.15, 0.0)
+@export var ads_spring_arm_length: float = 1.95
+@export var shoulder_offset: Vector3 = Vector3(0.42, 0.15, 0.0)
+@export var fov_3p: float = 72.0
+@export var ads_fov_3p: float = 52.0
+@export var targeting_sensitivity_multiplier: float = 0.70
 
 # Parámetros Segunda Persona (2P - Observador Frontal)
 @export var observer_distance: float = 3.5
@@ -33,6 +39,11 @@ enum PerspectiveMode {
 
 var character_body: CharacterBody3D = null
 var active_camera: Camera3D = null
+
+# Estados de postura y puntería (Fortnite ADS & Crouch)
+var is_crouching: bool = false
+var is_aiming: bool = false
+var _current_eye_height: float = 1.68
 
 # Nodos de cámaras
 var cam_1p: Camera3D
@@ -143,12 +154,17 @@ func _build_camera_rig() -> void:
 
 func handle_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.is_echo():
-		if event.keycode == KEY_F5:
+		if event.keycode == KEY_F5 or event.keycode == KEY_V:
 			cycle_perspective()
 
+	# Clic Derecho: Apuntar / Zoom sobre el hombro (ADS estilo Fortnite)
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+		is_aiming = event.pressed and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or DisplayServer.get_name() == "headless")
+
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		rot_yaw -= event.relative.x * mouse_sensitivity
-		rot_pitch -= event.relative.y * mouse_sensitivity
+		var eff_sens = mouse_sensitivity * (targeting_sensitivity_multiplier if is_aiming else 1.0)
+		rot_yaw -= event.relative.x * eff_sens
+		rot_pitch -= event.relative.y * eff_sens
 		rot_pitch = clampf(rot_pitch, -89.0, 85.0)
 
 		# Aplicar rotación horizontal al personaje
@@ -165,6 +181,23 @@ func apply_camera_shake(intensity: float = 0.2, duration: float = 0.15) -> void:
 	shake_timer = maxf(shake_timer, duration)
 
 func _process(delta: float) -> void:
+	# 1. Interpolación suave de altura ocular según postura (Erguido vs Agachado estilo Fortnite)
+	var target_eye_h = crouch_eye_height if is_crouching else eye_height
+	_current_eye_height = lerpf(_current_eye_height, target_eye_h, clampf(14.0 * delta, 0.0, 1.0))
+
+	# 2. Interpolación de Zoom / Mira (ADS con Clic Derecho estilo Fortnite)
+	if cam_1p:
+		var target_fov_1p = ads_fov_1p if is_aiming else fov_1p
+		cam_1p.fov = lerpf(cam_1p.fov, target_fov_1p, clampf(14.0 * delta, 0.0, 1.0))
+	if cam_3p:
+		var target_fov_3p = ads_fov_3p if is_aiming else fov_3p
+		cam_3p.fov = lerpf(cam_3p.fov, target_fov_3p, clampf(14.0 * delta, 0.0, 1.0))
+	if spring_arm_3p:
+		var target_arm = ads_spring_arm_length if is_aiming else spring_arm_length
+		spring_arm_3p.spring_length = lerpf(spring_arm_3p.spring_length, target_arm, clampf(14.0 * delta, 0.0, 1.0))
+		spring_arm_3p.position = Vector3(shoulder_offset.x, _current_eye_height + shoulder_offset.y, 0.0)
+
+	# 3. Sacudida de cámara (Camera Shake)
 	if shake_timer > 0.0:
 		shake_timer -= delta
 		var trauma = clampf(shake_timer / shake_duration, 0.0, 1.0) * shake_intensity
@@ -179,14 +212,13 @@ func _process(delta: float) -> void:
 			0.0
 		)
 		_update_camera_rotations()
-		if cam_1p:
-			cam_1p.position = Vector3(0.0, eye_height, -eye_forward_offset) + current_bob_offset + _current_shake_offset
 	elif not _current_shake_rot.is_zero_approx():
 		_current_shake_rot = Vector3.ZERO
 		_current_shake_offset = Vector3.ZERO
 		_update_camera_rotations()
-		if cam_1p:
-			cam_1p.position = Vector3(0.0, eye_height, -eye_forward_offset) + current_bob_offset
+
+	if cam_1p:
+		cam_1p.position = Vector3(0.0, _current_eye_height, -eye_forward_offset) + current_bob_offset + _current_shake_offset
 
 func _update_camera_rotations() -> void:
 	if cam_1p:
@@ -230,6 +262,9 @@ func _apply_perspective_instant(mode: PerspectiveMode) -> void:
 				active_camera = cam_2p
 
 func update_head_bob(delta: float, speed_ratio: float, is_grounded: bool) -> void:
+	var target_eye_h = crouch_eye_height if is_crouching else eye_height
+	_current_eye_height = lerpf(_current_eye_height, target_eye_h, clampf(14.0 * delta, 0.0, 1.0))
+
 	if not is_grounded or speed_ratio < 0.05:
 		current_bob_offset = current_bob_offset.lerp(Vector3.ZERO, 10.0 * delta)
 	else:
@@ -242,4 +277,4 @@ func update_head_bob(delta: float, speed_ratio: float, is_grounded: bool) -> voi
 		current_bob_offset = current_bob_offset.lerp(target_bob, 14.0 * delta)
 
 	if cam_1p:
-		cam_1p.position = Vector3(0.0, eye_height, -eye_forward_offset) + current_bob_offset + _current_shake_offset
+		cam_1p.position = Vector3(0.0, _current_eye_height, -eye_forward_offset) + current_bob_offset + _current_shake_offset

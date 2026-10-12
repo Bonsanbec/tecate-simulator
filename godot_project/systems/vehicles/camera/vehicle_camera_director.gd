@@ -109,7 +109,7 @@ func handle_input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventKey and event.pressed and not event.is_echo():
-		if event.keycode == KEY_F5:
+		if event.keycode == KEY_F5 or event.keycode == KEY_V:
 			toggle_mode()
 			get_viewport().set_input_as_handled()
 			return

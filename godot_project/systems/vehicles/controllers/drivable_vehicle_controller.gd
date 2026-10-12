@@ -7,10 +7,13 @@ extends "res://systems/vehicles/core/vehicle_base.gd"
 
 @export var handbrake_deceleration: float = 24.0 # m/s^2
 @export var min_turn_speed_kmh: float = 1.0     # Umbral mínimo para poder virar
+@export var boost_speed_multiplier: float = 1.30 # Multiplicador de velocidad con Turbo [Shift] (estilo Fortnite)
+@export var boost_accel_multiplier: float = 1.45 # Multiplicador de aceleración con Turbo [Shift]
 
 var _steer_input: float = 0.0
 var _throttle_input: float = 0.0
 var _handbrake_active: bool = false
+var _boost_active: bool = false
 
 # Nodos de ruedas visuales para animación procedural
 var wheel_fl_mesh: Node3D = null
@@ -36,7 +39,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.is_echo():
 		if event.keycode == KEY_L:
 			toggle_headlights()
-		elif event.keycode == KEY_H:
+		elif event.keycode == KEY_B or event.keycode == KEY_H:
 			_play_horn()
 
 func _play_horn() -> void:
@@ -58,6 +61,7 @@ func _physics_process(delta: float) -> void:
 		_steer_input = 0.0
 		_throttle_input = 0.0
 		_handbrake_active = false
+		_boost_active = false
 
 	# 4. Proceso de viraje y ángulo de ruedas
 	var target_steer = _steer_input * max_steer_angle_deg
@@ -95,6 +99,7 @@ func _read_driver_input() -> void:
 		_throttle_input -= 1.0
 
 	_handbrake_active = Input.is_key_pressed(KEY_SPACE)
+	_boost_active = Input.is_key_pressed(KEY_SHIFT)
 
 func _process_longitudinal_motion(delta: float, surf_profile: SurfaceProfileClass) -> void:
 	var forward_dir = -global_transform.basis.z
@@ -103,9 +108,11 @@ func _process_longitudinal_motion(delta: float, surf_profile: SurfaceProfileClas
 	var target_accel = 0.0
 	var is_accelerating = false
 
-	# Modificadores de superficie
+	# Modificadores de superficie y Boost [Shift] estilo Fortnite
 	var eff_friction = surf_profile.friction if surf_profile else 1.0
-	var eff_max_speed = (max_speed_kmh / 3.6) * (surf_profile.max_speed_factor if surf_profile else 1.0)
+	var boost_spd_factor = boost_speed_multiplier if _boost_active else 1.0
+	var boost_acc_factor = boost_accel_multiplier if _boost_active else 1.0
+	var eff_max_speed = (max_speed_kmh / 3.6) * (surf_profile.max_speed_factor if surf_profile else 1.0) * boost_spd_factor
 	var eff_rev_speed = (reverse_max_speed_kmh / 3.6) * (surf_profile.max_speed_factor if surf_profile else 1.0)
 
 	# Modificador de pendiente: gravedad a favor o en contra
@@ -119,10 +126,10 @@ func _process_longitudinal_motion(delta: float, surf_profile: SurfaceProfileClas
 	elif _throttle_input > 0.1: # Acelerando hacia adelante
 		if engine_running and not fuel_system.is_empty:
 			var slope_penalty = maxf(1.0, 1.0 + (slope_forward_sin * 1.5))
-			var fuel_penalty = surf_profile.fuel_penalty_factor if surf_profile else 1.0
+			var fuel_penalty = (surf_profile.fuel_penalty_factor if surf_profile else 1.0) * (1.5 if _boost_active else 1.0)
 			fuel_system.consume(_throttle_input, slope_penalty, fuel_penalty, delta)
 
-			var net_accel = (engine_acceleration * eff_friction) + slope_gravity_accel
+			var net_accel = (engine_acceleration * boost_acc_factor * eff_friction) + slope_gravity_accel
 			current_forward_speed = move_toward(current_forward_speed, eff_max_speed, maxf(0.5, net_accel) * delta)
 			is_accelerating = true
 	elif _throttle_input < -0.1: # Frenando o Marcha atrás

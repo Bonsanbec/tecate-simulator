@@ -182,8 +182,9 @@ func _process(_delta):
 		assert(_player.bone_upperleg_l != -1 and _player.bone_upperleg_r != -1, "Huesos UpperLeg L/R deben estar vinculados")
 		assert(_player.bone_lowerleg_l != -1 and _player.bone_lowerleg_r != -1, "Huesos LowerLeg L/R deben estar vinculados")
 		assert(_player.walk_speed >= 2.0, "walk_speed debe ser >= 2.0 m/s para desplazamiento ágil en Tecate")
-		assert(_player.fly_vertical_speed >= 20.0, "fly_vertical_speed debe ser >= 20.0 para ascenso potente en vuelo")
-		print("✓ Rig de locomoción validado: Huesos de piernas vinculados y velocidades optimizadas.")
+		assert(_player.crouch_speed > 1.0 and _player.crouch_speed < _player.walk_speed, "crouch_speed debe ser menor que walk_speed")
+		assert(not _player.is_flying, "El modo de vuelo debe estar permanentemente eliminado")
+		print("✓ Rig de locomoción validado: Huesos de piernas vinculados y velocidades estilo Fortnite optimizadas.")
 
 		# Validar Modo Screenshot F1 (ocultar HUD y avatar, suspender inputs)
 		_player.set_input_enabled(true)
@@ -230,42 +231,54 @@ func _process(_delta):
 		assert(foot_pos.y >= 0.04, "El pie debe mantenerse sobre la superficie del suelo")
 		print("✓ Extremidades validadas: Brazos orientados hacia abajo y piernas en suelo natural.")
 
-		# Validar Ascenso de Vuelo con Barra Espaciadora
-		print("\n--- 5. Validación de Vuelo y Ascenso con Barra Espaciadora ---")
-		_player.global_position.y += 30.0 # Situar en el aire
-		_player.is_flying = true
-		_player.velocity = Vector3.ZERO
-		
-		# Pulsar barra espaciadora en vuelo
+		# Validar Eliminación de Vuelo y Keybindings por Defecto de Fortnite
+		print("\n--- 5. Validación de Eliminación de Vuelo y Controles Estilo Fortnite ---")
+		_player.set_input_enabled(true)
+
+		# 1. Verificar que doble espacio o tecla F NUNCA activen vuelo
 		var ev_space = InputEventKey.new()
 		ev_space.keycode = KEY_SPACE
 		ev_space.pressed = true
 		_player._input(ev_space)
-		
-		assert(_player.is_flying == true, "La barra espaciadora NUNCA debe desactivar el vuelo")
-		assert(_player.velocity.y >= _player.fly_vertical_speed, "Pulsar espacio debe otorgar impulso vertical ascendente")
-		
-		# Mantener barra espaciadora para elevación continua
-		_player._is_space_held = true
-		_player._process_flying(0.05)
-		assert(_player.is_flying == true, "El vuelo debe mantenerse activo durante el ascenso")
-		assert(_player.velocity.y > 15.0, "La velocidad de ascenso en vuelo debe ser potente")
-		
-		# Descenso con Shift en el aire
-		_player._is_space_held = false
-		_player._is_shift_held = true
-		_player.velocity.y = 0.0 # Probar aceleración hacia abajo desde reposo
-		for step in range(10):
-			_player._process_flying(0.05)
-		assert(_player.velocity.y < 0.0, "Mantener Shift en vuelo debe permitir descender")
-		
-		# Alternancia con tecla F
+		_player._input(ev_space)
+		assert(_player.is_flying == false, "El doble toque de barra espaciadora NUNCA debe iniciar vuelo")
+		assert(not _player.has_method("_process_flying"), "El método _process_flying debe haber sido eliminado")
+
+		# 2. Tecla [F] en Fortnite ejecuta Herramienta de Recolección / Ataque Cuerpo a Cuerpo
+		_player.attack_cooldown = 0.0
 		var ev_f = InputEventKey.new()
 		ev_f.keycode = KEY_F
 		ev_f.pressed = true
 		_player._input(ev_f)
-		assert(_player.is_flying == false, "Tecla F debe permitir alternar el vuelo libre")
-		print("✓ Dinámica de vuelo validada: Barra espaciadora eleva continuamente y tecla F alterna.")
+		assert(_player.is_flying == false, "La tecla F NUNCA debe activar vuelo")
+		assert(_player.is_attacking == true, "La tecla F debe ejecutar el golpe cuerpo a cuerpo (Pico / Harvesting Tool de Fortnite)")
+
+		# 3. Tecla [Left Ctrl] alterna Agachado (Crouch Toggle de Fortnite)
+		var ev_ctrl = InputEventKey.new()
+		ev_ctrl.keycode = KEY_CTRL
+		ev_ctrl.pressed = true
+		_player._input(ev_ctrl)
+		assert(_player.is_crouching == true, "Left Ctrl debe activar el modo Agachado (Crouch)")
+		assert(_player.player_state == _player.PlayerState.CROUCHING, "player_state debe ser CROUCHING")
+
+		# 4. Presionar [Left Shift] (Sprint) desactiva automáticamente el agachado (como en Fortnite)
+		var ev_shift = InputEventKey.new()
+		ev_shift.keycode = KEY_SHIFT
+		ev_shift.pressed = true
+		_player._input(ev_shift)
+		assert(_player.is_crouching == false, "Presionar Left Shift (Sprint) debe levantar automáticamente al jugador agachado")
+
+		# 5. Clic Derecho activa Apuntado / Zoom (ADS de Fortnite)
+		var ev_rmb = InputEventMouseButton.new()
+		ev_rmb.button_index = MOUSE_BUTTON_RIGHT
+		ev_rmb.pressed = true
+		_player._input(ev_rmb)
+		assert(_player.camera_director.is_aiming == true, "Mantener Clic Derecho debe activar el modo ADS (Apuntar)")
+		ev_rmb.pressed = false
+		_player._input(ev_rmb)
+		assert(_player.camera_director.is_aiming == false, "Soltar Clic Derecho debe desactivar el modo ADS")
+
+		print("✓ Controles estilo Fortnite validados: Vuelo eliminado, [F] Golpe, [Ctrl] Agacharse, [Shift] Sprint, [RMB] ADS.")
 
 	elif _frames >= 16:
 		if _frames > 16:

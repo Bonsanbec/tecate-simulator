@@ -222,7 +222,7 @@ func test_start_screen_camera_preservation() -> void:
 	custom_cam.queue_free()
 
 func test_bus_stop_request() -> void:
-	print("\n--- Prueba 6: Timbre de Parada de Autobús con Tecla [T] ---")
+	print("\n--- Prueba 6: Timbre de Parada de Autobús con Teclas [B] y [T] (Estilo Fortnite) ---")
 	var bus_scene = load("res://assets/vehicles/bus_hongo.tscn")
 	var bus = bus_scene.instantiate() as RouteVehicle
 	root.add_child(bus)
@@ -234,36 +234,53 @@ func test_bus_stop_request() -> void:
 	
 	assert_true(not bus.stop_requested, "Autobús inicia sin parada solicitada")
 	
-	# Simular pulsación de tecla T
-	var ev_t = InputEventKey.new()
-	ev_t.keycode = KEY_T
-	ev_t.pressed = true
-	player._input(ev_t)
+	# Simular pulsación de tecla B (Emote / Señal por defecto en Fortnite)
+	var ev_b = InputEventKey.new()
+	ev_b.keycode = KEY_B
+	ev_b.pressed = true
+	player._input(ev_b)
 	
-	assert_true(bus.stop_requested, "Accionar tecla [T] solicita parada exitosamente en el autobús")
+	assert_true(bus.stop_requested, "Accionar tecla [B] solicita parada exitosamente en el autobús")
 	
 	player.queue_free()
 	bus.queue_free()
 
 func test_flight_mode_toggle() -> void:
-	print("\n--- Prueba 7: Alternancia de Vuelo con Tecla [F] ---")
+	print("\n--- Prueba 7: Eliminación de Vuelo, Agachado [Ctrl] y Cambio de Asiento [Ctrl] (Fortnite) ---")
 	var player = PlayerController.new()
 	root.add_child(player)
+	player._ready()
+	player.set_input_enabled(true)
 	
-	assert_true(not player.is_flying, "Jugador inicia en el suelo (no vuela)")
+	assert_true(not player.is_flying, "Jugador inicia en el suelo (vuelo deshabilitado)")
 	
 	var ev_f = InputEventKey.new()
 	ev_f.keycode = KEY_F
 	ev_f.pressed = true
-	
-	# Primer toque: Activa vuelo
 	player._input(ev_f)
-	assert_true(player.is_flying, "Primer toque de tecla [F] activa vuelo libre")
-	assert_true(player.player_state == PlayerController.PlayerState.FLYING, "player_state pasa a FLYING")
+	assert_true(not player.is_flying, "Tecla [F] ya NO activa vuelo libre (ejecuta golpe cuerpo a cuerpo estilo Fortnite)")
+	assert_true(player.is_attacking, "Tecla [F] activa herramienta cuerpo a cuerpo")
 	
-	# Segundo toque: Desactiva vuelo
-	player._input(ev_f)
-	assert_true(not player.is_flying, "Segundo toque de tecla [F] desactiva vuelo libre")
+	var ev_ctrl = InputEventKey.new()
+	ev_ctrl.keycode = KEY_CTRL
+	ev_ctrl.pressed = true
+	player._input(ev_ctrl)
+	assert_true(player.is_crouching, "Primer toque de [Left Ctrl] a pie activa agachado (Crouch)")
+	assert_true(player.player_state == PlayerController.PlayerState.CROUCHING, "player_state pasa a CROUCHING")
+	
+	player._input(ev_ctrl)
+	assert_true(not player.is_crouching, "Segundo toque de [Left Ctrl] a pie desactiva agachado")
 	assert_true(player.player_state == PlayerController.PlayerState.NORMAL, "player_state vuelve a NORMAL")
 	
+	# Probar cambio de asiento en vehículo con [Left Ctrl]
+	var car_scene = load("res://assets/vehicles/car_placeholder.tscn")
+	var car = car_scene.instantiate() as VehicleBase
+	root.add_child(car)
+	player.board_vehicle(car, 0) # Conductor
+	var first_seat = player.current_seat
+	assert_true(player.is_sitting and first_seat != null, "Jugador sentado inicialmente en asiento de conductor")
+	player._input(ev_ctrl)
+	assert_true(player.is_sitting and player.current_seat != first_seat, "Presionar [Left Ctrl] dentro de un vehículo cambia al siguiente asiento disponible")
+	
 	player.queue_free()
+	car.queue_free()
