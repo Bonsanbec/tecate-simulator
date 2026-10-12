@@ -46,6 +46,7 @@ enum PendingAction {
 @onready var title_label: Control = $CanvasLayer/RootControl/MarginContainer/VBox/TitleContainer/TitleLabel
 @onready var subtitle_label: Label = $CanvasLayer/RootControl/MarginContainer/VBox/TitleContainer/SubtitleLabel
 @onready var btn_continue: Button = $CanvasLayer/RootControl/MarginContainer/VBox/ButtonsContainer/BtnContinue
+@onready var btn_minigames: Button = get_node_or_null("CanvasLayer/RootControl/MarginContainer/VBox/ButtonsContainer/BtnMinigames") as Button
 @onready var btn_respawn: Button = $CanvasLayer/RootControl/MarginContainer/VBox/ButtonsContainer/BtnRespawn
 @onready var btn_quit: Button = $CanvasLayer/RootControl/MarginContainer/VBox/ButtonsContainer/BtnQuit
 
@@ -137,6 +138,10 @@ func _connect_signals() -> void:
 		btn_continue.pressed.connect(_on_continue_pressed)
 		_setup_button_hover_events(btn_continue)
 
+	if btn_minigames:
+		btn_minigames.pressed.connect(_on_minigames_pressed)
+		_setup_button_hover_events(btn_minigames)
+
 	if btn_respawn:
 		btn_respawn.pressed.connect(_on_respawn_pressed)
 		_setup_button_hover_events(btn_respawn)
@@ -199,7 +204,7 @@ func _setup_ui_styles() -> void:
 		if codename_astorga_label: codename_astorga_label.add_theme_font_override("font", din_font)
 
 	# Estilos de botones principales
-	for btn in [btn_continue, btn_respawn, btn_quit]:
+	for btn in [btn_continue, btn_minigames, btn_respawn, btn_quit]:
 		if not btn: continue
 		if din_font: btn.add_theme_font_override("font", din_font)
 		btn.add_theme_font_size_override("font_size", 34)
@@ -446,6 +451,19 @@ func _on_continue_pressed() -> void:
 		# Ya se eligió personaje previamente: reanudar inmediatamente
 		close_menu()
 		game_continued.emit()
+
+func _on_minigames_pressed() -> void:
+	if not has_chosen_character:
+		if selected_character_id.is_empty():
+			selected_character_id = CharacterCatalogClass.get_default_character_id()
+		has_chosen_character = true
+		if player and player.has_method("apply_identity"):
+			player.apply_identity(selected_character_id)
+	close_menu()
+	var tree = get_tree()
+	var mg_menu = tree.root.find_child("WiiPartyMinigameMenu", true, false) if (tree and tree.root) else null
+	if mg_menu and mg_menu.has_method("open_menu"):
+		mg_menu.open_menu()
 
 func _on_respawn_pressed() -> void:
 	# Siempre abre la pantalla de selección tras reaparecer

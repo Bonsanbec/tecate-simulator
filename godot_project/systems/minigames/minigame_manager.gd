@@ -2,8 +2,10 @@ class_name MinigameManager
 extends Node
 
 ## Gestor de Minijuegos y Competiciones Urbanas en el Cliente (TKT/1).
-## Coordina estados de juego, recepción de eventos fiables, retroalimentación
-## háptica/visual y sincronización con el servidor autoritativo.
+## Coordina estados de juego, recepción de eventos fiables, sesiones de práctica
+## en solitario, retroalimentación háptica/visual y sincronización con el servidor.
+
+const MinigameCatalogClass = preload("res://systems/minigames/minigame_catalog.gd")
 
 signal summon_received(game_id: int, host_id: int, mode: int, max_players: int)
 signal minigame_started(game_id: int, countdown_seconds: int, participants: Array)
@@ -11,6 +13,7 @@ signal minigame_action_received(action_type: int, target_entity_id: int, param_f
 signal participant_eliminated(game_id: int, eliminated_entity_id: int, reason: int)
 signal minigame_ended(game_id: int, winner_entity_id: int, rankings: Array)
 signal minigame_cancelled(game_id: int, reason: int)
+signal upcoming_minigame_notified(game_id: int, title: String, phase: int, location_name: String)
 
 enum ClientMinigameState {
 	NONE,
@@ -23,7 +26,13 @@ enum ClientMinigameState {
 var current_state: ClientMinigameState = ClientMinigameState.NONE
 var current_game_id: int = 0
 var is_participating: bool = false
+var is_local_practice: bool = false
 var local_entity_id: int = 0
+
+var _staging_timer: float = 0.0
+var _local_practice_timer: float = 0.0
+var _saved_local_position: Vector3 = Vector3.ZERO
+var _saved_local_yaw: float = 0.0
 
 @export var network_client_path: NodePath = ^"../NetworkClient"
 @export var player_path: NodePath = ^"../Player"
@@ -50,8 +59,23 @@ func _connect_network() -> void:
 	if not network_client:
 		return
 
-	network_client.event_received.connect(_on_network_event_received)
-	network_client.connected_to_server.connect(func(_sess, ent_id): local_entity_id = ent_id)
+	if not network_client.event_received.is_connected(_on_network_event_received):
+		network_client.event_received.connect(_on_network_event_received)
+	if not network_client.connected_to_server.is_connected(_on_connected_to_server):
+		network_client.connected_to_server.connect(_on_connected_to_server)
+
+func _on_connected_to_server(_sess: int, ent_id: int) -> void:
+	local_entity_id = ent_id
+
+func _process(delta: float) -> void:
+	if current_state == ClientMinigameState.STAGING:
+		_staging_timer -= delta
+		if _staging_timer <= 0.0:
+			current_state = ClientMinigameState.ACTIVE
+			print("[MinigameManager] Minijuego %d pasó de STAGING a ACTIVE" % current_game_id)
+
+	elif current_state == ClientMinigameState.ACTIVE and is_local_practice:
+		_process_local_practice(delta)
 
 func _on_network_event_received(ev: Dictionary) -> void:
 	var code = ev.get("event_code", 0)
@@ -86,8 +110,10 @@ func _handle_minigame_start(data: PackedByteArray) -> void:
 	if s.is_empty():
 		return
 
+	is_local_practice = false
 	current_game_id = s["game_id"]
 	current_state = ClientMinigameState.STAGING
+	_staging_timer = float(s.get("countdown_seconds", 3))
 	is_participating = false
 
 	# Verificar si el jugador local está en la lista de participantes
@@ -96,7 +122,8 @@ func _handle_minigame_start(data: PackedByteArray) -> void:
 		if p.get("entity_id", 0) == local_entity_id:
 			is_participating = true
 			if player and is_instance_valid(player):
-				# Posicionar en el spawn asignado
+				_saved_local_position = player.global_position
+				_saved_local_yaw = player.rotation.y
 				var target_pos = Vector3(p["spawn_x"], p["spawn_y"], p["spawn_z"])
 				player.global_position = target_pos
 				player.rotation.y = deg_to_rad(p.get("spawn_yaw", 0.0))
@@ -121,7 +148,6 @@ func _handle_minigame_action(data: PackedByteArray) -> void:
 	# Si la acción es empujón slapstick (1) y el objetivo somos nosotros
 	if action_type == 1 and target_id == local_entity_id:
 		if player and player.has_method("apply_impact_knockback"):
-			# El vector dir contiene (push_x, force_v, push_z)
 			var source_pos = player.global_position - Vector3(dir.x, 0.0, dir.z)
 			player.apply_impact_knockback(source_pos, param_float, dir.y)
 
@@ -143,6 +169,7 @@ func _handle_minigame_end(data: PackedByteArray) -> void:
 		return
 
 	current_state = ClientMinigameState.SUMMARY
+	is_local_practice = false
 	var winner_id = fin["winner_entity_id"]
 	var rankings = fin.get("rankings", [])
 	print("[MinigameManager] Minijuego FINALIZADO. Ganador: %d. Resultados: %s" % [winner_id, rankings])
@@ -161,6 +188,10 @@ func _handle_minigame_cancel(data: PackedByteArray) -> void:
 	if c.is_empty():
 		return
 
+	# Si estábamos en práctica local, ignorar cancelación de red por falta de quórum
+	if is_local_practice and current_state in [ClientMinigameState.STAGING, ClientMinigameState.ACTIVE]:
+		return
+
 	current_state = ClientMinigameState.NONE
 	current_game_id = 0
 	is_participating = false
@@ -173,15 +204,117 @@ func _notify_player_reward(coins: int) -> void:
 		return
 	var hud = tree.root.find_child("PlayerHUD", true, false)
 	if hud and hud.has_method("update_player_balance") and "wallet_label" in hud and hud.wallet_label:
-		# Extraer balance actual
 		var text = hud.wallet_label.text
 		var parts = text.split(" ")
 		var curr = int(parts[0]) if parts.size() > 0 else 50
 		hud.update_player_balance(curr + coins)
 
 # =============================================================================
-# ENVÍO DE ACCIONES AL SERVIDOR
+# ENVÍO DE ACCIONES AL SERVIDOR Y MODO DE PRÁCTICA LOCAL / SOLITARIO
 # =============================================================================
+
+func start_or_summon_minigame(game_id: int, mode: int = 0, max_players: int = 8, arena_id: int = 1) -> void:
+	_resolve_dependencies()
+	var is_net_connected: bool = (network_client != null and "state" in network_client and network_client.state == 2) # ConnectionState.CONNECTED == 2
+	var online_players: int = 1
+	if get_parent():
+		var mp_mgr = get_parent().find_child("MultiplayerManager", true, false)
+		if mp_mgr and mp_mgr.has_method("get_player_count"):
+			online_players = mp_mgr.get_player_count()
+
+	if is_net_connected:
+		send_summon_request(game_id, mode, max_players, arena_id)
+
+	# Si el jugador está offline o jugando solo en el servidor, iniciar sesión de práctica local inmediata
+	if not is_net_connected or online_players <= 1:
+		start_local_practice(game_id)
+
+func start_local_practice(game_id: int) -> void:
+	_resolve_dependencies()
+	var g = MinigameCatalogClass.get_minigame(game_id)
+	if g.is_empty():
+		return
+
+	is_local_practice = true
+	is_participating = true
+	current_game_id = game_id
+	current_state = ClientMinigameState.STAGING
+	_staging_timer = 3.0
+	_local_practice_timer = float(g.get("duration_seconds", 60))
+
+	var spawn_pos: Vector3 = g.get("spawn_position", Vector3(-6.6844, 401.80, 2.6878))
+	if player and is_instance_valid(player):
+		if "is_sitting" in player and player.is_sitting and player.has_method("stand_up"):
+			player.stand_up()
+		if "current_vehicle" in player and player.current_vehicle and player.has_method("dismount_vehicle"):
+			player.dismount_vehicle()
+		_saved_local_position = player.global_position
+		_saved_local_yaw = player.rotation.y
+		player.global_position = spawn_pos
+		player.velocity = Vector3.ZERO
+
+	var pid = local_entity_id if local_entity_id != 0 else 1
+	var participants = [{
+		"entity_id": pid,
+		"spawn_x": spawn_pos.x,
+		"spawn_y": spawn_pos.y,
+		"spawn_z": spawn_pos.z,
+		"spawn_yaw": 0.0
+	}]
+	print("[MinigameManager] Sesión de práctica local iniciada para '%s' (ID=%d)" % [g.get("title", "Minijuego"), game_id])
+	minigame_started.emit(game_id, 3, participants)
+
+func _process_local_practice(delta: float) -> void:
+	_local_practice_timer -= delta
+
+	# En Mi Kiosko (ID=1), comprobar caída fuera de la tarima del Kiosko
+	if current_game_id == 1 and player and is_instance_valid(player):
+		var center = Vector3(-6.6844, 401.80, 2.6878)
+		var dx = player.global_position.x - center.x
+		var dz = player.global_position.z - center.z
+		var h_dist = sqrt(dx * dx + dz * dz)
+		if player.global_position.y < 401.10 or h_dist > 5.20:
+			var pid = local_entity_id if local_entity_id != 0 else 1
+			participant_eliminated.emit(1, pid, 1)
+			finish_local_practice(false)
+			return
+
+	if _local_practice_timer <= 0.0:
+		finish_local_practice(true)
+
+func finish_local_practice(won: bool = true) -> void:
+	if not is_local_practice:
+		return
+
+	is_local_practice = false
+	is_participating = false
+	current_state = ClientMinigameState.SUMMARY
+
+	if player and is_instance_valid(player):
+		player.global_position = _saved_local_position
+		player.rotation.y = _saved_local_yaw
+		player.velocity = Vector3.ZERO
+
+	var pid = local_entity_id if local_entity_id != 0 else 1
+	var reward = 50 if won else 15
+	_notify_player_reward(reward)
+	var rankings = [{
+		"entity_id": pid,
+		"score": 100 if won else 25,
+		"coins_rewarded": reward
+	}]
+	minigame_ended.emit(current_game_id, pid if won else 0, rankings)
+
+func notify_upcoming_minigame(game_id: int) -> void:
+	var g = MinigameCatalogClass.get_minigame(game_id)
+	if g.is_empty():
+		return
+	upcoming_minigame_notified.emit(
+		game_id,
+		g.get("title", "Minijuego"),
+		g.get("phase", 2),
+		g.get("location_name", "Tecate")
+	)
 
 func send_summon_request(game_id: int, mode: int = 0, max_players: int = 8, arena_id: int = 1) -> void:
 	if not network_client:

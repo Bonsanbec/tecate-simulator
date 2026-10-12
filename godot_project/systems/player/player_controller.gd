@@ -13,6 +13,7 @@ const FootIKClass = preload("res://systems/player/foot_ik_controller.gd")
 const PlayerNetworkSyncClass = preload("res://systems/network/player_network_sync.gd")
 const PlayerHUDClass = preload("res://ui/player_hud.gd")
 const VehicleCameraDirectorClass = preload("res://systems/vehicles/camera/vehicle_camera_director.gd")
+const MinigameCatalogClass = preload("res://systems/minigames/minigame_catalog.gd")
 
 # Estados de Locomoción, Postura, Vehículo y Asientos (Sin vuelo libre)
 enum PlayerState {
@@ -46,6 +47,8 @@ var _nearby_vehicle: VehicleBase = null
 var _nearby_seat: Node = null
 var _nearby_seat_type: int = 0
 var _nearby_pump_zone: Node = null
+var _nearby_minigame_zone: Node = null
+var _nearby_minigame_location_id: String = ""
 var _near_exit_door: bool = false
 var _vehicle_scan_timer: float = 0.0
 
@@ -133,9 +136,9 @@ func _ready():
 	if camera_director and mesh_body and mesh_head:
 		camera_director.setup(self, mesh_body, mesh_head)
 
-	# Si existe StartScreen en la escena, pausar inputs y ocultar HUD al inicio
+	# Si existe StartScreen activo en la escena, pausar inputs y ocultar HUD al inicio
 	var start_screen = get_parent().get_node_or_null("StartScreen") if get_parent() else null
-	if start_screen:
+	if start_screen and not start_screen.is_queued_for_deletion() and ("is_menu_active" not in start_screen or start_screen.is_menu_active):
 		input_enabled = false
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		# El HUD ya nace oculto (visible = false en _ready); no se necesita llamada extra
@@ -166,6 +169,8 @@ static func ensure_fortnite_input_map() -> void:
 		"vehicle_switch_seat": [KEY_CTRL],
 		"vehicle_horn": [KEY_B, KEY_H],
 		"vehicle_lights": [KEY_L],
+		"minigame_menu": [KEY_M],
+		"minigame_context": [KEY_Q],
 		"photo_mode": [KEY_F1],
 		"pause_menu": [KEY_ESCAPE]
 	}
@@ -381,10 +386,18 @@ func toggle_f1_photo_mode() -> void:
 		_prev_avatar_visible = humanoid_scene.visible if humanoid_scene else true
 		if humanoid_scene:
 			humanoid_scene.visible = false
+		if get_tree():
+			for mz in get_tree().get_nodes_in_group("minigame_zones"):
+				if mz is Node3D:
+					mz.visible = false
 		print("[PlayerController] Modo Screenshot [F1] ACTIVADO: HUD y avatar ocultos, inputs suspendidos.")
 	else:
 		if humanoid_scene:
 			humanoid_scene.visible = _prev_avatar_visible
+		if get_tree():
+			for mz in get_tree().get_nodes_in_group("minigame_zones"):
+				if mz is Node3D:
+					mz.visible = true
 		if hud:
 			hud.show_hud()
 		print("[PlayerController] Modo Screenshot [F1] DESACTIVADO: HUD y avatar restaurados, inputs reactivados.")
@@ -1216,6 +1229,8 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 	_nearby_vehicle = null
 	_nearby_seat_type = 0
 	_nearby_pump_zone = null
+	_nearby_minigame_zone = null
+	_nearby_minigame_location_id = ""
 	_near_exit_door = false
 
 	var tree = get_tree()
@@ -1281,59 +1296,92 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 				_near_exit_door = true
 
 	# 3. Escaneo de estaciones de servicio (para repostaje [R / E])
-	for pz in get_tree().get_nodes_in_group("pump_zones"):
+	for pz in tree.get_nodes_in_group("pump_zones"):
 		if pz is Area3D and pz.is_inside_tree():
 			var d_sq = my_pos.distance_squared_to(pz.global_position)
 			if d_sq < 25.0:
 				_nearby_pump_zone = pz
 				break
 
+	# 3b. Escaneo de zonas de minijuegos y ubicación dinámica en Autobús El Hongo
+	var best_mg_dist_sq := INF
+	for mz in tree.get_nodes_in_group("minigame_zones"):
+		if mz is Node3D and mz.is_inside_tree():
+			var inside := false
+			if mz.has_method("is_point_inside"):
+				inside = mz.is_point_inside(my_pos)
+			else:
+				var r: float = float(mz.get("radius")) if "radius" in mz else 6.0
+				inside = my_pos.distance_squared_to(mz.global_position) <= (r * r)
+			if inside:
+				var d_sq = my_pos.distance_squared_to(mz.global_position)
+				if d_sq < best_mg_dist_sq:
+					best_mg_dist_sq = d_sq
+					_nearby_minigame_zone = mz
+					if "location_id" in mz:
+						_nearby_minigame_location_id = String(mz.location_id)
+
+	if _nearby_minigame_location_id.is_empty():
+		var riding_bus = _get_riding_bus()
+		if riding_bus != null or (_nearby_vehicle != null and _nearby_vehicle is RouteVehicle):
+			_nearby_minigame_location_id = "bus_hongo"
+
 	# 4. Actualización contextual de indicaciones en el HUD
 	if not hud:
 		return
 
+	var base_prompt := ""
 	if is_sitting:
-		var prompt = "[E] o [Espacio] Levantarse"
+		base_prompt = "[E] o [Espacio] Levantarse"
 		if current_vehicle and current_vehicle.seats.size() > 1:
-			prompt += "  |  [Ctrl] Cambiar Asiento"
+			base_prompt += "  |  [Ctrl] Cambiar Asiento"
 		var bus_on_board = _get_riding_bus()
 		if bus_on_board:
-			prompt += "  |  [B / T] Solicitar Parada"
+			base_prompt += "  |  [B / T] Solicitar Parada"
 		elif _nearby_pump_zone and current_vehicle:
-			prompt += "  |  [R] Repostar"
-		hud.set_interaction_prompt(prompt)
+			base_prompt += "  |  [R] Repostar"
 	elif current_vehicle != null:
 		if _nearby_seat:
 			var s_name = _nearby_seat.seat_name if "seat_name" in _nearby_seat else "Asiento"
-			var prompt = "[E] Sentarse en %s" % s_name
+			base_prompt = "[E] Sentarse en %s" % s_name
 			var bus_on_board = _get_riding_bus()
 			if bus_on_board:
-				prompt += "  |  [B / T] Solicitar Parada"
-			hud.set_interaction_prompt(prompt)
+				base_prompt += "  |  [B / T] Solicitar Parada"
 		elif _near_exit_door:
 			if current_vehicle.current_speed_kmh > 15.0:
-				hud.set_interaction_prompt("Vehículo en marcha (%.0f km/h)  |  [B / T] Solicitar Parada" % current_vehicle.current_speed_kmh)
+				base_prompt = "Vehículo en marcha (%.0f km/h)  |  [B / T] Solicitar Parada" % current_vehicle.current_speed_kmh
 			else:
-				hud.set_interaction_prompt("[E] Descender a la calle  |  [B / T] Solicitar Parada")
+				base_prompt = "[E] Descender a la calle  |  [B / T] Solicitar Parada"
 		else:
-			hud.set_interaction_prompt("[B / T] Solicitar Parada")
+			base_prompt = "[B / T] Solicitar Parada"
 	elif _nearby_seat:
 		var s_name = _nearby_seat.seat_name if "seat_name" in _nearby_seat else "Asiento"
-		hud.set_interaction_prompt("[E] Sentarse en %s" % s_name)
+		base_prompt = "[E] Sentarse en %s" % s_name
 	elif _nearby_vehicle:
 		if _nearby_vehicle.doors.size() > 0 or _nearby_vehicle.vehicle_type == 2:
-			hud.set_interaction_prompt("[E] Abordar %s por la puerta" % _nearby_vehicle.vehicle_name)
+			base_prompt = "[E] Abordar %s por la puerta" % _nearby_vehicle.vehicle_name
 		else:
 			var d_seat = _nearby_vehicle.get_driver_seat()
 			if d_seat and not d_seat.is_occupied():
 				_nearby_seat_type = VehicleSeat.SeatType.DRIVER
-				hud.set_interaction_prompt("[E] Conducir %s" % _nearby_vehicle.vehicle_name)
+				base_prompt = "[E] Conducir %s" % _nearby_vehicle.vehicle_name
 			else:
 				var avail_pass = _nearby_vehicle.get_available_passenger_seats()
 				if not avail_pass.is_empty():
 					_nearby_seat_type = VehicleSeat.SeatType.PASSENGER
-					hud.set_interaction_prompt("[E] Abordar como Pasajero en %s" % _nearby_vehicle.vehicle_name)
+					base_prompt = "[E] Abordar como Pasajero en %s" % _nearby_vehicle.vehicle_name
 				else:
-					hud.set_interaction_prompt("%s (Lleno)" % _nearby_vehicle.vehicle_name)
+					base_prompt = "%s (Lleno)" % _nearby_vehicle.vehicle_name
+
+	var mg_prompt := ""
+	if _nearby_minigame_zone and _nearby_minigame_zone.has_method("get_tooltip_prompt"):
+		mg_prompt = _nearby_minigame_zone.get_tooltip_prompt()
+	elif not _nearby_minigame_location_id.is_empty():
+		mg_prompt = MinigameCatalogClass.format_location_tooltip(_nearby_minigame_location_id)
+
+	if not base_prompt.is_empty() and not mg_prompt.is_empty():
+		hud.set_interaction_prompt(base_prompt + "  |  " + mg_prompt)
+	elif not base_prompt.is_empty():
+		hud.set_interaction_prompt(base_prompt)
 	else:
-		hud.set_interaction_prompt("")
+		hud.set_interaction_prompt(mg_prompt)

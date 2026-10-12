@@ -198,7 +198,7 @@ func _refresh_mode_badge() -> void:
 		mode_badge.text = "[V / F5] %s   |   %s" % [_cached_camera_mode, _current_interaction_prompt]
 		mode_badge.modulate.a = 1.0
 	else:
-		mode_badge.text = "[V / F5] %s" % _cached_camera_mode
+		mode_badge.text = "[V / F5] %s   |   [M] Minijuegos" % _cached_camera_mode
 		if _badge_fade_timer <= 0.0:
 			mode_badge.modulate.a = 0.35
 		else:

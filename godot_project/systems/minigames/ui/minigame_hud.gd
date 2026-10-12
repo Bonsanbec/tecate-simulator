@@ -2,8 +2,10 @@ class_name MinigameHUD
 extends CanvasLayer
 
 ## Interfaz Gráfica Diegética para Minijuegos en Tecate Simulator.
-## Despliega invitaciones, cuenta regresiva cinemática, banners de eliminación
-## y el podio con recompensas en Pesos Tecatenses.
+## Despliega invitaciones, cuenta regresiva cinemática, banners de eliminación,
+## notificaciones de ubicación y el podio con recompensas en Pesos Tecatenses.
+
+const MinigameCatalogClass = preload("res://systems/minigames/minigame_catalog.gd")
 
 @export var minigame_manager_path: NodePath = ^"../MinigameManager"
 var minigame_manager: Node = null
@@ -14,6 +16,7 @@ var invite_label: Label = null
 var countdown_label: Label = null
 var header_panel: PanelContainer = null
 var header_title: Label = null
+var header_sub: Label = null
 var feed_label: Label = null
 var podium_panel: PanelContainer = null
 var podium_vbox: VBoxContainer = null
@@ -95,21 +98,27 @@ func _build_ui() -> void:
 	header_panel.name = "HeaderPanel"
 	header_panel.visible = false
 	header_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	header_panel.offset_top = 15.0
-	header_panel.offset_left = -160.0
-	header_panel.offset_right = 160.0
+	header_panel.offset_top = 58.0
+	header_panel.offset_left = -200.0
+	header_panel.offset_right = 200.0
 
 	var style_header = StyleBoxFlat.new()
-	style_header.bg_color = Color(0.06, 0.08, 0.12, 0.85)
+	style_header.bg_color = Color(0.06, 0.08, 0.12, 0.88)
 	style_header.border_color = Color(0.85, 0.16, 0.16, 1.0) # Rojo Tecate
 	style_header.border_width_bottom = 3
-	style_header.corner_radius_bottom_left = 6
-	style_header.corner_radius_bottom_right = 6
-	style_header.content_margin_left = 16
-	style_header.content_margin_right = 16
+	style_header.corner_radius_bottom_left = 8
+	style_header.corner_radius_bottom_right = 8
+	style_header.corner_radius_top_left = 8
+	style_header.corner_radius_top_right = 8
+	style_header.content_margin_left = 18
+	style_header.content_margin_right = 18
 	style_header.content_margin_top = 6
 	style_header.content_margin_bottom = 6
 	header_panel.add_theme_stylebox_override("panel", style_header)
+
+	var header_vbox = VBoxContainer.new()
+	header_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	header_panel.add_child(header_vbox)
 
 	header_title = Label.new()
 	header_title.text = "MI KIOSKO"
@@ -117,7 +126,15 @@ func _build_ui() -> void:
 	if din_font: header_title.add_theme_font_override("font", din_font)
 	header_title.add_theme_font_size_override("font_size", 28)
 	header_title.modulate = Color(1.0, 1.0, 1.0, 1.0)
-	header_panel.add_child(header_title)
+	header_vbox.add_child(header_title)
+
+	header_sub = Label.new()
+	header_sub.text = "[Backspace] Terminar Práctica"
+	header_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if din_font: header_sub.add_theme_font_override("font", din_font)
+	header_sub.add_theme_font_size_override("font_size", 15)
+	header_sub.modulate = Color(1.0, 0.85, 0.35, 0.90)
+	header_vbox.add_child(header_sub)
 	root_control.add_child(header_panel)
 
 	# 4. Feed de Notificaciones y Eliminaciones (Lado Derecho)
@@ -125,11 +142,12 @@ func _build_ui() -> void:
 	feed_label.name = "FeedLabel"
 	feed_label.visible = false
 	feed_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	feed_label.offset_top = 70.0
-	feed_label.offset_left = -300.0
-	feed_label.offset_right = -20.0
+	feed_label.offset_top = 110.0
+	feed_label.offset_left = -380.0
+	feed_label.offset_right = -24.0
+	feed_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	if din_font: feed_label.add_theme_font_override("font", din_font)
-	feed_label.add_theme_font_size_override("font_size", 20)
+	feed_label.add_theme_font_size_override("font_size", 21)
 	feed_label.modulate = Color(1.0, 0.40, 0.40, 1.0)
 	root_control.add_child(feed_label)
 
@@ -179,8 +197,10 @@ func _connect_signals() -> void:
 		minigame_manager.minigame_ended.connect(_on_minigame_ended)
 	if not minigame_manager.minigame_cancelled.is_connected(_on_minigame_cancelled):
 		minigame_manager.minigame_cancelled.connect(_on_minigame_cancelled)
+	if "upcoming_minigame_notified" in minigame_manager and not minigame_manager.upcoming_minigame_notified.is_connected(_on_upcoming_minigame_notified):
+		minigame_manager.upcoming_minigame_notified.connect(_on_upcoming_minigame_notified)
 
-func _on_summon_received(game_id: int, host_id: int, _mode: int, _max_players: int) -> void:
+func _on_summon_received(game_id: int, _host_id: int, _mode: int, _max_players: int) -> void:
 	var name_str = _get_game_name(game_id)
 	invite_label.text = "¡CONVOCATORIA: %s!\nPresiona [Y] Aceptar  |  [N] Declinar" % name_str
 	invite_panel.visible = true
@@ -190,9 +210,11 @@ func _on_minigame_started(game_id: int, countdown: int, _participants: Array) ->
 	podium_panel.visible = false
 
 	header_title.text = _get_game_name(game_id)
+	if header_sub:
+		var is_prac = minigame_manager.is_local_practice if (minigame_manager and "is_local_practice" in minigame_manager) else false
+		header_sub.visible = is_prac
 	header_panel.visible = true
 
-	# Lanzar cuenta regresiva
 	_start_countdown(countdown)
 
 func _start_countdown(seconds: int) -> void:
@@ -206,7 +228,7 @@ func _process(delta: float) -> void:
 		if _countdown_timer > 0.0:
 			countdown_label.text = str(int(ceil(_countdown_timer)))
 		else:
-			countdown_label.text = "¡A PELEAR!"
+			countdown_label.text = "¡A JUGAR!"
 			if _countdown_timer <= -0.75:
 				_is_counting_down = false
 				countdown_label.visible = false
@@ -217,12 +239,24 @@ func _on_participant_eliminated(_game_id: int, eliminated_id: int, reason: int) 
 	elif reason == 2: reason_str = "¡ha sido quemado por una pelota!"
 	elif reason == 3: reason_str = "¡se quedó con la roña al terminar el tiempo!"
 
+	feed_label.modulate = Color(1.0, 0.40, 0.40, 1.0)
 	feed_label.text = "Jugador %d %s" % [eliminated_id, reason_str]
 	feed_label.visible = true
 
 	var tween = create_tween()
 	feed_label.modulate.a = 1.0
 	tween.tween_interval(3.0)
+	tween.tween_property(feed_label, "modulate:a", 0.0, 0.8)
+	tween.tween_callback(func(): feed_label.visible = false)
+
+func _on_upcoming_minigame_notified(_game_id: int, title: String, phase: int, location_name: String) -> void:
+	feed_label.modulate = Color(1.0, 0.85, 0.25, 1.0)
+	feed_label.text = "📍 Sede de '%s' (%s) • Programado para Fase %d" % [title, location_name, phase]
+	feed_label.visible = true
+
+	var tween = create_tween()
+	feed_label.modulate.a = 1.0
+	tween.tween_interval(4.0)
 	tween.tween_property(feed_label, "modulate:a", 0.0, 0.8)
 	tween.tween_callback(func(): feed_label.visible = false)
 
@@ -240,7 +274,10 @@ func _on_minigame_ended(game_id: int, winner_id: int, rankings: Array) -> void:
 	podium_vbox.add_child(title)
 
 	var winner_label = Label.new()
-	winner_label.text = "👑 GANADOR: Jugador %d" % winner_id
+	if winner_id > 0:
+		winner_label.text = "👑 GANADOR: Jugador %d" % winner_id
+	else:
+		winner_label.text = "🏁 FIN DE LA RONDA"
 	winner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	winner_label.add_theme_font_size_override("font_size", 22)
 	winner_label.modulate = Color(0.96, 0.95, 0.92, 1.0)
@@ -266,7 +303,6 @@ func _on_minigame_ended(game_id: int, winner_id: int, rankings: Array) -> void:
 
 	podium_panel.visible = true
 
-	# Cerrar podio tras 6 segundos
 	var t = create_tween()
 	t.tween_interval(6.0)
 	t.tween_callback(func(): podium_panel.visible = false)
@@ -278,8 +314,4 @@ func _on_minigame_cancelled(_game_id: int, _reason: int) -> void:
 	podium_panel.visible = false
 
 func _get_game_name(game_id: int) -> String:
-	match game_id:
-		1: return "Mi Kiosko"
-		2: return "Las Traes"
-		3: return "Quemados"
-		_: return "Minijuego"
+	return MinigameCatalogClass.get_game_title(game_id)

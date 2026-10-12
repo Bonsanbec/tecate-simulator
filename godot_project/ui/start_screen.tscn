@@ -85,13 +85,20 @@ theme_override_constants/separation = 10
 [node name="BtnContinue" type="Button" parent="CanvasLayer/RootControl/MarginContainer/VBox/ButtonsContainer"]
 layout_mode = 2
 focus_neighbor_top = NodePath("../BtnQuit")
-focus_neighbor_bottom = NodePath("../BtnRespawn")
+focus_neighbor_bottom = NodePath("../BtnMinigames")
 text = "Continuar"
+alignment = 0
+
+[node name="BtnMinigames" type="Button" parent="CanvasLayer/RootControl/MarginContainer/VBox/ButtonsContainer"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../BtnContinue")
+focus_neighbor_bottom = NodePath("../BtnRespawn")
+text = "Minijuegos"
 alignment = 0
 
 [node name="BtnRespawn" type="Button" parent="CanvasLayer/RootControl/MarginContainer/VBox/ButtonsContainer"]
 layout_mode = 2
-focus_neighbor_top = NodePath("../BtnContinue")
+focus_neighbor_top = NodePath("../BtnMinigames")
 focus_neighbor_bottom = NodePath("../BtnQuit")
 text = "Reaparecer"
 alignment = 0
