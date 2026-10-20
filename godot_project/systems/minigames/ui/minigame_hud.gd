@@ -242,7 +242,7 @@ func _on_participant_eliminated(_game_id: int, eliminated_id: int, reason: int) 
 	var tween = create_tween()
 	feed_label.modulate.a = 1.0
 	tween.tween_interval(3.0)
-	tween.tween_property(feed_label, &"modulate:a", 0.0, 0.8)
+	tween.tween_property(feed_label, ^"modulate:a", 0.0, 0.8)
 	tween.tween_callback(func(): feed_label.visible = false)
 
 func _on_upcoming_minigame_notified(_game_id: int, title: String, phase: int, location_name: String) -> void:
@@ -253,7 +253,7 @@ func _on_upcoming_minigame_notified(_game_id: int, title: String, phase: int, lo
 	var tween = create_tween()
 	feed_label.modulate.a = 1.0
 	tween.tween_interval(4.0)
-	tween.tween_property(feed_label, &"modulate:a", 0.0, 0.8)
+	tween.tween_property(feed_label, ^"modulate:a", 0.0, 0.8)
 	tween.tween_callback(func(): feed_label.visible = false)
 
 func _on_minigame_ended(game_id: int, winner_id: int, rankings: Array) -> void:

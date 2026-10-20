@@ -131,3 +131,20 @@ const EXT_PNG: String = ".png"
 const EXT_JSON: String = ".json"
 const EXT_GD: String = ".gd"
 const EXT_TTF: String = ".ttf"
+
+# =============================================================================
+# MODIFICADORES Y REGLAS DE COLISIÓN DE MINIJUEGOS
+# =============================================================================
+const NODE_MINIGAME_COLLISION_DIRECTOR: String = "MinigameCollisionDirector"
+const KEY_COLLISION_OVERRIDES: String = "collision_overrides"
+const KEY_TARGET_LOCATION: String = "target_location"
+const KEY_SHAPE_PATTERNS: String = "shape_patterns"
+const KEY_MODE: String = "mode"
+const KEY_LOW_OBSTACLE_HEIGHT_RATIO: String = "low_obstacle_height_ratio"
+
+const COLLISION_OVERRIDE_MODE_DISABLED: String = "disabled"
+const COLLISION_OVERRIDE_MODE_LOW_OBSTACLE: String = "low_obstacle"
+
+const PATTERN_HERRERIA_PERIMETRAL: String = "*Herreria_Perimetral*"
+const PATTERN_BARANDAL: String = "*Barandal*"
+const PATTERN_RAILING: String = "*Railing*"

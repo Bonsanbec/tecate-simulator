@@ -6,6 +6,8 @@ extends Node
 ## en solitario, retroalimentación háptica/visual y sincronización con el servidor.
 
 const MinigameCatalogClass = preload("res://systems/minigames/minigame_catalog.gd")
+const MinigameCollisionDirectorClass = preload("res://systems/minigames/minigame_collision_director.gd")
+const CitizenEntityClass = preload("res://systems/characters/citizen_entity.gd")
 
 signal summon_received(game_id: int, host_id: int, mode: int, max_players: int)
 signal minigame_started(game_id: int, countdown_seconds: int, participants: Array)
@@ -38,11 +40,14 @@ var _staging_timer: float = 0.0
 var _local_match_timer: float = 0.0
 var _saved_local_position: Vector3 = Vector3.ZERO
 var _saved_local_yaw: float = 0.0
+var _local_practice_rivals: Array[Node3D] = []
 
 func is_in_minigame() -> bool:
 	return current_state in [ClientMinigameState.STAGING, ClientMinigameState.ACTIVE]
 
 func _set_minigame_zones_visible(is_vis: bool) -> void:
+	if not is_inside_tree():
+		return
 	var tree = get_tree()
 	if not tree:
 		return
@@ -64,11 +69,36 @@ func _clear_player_interaction_prompts() -> void:
 
 var network_client: Node = null
 var player: Node = null
+var collision_director: Node = null
+
+func _init() -> void:
+	_init_collision_director()
 
 func _ready() -> void:
 	add_to_group("minigame_manager")
+	_init_collision_director()
 	_resolve_dependencies()
 	_connect_network()
+
+func _init_collision_director() -> void:
+	if not collision_director:
+		collision_director = MinigameCollisionDirectorClass.new()
+		collision_director.name = AppTechnicalStrings.NODE_MINIGAME_COLLISION_DIRECTOR
+		add_child(collision_director)
+
+func _get_world_or_scene_root() -> Node:
+	if get_tree() and get_tree().current_scene:
+		return get_tree().current_scene
+	var p: Node = get_parent()
+	while p and p.get_parent() and (not get_tree() or p.get_parent() != get_tree().root):
+		p = p.get_parent()
+	if p:
+		return p
+	return self
+
+func _exit_tree() -> void:
+	if collision_director:
+		collision_director.restore_all_overrides()
 
 func _resolve_dependencies() -> void:
 	if has_node(network_client_path):
@@ -149,6 +179,8 @@ func _handle_minigame_start(data: PackedByteArray) -> void:
 
 	_set_minigame_zones_visible(false)
 	_clear_player_interaction_prompts()
+	if collision_director:
+		collision_director.apply_overrides_for_game(current_game_id, _get_world_or_scene_root())
 
 	# Verificar si el jugador local está en la lista de participantes
 	var participants = s.get("participants", [])
@@ -179,11 +211,21 @@ func _handle_minigame_action(data: PackedByteArray) -> void:
 	var param_float = act["param_float"]
 	var dir = act["dir"]
 
-	# Si la acción es empujón slapstick (1) y el objetivo somos nosotros
-	if action_type == 1 and target_id == local_entity_id:
-		if player and player.has_method("apply_impact_knockback"):
-			var source_pos = player.global_position - Vector3(dir.x, 0.0, dir.z)
-			player.apply_impact_knockback(source_pos, param_float, dir.y)
+	# Si la acción es empujón slapstick (1)
+	if action_type == 1:
+		if target_id == local_entity_id:
+			if player and player.has_method("apply_impact_knockback"):
+				var source_pos = player.global_position - Vector3(dir.x, 0.0, dir.z)
+				player.apply_impact_knockback(source_pos, param_float, dir.y)
+		else:
+			var tree = get_tree()
+			if tree:
+				var mp_mgr = tree.root.find_child("MultiplayerManager", true, false)
+				if mp_mgr and "active_remote_players" in mp_mgr:
+					var rem_target = mp_mgr.active_remote_players.get(target_id)
+					if rem_target and is_instance_valid(rem_target) and rem_target.has_method("apply_impact_knockback"):
+						var s_pos = rem_target.global_position - Vector3(dir.x, 0.0, dir.z)
+						rem_target.apply_impact_knockback(s_pos, param_float, dir.y)
 
 	minigame_action_received.emit(action_type, target_id, param_float, dir)
 
@@ -205,6 +247,8 @@ func _handle_minigame_end(data: PackedByteArray) -> void:
 	current_state = ClientMinigameState.SUMMARY
 	is_local_match = false
 	_set_minigame_zones_visible(true)
+	if collision_director:
+		collision_director.restore_all_overrides()
 	var winner_id = fin["winner_entity_id"]
 	var rankings = fin.get("rankings", [])
 	print("[MinigameManager] Minijuego FINALIZADO. Ganador: %d. Resultados: %s" % [winner_id, rankings])
@@ -231,10 +275,14 @@ func _handle_minigame_cancel(data: PackedByteArray) -> void:
 	current_game_id = 0
 	is_participating = false
 	_set_minigame_zones_visible(true)
+	if collision_director:
+		collision_director.restore_all_overrides()
 	print("[MinigameManager] Minijuego CANCELADO (motivo=%d)" % c["reason"])
 	minigame_cancelled.emit(c["game_id"], c["reason"])
 
 func _notify_player_reward(coins: int) -> void:
+	if not is_inside_tree():
+		return
 	var tree = get_tree()
 	if not tree:
 		return
@@ -280,6 +328,8 @@ func start_local_game(game_id: int) -> void:
 
 	_set_minigame_zones_visible(false)
 	_clear_player_interaction_prompts()
+	if collision_director:
+		collision_director.apply_overrides_for_game(current_game_id, _get_world_or_scene_root())
 
 	var spawn_pos: Vector3 = g.get("spawn_position", Vector3(-6.6844, 401.80, 2.6878))
 	if player and is_instance_valid(player):
@@ -287,9 +337,12 @@ func start_local_game(game_id: int) -> void:
 			player.stand_up()
 		if "current_vehicle" in player and player.current_vehicle and player.has_method("dismount_vehicle"):
 			player.dismount_vehicle()
-		_saved_local_position = player.global_position
+		_saved_local_position = player.global_position if player.is_inside_tree() else player.position
 		_saved_local_yaw = player.rotation.y
-		player.global_position = spawn_pos
+		if player.is_inside_tree():
+			player.global_position = spawn_pos
+		else:
+			player.position = spawn_pos
 		player.velocity = Vector3.ZERO
 
 	var pid = local_entity_id if local_entity_id != 0 else 1
@@ -300,26 +353,90 @@ func start_local_game(game_id: int) -> void:
 		"spawn_z": spawn_pos.z,
 		"spawn_yaw": 0.0
 	}]
-	print("[MinigameManager] Minijuego iniciado para '%s' (ID=%d)" % [g.get("title", "Minijuego"), game_id])
+	if game_id == 1:
+		_spawn_kiosko_practice_rivals(participants)
+
+	print("[MinigameManager] Minijuego iniciado para '%s' (ID=%d, Participantes=%d)" % [g.get("title", "Minijuego"), game_id, participants.size()])
 	minigame_started.emit(game_id, 3, participants)
 
 func start_local_practice(game_id: int) -> void:
 	start_local_game(game_id)
 
+func _spawn_kiosko_practice_rivals(participants: Array) -> void:
+	_cleanup_practice_rivals()
+	var center = Vector3(-6.6844, 401.80, 2.6878)
+	var spawn_configs = [
+		{"id": 901, "offset": Vector3(1.8, 0.0, 0.5), "name": AppStrings.MINIGAME_1_RIVAL_1},
+		{"id": 902, "offset": Vector3(-1.8, 0.0, -0.5), "name": AppStrings.MINIGAME_1_RIVAL_2}
+	]
+	for cfg in spawn_configs:
+		var rival = CitizenEntityClass.new()
+		rival.setup(cfg["id"], true, cfg["name"])
+		add_child(rival)
+		var r_pos = center + cfg["offset"]
+		if rival.is_inside_tree():
+			rival.global_position = r_pos
+			rival.look_at(Vector3(center.x, r_pos.y, center.z), Vector3.UP)
+		else:
+			rival.position = r_pos
+		_local_practice_rivals.append(rival)
+		participants.append({
+			"entity_id": cfg["id"],
+			"name": cfg["name"],
+			"spawn_x": r_pos.x,
+			"spawn_y": r_pos.y,
+			"spawn_z": r_pos.z,
+			"spawn_yaw": rival.rotation_degrees.y
+		})
+
+func _cleanup_practice_rivals() -> void:
+	for r in _local_practice_rivals:
+		if is_instance_valid(r):
+			r.queue_free()
+	_local_practice_rivals.clear()
+
 func _process_local_game(delta: float) -> void:
 	_local_match_timer -= delta
 
-	# En Mi Kiosko (ID=1), comprobar caída fuera de la tarima del Kiosko
-	if current_game_id == 1 and player and is_instance_valid(player):
+	# En Mi Kiosko (ID=1), comprobar caídas fuera de la tarima del Kiosko
+	if current_game_id == 1:
 		var center = Vector3(-6.6844, 401.80, 2.6878)
-		var dx = player.global_position.x - center.x
-		var dz = player.global_position.z - center.z
-		var h_dist = sqrt(dx * dx + dz * dz)
-		if player.global_position.y < 401.10 or h_dist > 5.20:
-			var pid = local_entity_id if local_entity_id != 0 else 1
-			participant_eliminated.emit(1, pid, 1)
-			finish_local_game(false)
-			return
+		# 1. Caída del jugador local
+		if player and is_instance_valid(player):
+			var p_pos = player.global_position if player.is_inside_tree() else player.position
+			var dx = p_pos.x - center.x
+			var dz = p_pos.z - center.z
+			var h_dist = sqrt(dx * dx + dz * dz)
+			if p_pos.y < 401.10 or h_dist > 5.20:
+				var pid = local_entity_id if local_entity_id != 0 else 1
+				participant_eliminated.emit(1, pid, 1)
+				finish_local_game(false)
+				return
+
+		# 2. Caída de rivales de práctica
+		for i in range(_local_practice_rivals.size() - 1, -1, -1):
+			var rival = _local_practice_rivals[i]
+			if is_instance_valid(rival):
+				var r_pos = rival.global_position if rival.is_inside_tree() else rival.position
+				var r_dx = r_pos.x - center.x
+				var r_dz = r_pos.z - center.z
+				var r_dist = sqrt(r_dx * r_dx + r_dz * r_dz)
+				if r_pos.y < 401.10 or r_dist > 5.20:
+					var r_id = rival.entity_id if ("entity_id" in rival) else 901
+					participant_eliminated.emit(1, r_id, 1)
+					rival.queue_free()
+					_local_practice_rivals.remove_at(i)
+
+		# 3. Si todos los contrincantes fueron arrojados, victoria
+		if not _local_practice_rivals.is_empty():
+			var all_gone = true
+			for r in _local_practice_rivals:
+				if is_instance_valid(r):
+					all_gone = false
+					break
+			if all_gone:
+				finish_local_game(true)
+				return
 
 	if _local_match_timer <= 0.0:
 		finish_local_game(true)
@@ -335,9 +452,15 @@ func finish_local_game(won: bool = true) -> void:
 	is_participating = false
 	current_state = ClientMinigameState.SUMMARY
 	_set_minigame_zones_visible(true)
+	if collision_director:
+		collision_director.restore_all_overrides()
+	_cleanup_practice_rivals()
 
 	if player and is_instance_valid(player):
-		player.global_position = _saved_local_position
+		if player.is_inside_tree():
+			player.global_position = _saved_local_position
+		else:
+			player.position = _saved_local_position
 		player.rotation.y = _saved_local_yaw
 		player.velocity = Vector3.ZERO
 
@@ -382,7 +505,21 @@ func send_join_response(game_id: int, accepted: bool) -> void:
 	print("[MinigameManager] Enviado MINIGAME_JOIN para juego %d (aceptado=%s)" % [game_id, accepted])
 
 func send_game_action(action_type: int, target_entity_id: int, param_float: float, dir: Vector3) -> void:
+	if is_local_match:
+		_handle_local_match_action(action_type, target_entity_id, param_float, dir)
+		return
 	if not network_client:
 		return
 	var data = TKTCodec.encode_minigame_action_data(action_type, target_entity_id, param_float, dir)
 	network_client.send_event(TKTCodec.EventCode.MINIGAME_ACTION, data)
+
+func _handle_local_match_action(action_type: int, target_entity_id: int, param_float: float, dir: Vector3) -> void:
+	if action_type == 1: # Empujón / Knockback
+		var force_h = param_float if param_float > 0.0 else 7.5
+		for rival in _local_practice_rivals:
+			if is_instance_valid(rival) and (rival.entity_id == target_entity_id or target_entity_id == 0):
+				var p_pos = player.global_position if (player and is_instance_valid(player)) else (rival.global_position - dir)
+				rival.apply_impact_knockback(p_pos, force_h, 4.2)
+		minigame_action_received.emit(action_type, target_entity_id, force_h, dir)
+	elif action_type == 2: # Bloqueo / Parry
+		minigame_action_received.emit(action_type, local_entity_id, param_float, dir)
