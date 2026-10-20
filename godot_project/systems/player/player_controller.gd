@@ -1219,6 +1219,19 @@ func _process_riding_vehicle(delta: float) -> void:
 		local_pos.x = clampf(local_pos.x, -1.25, 1.25)
 		global_position = current_vehicle.to_global(local_pos)
 
+func _is_in_minigame() -> bool:
+	var tree = get_tree()
+	if not tree:
+		return false
+	var mg_mgr = tree.get_first_node_in_group("minigame_manager")
+	if not mg_mgr and tree.root:
+		mg_mgr = tree.root.find_child("MinigameManager", true, false)
+	if not mg_mgr and get_parent():
+		mg_mgr = get_parent().find_child("MinigameManager", true, false)
+	if mg_mgr and mg_mgr.has_method("is_in_minigame"):
+		return mg_mgr.is_in_minigame()
+	return false
+
 func _scan_nearby_interactive_objects(delta: float) -> void:
 	_vehicle_scan_timer += delta
 	if _vehicle_scan_timer < 0.12:
@@ -1232,6 +1245,11 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 	_nearby_minigame_zone = null
 	_nearby_minigame_location_id = ""
 	_near_exit_door = false
+
+	if _is_in_minigame():
+		if hud:
+			hud.set_interaction_prompt("")
+		return
 
 	var tree = get_tree()
 	if not tree:
@@ -1306,7 +1324,7 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 	# 3b. Escaneo de zonas de minijuegos y ubicación dinámica en Autobús El Hongo
 	var best_mg_dist_sq := INF
 	for mz in tree.get_nodes_in_group("minigame_zones"):
-		if mz is Node3D and mz.is_inside_tree():
+		if mz is Node3D and mz.is_inside_tree() and mz.visible:
 			var inside := false
 			if mz.has_method("is_point_inside"):
 				inside = mz.is_point_inside(my_pos)

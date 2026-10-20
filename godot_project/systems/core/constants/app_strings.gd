@@ -20,7 +20,7 @@ extends RefCounted
 # =============================================================================
 const APP_NAME: String = "Tecate: Pueblo Mágico y Social"
 const APP_SHORT_NAME: String = "Tecate Simulator"
-const APP_TITLE_TECATE: String = "TECATE"
+const APP_TITLE_TECATE: String = "Tecate"
 const APP_SUBTITLE: String = "Pueblo Mágico y Social"
 const APP_VERSION_LABEL: String = "Versión"
 const BRAND_PUEBLO_MAGICO: String = "Pueblo Mágico"
@@ -159,6 +159,7 @@ static func prompt_vehicle_full(vehicle_name: String) -> String:
 	return "%s lleno" % vehicle_name
 
 # =============================================================================
+# =============================================================================
 # MENÚ DE MINIJUEGOS Y RETOS (Sin mayúsculas sostenidas ni barras)
 # =============================================================================
 const MINIGAMES_HEADER_TITLE: String = "Minijuegos de Tecate"
@@ -174,13 +175,69 @@ const MINIGAMES_BADGE_ONE_VS_ALL: String = "Uno contra todos"
 const MINIGAMES_BADGE_DUEL: String = "Duelo individual"
 
 const MINIGAMES_BTN_PLAY: String = "Jugar"
+const MINIGAMES_BTN_TEST_LOCATION: String = "Probar ubicación"
 const MINIGAMES_BTN_TELEPORT: String = "Ir a la ubicación"
+const MINIGAMES_BTN_CLOSE: String = "Cerrar menú"
 const MINIGAMES_CLEAR_FILTER: String = "Mostrar todos los juegos"
 const MINIGAMES_STATUS_READY: String = "Listo para iniciar."
+const MINIGAMES_STATUS_PLAYABLE: String = "Disponible"
 const MINIGAMES_STATUS_PLAYING: String = "En curso..."
 const MINIGAMES_STATUS_FINISHED: String = "Juego concluido."
 const MINIGAMES_SECTION_RULES: String = "Reglas del juego:"
 const MINIGAMES_SECTION_CONTROLS: String = "Controles:"
+const MINIGAMES_ELIM_DEFAULT: String = "ha sido eliminado"
+const MINIGAMES_ELIM_FALL: String = "ha caído fuera de la tarima"
+const MINIGAMES_ELIM_BALL: String = "ha recibido el impacto de una pelota"
+const MINIGAMES_ELIM_TAG: String = "portaba la marca al finalizar el tiempo"
+
+# Descripciones Literales del Documento Maestro (docs/minigames/master.md)
+const MINIGAME_1_TITLE: String = "Mi Kiosko"
+const MINIGAME_1_SUBTITLE: String = "Batalla campal de empujones y bloqueos en la tarima"
+const MINIGAME_1_DESC: String = "Juego todos contra todos donde a base de empujones y bloqueos los jugadores intentan tirar a los demás por el acceso o la barandilla y ser el último en pie."
+
+const MINIGAME_2_TITLE: String = "Las traes"
+const MINIGAME_2_SUBTITLE: String = "Persecución por el Parque Miguel Hidalgo"
+const MINIGAME_2_DESC: String = "Juego todos contra todos donde, en toda el área construida, los jugadores se persiguen para pasarse la marca. Hay un tiempo límite contrarreloj y pierde quien la porte al finalizar. Quedarse quieto es motivo de descalificación."
+
+const MINIGAME_3_TITLE: String = "Quemados"
+const MINIGAME_3_SUBTITLE: String = "Pelotas de básquetbol con rebote físico"
+const MINIGAME_3_DESC: String = "Juego todos contra todos donde, en toda el área construida, los jugadores lanzan pelotas de básquetbol que rebotan según fuerza e impacto, con tiempo de recarga, y quedan eliminados si alguna pelota los toca, incluso la suya propia. No es posible quedarse quieto."
+
+const MINIGAME_4_TITLE: String = "Escondidas"
+const MINIGAME_4_SUBTITLE: String = "Sigilo urbano y carrera a la base"
+const MINIGAME_4_DESC: String = "Juego uno contra todos donde, en toda el área construida, los jugadores se esconden mientras un jugador cuenta hasta diez mirando hacia una pared u objeto. Al finalizar el conteo, el buscador debe encontrar a los demás y tener línea de visión directa para apuntar sobre ellos, marcarlos y correr a su base de conteo para eliminarlos. Cada jugador escondido puede correr a la base de conteo para salvarse. Ganan quienes no sean descubiertos o el buscador si logra encontrar y eliminar a todos."
+
+const MINIGAME_5_TITLE: String = "Cóbrese"
+const MINIGAME_5_SUBTITLE: String = "Conductor contra pasajeros en autobús urbano"
+const MINIGAME_5_DESC: String = "Juego uno contra todos donde un jugador es elegido como conductor para cobrar el pasaje en un autobús en movimiento. Con combinaciones variadas de monedas y billetes, cada pasajero debe intentar confundir al conductor pagando de menos respecto a la tarifa solicitada. El conductor debe validar la cantidad solo si es igual o mayor a la debida. Pierde el conductor si la recaudación total es inferior a la esperada, y pierde cada pasajero a quien le cobren la tarifa exacta o superior. Existe un contrarreloj para ambas partes donde agotar el tiempo conlleva penalización."
+
+const MINIGAME_6_TITLE: String = "Curiel y los Fotógrafos"
+const MINIGAME_6_SUBTITLE: String = "Cacería fotográfica urbana a contrarreloj"
+const MINIGAME_6_DESC: String = "Juego uno contra todos donde un jugador se coloca frente a Foto Estudio Curiel como jefe y exige mediante el chat a contrarreloj una fotografía que muestre determinado escenario, situación u objeto en el mapa. El jefe califica las fotografías y gana la mejor, o gana el jefe si existe al menos una foto entregada y ninguna resulta satisfactoria. Si nadie entrega fotografías, se declara empate entre los fotógrafos y pierde el jefe."
+
+const MINIGAME_7_TITLE: String = "Zumba"
+const MINIGAME_7_SUBTITLE: String = "Imitación rítmica de gestos frente al Kiosko"
+const MINIGAME_7_DESC: String = "Juego uno contra todos donde un jugador sube al Kiosko y presiona cualquier letra de la A a la Z, provocando cada una un gesto distinto, y los demás deben, de solo ver el gesto, imitarlo. Tras noventa segundos, ganan quienes sigan en ritmo o el instructor en cuanto ya no quede nadie."
+
+const MINIGAME_8_TITLE: String = "Espejito, espejito, ¿quién es el candidato más bonito?"
+const MINIGAME_8_SUBTITLE: String = "Discursos en el Kiosko, coaliciones y votaciones"
+const MINIGAME_8_DESC: String = "Juego todos contra todos donde uno a uno suben al Kiosko a dar un discurso contrarreloj mediante globos de texto y, al finalizar las participaciones, todos deben votar por alguien excepto por uno mismo. Existe la opción de conformar coaliciones durante el tiempo del discurso, lo cual requiere que los integrantes en cada turno seleccionen a sus aliados y coincidan con exactitud al final. También es posible abstenerse de votar. El empate anula la elección y da paso a una segunda vuelta entre los empatados, dejando al resto únicamente como votantes. Es posible elegir no postularse como candidato desde el inicio, siempre que haya al menos dos candidatos y un votante."
+
+const MINIGAME_9_TITLE: String = "Ajedrez en el Parque"
+const MINIGAME_9_SUBTITLE: String = "Partidas clásicas en mesas de concreto"
+const MINIGAME_9_DESC: String = "Duelo individual de ajedrez clásico en las tradicionales mesas de concreto bajo los árboles del Parque Miguel Hidalgo, con piezas tridimensionales sobre el tablero y modo de espectador para los transeúntes."
+
+const MINIGAME_10_TITLE: String = "Kuchumá K.O."
+const MINIGAME_10_SUBTITLE: String = "Combate en plataformas con cámara fija y violencia cómica"
+const MINIGAME_10_DESC: String = "Juego estilo combate en plataforma con múltiples modalidades, ya sea todos contra todos, por equipos, uno contra uno y dos contra dos, en cámara única fija, con repertorio de movimientos rico y diverso según cada personaje, violencia cómica total, contador de daño, diversas ubicaciones como la azotea de BBVA, el Parque Miguel Hidalgo con las calles como límite fuera de juego y vagones del tren, y eliminación por caer fuera del plano visible o por elementos lógicos del entorno como vehículos y trenes a toda velocidad en la vía pública."
+
+const MINIGAME_11_TITLE: String = "Justas"
+const MINIGAME_11_SUBTITLE: String = "Duelo ecuestre a toda velocidad en Avenida Miguel Hidalgo"
+const MINIGAME_11_DESC: String = "A caballo, dos jugadores sobre la Avenida Miguel Hidalgo corren a toda velocidad para ensartar al oponente. Gana quien, combinando velocidad y puntería al corazón, resulte más letal."
+
+const MINIGAME_12_TITLE: String = "Ranch Royale"
+const MINIGAME_12_SUBTITLE: String = "Supervivencia urbana y cierre de calles por obras"
+const MINIGAME_12_DESC: String = "Juego todos contra todos donde, en todo el mapa de Tecate, los jugadores encuentran armas cómicas y se enfrentan con ellas. La zona segura se reduce y desplaza mediante un polígono delimitado por manzanas urbanas cada vez menor. La barrera diegética son las motoconformadoras y cintas de precaución del Gobierno de Tecate cerrando calles por obras públicas. Al inicio, los jugadores descienden desde un avión en trayectoria aérea regional y gana el último habitante en pie."
 
 # =============================================================================
 # RED MULTIJUGADOR Y CONECTIVIDAD CÍVICA
@@ -290,3 +347,57 @@ static func get_cardinal_direction(deg: float) -> String:
 		return CARDINAL_O
 	else:
 		return CARDINAL_NO
+
+## Formatea la etiqueta de fase del minijuego
+static func format_minigame_phase(phase: int) -> String:
+	return "Fase %d" % phase
+
+## Formatea el distintivo de fase previa
+static func format_minigame_phase_preview(phase: int) -> String:
+	return "Fase %d, vista previa" % phase
+
+## Formatea el número de tarjeta en el catálogo
+static func format_minigame_tile_number(game_id: int) -> String:
+	return "%02d" % game_id
+
+## Formatea la duración y recompensa en pesos
+static func format_minigame_duration_reward(seconds: int, pesos: int) -> String:
+	return "%d s, %d pesos" % [seconds, pesos]
+
+## Formatea la cabecera de filtro por ubicación
+static func format_minigame_location_filter(location_name: String) -> String:
+	return "Juegos en %s" % location_name
+
+## Formatea la mención de ubicación en la ficha
+static func format_minigame_location_label(location_name: String) -> String:
+	return "Ubicación en Tecate: %s" % location_name
+
+## Formatea la pestaña de categoría con contador
+static func format_minigame_tab_count(tab_name: String, count: int) -> String:
+	return "%s: %d" % [tab_name, count]
+
+## Formatea el aviso de convocatoria a una reta
+static func format_minigame_summon_notice(game_name: String) -> String:
+	return "Convocatoria: %s" % game_name
+
+## Formatea la notificación de eliminación de un jugador
+static func format_minigame_elimination(player_id: int, reason_text: String) -> String:
+	return "Jugador %d %s." % [player_id, reason_text]
+
+## Formatea el aviso de sede futura programada
+static func format_minigame_upcoming(title: String, location_name: String, phase: int) -> String:
+	return "Sede de %s, %s, fase %d" % [title, location_name, phase]
+
+## Formatea el título del podio de resultados
+static func format_minigame_results(game_title: String) -> String:
+	return "Resultados: %s" % game_title
+
+## Formatea la mención del jugador ganador
+static func format_minigame_winner(winner_id: int) -> String:
+	return "Ganador: Jugador %d" % winner_id
+
+## Formatea una posición individual en la tabla de podio
+static func format_minigame_ranking_entry(rank: int, player_id: int) -> String:
+	return "%d. Jugador %d" % [rank, player_id]
+
+

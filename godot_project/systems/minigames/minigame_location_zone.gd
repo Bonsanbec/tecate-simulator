@@ -123,6 +123,8 @@ func _build_3d_marker() -> void:
 	marker_root.add_child(sub_label_3d)
 
 func _process(delta: float) -> void:
+	if not is_visible_in_tree():
+		return
 	if _follow_target and is_instance_valid(_follow_target):
 		global_position = _follow_target.global_position
 	if marker_root and marker_root.visible:

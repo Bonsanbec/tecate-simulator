@@ -120,8 +120,16 @@ func test_minigame_manager_lifecycle() -> void:
 		"data": summon_bytes
 	}
 	mgr._on_network_event_received(ev_summon)
-	test_assert("MinigameManager procesa MINIGAME_SUMMON y emite señal", summon_flag[0])
+	test_assert("MinigameManager procesa MINIGAME_SUMMON de otro jugador y emite señal", summon_flag[0])
 	test_assert("Estado del cliente pasa a INVITATION_PENDING", mgr.current_state == MinigameManagerClass.ClientMinigameState.INVITATION_PENDING)
+
+	# Probar que el anfitrión que convocó el juego NO recibe su propia convocatoria
+	mgr.current_state = MinigameManagerClass.ClientMinigameState.NONE
+	mgr.local_entity_id = 101
+	summon_flag[0] = false
+	mgr._on_network_event_received(ev_summon)
+	test_assert("Host no recibe señal de invitación para sí mismo", not summon_flag[0])
+	test_assert("Host no pasa a INVITATION_PENDING por su propia convocatoria", mgr.current_state == MinigameManagerClass.ClientMinigameState.NONE)
 
 	var start_flag = [false]
 	mgr.minigame_started.connect(func(_g, _cd, _parts): start_flag[0] = true)
@@ -134,11 +142,14 @@ func test_minigame_manager_lifecycle() -> void:
 	mgr._on_network_event_received(ev_start)
 	test_assert("MinigameManager procesa MINIGAME_START y emite señal", start_flag[0])
 	test_assert("Estado del cliente pasa a STAGING", mgr.current_state == MinigameManagerClass.ClientMinigameState.STAGING)
+	test_assert("is_in_minigame() es true durante STAGING", mgr.is_in_minigame())
 
 	# Simular avance de 3.1s para verificar transición automática STAGING -> ACTIVE
 	mgr._process(3.1)
 	test_assert("Estado del cliente pasa a ACTIVE tras cuenta regresiva", mgr.current_state == MinigameManagerClass.ClientMinigameState.ACTIVE)
+	test_assert("is_in_minigame() es true durante ACTIVE", mgr.is_in_minigame())
 
+	root.remove_child(mgr)
 	mgr.queue_free()
 
 func test_minigame_hud_elements() -> void:
@@ -155,6 +166,7 @@ func test_minigame_hud_elements() -> void:
 	test_assert("Contador de cuenta regresiva existe", hud.countdown_label != null)
 	test_assert("Encabezado de juego existe", hud.header_panel != null)
 	test_assert("Modal de podio existe", hud.podium_panel != null)
+	test_assert("Modo práctica no tiene elemento de texto header_sub", not "header_sub" in hud or hud.get("header_sub") == null)
 
 	# Simular inicio de minijuego para verificar activación de HUD
 	mgr.minigame_started.emit(1, 3, [])
@@ -162,8 +174,10 @@ func test_minigame_hud_elements() -> void:
 	test_assert("Título del encabezado es 'Mi Kiosko'", hud.header_title.text == "Mi Kiosko")
 	test_assert("Cuenta regresiva activa", hud._is_counting_down)
 
-	mgr.queue_free()
+	root.remove_child(hud)
 	hud.queue_free()
+	root.remove_child(mgr)
+	mgr.queue_free()
 
 func test_minigame_catalog() -> void:
 	print("\n--- Prueba 8: Catálogo Maestro de los 12 Minijuegos y 8 Ubicaciones ---")
@@ -203,6 +217,7 @@ func test_minigame_location_zone() -> void:
 	test_assert("Punto fuera del radio (distancia 25 m) es descartado", not zone.is_point_inside(Vector3(25.0, 400.5, 2.6878)))
 	test_assert("get_tooltip_prompt() retorna texto contextual de Kiosko", zone.get_tooltip_prompt().contains("Mi Kiosko"))
 
+	root.remove_child(zone)
 	zone.queue_free()
 
 func test_wii_party_minigame_menu() -> void:
@@ -222,11 +237,11 @@ func test_wii_party_minigame_menu() -> void:
 	# Abrir menú general
 	menu.open_menu()
 	test_assert("open_menu() activa visibilidad e is_open", menu.is_open and menu.visible)
-	test_assert("Juego seleccionado por defecto es #1 (MI KIOSKO)", menu.selected_game_id == 1 and menu.preview_title_label.text == "MI KIOSKO")
+	test_assert("Juego seleccionado por defecto es #1 (Mi Kiosko)", menu.selected_game_id == 1 and menu.preview_title_label.text == "Mi Kiosko")
 
 	# Seleccionar juego #6 (Curiel y los Fotógrafos)
 	menu.select_minigame(6)
-	test_assert("select_minigame(6) actualiza tarjeta de detalle a 'CURIEL Y LOS FOTÓGRAFOS'", menu.selected_game_id == 6 and menu.preview_title_label.text == "CURIEL Y LOS FOTÓGRAFOS")
+	test_assert("select_minigame(6) actualiza tarjeta de detalle a 'Curiel y los Fotógrafos'", menu.selected_game_id == 6 and menu.preview_title_label.text == "Curiel y los Fotógrafos")
 
 	# Filtrar por ubicación 'kiosko'
 	menu.open_menu("kiosko")
@@ -238,30 +253,36 @@ func test_wii_party_minigame_menu() -> void:
 	menu.select_category(MinigameCatalogClass.Category.DUEL_1V1)
 	test_assert("Filtro DUEL_1V1 muestra 2 minijuegos (Ajedrez en el Parque, Justas)", menu.game_tile_buttons.size() == 2)
 
-	# Probar lanzamiento de práctica local desde el botón Jugar con juego #1 (Mi Kiosko)
+	# Probar lanzamiento directo del minijuego desde el botón Jugar con juego #1 (Mi Kiosko)
 	menu.select_minigame(1)
 	menu._on_play_pressed()
-	test_assert("Presionar Jugar cierra el menú Wii Party e inicia sesión de práctica local", not menu.is_open and mgr.current_state == MinigameManagerClass.ClientMinigameState.STAGING)
+	test_assert("Presionar Jugar cierra el menú Wii Party e inicia el minijuego", not menu.is_open and mgr.current_state == MinigameManagerClass.ClientMinigameState.STAGING)
 
-	mgr.finish_local_practice(true)
-	test_assert("finish_local_practice() finaliza la sesión y pasa a SUMMARY", mgr.current_state == MinigameManagerClass.ClientMinigameState.SUMMARY)
+	mgr.finish_local_game(true)
+	test_assert("finish_local_game() finaliza la sesión y pasa a SUMMARY", mgr.current_state == MinigameManagerClass.ClientMinigameState.SUMMARY)
 
+	root.remove_child(menu)
 	menu.queue_free()
+	root.remove_child(mgr)
 	mgr.queue_free()
 
 func test_player_location_tooltips() -> void:
-	print("\n--- Prueba 11: Tooltips Contextuales de Ubicación en PlayerController y Coexistencia con Asientos ---")
+	print("\n--- Prueba 11: Tooltips Contextuales de Ubicación en PlayerController y Aislamiento en Minijuego ---")
 	var zone = MinigameLocationZoneClass.new()
 	zone.location_id = "foto_curiel"
 	zone.radius = 7.0
 	zone.position = Vector3(-48.87, 400.93, -45.17)
 	root.add_child(zone)
 
+	var mgr = MinigameManagerClass.new()
+	mgr.name = "MinigameManager"
+	root.add_child(mgr)
+
 	var player = PlayerController.new()
 	player.position = Vector3(-48.0, 400.93, -45.0)
 	root.add_child(player)
 
-	# Ejecutar escaneo de objetos y zonas interactivas
+	# Ejecutar escaneo de objetos y zonas interactivas fuera de minijuego
 	player._scan_nearby_interactive_objects(0.20)
 	test_assert("PlayerController detecta ubicación 'foto_curiel'", player._nearby_minigame_location_id == "foto_curiel")
 	test_assert("HUD muestra tooltip de Curiel y los Fotógrafos con [Q] y [M]", player.hud._current_interaction_prompt.contains("Curiel y los Fotógrafos") and player.hud._current_interaction_prompt.contains("[Q]"))
@@ -273,10 +294,22 @@ func test_player_location_tooltips() -> void:
 	root.add_child(bench)
 
 	player._scan_nearby_interactive_objects(0.20)
-	test_assert("Coexistencia: HUD conserva '[E] Sentarse en Banca Jardín' y añade el tooltip de minijuego con '[Q]'",
-		player.hud._current_interaction_prompt.contains("[E] Sentarse en Banca Jardín") and player.hud._current_interaction_prompt.contains("[Q]"))
+	test_assert("Coexistencia: HUD conserva 'Sentarse en Banca Jardín' y añade el tooltip de minijuego con '[Q]'",
+		player.hud._current_interaction_prompt.contains("Sentarse en Banca Jardín") and player.hud._current_interaction_prompt.contains("[Q]"))
+
+	# Ahora simular inicio de minijuego: el mapa debe quedar limpio y overlays/tooltips desactivados
+	mgr.start_local_game(1)
+	test_assert("MinigameManager oculta marcadores de zonas durante minijuego", not zone.visible)
+
+	player._scan_nearby_interactive_objects(0.20)
+	test_assert("Durante minijuego activo: HUD no muestra tooltips de ciudad ni de minijuegos", player.hud._current_interaction_prompt.is_empty())
+
+	# Finalizar minijuego y verificar restauración del mapa y marcadores
+	mgr.finish_local_game(true)
+	test_assert("Al terminar minijuego: zonas vuelven a ser visibles", zone.visible)
 
 	bench.queue_free()
 	player.queue_free()
+	mgr.queue_free()
 	zone.queue_free()
 

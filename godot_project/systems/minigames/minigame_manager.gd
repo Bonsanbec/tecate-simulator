@@ -26,13 +26,38 @@ enum ClientMinigameState {
 var current_state: ClientMinigameState = ClientMinigameState.NONE
 var current_game_id: int = 0
 var is_participating: bool = false
-var is_local_practice: bool = false
+var is_local_match: bool = false
+var is_local_practice: bool:
+	get:
+		return is_local_match
+	set(val):
+		is_local_match = val
 var local_entity_id: int = 0
 
 var _staging_timer: float = 0.0
-var _local_practice_timer: float = 0.0
+var _local_match_timer: float = 0.0
 var _saved_local_position: Vector3 = Vector3.ZERO
 var _saved_local_yaw: float = 0.0
+
+func is_in_minigame() -> bool:
+	return current_state in [ClientMinigameState.STAGING, ClientMinigameState.ACTIVE]
+
+func _set_minigame_zones_visible(is_vis: bool) -> void:
+	var tree = get_tree()
+	if not tree:
+		return
+	for mz in tree.get_nodes_in_group("minigame_zones"):
+		if mz is Node3D:
+			mz.visible = is_vis
+
+func _clear_player_interaction_prompts() -> void:
+	if player and is_instance_valid(player):
+		if "_nearby_minigame_zone" in player:
+			player._nearby_minigame_zone = null
+		if "_nearby_minigame_location_id" in player:
+			player._nearby_minigame_location_id = ""
+		if "hud" in player and player.hud and player.hud.has_method("set_interaction_prompt"):
+			player.hud.set_interaction_prompt("")
 
 @export var network_client_path: NodePath = ^"../NetworkClient"
 @export var player_path: NodePath = ^"../Player"
@@ -41,6 +66,7 @@ var network_client: Node = null
 var player: Node = null
 
 func _ready() -> void:
+	add_to_group("minigame_manager")
 	_resolve_dependencies()
 	_connect_network()
 
@@ -74,8 +100,8 @@ func _process(delta: float) -> void:
 			current_state = ClientMinigameState.ACTIVE
 			print("[MinigameManager] Minijuego %d pasó de STAGING a ACTIVE" % current_game_id)
 
-	elif current_state == ClientMinigameState.ACTIVE and is_local_practice:
-		_process_local_practice(delta)
+	elif current_state == ClientMinigameState.ACTIVE and is_local_match:
+		_process_local_game(delta)
 
 func _on_network_event_received(ev: Dictionary) -> void:
 	var code = ev.get("event_code", 0)
@@ -100,6 +126,11 @@ func _handle_minigame_summon(data: PackedByteArray, host_id: int) -> void:
 	if s.is_empty():
 		return
 
+	# Si la convocatoria fue iniciada por el propio jugador local, no auto-mostrársela
+	if host_id != 0 and host_id == local_entity_id:
+		print("[MinigameManager] Convocatoria propia enviada para Minijuego %d (host_id=%d), esperando participantes..." % [s["game_id"], host_id])
+		return
+
 	current_game_id = s["game_id"]
 	current_state = ClientMinigameState.INVITATION_PENDING
 	print("[MinigameManager] Convocatoria recibida para Minijuego %d por jugador %d" % [current_game_id, host_id])
@@ -110,11 +141,14 @@ func _handle_minigame_start(data: PackedByteArray) -> void:
 	if s.is_empty():
 		return
 
-	is_local_practice = false
+	is_local_match = false
 	current_game_id = s["game_id"]
 	current_state = ClientMinigameState.STAGING
 	_staging_timer = float(s.get("countdown_seconds", 3))
 	is_participating = false
+
+	_set_minigame_zones_visible(false)
+	_clear_player_interaction_prompts()
 
 	# Verificar si el jugador local está en la lista de participantes
 	var participants = s.get("participants", [])
@@ -169,7 +203,8 @@ func _handle_minigame_end(data: PackedByteArray) -> void:
 		return
 
 	current_state = ClientMinigameState.SUMMARY
-	is_local_practice = false
+	is_local_match = false
+	_set_minigame_zones_visible(true)
 	var winner_id = fin["winner_entity_id"]
 	var rankings = fin.get("rankings", [])
 	print("[MinigameManager] Minijuego FINALIZADO. Ganador: %d. Resultados: %s" % [winner_id, rankings])
@@ -188,13 +223,14 @@ func _handle_minigame_cancel(data: PackedByteArray) -> void:
 	if c.is_empty():
 		return
 
-	# Si estábamos en práctica local, ignorar cancelación de red por falta de quórum
-	if is_local_practice and current_state in [ClientMinigameState.STAGING, ClientMinigameState.ACTIVE]:
+	# Si estábamos en partida local, ignorar cancelación de red por falta de quórum
+	if is_local_match and current_state in [ClientMinigameState.STAGING, ClientMinigameState.ACTIVE]:
 		return
 
 	current_state = ClientMinigameState.NONE
 	current_game_id = 0
 	is_participating = false
+	_set_minigame_zones_visible(true)
 	print("[MinigameManager] Minijuego CANCELADO (motivo=%d)" % c["reason"])
 	minigame_cancelled.emit(c["game_id"], c["reason"])
 
@@ -210,7 +246,7 @@ func _notify_player_reward(coins: int) -> void:
 		hud.update_player_balance(curr + coins)
 
 # =============================================================================
-# ENVÍO DE ACCIONES AL SERVIDOR Y MODO DE PRÁCTICA LOCAL / SOLITARIO
+# ENVÍO DE ACCIONES AL SERVIDOR Y EJECUCIÓN LOCAL
 # =============================================================================
 
 func start_or_summon_minigame(game_id: int, mode: int = 0, max_players: int = 8, arena_id: int = 1) -> void:
@@ -225,22 +261,25 @@ func start_or_summon_minigame(game_id: int, mode: int = 0, max_players: int = 8,
 	if is_net_connected:
 		send_summon_request(game_id, mode, max_players, arena_id)
 
-	# Si el jugador está offline o jugando solo en el servidor, iniciar sesión de práctica local inmediata
+	# Si el jugador está desconectado o jugando solo en el servidor, iniciar el minijuego de inmediato
 	if not is_net_connected or online_players <= 1:
-		start_local_practice(game_id)
+		start_local_game(game_id)
 
-func start_local_practice(game_id: int) -> void:
+func start_local_game(game_id: int) -> void:
 	_resolve_dependencies()
 	var g = MinigameCatalogClass.get_minigame(game_id)
 	if g.is_empty():
 		return
 
-	is_local_practice = true
+	is_local_match = true
 	is_participating = true
 	current_game_id = game_id
 	current_state = ClientMinigameState.STAGING
 	_staging_timer = 3.0
-	_local_practice_timer = float(g.get("duration_seconds", 60))
+	_local_match_timer = float(g.get("duration_seconds", 60))
+
+	_set_minigame_zones_visible(false)
+	_clear_player_interaction_prompts()
 
 	var spawn_pos: Vector3 = g.get("spawn_position", Vector3(-6.6844, 401.80, 2.6878))
 	if player and is_instance_valid(player):
@@ -261,11 +300,14 @@ func start_local_practice(game_id: int) -> void:
 		"spawn_z": spawn_pos.z,
 		"spawn_yaw": 0.0
 	}]
-	print("[MinigameManager] Sesión de práctica local iniciada para '%s' (ID=%d)" % [g.get("title", "Minijuego"), game_id])
+	print("[MinigameManager] Minijuego iniciado para '%s' (ID=%d)" % [g.get("title", "Minijuego"), game_id])
 	minigame_started.emit(game_id, 3, participants)
 
-func _process_local_practice(delta: float) -> void:
-	_local_practice_timer -= delta
+func start_local_practice(game_id: int) -> void:
+	start_local_game(game_id)
+
+func _process_local_game(delta: float) -> void:
+	_local_match_timer -= delta
 
 	# En Mi Kiosko (ID=1), comprobar caída fuera de la tarima del Kiosko
 	if current_game_id == 1 and player and is_instance_valid(player):
@@ -276,19 +318,23 @@ func _process_local_practice(delta: float) -> void:
 		if player.global_position.y < 401.10 or h_dist > 5.20:
 			var pid = local_entity_id if local_entity_id != 0 else 1
 			participant_eliminated.emit(1, pid, 1)
-			finish_local_practice(false)
+			finish_local_game(false)
 			return
 
-	if _local_practice_timer <= 0.0:
-		finish_local_practice(true)
+	if _local_match_timer <= 0.0:
+		finish_local_game(true)
 
-func finish_local_practice(won: bool = true) -> void:
-	if not is_local_practice:
+func _process_local_practice(delta: float) -> void:
+	_process_local_game(delta)
+
+func finish_local_game(won: bool = true) -> void:
+	if not is_local_match:
 		return
 
-	is_local_practice = false
+	is_local_match = false
 	is_participating = false
 	current_state = ClientMinigameState.SUMMARY
+	_set_minigame_zones_visible(true)
 
 	if player and is_instance_valid(player):
 		player.global_position = _saved_local_position
@@ -304,6 +350,9 @@ func finish_local_practice(won: bool = true) -> void:
 		"coins_rewarded": reward
 	}]
 	minigame_ended.emit(current_game_id, pid if won else 0, rankings)
+
+func finish_local_practice(won: bool = true) -> void:
+	finish_local_game(won)
 
 func notify_upcoming_minigame(game_id: int) -> void:
 	var g = MinigameCatalogClass.get_minigame(game_id)

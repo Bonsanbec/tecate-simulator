@@ -52,6 +52,7 @@ const GROUP_PROPS: String = "props"
 const GROUP_SEATS: String = "seats"
 const GROUP_PUMP_ZONES: String = "pump_zones"
 const GROUP_MINIGAME_ZONES: String = "minigame_zones"
+const GROUP_MINIGAME_MANAGER: String = "minigame_manager"
 const GROUP_BUILDINGS: String = "buildings"
 const GROUP_DESTRUCTIBLE: String = "destructible"
 
@@ -112,6 +113,13 @@ const THEME_STYLE_HOVER: StringName = &"hover"
 const THEME_STYLE_FOCUS: StringName = &"focus"
 const THEME_STYLE_PRESSED: StringName = &"pressed"
 const THEME_STYLE_PANEL: StringName = &"panel"
+const THEME_MARGIN_LEFT: StringName = &"margin_left"
+const THEME_MARGIN_RIGHT: StringName = &"margin_right"
+const THEME_MARGIN_TOP: StringName = &"margin_top"
+const THEME_MARGIN_BOTTOM: StringName = &"margin_bottom"
+const THEME_SEPARATION: StringName = &"separation"
+const THEME_H_SEPARATION: StringName = &"h_separation"
+const THEME_V_SEPARATION: StringName = &"v_separation"
 
 # =============================================================================
 # EXTENSIONES DE ARCHIVO Y SUFIJOS

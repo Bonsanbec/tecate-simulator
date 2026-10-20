@@ -3,10 +3,9 @@ extends Node
 
 ## Capa de Entrada Contextual para Minijuegos.
 ## Captura y reasigna inputs de forma aislada:
-## - [M]: Abre/cierra el Menú de Minijuegos estilo Wii Party.
-## - [Q]: Inicia o abre el selector de minijuegos de la ubicación actual.
+## - [M]: Abre/cierra el Menú de Minijuegos estilo Wii Party (desactivado durante minijuegos).
+## - [Q]: Inicia o abre el selector de minijuegos de la ubicación actual (desactivado durante minijuegos).
 ## - [Y / N]: Acepta o declina convocatorias de reta en red.
-## - [Backspace]: Concluye una sesión de práctica local.
 
 const MinigameCatalogClass = preload("res://systems/minigames/minigame_catalog.gd")
 
@@ -56,7 +55,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventKey and event.pressed and not event.is_echo():
-		# 0. Alternar Menú de Minijuegos Estilo Wii Party con [M]
+		# 0. Si hay un minijuego activo, desactivar apertura de menú [M] y activación de zonas [Q]
+		var in_mg = minigame_manager.is_in_minigame() if minigame_manager.has_method("is_in_minigame") else false
+		if in_mg:
+			if event.keycode == KEY_M or event.keycode == KEY_Q:
+				if get_viewport():
+					get_viewport().set_input_as_handled()
+				return
+
+		# 0a. Alternar Menú de Minijuegos Estilo Wii Party con [M] (solo fuera de minijuegos)
 		if event.keycode == KEY_M:
 			if wii_party_menu and wii_party_menu.has_method("toggle_menu"):
 				var loc_id = _get_player_active_location_id()
@@ -65,19 +72,11 @@ func _unhandled_input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 				return
 
-		# 0b. Acción contextual de ubicación con [Q]
+		# 0b. Acción contextual de ubicación con [Q] (solo fuera de minijuegos)
 		if event.keycode == KEY_Q:
 			var loc_id = _get_player_active_location_id()
 			if not loc_id.is_empty():
 				_trigger_location_minigame(loc_id)
-				if get_viewport():
-					get_viewport().set_input_as_handled()
-				return
-
-		# 0c. Salir de sesión de práctica local con [Backspace]
-		if event.keycode == KEY_BACKSPACE:
-			if "is_local_practice" in minigame_manager and minigame_manager.is_local_practice:
-				minigame_manager.finish_local_practice(true)
 				if get_viewport():
 					get_viewport().set_input_as_handled()
 				return
