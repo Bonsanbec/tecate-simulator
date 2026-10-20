@@ -87,6 +87,13 @@ else
 fi
 
 # ------------------------------------------------------------------------------
+# 0. Verificación de Política de Cadenas (Zero Hardcoded Strings)
+# ------------------------------------------------------------------------------
+echo "🔍 [Auditoría] Ejecutando validación estricta de cadenas de texto (Zero Hardcoded Strings)..."
+python3 scripts/audit_hardcoded_strings.py --scope ui
+echo "✅ Auditoría de cadenas superada con éxito."
+
+# ------------------------------------------------------------------------------
 # 1. Compilación modular con validación de caché local
 # ------------------------------------------------------------------------------
 echo "🔍 [Caché Local] Comprobando integridad de fuentes y artefactos existentes..."

@@ -35,3 +35,10 @@ Siempre que se te solicite crear, modificar, auditar o integrar un modelo 3D, ed
    - Las colisiones físicas deben generarse automáticamente en tiempo de importación a partir de las submallas estructurales del archivo `.glb`.
    - Las submallas decorativas y rótulos tipográficos (`Txt_`, `Texto_`) deben excluirse de colisión para garantizar caminabilidad peatonal fluida y permitir al jugador aproximarse a escasos centímetros de las fachadas y escaparates sin obstáculos invisibles.
 
+9. **Política Obligatoria de Cadenas de Texto y Cero Cadenas Literales (Zero Hardcoded Strings)**:
+   - Toda cadena de texto legible por el usuario, mensaje de interfaz, telemetría urbana o prompt debe provenir exclusivamente de `res://systems/core/constants/app_strings.gd` (`AppStrings`).
+   - Toda constante técnica (rutas de recursos, acciones de `InputMap`, grupos, capas físicas y formatos) debe provenir de `res://systems/core/constants/app_technical_strings.gd` (`AppTechnicalStrings`).
+   - Queda terminantemente prohibido escribir cadenas literales crudas en scripts de runtime dentro de `godot_project/`.
+   - Consulta obligatoria y apego irrestricto a:
+     [`docs/strings.md`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/docs/strings.md) y [`.agents/rules/strings_architecture.md`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/.agents/rules/strings_architecture.md).
+

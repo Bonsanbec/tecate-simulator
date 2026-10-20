@@ -1332,46 +1332,46 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 
 	var base_prompt := ""
 	if is_sitting:
-		base_prompt = "[E] o [Espacio] Levantarse"
+		base_prompt = AppStrings.PROMPT_STAND_SPACE
 		if current_vehicle and current_vehicle.seats.size() > 1:
-			base_prompt += "  |  [Ctrl] Cambiar Asiento"
+			base_prompt += "  |  " + AppStrings.PROMPT_CHANGE_SEAT
 		var bus_on_board = _get_riding_bus()
 		if bus_on_board:
-			base_prompt += "  |  [B / T] Solicitar Parada"
+			base_prompt += "  |  " + AppStrings.PROMPT_REQUEST_STOP
 		elif _nearby_pump_zone and current_vehicle:
-			base_prompt += "  |  [R] Repostar"
+			base_prompt += "  |  " + AppStrings.PROMPT_REFUEL
 	elif current_vehicle != null:
 		if _nearby_seat:
-			var s_name = _nearby_seat.seat_name if "seat_name" in _nearby_seat else "Asiento"
-			base_prompt = "[E] Sentarse en %s" % s_name
+			var s_name = _nearby_seat.seat_name if "seat_name" in _nearby_seat else AppStrings.DEFAULT_SEAT_NAME
+			base_prompt = AppStrings.prompt_sit_in(s_name)
 			var bus_on_board = _get_riding_bus()
 			if bus_on_board:
-				base_prompt += "  |  [B / T] Solicitar Parada"
+				base_prompt += "  |  " + AppStrings.PROMPT_REQUEST_STOP
 		elif _near_exit_door:
 			if current_vehicle.current_speed_kmh > 15.0:
-				base_prompt = "Vehículo en marcha (%.0f km/h)  |  [B / T] Solicitar Parada" % current_vehicle.current_speed_kmh
+				base_prompt = "%s  |  %s" % [AppStrings.prompt_vehicle_in_motion(current_vehicle.current_speed_kmh), AppStrings.PROMPT_REQUEST_STOP]
 			else:
-				base_prompt = "[E] Descender a la calle  |  [B / T] Solicitar Parada"
+				base_prompt = "%s  |  %s" % [AppStrings.PROMPT_DESCEND_STREET, AppStrings.PROMPT_REQUEST_STOP]
 		else:
-			base_prompt = "[B / T] Solicitar Parada"
+			base_prompt = AppStrings.PROMPT_REQUEST_STOP
 	elif _nearby_seat:
-		var s_name = _nearby_seat.seat_name if "seat_name" in _nearby_seat else "Asiento"
-		base_prompt = "[E] Sentarse en %s" % s_name
+		var s_name = _nearby_seat.seat_name if "seat_name" in _nearby_seat else AppStrings.DEFAULT_SEAT_NAME
+		base_prompt = AppStrings.prompt_sit_in(s_name)
 	elif _nearby_vehicle:
 		if _nearby_vehicle.doors.size() > 0 or _nearby_vehicle.vehicle_type == 2:
-			base_prompt = "[E] Abordar %s por la puerta" % _nearby_vehicle.vehicle_name
+			base_prompt = AppStrings.prompt_board_vehicle_door(_nearby_vehicle.vehicle_name)
 		else:
 			var d_seat = _nearby_vehicle.get_driver_seat()
 			if d_seat and not d_seat.is_occupied():
 				_nearby_seat_type = VehicleSeat.SeatType.DRIVER
-				base_prompt = "[E] Conducir %s" % _nearby_vehicle.vehicle_name
+				base_prompt = AppStrings.prompt_drive_vehicle(_nearby_vehicle.vehicle_name)
 			else:
 				var avail_pass = _nearby_vehicle.get_available_passenger_seats()
 				if not avail_pass.is_empty():
 					_nearby_seat_type = VehicleSeat.SeatType.PASSENGER
-					base_prompt = "[E] Abordar como Pasajero en %s" % _nearby_vehicle.vehicle_name
+					base_prompt = AppStrings.prompt_enter_passenger_vehicle(_nearby_vehicle.vehicle_name)
 				else:
-					base_prompt = "%s (Lleno)" % _nearby_vehicle.vehicle_name
+					base_prompt = AppStrings.prompt_vehicle_full(_nearby_vehicle.vehicle_name)
 
 	var mg_prompt := ""
 	if _nearby_minigame_zone and _nearby_minigame_zone.has_method("get_tooltip_prompt"):

@@ -90,20 +90,20 @@ func _ready() -> void:
 	# Localizar al jugador
 	if has_node(player_path):
 		player = get_node(player_path) as CharacterBody3D
-	elif get_parent() and get_parent().has_node("Player"):
-		player = get_parent().get_node("Player") as CharacterBody3D
+	elif get_parent() and get_parent().has_node(AppTechnicalStrings.NODE_PLAYER):
+		player = get_parent().get_node(AppTechnicalStrings.NODE_PLAYER) as CharacterBody3D
 
 	# Localizar cliente de red
 	if has_node(network_client_path):
 		network_client = get_node(network_client_path)
-	elif get_parent() and get_parent().has_node("NetworkClient"):
-		network_client = get_parent().get_node("NetworkClient")
+	elif get_parent() and get_parent().has_node(AppTechnicalStrings.NODE_NETWORK_CLIENT):
+		network_client = get_parent().get_node(AppTechnicalStrings.NODE_NETWORK_CLIENT)
 
 	# Localizar o enlazar AuthService
-	if network_client and "auth_service" in network_client and network_client.auth_service:
+	if network_client and &"auth_service" in network_client and network_client.auth_service:
 		auth_service = network_client.auth_service
 	elif get_parent():
-		auth_service = get_parent().find_child("AuthService", true, false) as AuthService
+		auth_service = get_parent().find_child(AppTechnicalStrings.NODE_AUTH_SERVICE, true, false) as AuthService
 
 	if auth_service:
 		if auth_service.is_loaded:
@@ -152,15 +152,15 @@ func _connect_signals() -> void:
 
 	# Botones de selección de personaje
 	if btn_select_axel:
-		btn_select_axel.pressed.connect(func(): _select_character("axel"))
+		btn_select_axel.pressed.connect(func(): _select_character(AppTechnicalStrings.CHAR_ID_AXEL))
 		_setup_button_hover_events(btn_select_axel)
 
 	if btn_select_eli:
-		btn_select_eli.pressed.connect(func(): _select_character("eli"))
+		btn_select_eli.pressed.connect(func(): _select_character(AppTechnicalStrings.CHAR_ID_ELI))
 		_setup_button_hover_events(btn_select_eli)
 
 	if btn_select_astorga:
-		btn_select_astorga.pressed.connect(func(): _select_character("astorga"))
+		btn_select_astorga.pressed.connect(func(): _select_character(AppTechnicalStrings.CHAR_ID_ASTORGA))
 		_setup_button_hover_events(btn_select_astorga)
 
 	if btn_confirm_selection:
@@ -180,43 +180,60 @@ func _setup_button_hover_events(btn: Button) -> void:
 	btn.focus_exited.connect(_on_button_hover.bind(btn, false))
 
 func _setup_ui_styles() -> void:
-	var din_font = load("res://assets/fonts/DIN_Condensed_Bold.ttf")
+	var din_font = load(AppTechnicalStrings.FONT_DIN_CONDENSED_BOLD)
 
 	# Tipografía y coloreado oficial de letras de Tecate Pueblo Mágico
 	if title_label:
-		if title_label.has_method("set_text"):
-			title_label.text = CharacterCatalogClass.get_colored_title_bbcode("TECATE")
+		if title_label.has_method(AppTechnicalStrings.METHOD_SET_TEXT):
+			title_label.text = CharacterCatalogClass.get_colored_title_bbcode(AppStrings.APP_TITLE_TECATE)
 		if din_font:
 			if title_label is RichTextLabel:
-				title_label.add_theme_font_override("normal_font", din_font)
-			elif title_label.has_method("add_theme_font_override"):
-				title_label.add_theme_font_override("font", din_font)
+				title_label.add_theme_font_override(AppTechnicalStrings.THEME_NORMAL_FONT, din_font)
+			elif title_label.has_method(&"add_theme_font_override"):
+				title_label.add_theme_font_override(AppTechnicalStrings.THEME_FONT, din_font)
+
+	if subtitle_label:
+		subtitle_label.text = AppStrings.APP_SUBTITLE
+		if din_font: subtitle_label.add_theme_font_override(AppTechnicalStrings.THEME_FONT, din_font)
+
+	if char_select_title:
+		char_select_title.text = AppStrings.CHAR_SELECT_TITLE
+		if din_font: char_select_title.add_theme_font_override(AppTechnicalStrings.THEME_FONT, din_font)
+
+	if char_select_subtitle:
+		char_select_subtitle.text = AppStrings.CHAR_SELECT_SUBTITLE
+		if din_font: char_select_subtitle.add_theme_font_override(AppTechnicalStrings.THEME_FONT, din_font)
 
 	if din_font:
-		if subtitle_label: subtitle_label.add_theme_font_override("font", din_font)
-		if char_select_title: char_select_title.add_theme_font_override("font", din_font)
-		if char_select_subtitle: char_select_subtitle.add_theme_font_override("font", din_font)
-		if name_axel_label: name_axel_label.add_theme_font_override("font", din_font)
-		if codename_axel_label: codename_axel_label.add_theme_font_override("font", din_font)
-		if name_eli_label: name_eli_label.add_theme_font_override("font", din_font)
-		if codename_eli_label: codename_eli_label.add_theme_font_override("font", din_font)
-		if name_astorga_label: name_astorga_label.add_theme_font_override("font", din_font)
-		if codename_astorga_label: codename_astorga_label.add_theme_font_override("font", din_font)
+		if name_axel_label: name_axel_label.add_theme_font_override(AppTechnicalStrings.THEME_FONT, din_font)
+		if codename_axel_label: codename_axel_label.add_theme_font_override(AppTechnicalStrings.THEME_FONT, din_font)
+		if name_eli_label: name_eli_label.add_theme_font_override(AppTechnicalStrings.THEME_FONT, din_font)
+		if codename_eli_label: codename_eli_label.add_theme_font_override(AppTechnicalStrings.THEME_FONT, din_font)
+		if name_astorga_label: name_astorga_label.add_theme_font_override(AppTechnicalStrings.THEME_FONT, din_font)
+		if codename_astorga_label: codename_astorga_label.add_theme_font_override(AppTechnicalStrings.THEME_FONT, din_font)
 
-	# Estilos de botones principales
+	# Asignar textos centralizados y estilos a botones principales
+	if btn_continue: btn_continue.text = AppStrings.BTN_CONTINUE
+	if btn_minigames: btn_minigames.text = AppStrings.BTN_MINIGAMES
+	if btn_respawn: btn_respawn.text = AppStrings.BTN_RESPAWN
+	if btn_quit: btn_quit.text = AppStrings.BTN_QUIT
+
 	for btn in [btn_continue, btn_minigames, btn_respawn, btn_quit]:
 		if not btn: continue
-		if din_font: btn.add_theme_font_override("font", din_font)
-		btn.add_theme_font_size_override("font_size", 34)
+		if din_font: btn.add_theme_font_override(AppTechnicalStrings.THEME_FONT, din_font)
+		btn.add_theme_font_size_override(AppTechnicalStrings.THEME_FONT_SIZE, 34)
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		_apply_menu_button_style(btn)
 
-	# Estilos de botones de selección
+	# Asignar textos centralizados y estilos a botones de selección
+	if btn_confirm_selection: btn_confirm_selection.text = AppStrings.BTN_CONFIRM_SELECTION
+	if btn_back_to_main: btn_back_to_main.text = AppStrings.BTN_BACK_TO_MAIN
+
 	for btn in [btn_select_axel, btn_select_eli, btn_select_astorga, btn_confirm_selection, btn_back_to_main]:
 		if not btn: continue
-		if din_font: btn.add_theme_font_override("font", din_font)
-		btn.add_theme_font_size_override("font_size", 24)
+		if din_font: btn.add_theme_font_override(AppTechnicalStrings.THEME_FONT, din_font)
+		btn.add_theme_font_size_override(AppTechnicalStrings.THEME_FONT_SIZE, 24)
 		btn.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		_apply_action_button_style(btn)
@@ -227,21 +244,21 @@ func _setup_ui_styles() -> void:
 	_update_card_styles()
 
 func _apply_menu_button_style(btn: Button) -> void:
-	btn.add_theme_color_override("font_color", Color(0.96, 0.95, 0.92, 1.0))
-	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.78, 0.25, 1.0))
-	btn.add_theme_color_override("font_focus_color", Color(1.0, 0.78, 0.25, 1.0))
-	btn.add_theme_color_override("font_pressed_color", Color(0.85, 0.16, 0.16, 1.0))
-	btn.add_theme_color_override("font_shadow_color", Color(0.04, 0.05, 0.08, 0.85))
-	btn.add_theme_constant_override("shadow_offset_x", 1)
-	btn.add_theme_constant_override("shadow_offset_y", 2)
-	btn.add_theme_constant_override("shadow_outline_size", 3)
+	btn.add_theme_color_override(AppTechnicalStrings.THEME_FONT_COLOR, Color(0.96, 0.95, 0.92, 1.0))
+	btn.add_theme_color_override(AppTechnicalStrings.THEME_FONT_HOVER_COLOR, Color(1.0, 0.78, 0.25, 1.0))
+	btn.add_theme_color_override(AppTechnicalStrings.THEME_FONT_FOCUS_COLOR, Color(1.0, 0.78, 0.25, 1.0))
+	btn.add_theme_color_override(AppTechnicalStrings.THEME_FONT_PRESSED_COLOR, Color(0.85, 0.16, 0.16, 1.0))
+	btn.add_theme_color_override(AppTechnicalStrings.THEME_FONT_SHADOW_COLOR, Color(0.04, 0.05, 0.08, 0.85))
+	btn.add_theme_constant_override(AppTechnicalStrings.THEME_SHADOW_OFFSET_X, 1)
+	btn.add_theme_constant_override(AppTechnicalStrings.THEME_SHADOW_OFFSET_Y, 2)
+	btn.add_theme_constant_override(AppTechnicalStrings.THEME_SHADOW_OUTLINE_SIZE, 3)
 
 	var style_normal = StyleBoxEmpty.new()
 	style_normal.content_margin_left = 6
 	style_normal.content_margin_top = 4
 	style_normal.content_margin_bottom = 4
 	style_normal.content_margin_right = 16
-	btn.add_theme_stylebox_override("normal", style_normal)
+	btn.add_theme_stylebox_override(AppTechnicalStrings.THEME_STYLE_NORMAL, style_normal)
 
 	var style_hover = StyleBoxFlat.new()
 	style_hover.bg_color = Color(0.08, 0.10, 0.13, 0.65)
@@ -255,19 +272,19 @@ func _apply_menu_button_style(btn: Button) -> void:
 	style_hover.content_margin_top = 4
 	style_hover.content_margin_bottom = 4
 	style_hover.content_margin_right = 16
-	btn.add_theme_stylebox_override("hover", style_hover)
-	btn.add_theme_stylebox_override("focus", style_hover)
+	btn.add_theme_stylebox_override(AppTechnicalStrings.THEME_STYLE_HOVER, style_hover)
+	btn.add_theme_stylebox_override(AppTechnicalStrings.THEME_STYLE_FOCUS, style_hover)
 
 	var style_pressed = style_hover.duplicate()
 	style_pressed.bg_color = Color(0.05, 0.07, 0.10, 0.85)
 	style_pressed.border_color = Color(1.0, 0.72, 0.0, 1.0) # Dorado Sol
-	btn.add_theme_stylebox_override("pressed", style_pressed)
+	btn.add_theme_stylebox_override(AppTechnicalStrings.THEME_STYLE_PRESSED, style_pressed)
 
 func _apply_action_button_style(btn: Button) -> void:
-	btn.add_theme_color_override("font_color", Color(0.96, 0.95, 0.92, 1.0))
-	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.85, 0.35, 1.0))
-	btn.add_theme_color_override("font_focus_color", Color(1.0, 0.85, 0.35, 1.0))
-	btn.add_theme_color_override("font_pressed_color", Color(0.85, 0.16, 0.16, 1.0))
+	btn.add_theme_color_override(AppTechnicalStrings.THEME_FONT_COLOR, Color(0.96, 0.95, 0.92, 1.0))
+	btn.add_theme_color_override(AppTechnicalStrings.THEME_FONT_HOVER_COLOR, Color(1.0, 0.85, 0.35, 1.0))
+	btn.add_theme_color_override(AppTechnicalStrings.THEME_FONT_FOCUS_COLOR, Color(1.0, 0.85, 0.35, 1.0))
+	btn.add_theme_color_override(AppTechnicalStrings.THEME_FONT_PRESSED_COLOR, Color(0.85, 0.16, 0.16, 1.0))
 
 	var style_normal = StyleBoxFlat.new()
 	style_normal.bg_color = Color(0.08, 0.10, 0.14, 0.82)
@@ -284,45 +301,45 @@ func _apply_action_button_style(btn: Button) -> void:
 	style_normal.content_margin_right = 16
 	style_normal.content_margin_top = 8
 	style_normal.content_margin_bottom = 8
-	btn.add_theme_stylebox_override("normal", style_normal)
+	btn.add_theme_stylebox_override(AppTechnicalStrings.THEME_STYLE_NORMAL, style_normal)
 
 	var style_hover = style_normal.duplicate()
 	style_hover.bg_color = Color(0.12, 0.15, 0.20, 0.92)
 	style_hover.border_color = Color(1.0, 0.72, 0.0, 1.0) # Dorado Sol
-	btn.add_theme_stylebox_override("hover", style_hover)
-	btn.add_theme_stylebox_override("focus", style_hover)
+	btn.add_theme_stylebox_override(AppTechnicalStrings.THEME_STYLE_HOVER, style_hover)
+	btn.add_theme_stylebox_override(AppTechnicalStrings.THEME_STYLE_FOCUS, style_hover)
 
 	var style_pressed = style_hover.duplicate()
 	style_pressed.bg_color = Color(0.05, 0.07, 0.10, 0.95)
-	btn.add_theme_stylebox_override("pressed", style_pressed)
+	btn.add_theme_stylebox_override(AppTechnicalStrings.THEME_STYLE_PRESSED, style_pressed)
 
 ## Aplica dinámicamente el esquema de acento en todo el UI de acuerdo al personaje activo o previsualizado
 func _apply_dynamic_ui_theme(theme_color: Color) -> void:
-	var accent_line = get_node_or_null("CanvasLayer/RootControl/MarginContainer/VBox/AccentLine") as ColorRect
+	var accent_line = get_node_or_null(^"CanvasLayer/RootControl/MarginContainer/VBox/AccentLine") as ColorRect
 	if accent_line:
 		accent_line.color = theme_color
 
-	var accent_center_line = get_node_or_null("CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/TitleVBox/AccentCenterLine") as ColorRect
+	var accent_center_line = get_node_or_null(^"CanvasLayer/RootControl/CharacterSelectContainer/CenterContainer/SelectionVBox/TitleVBox/AccentCenterLine") as ColorRect
 	if accent_center_line:
 		accent_center_line.color = theme_color
 
 	for btn in [btn_confirm_selection, btn_back_to_main, btn_select_axel, btn_select_eli, btn_select_astorga]:
 		if not btn: continue
-		btn.add_theme_color_override("font_hover_color", theme_color)
-		btn.add_theme_color_override("font_focus_color", theme_color)
-		var norm = btn.get_theme_stylebox("normal")
+		btn.add_theme_color_override(AppTechnicalStrings.THEME_FONT_HOVER_COLOR, theme_color)
+		btn.add_theme_color_override(AppTechnicalStrings.THEME_FONT_FOCUS_COLOR, theme_color)
+		var norm = btn.get_theme_stylebox(AppTechnicalStrings.THEME_STYLE_NORMAL)
 		if norm is StyleBoxFlat:
 			var new_norm = norm.duplicate() as StyleBoxFlat
 			new_norm.border_color = Color(theme_color.r, theme_color.g, theme_color.b, 0.80)
-			btn.add_theme_stylebox_override("normal", new_norm)
+			btn.add_theme_stylebox_override(AppTechnicalStrings.THEME_STYLE_NORMAL, new_norm)
 
 func _update_card_styles() -> void:
-	var axel_color = CharacterCatalogClass.get_character_theme_color("axel")
-	var eli_color = CharacterCatalogClass.get_character_theme_color("eli")
-	var astorga_color = CharacterCatalogClass.get_character_theme_color("astorga")
-	_style_card_panel(card_axel_panel, selected_character_id == "axel", axel_color)
-	_style_card_panel(card_eli_panel, selected_character_id == "eli", eli_color)
-	_style_card_panel(card_astorga_panel, selected_character_id == "astorga", astorga_color)
+	var axel_color = CharacterCatalogClass.get_character_theme_color(AppTechnicalStrings.CHAR_ID_AXEL)
+	var eli_color = CharacterCatalogClass.get_character_theme_color(AppTechnicalStrings.CHAR_ID_ELI)
+	var astorga_color = CharacterCatalogClass.get_character_theme_color(AppTechnicalStrings.CHAR_ID_ASTORGA)
+	_style_card_panel(card_axel_panel, selected_character_id == AppTechnicalStrings.CHAR_ID_AXEL, axel_color)
+	_style_card_panel(card_eli_panel, selected_character_id == AppTechnicalStrings.CHAR_ID_ELI, eli_color)
+	_style_card_panel(card_astorga_panel, selected_character_id == AppTechnicalStrings.CHAR_ID_ASTORGA, astorga_color)
 
 func _style_card_panel(panel: PanelContainer, is_selected: bool, accent_color: Color = Color(1.0, 0.72, 0.0, 1.0)) -> void:
 	if not panel:
@@ -352,7 +369,7 @@ func _style_card_panel(panel: PanelContainer, is_selected: bool, accent_color: C
 		style.shadow_color = Color(0.0, 0.0, 0.0, 0.5)
 		style.shadow_size = 6
 
-	panel.add_theme_stylebox_override("panel", style)
+	panel.add_theme_stylebox_override(AppTechnicalStrings.THEME_STYLE_PANEL, style)
 
 func _on_button_hover(btn: Button, hovered: bool) -> void:
 	if not btn:
@@ -391,7 +408,7 @@ func open_menu(_instant: bool = false) -> void:
 		menu_camera.make_current()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-	if player and player.has_method("set_input_enabled"):
+	if player and player.has_method(AppTechnicalStrings.METHOD_SET_INPUT_ENABLED):
 		player.set_input_enabled(false)
 
 	# Mostrar el menú principal
@@ -422,11 +439,11 @@ func close_menu() -> void:
 	if is_instance_valid(_previous_camera):
 		_previous_camera.make_current()
 	elif player:
-		var player_cam = player.camera if ("camera" in player and player.camera) else player.get_node_or_null("Camera3D")
+		var player_cam = player.camera if (&"camera" in player and player.camera) else player.get_node_or_null(AppTechnicalStrings.NODE_CAMERA_3D)
 		if player_cam and player_cam is Camera3D:
 			player_cam.make_current()
 
-	if player and player.has_method("set_input_enabled"):
+	if player and player.has_method(AppTechnicalStrings.METHOD_SET_INPUT_ENABLED):
 		player.set_input_enabled(true)
 
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -457,12 +474,12 @@ func _on_minigames_pressed() -> void:
 		if selected_character_id.is_empty():
 			selected_character_id = CharacterCatalogClass.get_default_character_id()
 		has_chosen_character = true
-		if player and player.has_method("apply_identity"):
+		if player and player.has_method(AppTechnicalStrings.METHOD_APPLY_IDENTITY):
 			player.apply_identity(selected_character_id)
 	close_menu()
 	var tree = get_tree()
-	var mg_menu = tree.root.find_child("WiiPartyMinigameMenu", true, false) if (tree and tree.root) else null
-	if mg_menu and mg_menu.has_method("open_menu"):
+	var mg_menu = tree.root.find_child(AppTechnicalStrings.NODE_WII_PARTY_MENU, true, false) if (tree and tree.root) else null
+	if mg_menu and mg_menu.has_method(AppTechnicalStrings.METHOD_OPEN_MENU):
 		mg_menu.open_menu()
 
 func _on_respawn_pressed() -> void:
@@ -496,11 +513,11 @@ func _on_confirm_selection_pressed() -> void:
 		auth_service.save_identity_async(auth_service.display_name, selected_character_id)
 
 	# Aplicar identidad al jugador local
-	if player and player.has_method("apply_identity"):
+	if player and player.has_method(AppTechnicalStrings.METHOD_APPLY_IDENTITY):
 		player.apply_identity(selected_character_id)
 
 	# Sincronizar selección con el servidor TKT/1
-	if network_client and network_client.has_method("send_character_select"):
+	if network_client and network_client.has_method(AppTechnicalStrings.METHOD_SEND_CHARACTER_SELECT):
 		network_client.send_character_select(selected_character_id)
 
 	character_selected.emit(selected_character_id)
@@ -509,7 +526,7 @@ func _on_confirm_selection_pressed() -> void:
 	_pending_action = PendingAction.NONE
 
 	if action_to_resolve == PendingAction.RESPAWN:
-		if player and player.has_method("respawn"):
+		if player and player.has_method(AppTechnicalStrings.METHOD_RESPAWN):
 			player.respawn()
 		close_menu()
 		game_respawned.emit()

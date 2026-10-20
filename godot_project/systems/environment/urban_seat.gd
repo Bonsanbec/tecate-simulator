@@ -11,7 +11,7 @@ var occupant: Node3D = null
 @onready var exit_point: Marker3D = get_node_or_null("ExitPoint") as Marker3D
 
 func _ready() -> void:
-	add_to_group("seats")
+	add_to_group(AppTechnicalStrings.GROUP_SEATS)
 
 func is_occupied() -> bool:
 	return occupant != null

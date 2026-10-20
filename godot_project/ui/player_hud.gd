@@ -17,7 +17,7 @@ extends CanvasLayer
 
 const CharacterCatalogClass = preload("res://systems/characters/character_catalog.gd")
 
-var _cached_camera_mode: String = "1P - Vista Subjetiva"
+var _cached_camera_mode: String = AppStrings.CAMERA_MODE_1P
 var _current_interaction_prompt: String = ""
 var _badge_fade_timer: float = 3.0
 var _current_theme_color: Color = Color(0.85, 0.16, 0.16, 1.0) # Rojo Tecate por defecto
@@ -30,27 +30,27 @@ func _ready():
 	_refresh_mode_badge()
 
 func _setup_civic_hud_ui() -> void:
-	var top_left = get_node_or_null("TopLeft")
+	var top_left = get_node_or_null(^"TopLeft")
 	if top_left:
 		var vbox = VBoxContainer.new()
-		vbox.name = "TopLeftVBox"
+		vbox.name = &"TopLeftVBox"
 
 		if network_label and network_label.get_parent() == top_left:
 			top_left.remove_child(network_label)
 			vbox.add_child(network_label)
 
 		var wallet_container = HBoxContainer.new()
-		wallet_container.name = "WalletContainer"
+		wallet_container.name = &"WalletContainer"
 
 		var coin_icon = Label.new()
-		coin_icon.text = "🪙 "
+		coin_icon.text = AppStrings.CURRENCY_COIN_ICON
 		coin_icon.modulate = Color(1.0, 0.85, 0.25, 1.0)
 		wallet_container.add_child(coin_icon)
 
 		wallet_label = Label.new()
-		wallet_label.name = "WalletLabel"
-		wallet_label.text = "50 PESOS"
-		wallet_label.add_theme_font_size_override("font_size", 13)
+		wallet_label.name = &"WalletLabel"
+		wallet_label.text = AppStrings.format_currency_pesos(50)
+		wallet_label.add_theme_font_size_override(AppTechnicalStrings.THEME_FONT_SIZE, 13)
 		wallet_label.modulate = Color(1.0, 0.95, 0.70, 1.0)
 		wallet_container.add_child(wallet_label)
 
@@ -59,7 +59,7 @@ func _setup_civic_hud_ui() -> void:
 
 func update_player_balance(balance_pesos: int) -> void:
 	if wallet_label:
-		wallet_label.text = "%d PESOS" % balance_pesos
+		wallet_label.text = AppStrings.format_currency_pesos(balance_pesos)
 
 ## Aplica dinámicamente el esquema de color firma del personaje elegido al HUD completo
 func apply_character_theme(character_id: String) -> void:
@@ -87,13 +87,13 @@ func _update_hud_theme_styles(theme_color: Color) -> void:
 	style_flat.content_margin_right = 14.0
 	style_flat.content_margin_bottom = 8.0
 
-	for panel_name in ["TopLeft", "TopCompass", "BottomLeft", "BottomRight"]:
+	for panel_name in [^"TopLeft", ^"TopCompass", ^"BottomLeft", ^"BottomRight"]:
 		var panel = get_node_or_null(panel_name) as PanelContainer
 		if panel:
-			panel.add_theme_stylebox_override("panel", style_flat)
+			panel.add_theme_stylebox_override(AppTechnicalStrings.THEME_STYLE_PANEL, style_flat)
 
 	if mode_badge:
-		mode_badge.add_theme_color_override("font_color", theme_color)
+		mode_badge.add_theme_color_override(AppTechnicalStrings.THEME_FONT_COLOR, theme_color)
 
 func set_interaction_prompt(prompt_text: String) -> void:
 	_current_interaction_prompt = prompt_text
@@ -131,17 +131,11 @@ func update_hud(
 		var deg_norm = fposmod(heading_degrees, 360.0)
 		var cardinal = _get_cardinal_direction(deg_norm)
 		var street_hint = _format_street_hint(nearest_street)
-		compass_label.text = "%03d° %s  |  %s" % [int(deg_norm), cardinal, street_hint]
+		compass_label.text = AppStrings.format_compass_street(int(deg_norm), cardinal, street_hint)
 
 	# 2. Actualizar Telemetría Urbana
 	if telemetry_label:
-		var slope_sign = "+" if slope_degrees > 0.5 else ("-" if slope_degrees < -0.5 else "")
-		telemetry_label.text = "VELOCIDAD: %4.1f km/h\nALTITUD:   %5.1f m snm\nPENDIENTE: %s%3.1f°" % [
-			speed_kmh,
-			altitude_meters,
-			slope_sign,
-			abs(slope_degrees)
-		]
+		telemetry_label.text = AppStrings.format_pedestrian_telemetry(speed_kmh, altitude_meters, slope_degrees)
 
 	# 3. Retícula dinámica: Visible en 1P, discreta
 	if reticle:
@@ -163,21 +157,19 @@ func update_vehicle_hud(
 		var deg_norm = fposmod(heading_degrees, 360.0)
 		var cardinal = _get_cardinal_direction(deg_norm)
 		var street_hint = _format_street_hint(nearest_street)
-		compass_label.text = "%03d° %s  |  %s" % [int(deg_norm), cardinal, street_hint]
+		compass_label.text = AppStrings.format_compass_street(int(deg_norm), cardinal, street_hint)
 
 	if telemetry_label:
-		var fuel_str = "∞ (Ruta)" if is_infinite_fuel else ("%3.0f%%" % fuel_pct)
-		var role_str = "CONDUCTOR" if is_driver else "PASAJERO"
-		var slope_sign = "+" if slope_deg > 0.5 else ("-" if slope_deg < -0.5 else "")
-		telemetry_label.text = "[%s - %s]\nVELOCIDAD: %4.1f km/h\nCOMBUSTIBLE: %s\nSUPERFICIE: %s\nPENDIENTE: %s%3.1f°" % [
+		var role_str = AppStrings.VEHICLE_ROLE_DRIVER if is_driver else AppStrings.VEHICLE_ROLE_PASSENGER
+		telemetry_label.text = AppStrings.format_vehicle_telemetry(
 			vehicle_name,
 			role_str,
 			speed_kmh,
-			fuel_str,
+			fuel_pct,
+			is_infinite_fuel,
 			surface_name,
-			slope_sign,
-			abs(slope_deg)
-		]
+			slope_deg
+		)
 
 	if reticle:
 		reticle.visible = false
@@ -194,11 +186,10 @@ func set_perspective_badge(mode_name: String) -> void:
 func _refresh_mode_badge() -> void:
 	if not mode_badge:
 		return
+	mode_badge.text = AppStrings.format_hud_mode_badge(_cached_camera_mode, _current_interaction_prompt)
 	if not _current_interaction_prompt.is_empty():
-		mode_badge.text = "[V / F5] %s   |   %s" % [_cached_camera_mode, _current_interaction_prompt]
 		mode_badge.modulate.a = 1.0
 	else:
-		mode_badge.text = "[V / F5] %s   |   [M] Minijuegos" % _cached_camera_mode
 		if _badge_fade_timer <= 0.0:
 			mode_badge.modulate.a = 0.35
 		else:
@@ -215,27 +206,20 @@ func _process(delta: float) -> void:
 			mode_badge.modulate.a = clampf(_badge_fade_timer * 0.65 + 0.35, 0.35, 1.0)
 
 func _get_cardinal_direction(deg: float) -> String:
-	if deg >= 337.5 or deg < 22.5: return "N"
-	elif deg < 67.5: return "NE"
-	elif deg < 112.5: return "E"
-	elif deg < 157.5: return "SE"
-	elif deg < 202.5: return "S"
-	elif deg < 247.5: return "SW"
-	elif deg < 292.5: return "W"
-	else: return "NW"
+	return AppStrings.get_cardinal_direction(deg)
 
 func _format_street_hint(street_name: String) -> String:
 	if street_name.is_empty():
-		return "Zona Centro • Tecate, Pueblo Mágico"
+		return AppStrings.HINT_CENTRO_DEFAULT
 	return street_name
 
 func _get_landmark_hint(deg: float) -> String:
 	var norm = fposmod(deg, 360.0)
 	if norm >= 45.0 and norm < 135.0:
-		return "Hacia La Rumorosa / Mexicali"
+		return AppStrings.LANDMARK_RUMOROSA
 	elif norm >= 225.0 and norm < 315.0:
-		return "Hacia el Cerro Cuchumá / Tijuana"
+		return AppStrings.LANDMARK_CUCHUMA
 	elif norm >= 135.0 and norm < 225.0:
-		return "Hacia Ensenada / Valle de Guadalupe"
+		return AppStrings.LANDMARK_ENSENADA
 	else:
-		return "Hacia la Frontera / USA"
+		return AppStrings.LANDMARK_FRONTERA

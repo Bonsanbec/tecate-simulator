@@ -53,21 +53,21 @@ func _draw() -> void:
 
 	# Ejes del mundo que queremos visualizar (Godot: X=Este, Y=Arriba, Z=Sur)
 	var axes := [
-		{ "dir": Vector3(1,0,0), "col": COLOR_X, "col_neg": COLOR_X_NEG, "lbl": "X" },
-		{ "dir": Vector3(0,1,0), "col": COLOR_Y, "col_neg": COLOR_Y_NEG, "lbl": "Y" },
-		{ "dir": Vector3(0,0,1), "col": COLOR_Z, "col_neg": COLOR_Z_NEG, "lbl": "Z" },
+		{ &"dir": Vector3(1,0,0), &"col": COLOR_X, &"col_neg": COLOR_X_NEG, &"lbl": AppStrings.AXIS_X },
+		{ &"dir": Vector3(0,1,0), &"col": COLOR_Y, &"col_neg": COLOR_Y_NEG, &"lbl": AppStrings.AXIS_Y },
+		{ &"dir": Vector3(0,0,1), &"col": COLOR_Z, &"col_neg": COLOR_Z_NEG, &"lbl": AppStrings.AXIS_Z },
 	]
 
 	# ── Ordenar por profundidad (Z de cámara) para pintar primero los más lejanos ──
 	# Eje más alejado de la cámara: dot(axis, -cam_fwd) más negativo
 	var cam_fwd := -_basis.z            # Dirección hacia la que apunta la cámara
 	axes.sort_custom(func(a, b):
-		return a["dir"].dot(cam_fwd) < b["dir"].dot(cam_fwd)
+		return a[&"dir"].dot(cam_fwd) < b[&"dir"].dot(cam_fwd)
 	)
 
 	# ── Dibujar cada eje ────────────────────────────────────────────────────
 	for ax in axes:
-		var world_dir: Vector3 = ax["dir"]
+		var world_dir: Vector3 = ax[&"dir"]
 		var neg_dir: Vector3   = -world_dir
 
 		# Proyección 2D: mapear el eje del mundo al plano de pantalla
@@ -77,8 +77,8 @@ func _draw() -> void:
 		# Profundidad del extremo positivo (cuánto apunta hacia la cámara)
 		var depth_pos := world_dir.dot(cam_fwd)
 
-		var col_pos: Color = ax["col"]
-		var col_neg: Color = ax["col_neg"]
+		var col_pos: Color = ax[&"col"]
+		var col_neg: Color = ax[&"col_neg"]
 
 		# ── Eje negativo (semi-transparente) ───────────────────────────────
 		draw_line(center, neg_2d, col_neg, line_width * 0.8)
@@ -98,7 +98,7 @@ func _draw() -> void:
 		draw_string(
 			ThemeDB.fallback_font,
 			label_pos - Vector2(4, -4),
-			ax["lbl"],
+			ax[&"lbl"],
 			HORIZONTAL_ALIGNMENT_LEFT,
 			-1,
 			label_font_size,
