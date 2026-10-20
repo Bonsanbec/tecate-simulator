@@ -74,8 +74,8 @@ const LOCATIONS: Dictionary = {
 		"name": "Mesas del Parque Miguel Hidalgo",
 		"short_name": "Mesas del Parque",
 		"icon": "",
-		"position": Vector3(-28.0, 400.85, -6.0),
-		"radius": 5.5,
+		"position": Vector3(35.3156, 400.80, -3.5622),
+		"radius": 6.0,
 		"arena_id": 2,
 		"primary_game_id": 9,
 		"game_ids": [9],
@@ -168,7 +168,19 @@ const MINIGAMES: Array[Dictionary] = [
 			{"input": "Clic izquierdo o G", "action": "Empujar oponente con retroceso físico"},
 			{"input": "Clic derecho o F", "action": "Bloqueo oportuno reflejante"}
 		],
-		"spawn_position": Vector3(-6.6844, 401.80, 2.6878)
+		"spawn_position": Vector3(-6.6844, 401.80, 2.6878),
+		AppTechnicalStrings.KEY_COLLISION_OVERRIDES: [
+			{
+				AppTechnicalStrings.KEY_TARGET_LOCATION: "kiosko",
+				AppTechnicalStrings.KEY_SHAPE_PATTERNS: [
+					AppTechnicalStrings.PATTERN_HERRERIA_PERIMETRAL,
+					AppTechnicalStrings.PATTERN_BARANDAL,
+					AppTechnicalStrings.PATTERN_RAILING
+				],
+				AppTechnicalStrings.KEY_MODE: AppTechnicalStrings.COLLISION_OVERRIDE_MODE_DISABLED,
+				AppTechnicalStrings.KEY_LOW_OBSTACLE_HEIGHT_RATIO: 0.20
+			}
+		]
 	},
 	{
 		"id": 2,
@@ -374,7 +386,7 @@ const MINIGAMES: Array[Dictionary] = [
 			{"input": "E", "action": "Ocupar asiento en la mesa"},
 			{"input": "Clic izquierdo", "action": "Seleccionar y mover pieza en el tablero"}
 		],
-		"spawn_position": Vector3(-28.0, 400.85, -6.0)
+		"spawn_position": Vector3(35.3156, 400.80, -3.5622)
 	},
 	{
 		"id": 10,

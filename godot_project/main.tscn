@@ -138,10 +138,10 @@ location_id = "parque_explanada"
 radius = 8.0
 
 [node name="Location_Parque_Mesas" type="Node3D" parent="MinigameLocations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.0, 400.3132, -8.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.3156, 400.80, -3.5622)
 script = ExtResource("31_minigame_zone")
 location_id = "parque_mesas"
-radius = 6.5
+radius = 6.0
 
 [node name="Location_Foto_Curiel" type="Node3D" parent="MinigameLocations"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48.8735, 400.9325, -45.1705)
