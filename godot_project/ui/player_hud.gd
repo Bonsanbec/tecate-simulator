@@ -42,11 +42,6 @@ func _setup_civic_hud_ui() -> void:
 		var wallet_container = HBoxContainer.new()
 		wallet_container.name = &"WalletContainer"
 
-		var coin_icon = Label.new()
-		coin_icon.text = AppStrings.CURRENCY_COIN_ICON
-		coin_icon.modulate = Color(1.0, 0.85, 0.25, 1.0)
-		wallet_container.add_child(coin_icon)
-
 		wallet_label = Label.new()
 		wallet_label.name = &"WalletLabel"
 		wallet_label.text = AppStrings.format_currency_pesos(50)

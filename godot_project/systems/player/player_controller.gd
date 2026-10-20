@@ -237,7 +237,7 @@ func _initialize_submodules() -> void:
 		network_client.disconnected_from_server.connect(_on_net_disconnected)
 		network_client.latency_updated.connect(_on_net_latency_updated)
 		if hud:
-			hud.update_network_status("TKT/1: CONECTANDO...", false)
+			hud.update_network_status(AppStrings.NET_STATUS_CONNECTING, false)
 		network_client.start_connection()
 
 func apply_identity(p_id: String) -> void:
@@ -253,12 +253,12 @@ func _initialize_humanoid_rig() -> void:
 		camera_director.setup(self, mesh_body, mesh_head)
 
 func _on_perspective_changed(mode: int) -> void:
-	var mode_name = "1P - Vista Subjetiva"
+	var mode_name = AppStrings.CAMERA_MODE_1P
 	match mode:
 		CameraDirectorClass.PerspectiveMode.THIRD_PERSON:
-			mode_name = "3P - Vista al Hombro"
+			mode_name = AppStrings.CAMERA_MODE_3P_SHOULDER
 		CameraDirectorClass.PerspectiveMode.SECOND_PERSON:
-			mode_name = "2P - Observador Frontal"
+			mode_name = AppStrings.CAMERA_MODE_2P_FRONTAL
 	if hud:
 		hud.set_perspective_badge(mode_name)
 
@@ -266,17 +266,17 @@ func _on_net_connected(sess_id: int, p_id: int) -> void:
 	print("[PlayerController] Red TKT/1 conectada: Sesión=%d, Jugador=%d" % [sess_id, p_id])
 	if hud:
 		var p_count = multiplayer_manager.get_player_count() if multiplayer_manager else 1
-		hud.update_network_status("● EN LÍNEA  |  %s  |  %d Jug." % [network_client.server_host, p_count], true)
+		hud.update_network_status(AppStrings.format_network_status_host(network_client.server_host, p_count), true)
 
 func _on_net_disconnected(reason: String) -> void:
 	print("[PlayerController] Red TKT/1 desconectada: ", reason)
 	if hud:
-		hud.update_network_status("○ FUERA DE LÍNEA", false)
+		hud.update_network_status(AppStrings.NET_STATUS_OFFLINE, false)
 
 func _on_net_latency_updated(ping_ms: float) -> void:
 	if hud and network_client and network_client.state == NetworkClient.ConnectionState.CONNECTED:
 		var p_count = multiplayer_manager.get_player_count() if multiplayer_manager else 1
-		hud.update_network_status("● EN LÍNEA  |  %d ms  |  %d Jug." % [int(ping_ms), p_count], true)
+		hud.update_network_status(AppStrings.format_network_status_ping(int(ping_ms), p_count), true)
 
 func set_input_enabled(enabled: bool) -> void:
 	input_enabled = enabled
@@ -935,13 +935,13 @@ func sit_in_seat(seat: Node) -> bool:
 		var is_drv = current_vehicle_seat.is_driver() if current_vehicle_seat else false
 		network_client.send_vehicle_enter(v_id, seat_idx, is_drv)
 
-	var s_name = seat.seat_name if "seat_name" in seat else "Asiento"
+	var s_name = seat.seat_name if "seat_name" in seat else AppStrings.DEFAULT_SEAT_NAME
 	if hud:
-		var prompt = "[E] o [Espacio] Levantarse"
+		var prompt = AppStrings.PROMPT_STAND
 		if current_vehicle and current_vehicle.seats.size() > 1:
-			prompt += "  |  [Ctrl] Cambiar Asiento"
+			prompt += ", " + AppStrings.PROMPT_CHANGE_SEAT
 		if _get_riding_bus():
-			prompt += "  |  [B / T] Solicitar Parada"
+			prompt += ", " + AppStrings.PROMPT_REQUEST_STOP
 		hud.set_interaction_prompt(prompt)
 	print("[PlayerController] Sentado con éxito en: %s" % s_name)
 	return true
@@ -1097,7 +1097,7 @@ func dismount_vehicle() -> bool:
 	if current_vehicle.current_speed_kmh > 15.0:
 		print("[PlayerController] Vehículo a alta velocidad (%.1f km/h). Use [B / T] para solicitar parada antes de descender." % current_vehicle.current_speed_kmh)
 		if hud:
-			hud.set_interaction_prompt("Vehículo en marcha. [B / T] Solicitar Parada")
+			hud.set_interaction_prompt("%s, %s" % [AppStrings.prompt_vehicle_in_motion(current_vehicle.current_speed_kmh), AppStrings.PROMPT_REQUEST_STOP])
 		return false
 
 	var exit_pos = current_vehicle.get_exterior_exit_position()
@@ -1130,7 +1130,7 @@ func _try_request_bus_stop() -> bool:
 	if bus and bus.has_method("request_stop"):
 		bus.request_stop()
 		if hud:
-			hud.set_interaction_prompt("🔔 Timbre: Parada solicitada para el próximo cruce")
+			hud.set_interaction_prompt(AppStrings.PROMPT_STOP_REQUESTED)
 		print("[PlayerController] Timbre accionado: Parada solicitada en '%s'" % bus.vehicle_name)
 		return true
 	return false
@@ -1334,24 +1334,24 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 	if is_sitting:
 		base_prompt = AppStrings.PROMPT_STAND_SPACE
 		if current_vehicle and current_vehicle.seats.size() > 1:
-			base_prompt += "  |  " + AppStrings.PROMPT_CHANGE_SEAT
+			base_prompt += ", " + AppStrings.PROMPT_CHANGE_SEAT
 		var bus_on_board = _get_riding_bus()
 		if bus_on_board:
-			base_prompt += "  |  " + AppStrings.PROMPT_REQUEST_STOP
+			base_prompt += ", " + AppStrings.PROMPT_REQUEST_STOP
 		elif _nearby_pump_zone and current_vehicle:
-			base_prompt += "  |  " + AppStrings.PROMPT_REFUEL
+			base_prompt += ", " + AppStrings.PROMPT_REFUEL
 	elif current_vehicle != null:
 		if _nearby_seat:
 			var s_name = _nearby_seat.seat_name if "seat_name" in _nearby_seat else AppStrings.DEFAULT_SEAT_NAME
 			base_prompt = AppStrings.prompt_sit_in(s_name)
 			var bus_on_board = _get_riding_bus()
 			if bus_on_board:
-				base_prompt += "  |  " + AppStrings.PROMPT_REQUEST_STOP
+				base_prompt += ", " + AppStrings.PROMPT_REQUEST_STOP
 		elif _near_exit_door:
 			if current_vehicle.current_speed_kmh > 15.0:
-				base_prompt = "%s  |  %s" % [AppStrings.prompt_vehicle_in_motion(current_vehicle.current_speed_kmh), AppStrings.PROMPT_REQUEST_STOP]
+				base_prompt = "%s, %s" % [AppStrings.prompt_vehicle_in_motion(current_vehicle.current_speed_kmh), AppStrings.PROMPT_REQUEST_STOP]
 			else:
-				base_prompt = "%s  |  %s" % [AppStrings.PROMPT_DESCEND_STREET, AppStrings.PROMPT_REQUEST_STOP]
+				base_prompt = "%s, %s" % [AppStrings.PROMPT_DESCEND_STREET, AppStrings.PROMPT_REQUEST_STOP]
 		else:
 			base_prompt = AppStrings.PROMPT_REQUEST_STOP
 	elif _nearby_seat:
@@ -1380,7 +1380,7 @@ func _scan_nearby_interactive_objects(delta: float) -> void:
 		mg_prompt = MinigameCatalogClass.format_location_tooltip(_nearby_minigame_location_id)
 
 	if not base_prompt.is_empty() and not mg_prompt.is_empty():
-		hud.set_interaction_prompt(base_prompt + "  |  " + mg_prompt)
+		hud.set_interaction_prompt(base_prompt + ", " + mg_prompt)
 	elif not base_prompt.is_empty():
 		hud.set_interaction_prompt(base_prompt)
 	else:

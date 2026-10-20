@@ -7,7 +7,13 @@ extends RefCounted
 ## telemetría urbana del HUD, prompts de interacción, identidades cívicas
 ## y métodos estáticos de formateo tipado.
 ##
-## Referencia normativa: docs/strings.md
+## Cumple estrictamente con la normativa docs/strings.md v2.0.0:
+## - Cero mayúsculas sostenidas (ALL CAPS prohibido en etiquetas, roles y badges).
+## - Cero corchetes ([...]) o teclas físicas embebidas en cadenas.
+## - Cero barras inclinadas (/) en textos y referencias geográficas.
+## - Cero símbolos no tipográficos (sin infinito ∞, sin emojis, sin viñetas •).
+## - Cero paréntesis (...) explicativos o redundantes.
+## - Capitalización estricta de oración en español estándar.
 
 # =============================================================================
 # MARCA, SISTEMA Y METADATOS
@@ -41,7 +47,7 @@ const BTN_RETRY: String = "Reintentar"
 # PANTALLA DE INICIO Y SELECCIÓN DE PERSONAJE
 # =============================================================================
 const MENU_TITLE: String = "Tecate Simulator"
-const MENU_SUBTITLE: String = "Simulación Urbana, Social y Multijugador"
+const MENU_SUBTITLE: String = "Simulación urbana, social y multijugador"
 const CHAR_SELECT_TITLE: String = "Selección de personaje"
 const CHAR_SELECT_SUBTITLE: String = "Elige tu identidad cívica para recorrer Tecate"
 
@@ -67,16 +73,16 @@ const CHAR_ASTORGA_GREETING: String = "¿Y mi camarada?"
 # =============================================================================
 # HUD DIEGÉTICO, BRÚJULA Y TELEMETRÍA URBANA
 # =============================================================================
-const HUD_SPEED: String = "VELOCIDAD"
-const HUD_ALTITUDE: String = "ALTITUD"
-const HUD_SLOPE: String = "PENDIENTE"
-const HUD_FUEL: String = "COMBUSTIBLE"
-const HUD_SURFACE: String = "SUPERFICIE"
+const HUD_SPEED: String = "Velocidad"
+const HUD_ALTITUDE: String = "Altitud"
+const HUD_SLOPE: String = "Pendiente"
+const HUD_FUEL: String = "Combustible"
+const HUD_SURFACE: String = "Superficie"
 const HUD_UNIT_KMH: String = "km/h"
 const HUD_UNIT_METERS_MSNM: String = "m snm"
 const HUD_UNIT_PERCENT: String = "%"
 const HUD_UNIT_DEGREES: String = "°"
-const HINT_CENTRO_DEFAULT: String = "Zona Centro - Tecate, Pueblo Mágico"
+const HINT_CENTRO_DEFAULT: String = "Zona Centro, Tecate"
 
 # Puntos Cardinales
 const CARDINAL_N: String = "N"
@@ -88,92 +94,91 @@ const CARDINAL_SO: String = "SO"
 const CARDINAL_O: String = "O"
 const CARDINAL_NO: String = "NO"
 
-# Modos de Perspectiva y Cámara
-const CAMERA_MODE_1P: String = "1P - Vista subjetiva"
-const CAMERA_MODE_3P_CLOSE: String = "3P - Vista cercana"
-const CAMERA_MODE_3P_FAR: String = "3P - Vista lejana"
-const CAMERA_TOGGLE_HINT: String = "[V / F5]"
+# Modos de Perspectiva y Cámara (Sin siglas numéricas 1P/3P ni paréntesis)
+const CAMERA_MODE_1P: String = "Vista subjetiva"
+const CAMERA_MODE_3P_SHOULDER: String = "Vista al hombro"
+const CAMERA_MODE_2P_FRONTAL: String = "Observador frontal"
+const CAMERA_MODE_3P_CLOSE: String = "Vista en tercera persona"
+const CAMERA_MODE_3P_FAR: String = "Vista panorámica"
+const CAMERA_TOGGLE_ACTION: String = "Cambiar cámara"
 
-# Iconos e Identificadores Visuales Diegéticos
-const CURRENCY_COIN_ICON: String = "🪙 "
-
-# Referencias Geográficas y Paisajísticas
-const LANDMARK_RUMOROSA: String = "Hacia La Rumorosa / Mexicali"
-const LANDMARK_CUCHUMA: String = "Hacia el Cerro Cuchumá / Tijuana"
-const LANDMARK_ENSENADA: String = "Hacia Ensenada / Valle de Guadalupe"
-const LANDMARK_FRONTERA: String = "Hacia la Frontera / USA"
+# Referencias Geográficas y Paisajísticas (Sin barras inclinadas '/')
+const LANDMARK_RUMOROSA: String = "Hacia La Rumorosa y Mexicali"
+const LANDMARK_CUCHUMA: String = "Hacia el Cerro Cuchumá y Tijuana"
+const LANDMARK_ENSENADA: String = "Hacia Ensenada y el Valle de Guadalupe"
+const LANDMARK_FRONTERA: String = "Hacia la frontera norte"
 
 # Ejes del Gizmo de Orientación
 const AXIS_X: String = "X"
 const AXIS_Y: String = "Y"
 const AXIS_Z: String = "Z"
 
-# Roles Vehiculares
-const VEHICLE_ROLE_DRIVER: String = "CONDUCTOR"
-const VEHICLE_ROLE_PASSENGER: String = "PASAJERO"
-const VEHICLE_FUEL_INFINITE_ROUTE: String = "∞ (Ruta)"
+# Roles Vehiculares (Sin mayúsculas sostenidas)
+const VEHICLE_ROLE_DRIVER: String = "Conductor"
+const VEHICLE_ROLE_PASSENGER: String = "Pasajero"
+const VEHICLE_FUEL_INFINITE_ROUTE: String = "Ilimitado"
 
 # =============================================================================
-# PROMPTS DE INTERACCIÓN URBANA Y VEHICULAR
+# PROMPTS DE INTERACCIÓN URBANA Y VEHICULAR (Sin corchetes [E], [R], [Ctrl])
 # =============================================================================
-const PROMPT_SIT: String = "[E] Sentarse"
-const PROMPT_STAND: String = "[E] Levantarse"
-const PROMPT_ENTER_BUS: String = "[E] Subir al autobús"
-const PROMPT_EXIT_BUS: String = "[E] Bajar del autobús"
-const PROMPT_DRIVE_VEHICLE: String = "[E] Conducir vehículo"
-const PROMPT_ENTER_PASSENGER: String = "[E] Subir como pasajero"
-const PROMPT_REFUEL_PUMP: String = "[E] Cargar combustible"
-const PROMPT_REFUEL: String = "[R] Repostar"
-const PROMPT_DESCEND_STREET: String = "[E] Descender a la calle"
-const PROMPT_REQUEST_STOP: String = "[B / T] Solicitar parada"
+const PROMPT_SIT: String = "Sentarse"
+const PROMPT_STAND: String = "Levantarse"
+const PROMPT_ENTER_BUS: String = "Subir al autobús"
+const PROMPT_EXIT_BUS: String = "Bajar del autobús"
+const PROMPT_DRIVE_VEHICLE: String = "Conducir vehículo"
+const PROMPT_ENTER_PASSENGER: String = "Subir como pasajero"
+const PROMPT_REFUEL_PUMP: String = "Cargar combustible"
+const PROMPT_REFUEL: String = "Cargar combustible"
+const PROMPT_DESCEND_STREET: String = "Descender a la calle"
+const PROMPT_REQUEST_STOP: String = "Solicitar parada"
 const PROMPT_SPEED_TOO_HIGH: String = "Velocidad muy alta para descender"
-const PROMPT_OPEN_DOOR: String = "[E] Abrir puerta"
-const PROMPT_TALK_CITIZEN: String = "[E] Conversar"
+const PROMPT_OPEN_DOOR: String = "Abrir puerta"
+const PROMPT_TALK_CITIZEN: String = "Conversar"
 
-const PROMPT_STAND_SPACE: String = "[E] o [Espacio] Levantarse"
-const PROMPT_CHANGE_SEAT: String = "[Ctrl] Cambiar asiento"
+const PROMPT_STAND_SPACE: String = "Levantarse"
+const PROMPT_CHANGE_SEAT: String = "Cambiar de asiento"
 const DEFAULT_SEAT_NAME: String = "Asiento"
 
-## Prompts de interacción parametrizados
+## Prompts de interacción parametrizados (Acción semántica pura)
 static func prompt_sit_in(seat_name: String) -> String:
-	return "[E] Sentarse en %s" % seat_name
+	return "Sentarse en %s" % seat_name
 
 static func prompt_board_vehicle_door(vehicle_name: String) -> String:
-	return "[E] Abordar %s por la puerta" % vehicle_name
+	return "Abordar %s por la puerta" % vehicle_name
 
 static func prompt_drive_vehicle(vehicle_name: String) -> String:
-	return "[E] Conducir %s" % vehicle_name
+	return "Conducir %s" % vehicle_name
 
 static func prompt_enter_passenger_vehicle(vehicle_name: String) -> String:
-	return "[E] Subir como pasajero a %s" % vehicle_name
+	return "Subir como pasajero a %s" % vehicle_name
 
 static func prompt_vehicle_in_motion(speed: float) -> String:
-	return "Vehículo en marcha (%.0f km/h)" % speed
+	return "Vehículo en marcha a %.0f km/h" % speed
 
 static func prompt_vehicle_full(vehicle_name: String) -> String:
-	return "%s (Lleno)" % vehicle_name
+	return "%s lleno" % vehicle_name
 
 # =============================================================================
-# MENÚ DE MINIJUEGOS (WII PARTY) Y RETOS
+# MENÚ DE MINIJUEGOS Y RETOS (Sin mayúsculas sostenidas ni barras)
 # =============================================================================
-const MINIGAMES_HEADER_TITLE: String = "MINIJUEGOS DE TECATE"
-const MINIGAMES_HEADER_SUBTITLE: String = "Parque Miguel Hidalgo y Zonas Emblemáticas"
+const MINIGAMES_HEADER_TITLE: String = "Minijuegos de Tecate"
+const MINIGAMES_HEADER_SUBTITLE: String = "Parque Miguel Hidalgo y zonas emblemáticas"
 const MINIGAMES_TAB_ALL: String = "Todos"
-const MINIGAMES_TAB_ALL_VS_ALL: String = "Todos vs. Todos"
-const MINIGAMES_TAB_ONE_VS_ALL: String = "1 vs. Todos"
-const MINIGAMES_TAB_DUEL: String = "Duelo 1 vs. 1"
+const MINIGAMES_TAB_ALL_VS_ALL: String = "Todos contra todos"
+const MINIGAMES_TAB_ONE_VS_ALL: String = "Uno contra todos"
+const MINIGAMES_TAB_DUEL: String = "Duelo individual"
 
-const MINIGAMES_BADGE_PARTY_MODE: String = "MODO FIESTA"
-const MINIGAMES_BADGE_ALL_VS_ALL: String = "TODOS CONTRA TODOS"
-const MINIGAMES_BADGE_ONE_VS_ALL: String = "1 CONTRA TODOS"
-const MINIGAMES_BADGE_DUEL: String = "DUELO 1 VS. 1"
+const MINIGAMES_BADGE_PARTY_MODE: String = "Modo fiesta"
+const MINIGAMES_BADGE_ALL_VS_ALL: String = "Todos contra todos"
+const MINIGAMES_BADGE_ONE_VS_ALL: String = "Uno contra todos"
+const MINIGAMES_BADGE_DUEL: String = "Duelo individual"
 
 const MINIGAMES_BTN_PLAY: String = "Jugar"
 const MINIGAMES_BTN_TELEPORT: String = "Ir a la ubicación"
 const MINIGAMES_CLEAR_FILTER: String = "Mostrar todos los juegos"
 const MINIGAMES_STATUS_READY: String = "Listo para iniciar."
 const MINIGAMES_STATUS_PLAYING: String = "En curso..."
-const MINIGAMES_STATUS_FINISHED: String = "¡Juego concluido!"
+const MINIGAMES_STATUS_FINISHED: String = "Juego concluido."
 const MINIGAMES_SECTION_RULES: String = "Reglas del juego:"
 const MINIGAMES_SECTION_CONTROLS: String = "Controles:"
 
@@ -181,12 +186,14 @@ const MINIGAMES_SECTION_CONTROLS: String = "Controles:"
 # RED MULTIJUGADOR Y CONECTIVIDAD CÍVICA
 # =============================================================================
 const NET_STATUS_ONLINE: String = "En línea"
+const NET_STATUS_OFFLINE: String = "Desconectado"
 const NET_STATUS_CONNECTING: String = "Conectando al servidor..."
 const NET_STATUS_DISCONNECTED: String = "Desconectado"
 const NET_STATUS_RECONNECTING: String = "Reconectando..."
 const NET_STATUS_SYNCING: String = "Sincronizando..."
 const NET_ERROR_GENERIC: String = "Error de conexión con el servidor."
 const NET_ERROR_TIMEOUT: String = "Tiempo de espera agotado al conectar."
+const PROMPT_STOP_REQUESTED: String = "Parada solicitada para el próximo cruce"
 
 # =============================================================================
 # CONDICIONES CLIMÁTICAS
@@ -202,9 +209,17 @@ const WEATHER_STORM: String = "Tormenta"
 # MÉTODOS ESTÁTICOS DE FORMATEO TIPADO
 # =============================================================================
 
-## Formatea el saldo del jugador en moneda local
+## Formatea el estado de red con host y jugadores
+static func format_network_status_host(host: String, player_count: int) -> String:
+	return "En línea, servidor %s, %d jugadores" % [host, player_count]
+
+## Formatea el estado de red con latencia y jugadores
+static func format_network_status_ping(ping_ms: int, player_count: int) -> String:
+	return "En línea, %d ms, %d jugadores" % [ping_ms, player_count]
+
+## Formatea el saldo del jugador en moneda local (minúsculas normativas)
 static func format_currency_pesos(pesos: int) -> String:
-	return "%d PESOS" % pesos
+	return "%d pesos" % pesos
 
 ## Formatea la velocidad con precisión estándar
 static func format_speed(speed_kmh: float) -> String:
@@ -214,20 +229,20 @@ static func format_speed(speed_kmh: float) -> String:
 static func format_altitude(meters: float) -> String:
 	return "%5.1f %s" % [meters, HUD_UNIT_METERS_MSNM]
 
-## Formatea la pendiente topográfica con signo explícito
+## Formatea la pendiente topográfica
 static func format_slope(degrees: float) -> String:
 	var sign_str: String = "+" if degrees > 0.5 else ("-" if degrees < -0.5 else "")
 	return "%s%3.1f%s" % [sign_str, abs(degrees), HUD_UNIT_DEGREES]
 
 ## Formatea el rumbo y calle de la brújula urbana
 static func format_compass_street(heading_deg: int, cardinal: String, street_hint: String) -> String:
-	return "%03d° %s  |  %s" % [heading_deg, cardinal, street_hint]
+	return "%03d° %s, %s" % [heading_deg, cardinal, street_hint]
 
 ## Formatea el indicador de perspectiva y prompt de interacción del HUD
 static func format_hud_mode_badge(camera_mode: String, prompt: String = "") -> String:
 	if prompt.is_empty():
-		return "%s %s   |   [M] %s" % [CAMERA_TOGGLE_HINT, camera_mode, BTN_MINIGAMES]
-	return "%s %s   |   %s" % [CAMERA_TOGGLE_HINT, camera_mode, prompt]
+		return "%s: %s" % [camera_mode, BTN_MINIGAMES]
+	return "%s: %s" % [camera_mode, prompt]
 
 ## Formatea el bloque multilínea de telemetría a pie
 static func format_pedestrian_telemetry(speed_kmh: float, altitude_m: float, slope_deg: float) -> String:
@@ -248,7 +263,7 @@ static func format_vehicle_telemetry(
 	slope_deg: float
 ) -> String:
 	var fuel_str: String = VEHICLE_FUEL_INFINITE_ROUTE if is_infinite_fuel else ("%3.0f%%" % fuel_pct)
-	return "[%s - %s]\n%s: %s\n%s: %s\n%s: %s\n%s: %s" % [
+	return "%s, %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s" % [
 		vehicle_name, role_name,
 		HUD_SPEED, format_speed(speed_kmh),
 		HUD_FUEL, fuel_str,

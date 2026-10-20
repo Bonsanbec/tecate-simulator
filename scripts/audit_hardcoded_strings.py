@@ -98,6 +98,40 @@ def scan_file_for_hardcoded_strings(file_path: str) -> List[Tuple[int, str]]:
 
     return violations
 
+def audit_app_strings_normative(app_strings_path: str) -> List[Tuple[int, str, str]]:
+    violations = []
+    if not os.path.exists(app_strings_path):
+        return violations
+
+    with open(app_strings_path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    for idx, raw_line in enumerate(lines, 1):
+        line = raw_line.strip()
+        if line.startswith("#"):
+            continue
+
+        matches = re.findall(r'\"([^\"]*)\"', line)
+        for s in matches:
+            if "[" in s or "]" in s:
+                violations.append((idx, s, "Prohibición de corchetes ([...]) en textos de usuario"))
+            if "(" in s or ")" in s:
+                violations.append((idx, s, "Prohibición de paréntesis ((...)) en textos o formatos"))
+            if "/" in s and s != "km/h" and not s.endswith("km/h"):
+                violations.append((idx, s, "Prohibición de barras inclinadas (/); use conjunciones 'y' u 'o'"))
+            if "∞" in s:
+                violations.append((idx, s, "Prohibición de símbolo infinito (∞); use 'Ilimitado'"))
+            if any(ord(c) > 0x1F000 for c in s):
+                violations.append((idx, s, "Prohibición de emojis en cadenas de texto"))
+
+            # Detección de mayúsculas sostenidas (ALL CAPS) excepto marca "TECATE" o acrónimos
+            words = re.findall(r'\b[A-ZÁÉÍÓÚÑ]{4,}\b', s)
+            for w in words:
+                if w not in ["TECATE"]:
+                    violations.append((idx, s, f"Prohibición de mayúsculas sostenidas: palabra '{w}'"))
+
+    return violations
+
 def audit_directory(base_dir: str, scope: str = "all", strict: bool = False) -> int:
     total_violations = 0
     scanned_files = 0
@@ -106,6 +140,18 @@ def audit_directory(base_dir: str, scope: str = "all", strict: bool = False) -> 
     print(f" AUDITORÍA DE CADENAS DE TEXTO (ZERO HARDCODED STRINGS)")
     print(f" Directorio base: {base_dir} | Ámbito: {scope}")
     print(f"========================================================")
+
+    # 1. Auditoría normativa estricta sobre AppStrings
+    app_strings_path = os.path.join(base_dir, "systems/core/constants/app_strings.gd")
+    if os.path.exists(app_strings_path):
+        norm_violations = audit_app_strings_normative(app_strings_path)
+        if norm_violations:
+            print(f"\n[VIOLACIÓN NORMATIVA] AppStrings presenta {len(norm_violations)} infracciones de estilo:")
+            for line_num, val, rule in norm_violations:
+                print(f"  • Línea {line_num}: \"{val}\" -> {rule}")
+            total_violations += len(norm_violations)
+        else:
+            print("✓ AppStrings cumple al 100% las reglas normativas (sin slashes, corchetes, paréntesis, ALL CAPS ni emojis).")
 
     for root, dirs, files in os.walk(base_dir):
         # Filtrar directorios exentos
@@ -146,8 +192,8 @@ def audit_directory(base_dir: str, scope: str = "all", strict: bool = False) -> 
         print("✓ Cero cadenas literales no centralizadas. Cumplimiento de política exitoso.")
         return 0
     else:
-        print(f"✗ Se encontraron {total_violations} cadenas literales no autorizadas.")
-        print("  Traslade estas cadenas a AppStrings o AppTechnicalStrings según corresponda.")
+        print(f"✗ Se encontraron {total_violations} infracciones a la política de strings.")
+        print("  Corrija las infracciones para cumplir estrictamente con docs/strings.md.")
         return 1
 
 def main():

@@ -29,6 +29,7 @@ func _run_all_tests() -> void:
 	test_app_technical_strings_integrity()
 	test_app_constants_facade()
 	test_ui_modules_integration()
+	test_strict_normative_prohibitions()
 
 	print("\n========================================================")
 	print(" RESUMEN DE PRUEBAS DE CADENAS DE TEXTO")
@@ -60,7 +61,7 @@ func test_app_strings_integrity() -> void:
 	# Marca y Sistema
 	assert_true(not AppStrings.APP_NAME.is_empty(), "AppStrings.APP_NAME está definido")
 	assert_true(AppStrings.APP_NAME == "Tecate: Pueblo Mágico y Social", "AppStrings.APP_NAME tiene el valor oficial")
-	assert_true(AppStrings.APP_TITLE_TECATE == "TECATE", "AppStrings.APP_TITLE_TECATE es 'TECATE'")
+	assert_true(AppStrings.APP_TITLE_TECATE == "Tecate", "AppStrings.APP_TITLE_TECATE es 'Tecate'")
 	assert_true(AppStrings.APP_SUBTITLE == "Pueblo Mágico y Social", "AppStrings.APP_SUBTITLE es 'Pueblo Mágico y Social'")
 
 	# Navegación y Botones (Sin punto final según Sec 2.1)
@@ -91,9 +92,9 @@ func test_app_strings_integrity() -> void:
 func test_app_strings_formatters() -> void:
 	print("\n--- 2. Validación de Métodos de Formateo de AppStrings ---")
 
-	# Formateo monetario
-	assert_true(AppStrings.format_currency_pesos(50) == "50 PESOS", "format_currency_pesos formatea '50 PESOS'")
-	assert_true(AppStrings.format_currency_pesos(1000) == "1000 PESOS", "format_currency_pesos formatea cantidades mayores")
+	# Formateo monetario en minúsculas normativas
+	assert_true(AppStrings.format_currency_pesos(50) == "50 pesos", "format_currency_pesos formatea '50 pesos' en minúsculas")
+	assert_true(AppStrings.format_currency_pesos(1000) == "1000 pesos", "format_currency_pesos formatea cantidades mayores en minúsculas")
 
 	# Formateo de velocidad y altitud
 	assert_true(AppStrings.format_speed(25.5).ends_with("km/h"), "format_speed incluye unidad km/h")
@@ -113,10 +114,10 @@ func test_app_strings_formatters() -> void:
 	assert_true(AppStrings.get_cardinal_direction(270.0) == "O", "270° corresponde a 'O'")
 	assert_true(AppStrings.get_cardinal_direction(315.0) == "NO", "315° corresponde a 'NO'")
 
-	# Prompts de interacción parametrizados
-	assert_true(AppStrings.prompt_sit_in("Banca Hidalgo") == "[E] Sentarse en Banca Hidalgo", "prompt_sit_in formatea asiento")
-	assert_true(AppStrings.prompt_drive_vehicle("Autobús") == "[E] Conducir Autobús", "prompt_drive_vehicle formatea vehículo")
-	assert_true(AppStrings.prompt_vehicle_full("Coche") == "Coche (Lleno)", "prompt_vehicle_full formatea capacidad")
+	# Prompts de interacción parametrizados (sin corchetes ni paréntesis)
+	assert_true(AppStrings.prompt_sit_in("Banca Hidalgo") == "Sentarse en Banca Hidalgo", "prompt_sit_in formatea sin corchetes")
+	assert_true(AppStrings.prompt_drive_vehicle("Autobús") == "Conducir Autobús", "prompt_drive_vehicle formatea sin corchetes")
+	assert_true(AppStrings.prompt_vehicle_full("Coche") == "Coche lleno", "prompt_vehicle_full formatea sin paréntesis")
 
 # -----------------------------------------------------------------------------
 # 3. Validación de Integridad de AppTechnicalStrings
@@ -183,3 +184,42 @@ func test_ui_modules_integration() -> void:
 	assert_true(hud.wallet_label != null, "Wallet label de PlayerHUD instanciada")
 	assert_true(hud.wallet_label.text == AppStrings.format_currency_pesos(50), "Wallet label inicializada con AppStrings.format_currency_pesos")
 	hud.queue_free()
+
+# -----------------------------------------------------------------------------
+# 6. Validación Normativa Estricta (Zero Slashes, Zero Brackets, Zero Parens, Zero All-Caps)
+# -----------------------------------------------------------------------------
+func test_strict_normative_prohibitions() -> void:
+	print("\n--- 6. Validación Normativa Estricta (Zero Slashes, Zero Brackets, Zero Parens, Zero All-Caps) ---")
+
+	# Verificar constantes de HUD y Roles sin ALL CAPS
+	assert_true(AppStrings.HUD_SPEED == "Velocidad", "HUD_SPEED es 'Velocidad' (no 'VELOCIDAD')")
+	assert_true(AppStrings.HUD_ALTITUDE == "Altitud", "HUD_ALTITUDE es 'Altitud' (no 'ALTITUD')")
+	assert_true(AppStrings.HUD_SLOPE == "Pendiente", "HUD_SLOPE es 'Pendiente' (no 'PENDIENTE')")
+	assert_true(AppStrings.HUD_FUEL == "Combustible", "HUD_FUEL es 'Combustible' (no 'COMBUSTIBLE')")
+	assert_true(AppStrings.VEHICLE_ROLE_DRIVER == "Conductor", "VEHICLE_ROLE_DRIVER es 'Conductor' (no 'CONDUCTOR')")
+	assert_true(AppStrings.VEHICLE_ROLE_PASSENGER == "Pasajero", "VEHICLE_ROLE_PASSENGER es 'Pasajero' (no 'PASAJERO')")
+	assert_true(AppStrings.MINIGAMES_BADGE_PARTY_MODE == "Modo fiesta", "MINIGAMES_BADGE_PARTY_MODE es 'Modo fiesta' (no 'MODO FIESTA')")
+
+	# Prohibición de barras '/' en referencias geográficas (debe usar conjunción 'y')
+	assert_true(!AppStrings.LANDMARK_RUMOROSA.contains("/"), "LANDMARK_RUMOROSA no contiene '/'")
+	assert_true(!AppStrings.LANDMARK_CUCHUMA.contains("/"), "LANDMARK_CUCHUMA no contiene '/'")
+	assert_true(!AppStrings.LANDMARK_ENSENADA.contains("/"), "LANDMARK_ENSENADA no contiene '/'")
+	assert_true(AppStrings.LANDMARK_RUMOROSA == "Hacia La Rumorosa y Mexicali", "LANDMARK_RUMOROSA usa conjunción 'y'")
+	assert_true(AppStrings.LANDMARK_CUCHUMA == "Hacia el Cerro Cuchumá y Tijuana", "LANDMARK_CUCHUMA usa conjunción 'y'")
+
+	# Prohibición de corchetes en prompts
+	assert_true(!AppStrings.PROMPT_SIT.contains("[") and !AppStrings.PROMPT_SIT.contains("]"), "PROMPT_SIT sin corchetes")
+	assert_true(!AppStrings.PROMPT_STAND.contains("[") and !AppStrings.PROMPT_STAND.contains("]"), "PROMPT_STAND sin corchetes")
+	assert_true(!AppStrings.PROMPT_DRIVE_VEHICLE.contains("[") and !AppStrings.PROMPT_DRIVE_VEHICLE.contains("]"), "PROMPT_DRIVE_VEHICLE sin corchetes")
+
+	# Prohibición de símbolos de infinito y emojis
+	assert_true(!AppStrings.VEHICLE_FUEL_INFINITE_ROUTE.contains("∞"), "VEHICLE_FUEL_INFINITE_ROUTE no contiene símbolo infinito '∞'")
+	assert_true(AppStrings.VEHICLE_FUEL_INFINITE_ROUTE == "Ilimitado", "VEHICLE_FUEL_INFINITE_ROUTE es 'Ilimitado'")
+
+	# Prohibición de paréntesis en telemetría vehicular
+	var veh_telemetry = AppStrings.format_vehicle_telemetry("Autobús", "Conductor", 40.0, 80.0, false, "Asfalto", 2.0)
+	assert_true(!veh_telemetry.contains("(") and !veh_telemetry.contains(")"), "format_vehicle_telemetry no contiene paréntesis")
+
+	# Verificación de formateo de red
+	assert_true(AppStrings.format_network_status_host("127.0.0.1", 4) == "En línea, servidor 127.0.0.1, 4 jugadores", "format_network_status_host formatea limpiamente")
+	assert_true(AppStrings.format_network_status_ping(35, 2) == "En línea, 35 ms, 2 jugadores", "format_network_status_ping formatea limpiamente")

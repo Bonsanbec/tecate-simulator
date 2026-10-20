@@ -5,7 +5,7 @@ extends Node3D
 ##
 ## Presenta una vista cinematográfica orientada hacia el Cerro Cuchumá en el horizonte,
 ## con opciones principales ("Continuar", "Reaparecer", "Salir") y una transición fluida
-## hacia la pantalla cenital de selección de personajes ("Camarada / Axel" y "Diseñador / Eli"),
+## hacia la pantalla cenital de selección de personajes ("Camarada Axel" y "Diseñador Eli"),
 ## posada contemplando la topografía urbana de Tecate desde las alturas.
 
 signal character_selected(character_id: String)
