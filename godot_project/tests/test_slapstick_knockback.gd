@@ -21,6 +21,11 @@ func _init() -> void:
 	_test_citizen_knockback_kinematics()
 	_test_knockback_signal_and_flash()
 	_test_player_slapstick_punch()
+	_test_damage_flash_visual_material()
+	_test_citizen_physics_movement_on_knockback()
+	_test_player_knockback_recovery_and_pop()
+	_test_volumetric_melee_hit()
+	_test_kiosko_local_practice_rivals()
 	_test_vehicle_health_free()
 
 	print("\n========================================================")
@@ -67,6 +72,8 @@ func _test_citizen_knockback_kinematics() -> void:
 	# El vector de retroceso debe empujar hacia -Z (alejándose del atacante)
 	assert_test(victim.velocity.z < -6.5, "Impulso horizontal aleja a la víctima en -Z (Velocidad: %.2f m/s)" % victim.velocity.z)
 	assert_test(is_equal_approx(victim.velocity.y, 4.2), "Salto pop vertical (+Y) impulsa a la víctima hacia arriba (%.2f m/s)" % victim.velocity.y)
+	assert_test(victim._knockback_active_timer > 0.0, "Temporizador de retroceso activo (_knockback_active_timer > 0)")
+	assert_test(victim.floor_snap_length == 0.0, "floor_snap_length se libera a 0.0 para permitir despegue")
 
 	victim.queue_free()
 
@@ -112,8 +119,112 @@ func _test_player_slapstick_punch() -> void:
 
 	player.queue_free()
 
+func _test_damage_flash_visual_material() -> void:
+	print("\n--- 5. Material de Destello Rojo Visible (Mesh Override) ---")
+	var citizen = CitizenEntityClass.new()
+	citizen.setup(104, true, "Peatón Destello")
+	root.add_child(citizen)
+
+	citizen.apply_impact_knockback(Vector3(0, 0, 1), 5.0, 3.0)
+	var flash_ok = (citizen.mesh_body != null and citizen.mesh_body.material_override != null)
+	assert_test(flash_ok, "mesh_body recibe material_override rojo durante destello de daño")
+
+	citizen._restore_mesh_colors()
+	var restored_ok = (citizen.mesh_body != null and citizen.mesh_body.material_override == null)
+	assert_test(restored_ok, "material_override es restaurado fielmente tras expirar destello")
+
+	citizen.queue_free()
+
+func _test_citizen_physics_movement_on_knockback() -> void:
+	print("\n--- 6. Traslación Física Real de Víctima por move_and_slide ---")
+	var victim = CitizenEntityClass.new()
+	victim.setup(105, true, "Víctima Física")
+	root.add_child(victim)
+	victim.position = Vector3(0.0, 10.0, 0.0) # En el aire
+
+	var initial_z = victim.position.z
+	victim.apply_impact_knockback(Vector3(0.0, 10.0, 1.0), 8.0, 4.0)
+
+	# Simular un paso de física
+	victim._physics_process(0.05)
+	assert_test(victim.position.z < initial_z, "La posición Z de la víctima se desplazó físicamente (Z: %.3f -> %.3f)" % [initial_z, victim.position.z])
+
+	victim.queue_free()
+
+func _test_player_knockback_recovery_and_pop() -> void:
+	print("\n--- 7. Retroceso y Preservación de Impulso en PlayerController ---")
+	var player = PlayerControllerClass.new()
+	player.setup(1, false, "Jugador Impactado")
+	root.add_child(player)
+	player.position = Vector3(0.0, 5.0, 0.0)
+
+	player.apply_impact_knockback(Vector3(0.0, 5.0, 2.0), 7.0, 4.2)
+	assert_test(player.floor_snap_length == 0.0, "PlayerController floor_snap_length es 0.0 tras impacto")
+	assert_test(player._knockback_recovery_timer > 0.0, "PlayerController _knockback_recovery_timer activo (~0.40s)")
+	assert_test(player.velocity.y > 4.0, "Velocidad vertical pop (+Y) preservada en PlayerController")
+
+	# Procesar un paso de marcha durante knockback
+	player._process_walking(0.02)
+	assert_test(player.velocity.z < -5.0, "Inercia horizontal de retroceso no es borrada instantáneamente por WASD")
+
+	player.queue_free()
+
+func _test_volumetric_melee_hit() -> void:
+	print("\n--- 8. Impacto Volumétrico (SphereCast Frontal sin Rayo Cero) ---")
+	var player = PlayerControllerClass.new()
+	player.setup(1, false, "Atacante")
+	root.add_child(player)
+	player.position = Vector3(0.0, 0.0, 0.0)
+
+	# Ubicar víctima ligeramente desplazada del centro (donde un rayo delgado de grosor 0 fallaría)
+	var dummy = CitizenEntityClass.new()
+	dummy.setup(106, true, "Dummy Desplazado")
+	root.add_child(dummy)
+	dummy.position = Vector3(0.35, 0.0, -1.8) # 1.8m adelante, 0.35m a la derecha
+
+	var hit_detected = [false]
+	dummy.knockback_received.connect(func(_pos, _fh, _fv):
+		hit_detected[0] = true
+	)
+
+	player.perform_melee_attack()
+	assert_test(hit_detected[0], "SphereCast volumétrico conecta exitosamente con objetivo desplazado lateralmente")
+
+	dummy.queue_free()
+	player.queue_free()
+
+func _test_kiosko_local_practice_rivals() -> void:
+	print("\n--- 9. Rivales de Práctica y Ring-Out en Mi Kiosko ---")
+	var minigame_mgr_script = load("res://systems/minigames/minigame_manager.gd")
+	var mgr = minigame_mgr_script.new()
+	root.add_child(mgr)
+
+	var player = PlayerControllerClass.new()
+	player.setup(1, false, "Jugador Kiosko")
+	root.add_child(player)
+	mgr.player = player
+
+	# Iniciar juego local de Kiosko (ID=1)
+	mgr.start_local_game(1)
+	player.position = Vector3(-6.6844, 401.80, 2.6878)
+	assert_test(mgr._local_practice_rivals.size() == 2, "Mi Kiosko genera 2 contrincantes de práctica en tarima")
+
+	var rival1 = mgr._local_practice_rivals[0]
+	assert_test(is_instance_valid(rival1), "Rival 1 instanciado e insertado en la escena")
+
+	# Simular caída de rival 1 (Ring-Out)
+	rival1.position.y = 400.0
+	mgr._process_local_game(0.05)
+	assert_test(mgr._local_practice_rivals.size() == 1, "Rival expulsado de tarima es eliminado y removido de la partida")
+
+	mgr.finish_local_game(true)
+	assert_test(mgr._local_practice_rivals.is_empty(), "Contrincantes de práctica limpiados tras concluir partida")
+
+	player.queue_free()
+	mgr.queue_free()
+
 func _test_vehicle_health_free() -> void:
-	print("\n--- 5. Vehículo Desacoplado de Barras de Salud ---")
+	print("\n--- 10. Vehículo Desacoplado de Barras de Salud ---")
 	var car = VehicleBaseClass.new()
 	car.vehicle_name = "Auto Sin HP"
 	car.vehicle_type = VehicleBaseClass.VehicleType.CAR

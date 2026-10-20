@@ -24,12 +24,15 @@ const CharacterCatalogClass = preload("res://systems/characters/character_catalo
 # Cinemática Slapstick y Retroceso (Minecraft-style pop & knockback)
 signal knockback_received(source_pos: Vector3, force_h: float, force_v: float)
 var _knockback_flash_timer: float = 0.0
-var _original_albedo_colors: Dictionary = {}
+var _knockback_active_timer: float = 0.0
+var _original_material_overrides: Dictionary = {}
+static var _damage_flash_mat: StandardMaterial3D = null
 
 # Parámetros antropométricos y físicos de Tecate
 @export var mass_kg: float = 75.0
 @export var capsule_radius: float = 0.25
 @export var capsule_height: float = 1.75
+var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity", 9.8)
 const DEFAULT_SNAP_LENGTH: float = 0.30
 
 # Replicación e interpolación de red (para entidades gobernadas por el servidor)
@@ -150,6 +153,8 @@ func apply_impact_knockback(source_pos: Vector3, force_h: float = 6.5, force_v: 
 	velocity.x = dir_h.x * force_h
 	velocity.z = dir_h.z * force_h
 	velocity.y = force_v
+	floor_snap_length = 0.0
+	_knockback_active_timer = 0.55
 
 	_trigger_impact_flash()
 	knockback_received.emit(source_pos, force_h, force_v)
@@ -158,22 +163,29 @@ func _trigger_impact_flash() -> void:
 	_knockback_flash_timer = 0.15
 	_set_damage_flash_color(Color(1.0, 0.35, 0.35, 1.0))
 
-func _set_damage_flash_color(color: Color) -> void:
+func _get_damage_flash_material() -> StandardMaterial3D:
+	if not _damage_flash_mat:
+		_damage_flash_mat = StandardMaterial3D.new()
+		_damage_flash_mat.albedo_color = Color(1.0, 0.28, 0.28, 1.0)
+		_damage_flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+		_damage_flash_mat.emission_enabled = true
+		_damage_flash_mat.emission = Color(0.9, 0.15, 0.15, 1.0)
+		_damage_flash_mat.emission_energy_multiplier = 0.6
+	return _damage_flash_mat
+
+func _set_damage_flash_color(_color: Color = Color(1.0, 0.35, 0.35, 1.0)) -> void:
+	var flash_mat = _get_damage_flash_material()
 	for m in [mesh_body, mesh_head, mesh_props]:
 		if m and is_instance_valid(m):
-			var mat = m.material_override as StandardMaterial3D
-			if mat:
-				if not _original_albedo_colors.has(m):
-					_original_albedo_colors[m] = mat.albedo_color
-				mat.albedo_color = color
+			if not _original_material_overrides.has(m):
+				_original_material_overrides[m] = m.material_override
+			m.material_override = flash_mat
 
 func _restore_mesh_colors() -> void:
-	for m in _original_albedo_colors.keys():
+	for m in _original_material_overrides.keys():
 		if m and is_instance_valid(m):
-			var mat = m.material_override as StandardMaterial3D
-			if mat:
-				mat.albedo_color = _original_albedo_colors[m]
-	_original_albedo_colors.clear()
+			m.material_override = _original_material_overrides[m]
+	_original_material_overrides.clear()
 
 
 func _setup_physics_properties() -> void:
@@ -351,7 +363,37 @@ func _physics_process(delta: float) -> void:
 	if is_locally_controlled:
 		return
 
+	# Si la entidad está bajo el efecto de un retroceso físico slapstick
+	if _knockback_active_timer > 0.0:
+		_knockback_active_timer = maxf(0.0, _knockback_active_timer - delta)
+		if not is_on_floor():
+			velocity.y -= gravity * delta
+			velocity.x = move_toward(velocity.x, 0.0, 3.0 * delta)
+			velocity.z = move_toward(velocity.z, 0.0, 3.0 * delta)
+		else:
+			velocity.x = move_toward(velocity.x, 0.0, 16.0 * delta)
+			velocity.z = move_toward(velocity.z, 0.0, 16.0 * delta)
+			floor_snap_length = DEFAULT_SNAP_LENGTH
+		if is_inside_tree() and get_world_3d():
+			move_and_slide()
+		else:
+			position += velocity * delta
+		_update_procedural_locomotion(delta, velocity)
+		return
+
 	if snapshot_history.is_empty():
+		# Entidad autónoma o maniquí de práctica sin red
+		if not is_on_floor() or velocity.length_squared() > 0.01:
+			if not is_on_floor():
+				velocity.y -= gravity * delta
+			else:
+				velocity.x = move_toward(velocity.x, 0.0, 16.0 * delta)
+				velocity.z = move_toward(velocity.z, 0.0, 16.0 * delta)
+			if is_inside_tree() and get_world_3d():
+				move_and_slide()
+			else:
+				position += velocity * delta
+			_update_procedural_locomotion(delta, velocity)
 		return
 
 	var current_time = float(Time.get_ticks_msec()) / 1000.0

@@ -3,19 +3,26 @@ extends Node
 
 ## Capa de Entrada Contextual para Minijuegos.
 ## Captura y reasigna inputs de forma aislada:
-## - [M]: Abre/cierra el Menú de Minijuegos estilo Wii Party (desactivado durante minijuegos).
-## - [Q]: Inicia o abre el selector de minijuegos de la ubicación actual (desactivado durante minijuegos).
+## - [M]: Abre/cierra el teléfono celular Motorola K1 con la app de Retas (desactivado durante minijuegos).
+## - [Q]: Inicia o abre el selector de actividades de la ubicación actual (desactivado durante minijuegos).
 ## - [Y / N]: Acepta o declina convocatorias de reta en red.
 
 const MinigameCatalogClass = preload("res://systems/minigames/minigame_catalog.gd")
 
 @export var minigame_manager_path: NodePath = ^"../MinigameManager"
-@export var wii_party_menu_path: NodePath = ^"../WiiPartyMinigameMenu"
+@export var phone_menu_path: NodePath = ^"../PhoneMenu"
 @export var player_path: NodePath = ^"../Player"
 
 var minigame_manager: Node = null
-var wii_party_menu: Node = null
+var phone_menu: Node = null
 var player: Node = null
+
+# Compatibilidad con código previo
+var wii_party_menu: Node:
+	get:
+		return phone_menu
+	set(val):
+		phone_menu = val
 
 func _ready() -> void:
 	_resolve_nodes()
@@ -23,13 +30,15 @@ func _ready() -> void:
 func _resolve_nodes() -> void:
 	if has_node(minigame_manager_path):
 		minigame_manager = get_node(minigame_manager_path)
-	elif get_parent() and get_parent().has_node("MinigameManager"):
-		minigame_manager = get_parent().get_node("MinigameManager")
+	elif get_parent() and get_parent().has_node(AppTechnicalStrings.NODE_MINIGAME_MANAGER):
+		minigame_manager = get_parent().get_node(AppTechnicalStrings.NODE_MINIGAME_MANAGER)
 
-	if has_node(wii_party_menu_path):
-		wii_party_menu = get_node(wii_party_menu_path)
+	if has_node(phone_menu_path):
+		phone_menu = get_node(phone_menu_path)
+	elif get_parent() and get_parent().has_node(AppTechnicalStrings.NODE_PHONE_MENU):
+		phone_menu = get_parent().get_node(AppTechnicalStrings.NODE_PHONE_MENU)
 	elif get_parent() and get_parent().has_node("WiiPartyMinigameMenu"):
-		wii_party_menu = get_parent().get_node("WiiPartyMinigameMenu")
+		phone_menu = get_parent().get_node("WiiPartyMinigameMenu")
 
 	if has_node(player_path):
 		player = get_node(player_path)
@@ -41,10 +50,10 @@ func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.is_echo()):
 		return
 
-	# Si el menú Wii Party está abierto, [Escape] o [M] lo cierran
-	if wii_party_menu and "is_open" in wii_party_menu and wii_party_menu.is_open:
+	# Si el teléfono celular está abierto, [Escape] o [M] lo cierran
+	if phone_menu and "is_open" in phone_menu and phone_menu.is_open:
 		if event.keycode == KEY_ESCAPE or event.keycode == KEY_M:
-			wii_party_menu.close_menu()
+			phone_menu.close_menu()
 			if get_viewport():
 				get_viewport().set_input_as_handled()
 			return
@@ -55,7 +64,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventKey and event.pressed and not event.is_echo():
-		# 0. Si hay un minijuego activo, desactivar apertura de menú [M] y activación de zonas [Q]
+		# 0. Si hay un minijuego activo, desactivar apertura de teléfono [M] y activación de zonas [Q]
 		var in_mg = minigame_manager.is_in_minigame() if minigame_manager.has_method("is_in_minigame") else false
 		if in_mg:
 			if event.keycode == KEY_M or event.keycode == KEY_Q:
@@ -63,11 +72,11 @@ func _unhandled_input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 				return
 
-		# 0a. Alternar Menú de Minijuegos Estilo Wii Party con [M] (solo fuera de minijuegos)
+		# 0a. Alternar teléfono móvil Motorola K1 con [M] (solo fuera de minijuegos)
 		if event.keycode == KEY_M:
-			if wii_party_menu and wii_party_menu.has_method("toggle_menu"):
+			if phone_menu and phone_menu.has_method("toggle_menu"):
 				var loc_id = _get_player_active_location_id()
-				wii_party_menu.toggle_menu(loc_id)
+				phone_menu.toggle_menu(loc_id)
 				if get_viewport():
 					get_viewport().set_input_as_handled()
 				return
@@ -119,11 +128,11 @@ func _trigger_location_minigame(location_id: String) -> void:
 	var primary_game = MinigameCatalogClass.get_minigame(primary_id)
 
 	# Si la ubicación tiene un único juego jugable o si el juego principal es de Fase 1 y se presiona [Q]:
-	# Si hay varios juegos en la ubicación (ej. Kiosko o Explanada), abrir el menú Wii Party filtrado
-	# o iniciar el principal si solo hay 1 jugable:
-	if games.size() > 1 and wii_party_menu and wii_party_menu.has_method("open_menu"):
-		wii_party_menu.open_menu(location_id)
-		wii_party_menu.select_minigame(primary_id)
+	# Si hay varias actividades en la ubicación (ej. Kiosko o Explanada), abrir el teléfono móvil filtrado
+	# o iniciar la principal si solo hay 1 disponible:
+	if games.size() > 1 and phone_menu and phone_menu.has_method("open_menu"):
+		phone_menu.open_menu(location_id)
+		phone_menu.select_minigame(primary_id)
 	elif primary_game.get("is_playable", false):
 		minigame_manager.start_or_summon_minigame(
 			primary_id,
@@ -131,14 +140,22 @@ func _trigger_location_minigame(location_id: String) -> void:
 			primary_game.get("max_players", 8),
 			primary_game.get("arena_id", 1)
 		)
-	elif wii_party_menu and wii_party_menu.has_method("open_menu"):
-		wii_party_menu.open_menu(location_id)
-		wii_party_menu.select_minigame(primary_id)
+	elif phone_menu and phone_menu.has_method("open_menu"):
+		phone_menu.open_menu(location_id)
+		phone_menu.select_minigame(primary_id)
 
 func _handle_kiosko_input(event: InputEvent) -> void:
 	# Bloqueo / Parry [Clic Derecho o Tecla F]
 	if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed) or (event is InputEventKey and event.keycode == KEY_F and event.pressed and not event.is_echo()):
 		minigame_manager.send_game_action(2, 0, 0.65, Vector3.ZERO)
+		if get_viewport():
+			get_viewport().set_input_as_handled()
+		return
+
+	# Empujón / Knockback [Clic Izquierdo o Tecla G]
+	var is_punch = (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or DisplayServer.get_name() == "headless")) or (event is InputEventKey and event.keycode == KEY_G and event.pressed and not event.is_echo())
+	if is_punch and player and is_instance_valid(player) and player.has_method("perform_melee_attack"):
+		player.perform_melee_attack()
 		if get_viewport():
 			get_viewport().set_input_as_handled()
 

@@ -159,30 +159,54 @@ static func prompt_vehicle_full(vehicle_name: String) -> String:
 	return "%s lleno" % vehicle_name
 
 # =============================================================================
+# TELÉFONO CELULAR MOTOROLA MOTOKRZR K1 (DIEGÉTICO AÑOS 2000)
 # =============================================================================
-# MENÚ DE MINIJUEGOS Y RETOS (Sin mayúsculas sostenidas ni barras)
+const PHONE_OPERATOR_NAME: String = "TELCEL GSM"
+const PHONE_DEFAULT_TIME: String = "12:45 PM"
+const PHONE_SOFTKEY_MENU: String = "Menú"
+const PHONE_SOFTKEY_SELECT: String = "Elegir"
+const PHONE_SOFTKEY_BACK: String = "Atrás"
+const PHONE_SOFTKEY_EXIT: String = "Salir"
+const PHONE_SOFTKEY_CALL: String = "Llamar"
+const PHONE_PROMPT_OPEN: String = "[M] Abrir teléfono celular"
+const PHONE_PROMPT_SHORT: String = "[M] Celular"
+const PROMPT_START_ACTIVITY: String = "[Q] Iniciar actividad"
+
+# Iconos / Apps del Menú Principal Motorola Synergy OS
+const PHONE_APP_MESSAGES: String = "Mensajes"
+const PHONE_APP_CONTACTS: String = "Contactos"
+const PHONE_APP_ACTIVITIES: String = "Retas"
+const PHONE_APP_CAMERA: String = "Cámara"
+const PHONE_APP_MULTIMEDIA: String = "Multimedia"
+const PHONE_APP_CITY_GUIDE: String = "Guía Tecate"
+const PHONE_APP_SETTINGS: String = "Ajustes"
+const PHONE_APP_ALARM_CLOCK: String = "Reloj"
+const PHONE_APP_MUNICIPAL_GAZETTE: String = "Gaceta"
+
 # =============================================================================
-const MINIGAMES_HEADER_TITLE: String = "Minijuegos de Tecate"
+# RETAS Y ACTIVIDADES URBANAS DE TECATE
+# =============================================================================
+const MINIGAMES_HEADER_TITLE: String = "Retas y actividades"
 const MINIGAMES_HEADER_SUBTITLE: String = "Parque Miguel Hidalgo y zonas emblemáticas"
-const MINIGAMES_TAB_ALL: String = "Todos"
-const MINIGAMES_TAB_ALL_VS_ALL: String = "Todos contra todos"
-const MINIGAMES_TAB_ONE_VS_ALL: String = "Uno contra todos"
-const MINIGAMES_TAB_DUEL: String = "Duelo individual"
+const MINIGAMES_TAB_ALL: String = "Todas"
+const MINIGAMES_TAB_ALL_VS_ALL: String = "Retas grupales"
+const MINIGAMES_TAB_ONE_VS_ALL: String = "Desafíos comunitarios"
+const MINIGAMES_TAB_DUEL: String = "Mano a mano"
 
-const MINIGAMES_BADGE_PARTY_MODE: String = "Modo fiesta"
-const MINIGAMES_BADGE_ALL_VS_ALL: String = "Todos contra todos"
-const MINIGAMES_BADGE_ONE_VS_ALL: String = "Uno contra todos"
-const MINIGAMES_BADGE_DUEL: String = "Duelo individual"
+const MINIGAMES_BADGE_PARTY_MODE: String = "Actividades"
+const MINIGAMES_BADGE_ALL_VS_ALL: String = "Grupales"
+const MINIGAMES_BADGE_ONE_VS_ALL: String = "Desafíos"
+const MINIGAMES_BADGE_DUEL: String = "Mano a mano"
 
-const MINIGAMES_BTN_PLAY: String = "Jugar"
+const MINIGAMES_BTN_PLAY: String = "Participar"
 const MINIGAMES_BTN_TEST_LOCATION: String = "Probar ubicación"
-const MINIGAMES_BTN_TELEPORT: String = "Ir a la ubicación"
-const MINIGAMES_BTN_CLOSE: String = "Cerrar menú"
-const MINIGAMES_CLEAR_FILTER: String = "Mostrar todos los juegos"
-const MINIGAMES_STATUS_READY: String = "Listo para iniciar."
+const MINIGAMES_BTN_TELEPORT: String = "Ir al lugar"
+const MINIGAMES_BTN_CLOSE: String = "Guardar celular"
+const MINIGAMES_CLEAR_FILTER: String = "Mostrar todas las actividades"
+const MINIGAMES_STATUS_READY: String = "Lista para iniciar."
 const MINIGAMES_STATUS_PLAYABLE: String = "Disponible"
 const MINIGAMES_STATUS_PLAYING: String = "En curso..."
-const MINIGAMES_STATUS_FINISHED: String = "Juego concluido."
+const MINIGAMES_STATUS_FINISHED: String = "Actividad concluida."
 const MINIGAMES_SECTION_RULES: String = "Reglas del juego:"
 const MINIGAMES_SECTION_CONTROLS: String = "Controles:"
 const MINIGAMES_ELIM_DEFAULT: String = "ha sido eliminado"
@@ -194,6 +218,8 @@ const MINIGAMES_ELIM_TAG: String = "portaba la marca al finalizar el tiempo"
 const MINIGAME_1_TITLE: String = "Mi Kiosko"
 const MINIGAME_1_SUBTITLE: String = "Batalla campal de empujones y bloqueos en la tarima"
 const MINIGAME_1_DESC: String = "Juego todos contra todos donde a base de empujones y bloqueos los jugadores intentan tirar a los demás por el acceso o la barandilla y ser el último en pie."
+const MINIGAME_1_RIVAL_1: String = "Rival de práctica 1"
+const MINIGAME_1_RIVAL_2: String = "Rival de práctica 2"
 
 const MINIGAME_2_TITLE: String = "Las traes"
 const MINIGAME_2_SUBTITLE: String = "Persecución por el Parque Miguel Hidalgo"

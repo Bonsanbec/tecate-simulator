@@ -64,8 +64,7 @@ var _vehicle_scan_timer: float = 0.0
 @export var mouse_sensitivity: float = 0.15
 @export var standing_capsule_height: float = 1.75
 @export var crouching_capsule_height: float = 1.25
-
-var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity", 9.8)
+var _knockback_recovery_timer: float = 0.0
 
 # Estados de control y locomoción (Keybindings por defecto de Fortnite)
 var input_enabled: bool = true
@@ -341,6 +340,14 @@ func toggle_auto_run() -> void:
 	if is_auto_running and is_crouching:
 		set_crouching(false)
 
+## Aplica cinemática de retroceso slapstick en el jugador con liberación de adherencia al suelo (Floor Snap)
+func apply_impact_knockback(source_pos: Vector3, force_h: float = 6.5, force_v: float = 4.0) -> void:
+	super.apply_impact_knockback(source_pos, force_h, force_v)
+	floor_snap_length = 0.0
+	_knockback_recovery_timer = 0.40
+	if camera_director:
+		camera_director.apply_camera_shake(0.45, 0.25)
+
 ## Ejecuta un golpe/ataque cuerpo a cuerpo hacia adelante con animación e impacto cinemático slapstick
 func perform_melee_attack() -> void:
 	if not input_enabled or is_sitting or is_f1_photo_mode:
@@ -356,26 +363,86 @@ func perform_melee_attack() -> void:
 	if camera_director:
 		camera_director.apply_camera_shake(0.20, 0.14)
 
-	var from_pos = global_position + Vector3(0, 1.2, 0)
-	var forward_dir = -global_transform.basis.z.normalized()
+	var my_pos = global_position if is_inside_tree() else position
+	var from_pos = my_pos + Vector3(0.0, 1.35, 0.0)
+	var forward_dir = (-global_transform.basis.z.normalized()) if is_inside_tree() else (-transform.basis.z.normalized())
 	if camera_director and camera_director.active_camera:
-		from_pos = camera_director.active_camera.global_position
 		forward_dir = -camera_director.active_camera.global_transform.basis.z.normalized()
+		if camera_director.current_mode == CameraDirectorClass.PerspectiveMode.FIRST_PERSON:
+			from_pos = camera_director.active_camera.global_position
 
-	var space_state = get_world_3d().direct_space_state
+	var target: Node = null
+	var world_3d = get_world_3d() if is_inside_tree() else null
+	var space_state = world_3d.direct_space_state if world_3d else null
 	if space_state:
+		# 1. Comprobación inicial de raycast directo
 		var query = PhysicsRayQueryParameters3D.create(from_pos, from_pos + forward_dir * attack_range)
-		query.exclude = [self]
+		query.exclude = [get_rid()]
 		query.collision_mask = 1 | 2 | 4
 
 		var result = space_state.intersect_ray(query)
 		if result and result.has("collider") and is_instance_valid(result.collider):
-			var target = result.collider
-			if target.has_method("apply_impact_knockback"):
-				target.apply_impact_knockback(global_position, 7.5, 4.2)
-				print("[Combat] Golpe slapstick asestado a '%s': retroceso Minecraft aplicado." % target.name)
-				if camera_director:
-					camera_director.apply_camera_shake(0.38, 0.22)
+			target = result.collider
+
+		# 2. Comprobación volumétrica (SphereCast) si el rayo delgado no impactó una entidad válida
+		if target == null or not target.has_method("apply_impact_knockback"):
+			var shape_query = PhysicsShapeQueryParameters3D.new()
+			var sphere = SphereShape3D.new()
+			sphere.radius = 0.65
+			shape_query.shape = sphere
+			shape_query.transform = Transform3D(Basis.IDENTITY, from_pos + forward_dir * (attack_range * 0.60))
+			shape_query.exclude = [get_rid()]
+			shape_query.collision_mask = 1 | 2 | 4
+			var shape_hits = space_state.intersect_shape(shape_query, 8)
+			for hit in shape_hits:
+				var cand = hit.get("collider")
+				if cand and cand != self and is_instance_valid(cand) and cand.has_method("apply_impact_knockback"):
+					target = cand
+					break
+
+	# 3. Escaneo de proximidad cónica frontal por si la geometría estática absorbe la colisión o en entornos de prueba
+	if target == null or not target.has_method("apply_impact_knockback"):
+		var best_dot = 0.40
+		var best_dist = attack_range + 0.35
+		var candidates: Array[Node] = []
+		var tree: SceneTree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+		if tree:
+			candidates.append_array(tree.get_nodes_in_group("citizens"))
+			candidates.append_array(tree.get_nodes_in_group("players"))
+			candidates.append_array(tree.get_nodes_in_group("urban_props"))
+		if candidates.is_empty() and get_parent():
+			for ch in get_parent().get_children():
+				if ch is Node3D and (ch.is_in_group("citizens") or ch.is_in_group("players") or ch.is_in_group("urban_props")):
+					candidates.append(ch)
+		for cand in candidates:
+			if cand == self or not is_instance_valid(cand) or not cand.has_method("apply_impact_knockback"):
+				continue
+			var cand_pos = cand.global_position if cand.is_inside_tree() else cand.position
+			var diff = cand_pos - from_pos
+			var diff_h = Vector3(diff.x, 0.0, diff.z)
+			var dist = diff_h.length()
+			if dist <= best_dist and absf(diff.y) < 2.2:
+				var dot = forward_dir.dot(diff.normalized())
+				if dot > best_dot:
+					best_dot = dot
+					target = cand
+
+	if target and is_instance_valid(target):
+		if target.has_method("apply_impact_knockback"):
+			target.apply_impact_knockback(my_pos, 7.5, 4.2)
+			print("[Combat] Golpe slapstick asestado a '%s': retroceso Minecraft aplicado." % target.name)
+			if camera_director:
+				camera_director.apply_camera_shake(0.38, 0.22)
+
+			# Notificar al gestor de minijuegos si estamos en partida activa (ej. Mi Kiosko ID=1)
+			var tree = get_tree() if is_inside_tree() else null
+			if tree:
+				var mg_mgr = tree.root.find_child("MinigameManager", true, false)
+				if mg_mgr and mg_mgr.is_participating and mg_mgr.current_state == MinigameManager.ClientMinigameState.ACTIVE:
+					var target_id = target.entity_id if ("entity_id" in target) else 0
+					if mg_mgr.current_game_id == 1:
+						mg_mgr.send_game_action(1, target_id, 7.5, forward_dir)
+						print("[Combat] Acción de empujón slapstick enviada al servidor para Mi Kiosko (Objetivo ID: %d)." % target_id)
 
 func toggle_f1_photo_mode() -> void:
 	is_f1_photo_mode = !is_f1_photo_mode
@@ -615,9 +682,10 @@ func _process_walking(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 	else:
-		if velocity.y < 0.0:
-			velocity.y = 0.0
-		floor_snap_length = DEFAULT_SNAP_LENGTH
+		if _knockback_recovery_timer <= 0.0:
+			if velocity.y < 0.0:
+				velocity.y = 0.0
+			floor_snap_length = DEFAULT_SNAP_LENGTH
 
 	# 3. Salto único estilo Fortnite (Barra Espaciadora)
 	var want_jump = _jump_requested or Input.is_key_pressed(KEY_SPACE) or Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("ui_accept")
@@ -660,14 +728,23 @@ func _process_walking(delta: float) -> void:
 			active_speed *= clampf(penalty, 0.65, 1.0)
 
 	# 6. Aceleración con inercia de masa realista (75 kg)
-	var target_h_vel = move_dir * active_speed
-	var current_h_vel = Vector2(velocity.x, velocity.z)
-	var target_h_vec2 = Vector2(target_h_vel.x, target_h_vel.z)
+	if _knockback_recovery_timer > 0.0:
+		_knockback_recovery_timer = maxf(0.0, _knockback_recovery_timer - delta)
+		var air_drag = 3.5 if not is_on_floor() else 14.0
+		velocity.x = move_toward(velocity.x, 0.0, air_drag * delta)
+		velocity.z = move_toward(velocity.z, 0.0, air_drag * delta)
+		if move_dir != Vector3.ZERO:
+			velocity.x += move_dir.x * active_speed * 0.20 * delta
+			velocity.z += move_dir.z * active_speed * 0.20 * delta
+	else:
+		var target_h_vel = move_dir * active_speed
+		var current_h_vel = Vector2(velocity.x, velocity.z)
+		var target_h_vec2 = Vector2(target_h_vel.x, target_h_vel.z)
 
-	var rate = acceleration if move_dir != Vector3.ZERO else braking_deceleration
-	var next_h_vec2 = current_h_vel.move_toward(target_h_vec2, rate * delta)
-	velocity.x = next_h_vec2.x
-	velocity.z = next_h_vec2.y
+		var rate = acceleration if move_dir != Vector3.ZERO else braking_deceleration
+		var next_h_vec2 = current_h_vel.move_toward(target_h_vec2, rate * delta)
+		velocity.x = next_h_vec2.x
+		velocity.z = next_h_vec2.y
 
 	# 7. Escalado dinámico de guarniciones y banquetas de Tecate
 	if is_on_floor() and move_dir != Vector3.ZERO:

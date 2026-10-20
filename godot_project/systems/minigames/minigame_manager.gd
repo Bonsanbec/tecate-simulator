@@ -87,10 +87,11 @@ func _init_collision_director() -> void:
 		add_child(collision_director)
 
 func _get_world_or_scene_root() -> Node:
-	if get_tree() and get_tree().current_scene:
-		return get_tree().current_scene
+	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree and tree.current_scene:
+		return tree.current_scene
 	var p: Node = get_parent()
-	while p and p.get_parent() and (not get_tree() or p.get_parent() != get_tree().root):
+	while p and p.get_parent() and (not tree or p.get_parent() != tree.root):
 		p = p.get_parent()
 	if p:
 		return p
