@@ -168,9 +168,9 @@ const PHONE_SOFTKEY_SELECT: String = "Elegir"
 const PHONE_SOFTKEY_BACK: String = "Atrás"
 const PHONE_SOFTKEY_EXIT: String = "Salir"
 const PHONE_SOFTKEY_CALL: String = "Llamar"
-const PHONE_PROMPT_OPEN: String = "[M] Abrir teléfono celular"
-const PHONE_PROMPT_SHORT: String = "[M] Celular"
-const PROMPT_START_ACTIVITY: String = "[Q] Iniciar actividad"
+const PHONE_PROMPT_OPEN: String = "Abrir teléfono celular"
+const PHONE_PROMPT_SHORT: String = "Celular"
+const PROMPT_START_ACTIVITY: String = "Iniciar actividad"
 
 # Iconos / Apps del Menú Principal Motorola Synergy OS
 const PHONE_APP_MESSAGES: String = "Mensajes"

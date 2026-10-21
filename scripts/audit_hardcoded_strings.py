@@ -127,7 +127,7 @@ def audit_app_strings_normative(app_strings_path: str) -> List[Tuple[int, str, s
             # Detección de mayúsculas sostenidas (ALL CAPS) excepto marca "TECATE" o acrónimos
             words = re.findall(r'\b[A-ZÁÉÍÓÚÑ]{4,}\b', s)
             for w in words:
-                if w not in ["TECATE", "BBVA"]:
+                if w not in ["TECATE", "BBVA", "TELCEL"]:
                     violations.append((idx, s, f"Prohibición de mayúsculas sostenidas: palabra '{w}'"))
 
     return violations
