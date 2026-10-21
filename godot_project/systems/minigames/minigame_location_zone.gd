@@ -1,10 +1,10 @@
 class_name MinigameLocationZone
 extends Node3D
 
-## Zona de Activación e Información de Minijuegos por Ubicación en el Mapa 3D.
+## Zona de Activación e Información de Actividades por Ubicación en el Mapa 3D.
 ## Se registra en el grupo "minigame_zones" para que PlayerController muestre
 ## los tooltips contextuales al acercarse y despliega un marcador diegético 3D
-## con el estilo festivo de Wii Party / Club Penguin.
+## en el entorno urbano de Tecate.
 
 const MinigameCatalogClass = preload("res://systems/minigames/minigame_catalog.gd")
 
@@ -113,10 +113,9 @@ func _build_3d_marker() -> void:
 	sub_label_3d.font_size = 46
 	sub_label_3d.outline_size = 10
 	sub_label_3d.modulate = accent_color.lightened(0.25)
-	sub_label_3d.outline_modulate = Color(0.04, 0.05, 0.08, 0.92)
 	if din_font:
 		sub_label_3d.font = din_font
-	sub_label_3d.text = "[Q] Iniciar Minijuego  •  [M] Menú Wii Party"
+	sub_label_3d.text = "%s  •  %s" % [AppStrings.PROMPT_START_ACTIVITY, AppStrings.PHONE_PROMPT_SHORT]
 	sub_label_3d.visibility_range_end = 26.0
 	sub_label_3d.visibility_range_end_margin = 4.0
 	sub_label_3d.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF

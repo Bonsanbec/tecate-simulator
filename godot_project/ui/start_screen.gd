@@ -478,7 +478,7 @@ func _on_minigames_pressed() -> void:
 			player.apply_identity(selected_character_id)
 	close_menu()
 	var tree = get_tree()
-	var mg_menu = tree.root.find_child(AppTechnicalStrings.NODE_WII_PARTY_MENU, true, false) if (tree and tree.root) else null
+	var mg_menu = tree.root.find_child(AppTechnicalStrings.NODE_PHONE_MENU, true, false) if (tree and tree.root) else null
 	if mg_menu and mg_menu.has_method(AppTechnicalStrings.METHOD_OPEN_MENU):
 		mg_menu.open_menu()
 

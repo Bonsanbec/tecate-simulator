@@ -25,7 +25,7 @@ enum PerspectiveMode {
 @export var fov_1p: float = 75.0
 @export var ads_fov_1p: float = 55.0
 
-# Parámetros Tercera Persona (3P - Hombro Derecho estilo Fortnite)
+# Parámetros Tercera Persona (3P - Cámara al Hombro Derecho)
 @export var spring_arm_length: float = 3.2
 @export var ads_spring_arm_length: float = 1.95
 @export var shoulder_offset: Vector3 = Vector3(0.42, 0.15, 0.0)
@@ -40,7 +40,7 @@ enum PerspectiveMode {
 var character_body: CharacterBody3D = null
 var active_camera: Camera3D = null
 
-# Estados de postura y puntería (Fortnite ADS & Crouch)
+# Estados de postura biomecánica y puntería ocular
 var is_crouching: bool = false
 var is_aiming: bool = false
 var _current_eye_height: float = 1.68
@@ -157,7 +157,7 @@ func handle_input(event: InputEvent) -> void:
 		if event.keycode == KEY_F5 or event.keycode == KEY_V:
 			cycle_perspective()
 
-	# Clic Derecho: Apuntar / Zoom sobre el hombro (ADS estilo Fortnite)
+	# Clic Derecho: Apuntar / Zoom sobre el hombro (ADS de precisión)
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
 		is_aiming = event.pressed and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or DisplayServer.get_name() == "headless")
 
@@ -181,11 +181,11 @@ func apply_camera_shake(intensity: float = 0.2, duration: float = 0.15) -> void:
 	shake_timer = maxf(shake_timer, duration)
 
 func _process(delta: float) -> void:
-	# 1. Interpolación suave de altura ocular según postura (Erguido vs Agachado estilo Fortnite)
+	# 1. Interpolación suave de altura ocular según postura (Erguido vs Agachado en sigilo)
 	var target_eye_h = crouch_eye_height if is_crouching else eye_height
 	_current_eye_height = lerpf(_current_eye_height, target_eye_h, clampf(14.0 * delta, 0.0, 1.0))
 
-	# 2. Interpolación de Zoom / Mira (ADS con Clic Derecho estilo Fortnite)
+	# 2. Interpolación de Zoom / Mira (ADS con Clic Derecho)
 	if cam_1p:
 		var target_fov_1p = ads_fov_1p if is_aiming else fov_1p
 		cam_1p.fov = lerpf(cam_1p.fov, target_fov_1p, clampf(14.0 * delta, 0.0, 1.0))

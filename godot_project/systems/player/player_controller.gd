@@ -52,8 +52,8 @@ var _nearby_minigame_location_id: String = ""
 var _near_exit_door: bool = false
 var _vehicle_scan_timer: float = 0.0
 
-# Parámetros Biomecánicos de Marcha, Sigilo (Crouch) y Carrera (Estilo Fortnite)
-@export var crouch_speed: float = 1.60     # ~5.8 km/h (avance agachado / sigilo Fortnite)
+# Parámetros Biomecánicos de Marcha, Sigilo (Crouch) y Carrera
+@export var crouch_speed: float = 1.60     # ~5.8 km/h (avance agachado / sigilo urbano)
 @export var walk_speed: float = 2.40       # ~8.6 km/h (trote base urbano)
 @export var jog_speed: float = 3.80        # ~13.7 km/h
 @export var sprint_speed: float = 6.20     # ~22.3 km/h (sprint táctico con Left Shift)
@@ -66,7 +66,7 @@ var _vehicle_scan_timer: float = 0.0
 @export var crouching_capsule_height: float = 1.25
 var _knockback_recovery_timer: float = 0.0
 
-# Estados de control y locomoción (Keybindings por defecto de Fortnite)
+# Estados de control y locomoción estándar de simulación
 var input_enabled: bool = true
 var is_f1_photo_mode: bool = false
 var _prev_avatar_visible: bool = true
@@ -123,7 +123,7 @@ var rot_y: float:
 
 func _ready():
 	is_locally_controlled = true
-	ensure_fortnite_input_map()
+	ensure_standard_input_map()
 	super._ready()
 
 	spawn_position = global_position
@@ -147,8 +147,8 @@ func _ready():
 		if hud:
 			hud.show_hud()
 
-## Registra en el InputMap las acciones con los keybindings por defecto de Fortnite en PC
-static func ensure_fortnite_input_map() -> void:
+## Registra en el InputMap las acciones con la configuración estándar en PC
+static func ensure_standard_input_map() -> void:
 	var key_bindings := {
 		"move_forward": [KEY_W, KEY_UP],
 		"move_backward": [KEY_S, KEY_DOWN],
@@ -193,6 +193,10 @@ static func ensure_fortnite_input_map() -> void:
 		ev.button_index = mouse_bindings[action_name]
 		if not InputMap.action_has_event(action_name, ev):
 			InputMap.action_add_event(action_name, ev)
+
+## Alias de compatibilidad hacia ensure_standard_input_map
+static func ensure_fortnite_input_map() -> void:
+	ensure_standard_input_map()
 
 func _initialize_submodules() -> void:
 	# 1. Director de Cámaras (1P / 2P / 3P con F5)
@@ -305,7 +309,7 @@ func respawn() -> void:
 		main_node._snap_player(self)
 	print("[PlayerController] Reaparecido en Parque Hidalgo: ", global_position)
 
-## Alterna el estado de agachado (Crouch Toggle estilo Fortnite con Left Ctrl / C)
+## Alterna el estado de agachado (Crouch Toggle con Left Ctrl / C)
 func toggle_crouch() -> void:
 	if is_sitting or current_vehicle != null:
 		return
@@ -331,7 +335,7 @@ func set_crouching(crouched: bool) -> void:
 		cap.height = target_h
 		collision_shape.position = Vector3(0.0, target_h * 0.5, 0.0)
 
-## Alterna la carrera automática (Auto-Run estilo Fortnite con [=] o [NumLock])
+## Alterna la carrera automática (Auto-Run con [=] o [NumLock])
 func toggle_auto_run() -> void:
 	if is_sitting or current_vehicle != null:
 		is_auto_running = false
@@ -475,7 +479,7 @@ func _set_input_handled() -> void:
 		vp.set_input_as_handled()
 
 func _input(event: InputEvent) -> void:
-	# 1. Ataque Cuerpo a Cuerpo / Pico (Fortnite Default: Clic Izquierdo, Tecla F o 1; más alias G / X)
+	# 1. Ataque Cuerpo a Cuerpo / Interacción Física (Clic Izquierdo, Tecla F o 1; más alias G / X)
 	var is_lmb_attack = (
 		event is InputEventMouseButton
 		and event.button_index == MOUSE_BUTTON_LEFT
@@ -530,18 +534,18 @@ func _input(event: InputEvent) -> void:
 		if event.keycode == KEY_W or event.keycode == KEY_S or event.keycode == KEY_UP or event.keycode == KEY_DOWN:
 			is_auto_running = false
 
-		# Carrera Automática (Auto-Run de Fortnite: [=] o [NumLock])
+		# Carrera Automática ([=] o [NumLock])
 		if event.keycode == KEY_EQUAL or event.keycode == KEY_NUMLOCK:
 			toggle_auto_run()
 			_set_input_handled()
 			return
 
-		# Sprint Táctico [Left Shift]: Si está agachado a pie, se incorpora para correr (estilo Fortnite)
+		# Sprint Táctico [Left Shift]: Si está agachado a pie, se incorpora para correr
 		if (event.keycode == KEY_SHIFT or event.physical_keycode == KEY_SHIFT) and not current_vehicle and not is_sitting:
 			if is_crouching:
 				set_crouching(false)
 
-		# Agacharse / Cambiar de Asiento [Left Ctrl o C] (Fortnite Default):
+		# Agacharse / Cambiar de Asiento [Left Ctrl o C]:
 		# - En vehículo: Left Ctrl cambia al siguiente asiento disponible (Conductor <-> Pasajero).
 		# - A pie: Left Ctrl o C alterna el estado de agachado (Crouch Toggle).
 		if event.keycode == KEY_CTRL or event.physical_keycode == KEY_CTRL or event.keycode == KEY_C:
@@ -554,7 +558,7 @@ func _input(event: InputEvent) -> void:
 				_set_input_handled()
 				return
 
-		# Tecla Usar / Interactuar [E] (Fortnite Default):
+		# Tecla Usar / Interactuar [E]:
 		# Abordar, Sentarse, Levantarse, Salir de Vehículo o Repostar
 		if event.keycode == KEY_E:
 			if is_sitting:
@@ -585,20 +589,20 @@ func _input(event: InputEvent) -> void:
 				_set_input_handled()
 				return
 
-		# Gesto / Emote / Solicitar Parada en Autobús [B o T] (En Fortnite [B] es Emote / Señal)
+		# Gesto / Emote / Solicitar Parada en Autobús [B o T]
 		if event.keycode == KEY_B or event.keycode == KEY_T:
 			if _try_request_bus_stop():
 				_set_input_handled()
 				return
 
-		# Recargar / Repostar Combustible [R] (Fortnite Reload)
+		# Recargar / Repostar Combustible [R]
 		if event.keycode == KEY_R and _nearby_pump_zone and current_vehicle:
 			if _nearby_pump_zone.has_method("start_refueling"):
 				_nearby_pump_zone.start_refueling()
 				_set_input_handled()
 				return
 
-		# Barra Espaciadora [Space] (Fortnite Jump):
+		# Barra Espaciadora [Space]:
 		# - Si está sentado: levantarse inmediatamente.
 		# - Si está agachado: incorporarse y saltar.
 		# - En el suelo: salto único inmediato (sin vuelo).
@@ -687,7 +691,7 @@ func _process_walking(delta: float) -> void:
 				velocity.y = 0.0
 			floor_snap_length = DEFAULT_SNAP_LENGTH
 
-	# 3. Salto único estilo Fortnite (Barra Espaciadora)
+	# 3. Salto estándar (Barra Espaciadora)
 	var want_jump = _jump_requested or Input.is_key_pressed(KEY_SPACE) or Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("ui_accept")
 	_jump_requested = false
 	if want_jump and is_on_floor():
@@ -696,7 +700,7 @@ func _process_walking(delta: float) -> void:
 		velocity.y = jump_velocity
 		floor_snap_length = 0.0
 
-	# 4. Modificadores de velocidad estilo Fortnite:
+	# 4. Modificadores de velocidad de locomoción:
 	#    - Left Shift: Esprintar (desactiva agachado automáticamente al avanzar)
 	#    - Left Ctrl / C: Agachado (crouch_speed)
 	#    - Clic Derecho (ADS): Paso firme de puntería
@@ -857,7 +861,7 @@ func _update_procedural_animations(delta: float) -> void:
 	var knee_flex_l = maxf(0.0, -sin(locomotion_phase)) * leg_amplitude * 0.85
 	var knee_flex_r = maxf(0.0, sin(locomotion_phase)) * leg_amplitude * 0.85
 
-	# Postura biomecánica de Agachado (Crouch estilo Fortnite con Left Ctrl / C)
+	# Postura biomecánica de Agachado (Crouch con Left Ctrl / C)
 	var crouch_thigh_offset = deg_to_rad(38.0) if is_crouching else 0.0
 	var crouch_knee_offset = deg_to_rad(46.0) if is_crouching else 0.0
 	var crouch_chest_lean = deg_to_rad(14.0) if is_crouching else 0.0
@@ -1023,7 +1027,7 @@ func sit_in_seat(seat: Node) -> bool:
 	print("[PlayerController] Sentado con éxito en: %s" % s_name)
 	return true
 
-## Alterna cíclicamente al siguiente asiento disponible dentro del vehículo actual ([Left Ctrl] en Fortnite)
+## Alterna cíclicamente al siguiente asiento disponible dentro del vehículo actual ([Left Ctrl])
 func cycle_vehicle_seat() -> bool:
 	if not current_vehicle or current_vehicle.seats.is_empty():
 		return false

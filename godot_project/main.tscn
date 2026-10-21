@@ -28,7 +28,7 @@
 [ext_resource type="Script" path="res://systems/minigames/minigame_manager.gd" id="27_minigame_mgr"]
 [ext_resource type="Script" path="res://systems/minigames/minigame_input_layer.gd" id="28_minigame_input"]
 [ext_resource type="Script" path="res://systems/minigames/ui/minigame_hud.gd" id="29_minigame_hud"]
-[ext_resource type="Script" path="res://systems/minigames/ui/wii_party_minigame_menu.gd" id="30_wii_party_menu"]
+[ext_resource type="Script" path="res://systems/phone/ui/phone_menu.gd" id="30_phone_menu"]
 [ext_resource type="Script" path="res://systems/minigames/minigame_location_zone.gd" id="31_minigame_zone"]
 
 
@@ -120,8 +120,8 @@ script = ExtResource("28_minigame_input")
 [node name="MinigameHUD" type="CanvasLayer" parent="."]
 script = ExtResource("29_minigame_hud")
 
-[node name="WiiPartyMinigameMenu" type="CanvasLayer" parent="."]
-script = ExtResource("30_wii_party_menu")
+[node name="PhoneMenu" type="CanvasLayer" parent="."]
+script = ExtResource("30_phone_menu")
 
 [node name="MinigameLocations" type="Node3D" parent="."]
 

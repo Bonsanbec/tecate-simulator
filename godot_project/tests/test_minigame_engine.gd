@@ -5,6 +5,7 @@ const MinigameCatalogClass = preload("res://systems/minigames/minigame_catalog.g
 const MinigameLocationZoneClass = preload("res://systems/minigames/minigame_location_zone.gd")
 const MinigameManagerClass = preload("res://systems/minigames/minigame_manager.gd")
 const MinigameHUDClass = preload("res://systems/minigames/ui/minigame_hud.gd")
+const PhoneMenuClass = preload("res://systems/phone/ui/phone_menu.gd")
 const WiiPartyMinigameMenuClass = preload("res://systems/minigames/ui/wii_party_minigame_menu.gd")
 const UrbanSeatClass = preload("res://systems/environment/urban_seat.gd")
 
@@ -33,7 +34,7 @@ func _run_all_tests() -> void:
 	test_minigame_hud_elements()
 	test_minigame_catalog()
 	test_minigame_location_zone()
-	test_wii_party_minigame_menu()
+	test_phone_menu()
 	test_player_location_tooltips()
 
 	print("================================================================================")
@@ -220,43 +221,43 @@ func test_minigame_location_zone() -> void:
 	root.remove_child(zone)
 	zone.queue_free()
 
-func test_wii_party_minigame_menu() -> void:
-	print("\n--- Prueba 10: Menú de Minijuegos Estilo Wii Party ---")
+func test_phone_menu() -> void:
+	print("\n--- Prueba 10: Teléfono Celular Motorola K1 (Retas y Actividades) ---")
 	var mgr = MinigameManagerClass.new()
 	mgr.name = "MinigameManager"
 	root.add_child(mgr)
 
-	var menu = WiiPartyMinigameMenuClass.new()
-	menu.name = "WiiPartyMinigameMenu"
+	var menu = PhoneMenuClass.new()
+	menu.name = "PhoneMenu"
 	menu.minigame_manager = mgr
 	root.add_child(menu)
 
-	test_assert("Menú Wii Party inicia cerrado", not menu.is_open)
-	test_assert("Grid de minijuegos crea las 12 tarjetas al iniciar", menu.game_tile_buttons.size() == 12)
+	test_assert("Teléfono celular Motorola K1 inicia cerrado", not menu.is_open)
+	test_assert("Lista de actividades crea las 12 opciones al iniciar", menu.game_tile_buttons.size() == 12)
 
 	# Abrir menú general
 	menu.open_menu()
 	test_assert("open_menu() activa visibilidad e is_open", menu.is_open and menu.visible)
-	test_assert("Juego seleccionado por defecto es #1 (Mi Kiosko)", menu.selected_game_id == 1 and menu.preview_title_label.text == "Mi Kiosko")
+	test_assert("Actividad seleccionada por defecto es #1 (Mi Kiosko)", menu.selected_game_id == 1 and menu.preview_title_label.text == "Mi Kiosko")
 
-	# Seleccionar juego #6 (Curiel y los Fotógrafos)
+	# Seleccionar actividad #6 (Curiel y los Fotógrafos)
 	menu.select_minigame(6)
 	test_assert("select_minigame(6) actualiza tarjeta de detalle a 'Curiel y los Fotógrafos'", menu.selected_game_id == 6 and menu.preview_title_label.text == "Curiel y los Fotógrafos")
 
 	# Filtrar por ubicación 'kiosko'
 	menu.open_menu("kiosko")
-	test_assert("open_menu('kiosko') filtra a los 3 juegos del Kiosko", menu.game_tile_buttons.size() == 3)
-	test_assert("Banner de filtro de ubicación es visible", menu.location_filter_banner.visible)
+	test_assert("open_menu('kiosko') filtra a las 3 actividades del Kiosko", menu.game_tile_buttons.size() == 3)
+	test_assert("Chip de filtro de ubicación es visible", menu.location_filter_banner.visible)
 
 	# Limpiar filtro de ubicación y cambiar a categoría DUEL_1V1
 	menu.current_location_filter = ""
 	menu.select_category(MinigameCatalogClass.Category.DUEL_1V1)
-	test_assert("Filtro DUEL_1V1 muestra 2 minijuegos (Ajedrez en el Parque, Justas)", menu.game_tile_buttons.size() == 2)
+	test_assert("Filtro DUEL_1V1 muestra 2 actividades (Ajedrez en el Parque, Justas)", menu.game_tile_buttons.size() == 2)
 
-	# Probar lanzamiento directo del minijuego desde el botón Jugar con juego #1 (Mi Kiosko)
+	# Probar lanzamiento directo desde el botón Convocar con actividad #1 (Mi Kiosko)
 	menu.select_minigame(1)
 	menu._on_play_pressed()
-	test_assert("Presionar Jugar cierra el menú Wii Party e inicia el minijuego", not menu.is_open and mgr.current_state == MinigameManagerClass.ClientMinigameState.STAGING)
+	test_assert("Presionar Convocar cierra el celular e inicia la actividad", not menu.is_open and mgr.current_state == MinigameManagerClass.ClientMinigameState.STAGING)
 
 	mgr.finish_local_game(true)
 	test_assert("finish_local_game() finaliza la sesión y pasa a SUMMARY", mgr.current_state == MinigameManagerClass.ClientMinigameState.SUMMARY)

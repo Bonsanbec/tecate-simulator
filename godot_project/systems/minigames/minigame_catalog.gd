@@ -527,9 +527,9 @@ static func format_location_tooltip(location_id: String) -> String:
 
 	if games.size() == 1:
 		var status_tag = "" if primary.get("is_playable", false) else ", vista previa"
-		return "Minijuego: %s%s" % [p_title, status_tag]
+		return "[Q] %s%s  |  %s" % [p_title, status_tag, AppStrings.PHONE_PROMPT_SHORT]
 	else:
 		var names: PackedStringArray = []
 		for g in games:
 			names.append(g["title"])
-		return "%s: %s" % [loc.get("short_name", "Ubicación"), ", ".join(names)]
+		return "%s: %s  |  [Q] Iniciar  |  %s" % [loc.get("short_name", "Ubicación"), ", ".join(names), AppStrings.PHONE_PROMPT_SHORT]

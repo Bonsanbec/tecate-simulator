@@ -67,7 +67,8 @@ const NODE_CAMERA_3D: String = "Camera3D"
 const NODE_ANIMATION_PLAYER: String = "AnimationPlayer"
 const NODE_CANVAS_LAYER: String = "CanvasLayer"
 const NODE_AUTH_SERVICE: String = "AuthService"
-const NODE_WII_PARTY_MENU: String = "WiiPartyMinigameMenu"
+const NODE_PHONE_MENU: String = "PhoneMenu"
+const NODE_WII_PARTY_MENU: String = "PhoneMenu" # Alias de compatibilidad hacia NODE_PHONE_MENU
 
 # =============================================================================
 # RED Y PROTOCOLO MULTIJUGADOR TKT

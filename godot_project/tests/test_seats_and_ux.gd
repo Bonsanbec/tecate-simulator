@@ -222,7 +222,7 @@ func test_start_screen_camera_preservation() -> void:
 	custom_cam.queue_free()
 
 func test_bus_stop_request() -> void:
-	print("\n--- Prueba 6: Timbre de Parada de Autobús con Teclas [B] y [T] (Estilo Fortnite) ---")
+	print("\n--- Prueba 6: Timbre de Parada de Autobús con Teclas [B] y [T] ---")
 	var bus_scene = load("res://assets/vehicles/bus_hongo.tscn")
 	var bus = bus_scene.instantiate() as RouteVehicle
 	root.add_child(bus)
@@ -234,7 +234,7 @@ func test_bus_stop_request() -> void:
 	
 	assert_true(not bus.stop_requested, "Autobús inicia sin parada solicitada")
 	
-	# Simular pulsación de tecla B (Emote / Señal por defecto en Fortnite)
+	# Simular pulsación de tecla B (Emote / Timbre de solicitud)
 	var ev_b = InputEventKey.new()
 	ev_b.keycode = KEY_B
 	ev_b.pressed = true
@@ -246,7 +246,7 @@ func test_bus_stop_request() -> void:
 	bus.queue_free()
 
 func test_flight_mode_toggle() -> void:
-	print("\n--- Prueba 7: Eliminación de Vuelo, Agachado [Ctrl] y Cambio de Asiento [Ctrl] (Fortnite) ---")
+	print("\n--- Prueba 7: Eliminación de Vuelo, Agachado [Ctrl] y Cambio de Asiento [Ctrl] ---")
 	var player = PlayerController.new()
 	root.add_child(player)
 	player._ready()
@@ -258,7 +258,7 @@ func test_flight_mode_toggle() -> void:
 	ev_f.keycode = KEY_F
 	ev_f.pressed = true
 	player._input(ev_f)
-	assert_true(not player.is_flying, "Tecla [F] ya NO activa vuelo libre (ejecuta golpe cuerpo a cuerpo estilo Fortnite)")
+	assert_true(not player.is_flying, "Tecla [F] ya NO activa vuelo libre (ejecuta golpe cuerpo a cuerpo)")
 	assert_true(player.is_attacking, "Tecla [F] activa herramienta cuerpo a cuerpo")
 	
 	var ev_ctrl = InputEventKey.new()

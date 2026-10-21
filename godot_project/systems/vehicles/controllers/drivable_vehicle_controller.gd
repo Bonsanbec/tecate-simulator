@@ -7,7 +7,7 @@ extends "res://systems/vehicles/core/vehicle_base.gd"
 
 @export var handbrake_deceleration: float = 24.0 # m/s^2
 @export var min_turn_speed_kmh: float = 1.0     # Umbral mínimo para poder virar
-@export var boost_speed_multiplier: float = 1.30 # Multiplicador de velocidad con Turbo [Shift] (estilo Fortnite)
+@export var boost_speed_multiplier: float = 1.30 # Multiplicador de velocidad con Turbo [Shift]
 @export var boost_accel_multiplier: float = 1.45 # Multiplicador de aceleración con Turbo [Shift]
 
 var _steer_input: float = 0.0
@@ -108,7 +108,7 @@ func _process_longitudinal_motion(delta: float, surf_profile: SurfaceProfileClas
 	var target_accel = 0.0
 	var is_accelerating = false
 
-	# Modificadores de superficie y Boost [Shift] estilo Fortnite
+	# Modificadores de superficie y aceleración con Boost [Shift]
 	var eff_friction = surf_profile.friction if surf_profile else 1.0
 	var boost_spd_factor = boost_speed_multiplier if _boost_active else 1.0
 	var boost_acc_factor = boost_accel_multiplier if _boost_active else 1.0
