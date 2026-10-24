@@ -150,6 +150,22 @@ class TestCharacterSync(unittest.TestCase):
         self.assertEqual(char_events[0].entity_id, s1.player_entity_id)
         self.assertEqual(char_events[0].unpack_character_select(), "axel")
 
+        # c1 también debe haber recibido el evento CHARACTER_SELECT del nuevo cliente c2 (sincronización bidireccional)
+        c1_packets = [p for p in self.transport.sent_packets if p[1] == c1_addr]
+        self.assertGreaterEqual(len(c1_packets), 1)
+        c1_char_events = []
+        for p_data, _ in c1_packets:
+            hdr, payload = decode_packet(p_data)
+            if hdr.message_type == MessageType.EVENT:
+                ev = EventPayload.unpack(payload)
+                if ev.event_code == EventCode.CHARACTER_SELECT:
+                    c1_char_events.append(ev)
+
+        self.assertEqual(len(c1_char_events), 1)
+        s2 = self.server.session_manager.get_by_addr(c2_addr)
+        self.assertIsNotNone(s2)
+        self.assertEqual(c1_char_events[0].entity_id, s2.player_entity_id)
+
 
 if __name__ == "__main__":
     unittest.main()

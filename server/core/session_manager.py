@@ -51,9 +51,18 @@ class SessionManager:
             existing = self._sessions_by_uuid[player_uuid]
             # Desvincular de la dirección previa si cambió
             if existing.addr != addr:
+                old_addr = existing.addr
                 self._sessions_by_addr.pop(existing.addr, None)
                 existing.addr = addr
                 self._sessions_by_addr[addr] = existing
+                logger.warning(
+                    "[Sesión] Reasignada dirección para UUID=%s: %s:%d -> %s:%d (posible duplicación de player_identity.json)",
+                    player_uuid,
+                    old_addr[0],
+                    old_addr[1],
+                    addr[0],
+                    addr[1],
+                )
             existing.touch()
             existing.client_version = client_version
             existing.auth_token = auth_token

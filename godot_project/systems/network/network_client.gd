@@ -65,6 +65,8 @@ func _ready():
 func _on_auth_identity_loaded(_uuid: String, _name: String, character_id: String) -> void:
 	if local_character_id.is_empty():
 		local_character_id = character_id
+	if state == ConnectionState.CONNECTED and not local_character_id.is_empty():
+		send_character_select(local_character_id)
 
 func _ensure_auth_service() -> void:
 	auth_service = get_node_or_null("AuthService")

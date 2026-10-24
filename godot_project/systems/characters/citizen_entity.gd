@@ -118,7 +118,7 @@ func setup(id: int, is_npc: bool = true, display_name: String = "") -> void:
 	name = ("Citizen_%d" if is_npc else "RemotePlayer_%d") % id
 	if identity_id.is_empty():
 		identity_id = CharacterCatalogClass.get_character_id_for_entity(id)
-	if profile == null:
+	if profile == null or profile.identity_id != identity_id:
 		profile = CitizenProfileClass.get_profile_by_identity(identity_id)
 
 	_setup_physics_properties()
@@ -214,9 +214,19 @@ func _ensure_collision_shape() -> void:
 		add_child(collision_shape)
 
 func _initialize_humanoid_rig() -> void:
-	# Si ya existe el avatar, no reinstanciar
+	# Si ya existe el avatar para la identidad configurada, no reinstanciar
 	if humanoid_scene:
-		return
+		if profile and profile.identity_id == identity_id:
+			return
+		# La identidad ha cambiado: remover avatar anterior y reiniciar referencias del rig
+		humanoid_scene.queue_free()
+		humanoid_scene = null
+		skeleton = null
+		mesh_body = null
+		mesh_head = null
+		mesh_props = null
+		bone_hand_l = -1
+		bone_hand_r = -1
 
 	# Resolver ruta del modelo según catálogo o perfil
 	if identity_id.is_empty():

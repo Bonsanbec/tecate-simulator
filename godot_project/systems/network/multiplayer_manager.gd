@@ -96,11 +96,13 @@ func _on_snapshot_received(_server_tick: int, entities: Array[TKTCodec.EntityRec
 			var remote_p = active_remote_players.get(rec.entity_id) as CitizenEntityClass
 			if not remote_p:
 				remote_p = (citizen_entity_scene if citizen_entity_scene else remote_player_scene).instantiate() as CitizenEntityClass
-				remote_entities_container.add_child(remote_p)
 				var char_id = active_player_characters.get(rec.entity_id, "")
 				if not char_id.is_empty():
 					remote_p.identity_id = char_id
+				remote_entities_container.add_child(remote_p)
 				remote_p.setup(rec.entity_id, false, "Jugador #%d" % rec.entity_id)
+				if not char_id.is_empty() and remote_p.has_method(AppTechnicalStrings.METHOD_APPLY_IDENTITY):
+					remote_p.apply_identity(char_id)
 				active_remote_players[rec.entity_id] = remote_p
 				print("[MultiplayerManager] Nuevo jugador remoto avistado: ID=%d (Personaje=%s)" % [rec.entity_id, remote_p.identity_id])
 				player_count_changed.emit(get_player_count())
@@ -186,7 +188,7 @@ func _on_event_received(ev: Dictionary) -> void:
 			if not character_id.is_empty():
 				active_player_characters[entity_id] = character_id
 				var remote_p = active_remote_players.get(entity_id)
-				if remote_p and remote_p.has_method("apply_identity"):
+				if remote_p and remote_p.has_method(AppTechnicalStrings.METHOD_APPLY_IDENTITY):
 					remote_p.apply_identity(character_id)
 				print("[MultiplayerManager] Jugador remoto %d sincronizó personaje '%s'" % [entity_id, character_id])
 

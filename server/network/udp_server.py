@@ -256,10 +256,21 @@ class TKTGameServer:
             session.player_entity_id,
         )
 
-        # Enviar sincronización de personajes de otros jugadores ya conectados
+        # Sincronización bidireccional de personajes:
+        # 1. Enviar al nuevo jugador los personajes de sesiones ya conectadas.
+        # 2. Difundir a las sesiones ya conectadas el personaje del nuevo jugador.
+        new_player_ev = EventPayload.create_character_select(
+            entity_id=session.player_entity_id,
+            character_id=char_id,
+            event_id=0,
+            timestamp=self.get_server_time_ms(),
+        )
+
         for other_sess in self.session_manager:
             if other_sess.session_id == session.session_id:
                 continue
+
+            # 1. Enviar personaje de other_sess al nuevo cliente
             other_ent = self.world.get_entity(other_sess.player_entity_id)
             if other_ent and "character_id" in other_ent.properties:
                 c_id = other_ent.properties["character_id"]
@@ -277,6 +288,16 @@ class TKTGameServer:
                     timestamp=self.get_server_time_ms(),
                 )
                 self.send_to(encode_packet(char_hdr, char_ev.pack()), addr)
+
+            # 2. Notificar a other_sess sobre el personaje del nuevo jugador
+            new_char_hdr = PacketHeader(
+                message_type=MessageType.EVENT,
+                flags=PacketFlags.RELIABLE,
+                session_id=other_sess.session_id,
+                sequence=other_sess.next_sequence(),
+                timestamp=self.get_server_time_ms(),
+            )
+            self.send_to(encode_packet(new_char_hdr, new_player_ev.pack()), other_sess.addr)
 
     def _handle_input(self, session: ClientSession, payload_bytes: bytes) -> None:
         try:

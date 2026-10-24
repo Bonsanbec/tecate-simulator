@@ -466,6 +466,9 @@ func _on_continue_pressed() -> void:
 		transition_to_character_select()
 	else:
 		# Ya se eligió personaje previamente: reanudar inmediatamente
+		if network_client and network_client.has_method(AppTechnicalStrings.METHOD_SEND_CHARACTER_SELECT):
+			if not selected_character_id.is_empty():
+				network_client.send_character_select(selected_character_id)
 		close_menu()
 		game_continued.emit()
 
@@ -476,6 +479,9 @@ func _on_minigames_pressed() -> void:
 		has_chosen_character = true
 		if player and player.has_method(AppTechnicalStrings.METHOD_APPLY_IDENTITY):
 			player.apply_identity(selected_character_id)
+	if network_client and network_client.has_method(AppTechnicalStrings.METHOD_SEND_CHARACTER_SELECT):
+		if not selected_character_id.is_empty():
+			network_client.send_character_select(selected_character_id)
 	close_menu()
 	var tree = get_tree()
 	var mg_menu = tree.root.find_child(AppTechnicalStrings.NODE_PHONE_MENU, true, false) if (tree and tree.root) else null

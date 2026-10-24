@@ -66,7 +66,6 @@ func _try_override_from_env_file() -> void:
 	var search_paths: Array[String] = [
 		"res://.env",
 		"res://../.env",
-		"res://../server/.env",
 		"user://.env",
 	]
 
