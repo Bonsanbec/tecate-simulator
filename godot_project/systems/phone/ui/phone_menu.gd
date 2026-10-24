@@ -45,10 +45,10 @@ var screen_content_stack: Control = null
 
 # Elementos de la barra de estado superior
 var status_bar: HBoxContainer = null
-var signal_label: Label = null
+var signal_widget: Control = null
 var operator_label: Label = null
 var clock_label: Label = null
-var battery_label: Label = null
+var battery_widget: Control = null
 
 # Pantallas del celular
 var screen_idle_node: Control = null
@@ -297,10 +297,9 @@ func _build_motorola_k1_ui() -> void:
 	status_bar.name = "StatusBar"
 	screen_vbox.add_child(status_bar)
 
-	signal_label = Label.new()
-	signal_label.text = "📶"
-	signal_label.add_theme_font_size_override("font_size", 14)
-	status_bar.add_child(signal_label)
+	signal_widget = RetroSignalWidget.new()
+	signal_widget.name = "SignalWidget"
+	status_bar.add_child(signal_widget)
 
 	operator_label = Label.new()
 	operator_label.text = AppStrings.PHONE_OPERATOR_NAME
@@ -319,10 +318,9 @@ func _build_motorola_k1_ui() -> void:
 	clock_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
 	status_bar.add_child(clock_label)
 
-	battery_label = Label.new()
-	battery_label.text = " 🔋"
-	battery_label.add_theme_font_size_override("font_size", 14)
-	status_bar.add_child(battery_label)
+	battery_widget = RetroBatteryWidget.new()
+	battery_widget.name = "BatteryWidget"
+	status_bar.add_child(battery_widget)
 
 	# Divisor fino de pantalla
 	var screen_div = ColorRect.new()
@@ -423,7 +421,7 @@ func _build_activities_screen() -> void:
 	screen_activities_node.add_child(title_banner)
 
 	var title_lbl = Label.new()
-	title_lbl.text = "🏆 %s" % AppStrings.MINIGAMES_HEADER_TITLE
+	title_lbl.text = AppStrings.MINIGAMES_HEADER_TITLE
 	if _din_font:
 		title_lbl.add_theme_font_override("font", _din_font)
 	title_lbl.add_theme_font_size_override("font_size", 18)
@@ -539,7 +537,7 @@ func _build_detail_screen() -> void:
 	screen_detail_node.add_child(actions_row)
 
 	btn_summon_action = Button.new()
-	btn_summon_action.text = "📞 %s" % AppStrings.MINIGAMES_BTN_PLAY
+	btn_summon_action.text = AppStrings.MINIGAMES_BTN_PLAY
 	btn_summon_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_summon_action.custom_minimum_size = Vector2(0, 34)
 	btn_summon_action.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -551,7 +549,7 @@ func _build_detail_screen() -> void:
 	actions_row.add_child(btn_summon_action)
 
 	btn_teleport_action = Button.new()
-	btn_teleport_action.text = "📍 %s" % AppStrings.MINIGAMES_BTN_TELEPORT
+	btn_teleport_action.text = AppStrings.MINIGAMES_BTN_TELEPORT
 	btn_teleport_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_teleport_action.custom_minimum_size = Vector2(0, 34)
 	btn_teleport_action.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -590,21 +588,21 @@ func _build_main_menu_screen() -> void:
 	screen_main_menu_node.add_child(grid)
 
 	var apps = [
-		{"icon": "✉", "name": AppStrings.PHONE_APP_MESSAGES, "id": 0},
-		{"icon": "👥", "name": AppStrings.PHONE_APP_CONTACTS, "id": 1},
-		{"icon": "🏆", "name": AppStrings.PHONE_APP_ACTIVITIES, "id": 2},
-		{"icon": "📷", "name": AppStrings.PHONE_APP_CAMERA, "id": 3},
-		{"icon": "🎵", "name": AppStrings.PHONE_APP_MULTIMEDIA, "id": 4},
-		{"icon": "🗺", "name": AppStrings.PHONE_APP_CITY_GUIDE, "id": 5},
-		{"icon": "⚙", "name": AppStrings.PHONE_APP_SETTINGS, "id": 6},
-		{"icon": "⏰", "name": AppStrings.PHONE_APP_ALARM_CLOCK, "id": 7},
-		{"icon": "🏛", "name": AppStrings.PHONE_APP_MUNICIPAL_GAZETTE, "id": 8}
+		{"name": AppStrings.PHONE_APP_MESSAGES, "id": 0},
+		{"name": AppStrings.PHONE_APP_CONTACTS, "id": 1},
+		{"name": AppStrings.PHONE_APP_ACTIVITIES, "id": 2},
+		{"name": AppStrings.PHONE_APP_CAMERA, "id": 3},
+		{"name": AppStrings.PHONE_APP_MULTIMEDIA, "id": 4},
+		{"name": AppStrings.PHONE_APP_CITY_GUIDE, "id": 5},
+		{"name": AppStrings.PHONE_APP_SETTINGS, "id": 6},
+		{"name": AppStrings.PHONE_APP_ALARM_CLOCK, "id": 7},
+		{"name": AppStrings.PHONE_APP_MUNICIPAL_GAZETTE, "id": 8}
 	]
 
 	menu_grid_buttons.clear()
 	for app in apps:
 		var app_btn = Button.new()
-		app_btn.text = "%s\n%s" % [app["icon"], app["name"]]
+		app_btn.text = app["name"]
 		app_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		app_btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		app_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -649,15 +647,18 @@ func _build_laser_keypad(parent: VBoxContainer) -> void:
 	keypad_vbox.add_child(nav_row)
 
 	var btn_call = Button.new()
-	btn_call.text = "📞"
+	btn_call.text = AppStrings.PHONE_KEYPAD_SEND
 	btn_call.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_call.custom_minimum_size = Vector2(0, 36)
+	if _din_font:
+		btn_call.add_theme_font_override("font", _din_font)
+	btn_call.add_theme_font_size_override("font_size", 16)
 	_style_keypad_button(btn_call, Color(0.10, 0.55, 0.25, 0.9), Color(0.3, 1.0, 0.5, 1.0))
 	btn_call.pressed.connect(_on_call_key_pressed)
 	nav_row.add_child(btn_call)
 
 	var btn_ok = Button.new()
-	btn_ok.text = "• OK •"
+	btn_ok.text = AppStrings.PHONE_KEYPAD_OK
 	btn_ok.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_ok.custom_minimum_size = Vector2(0, 36)
 	if _din_font:
@@ -668,9 +669,12 @@ func _build_laser_keypad(parent: VBoxContainer) -> void:
 	nav_row.add_child(btn_ok)
 
 	var btn_end = Button.new()
-	btn_end.text = "🔴"
+	btn_end.text = AppStrings.PHONE_KEYPAD_END
 	btn_end.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_end.custom_minimum_size = Vector2(0, 36)
+	if _din_font:
+		btn_end.add_theme_font_override("font", _din_font)
+	btn_end.add_theme_font_size_override("font_size", 16)
 	_style_keypad_button(btn_end, Color(0.65, 0.15, 0.15, 0.9), Color(1.0, 0.4, 0.4, 1.0))
 	btn_end.pressed.connect(close_menu)
 	nav_row.add_child(btn_end)
@@ -865,7 +869,7 @@ func _refresh_activities_list() -> void:
 		var g_id: int = g["id"]
 		var title: String = g.get("title", "Reta")
 		var loc: String = g.get("location_name", "Tecate")
-		btn.text = "%02d. %s\n   📍 %s" % [g_id, title, loc]
+		btn.text = AppStrings.format_phone_activity_item(g_id, title, loc)
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.custom_minimum_size = Vector2(0, 40)
 		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -896,10 +900,10 @@ func _populate_activity_detail(g: Dictionary) -> void:
 		return
 
 	detail_title_label.text = g.get("title", "Reta")
-	detail_category_label.text = "#%02d • Modalidad: %s" % [g.get("id", 1), g.get("category_name", "Reta")]
-	detail_location_label.text = "📍 %s" % g.get("location_name", "Tecate, B.C.")
+	detail_category_label.text = AppStrings.format_phone_activity_category(g.get("id", 1), g.get("category_name", "Reta"))
+	detail_location_label.text = AppStrings.format_minigame_location_label(g.get("location_name", "Tecate, B.C."))
 	detail_description_label.text = g.get("description", "")
-	detail_controls_label.text = "Controles: %s" % g.get("controls_summary", "Teclas estándar")
+	detail_controls_label.text = AppStrings.format_phone_controls(g.get("controls_summary", "Teclas estándar"))
 
 func _update_location_filter_banner() -> void:
 	if not location_filter_chip:
@@ -909,7 +913,7 @@ func _update_location_filter_banner() -> void:
 	else:
 		var loc_info = MinigameCatalogClass.get_location_info(current_location_filter)
 		location_filter_chip.visible = true
-		location_filter_chip.text = "📍 Zona activa: %s" % loc_info.get("name", current_location_filter)
+		location_filter_chip.text = AppStrings.format_phone_active_zone(loc_info.get("name", current_location_filter))
 
 func _update_matrix_highlights() -> void:
 	for i in range(menu_grid_buttons.size()):
@@ -1076,3 +1080,26 @@ func _animate_close() -> void:
 	_phone_tween.chain().tween_callback(func():
 		visible = false
 	)
+
+# =============================================================================
+# WIDGETS RETRO DE ESTADO GSM (DIEGÉTICOS, PROCEDURALES, CERO EMOJIS)
+# =============================================================================
+class RetroSignalWidget extends Control:
+	func _init() -> void:
+		custom_minimum_size = Vector2(16, 14)
+	func _draw() -> void:
+		var bar_w: float = 2.5
+		var spacing: float = 1.5
+		for i in range(4):
+			var bar_h: float = 3.5 + i * 2.8
+			var rect = Rect2(i * (bar_w + spacing), 13.0 - bar_h, bar_w, bar_h)
+			draw_rect(rect, Color(0.70, 0.85, 1.0, 1.0))
+
+class RetroBatteryWidget extends Control:
+	func _init() -> void:
+		custom_minimum_size = Vector2(18, 14)
+	func _draw() -> void:
+		draw_rect(Rect2(0, 3, 15, 8), Color(0.70, 0.85, 1.0, 0.8), false, 1.0)
+		draw_rect(Rect2(15, 5, 2, 4), Color(0.70, 0.85, 1.0, 0.8))
+		draw_rect(Rect2(2, 5, 10, 4), Color(0.20, 0.85, 0.45, 0.95))
+

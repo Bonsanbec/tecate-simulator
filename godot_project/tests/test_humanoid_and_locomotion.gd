@@ -40,14 +40,14 @@ func _init():
 	for b_name in critical_bones:
 		var idx = skel.find_bone(b_name)
 		assert(idx != -1, "El hueso " + b_name + " debe existir en el Skeleton3D")
-	print("✓ Esqueleto antropométrico validado: 22 huesos articulados correctamente.")
+	print("[PASS] Esqueleto antropométrico validado: 22 huesos articulados correctamente.")
 	
 	# Verificar mallas modulares para True First Person
 	var body_mesh = model_inst.find_child("Player_Body_Mesh", true, false) as MeshInstance3D
 	var head_mesh = model_inst.find_child("Player_Head_Mesh", true, false) as MeshInstance3D
 	assert(body_mesh != null, "Player_Body_Mesh debe existir")
 	assert(head_mesh != null, "Player_Head_Mesh debe existir")
-	print("✓ Desacoplamiento modular verificado: Malla de Cuerpo y Malla de Cabeza separadas.")
+	print("[PASS] Desacoplamiento modular verificado: Malla de Cuerpo y Malla de Cabeza separadas.")
 	model_inst.queue_free()
 
 	# 2. Prueba del Módulo de Red Multijugador
@@ -71,7 +71,7 @@ func _init():
 	assert(abs(deserialized.position.z - snap.position.z) < 0.001, "Posición Z debe coincidir")
 	assert(abs(deserialized.pitch - snap.pitch) < 0.1, "Pitch debe coincidir con precisión de 16-bit")
 	assert(deserialized.flags == snap.flags, "Flags de estado deben coincidir")
-	print("✓ Paquete cuantizado de 24 bytes serializado y deserializado con fidelidad completa.")
+	print("[PASS] Paquete cuantizado de 24 bytes serializado y deserializado con fidelidad completa.")
 
 	# 3. Prueba de Predicción y Búfer Circular
 	var net_sync = PlayerNetworkSyncClass.new()
@@ -91,7 +91,7 @@ func _init():
 	srv_snap_divergent.tick = 145
 	srv_snap_divergent.position = Vector3(15.0, 400.0, 0.0) # Error de 0.5m
 	assert(net_sync.check_server_reconciliation(srv_snap_divergent), "Debe detectar divergencia para rollback")
-	print("✓ Búfer circular de 120 ticks y predicción con reconciliación validados.")
+	print("[PASS] Búfer circular de 120 ticks y predicción con reconciliación validados.")
 	net_sync.queue_free()
 
 	# 4. Instanciación en Escena con PlayerController
@@ -116,7 +116,7 @@ func _process(_delta):
 		assert(cam_dir.cam_1p != null, "Camera_1P debe existir")
 		assert(cam_dir.cam_1p.cull_mask == 1, "En 1P, la capa 2 (cabeza) debe estar excluida para evitar clipping")
 		assert(cam_dir.cam_1p.near <= 0.055, "Near plane de 1P debe ser <= 0.05 para visibilidad de manos")
-		print("✓ Perspectiva 1P validada con exclusión de cabeza y near plane para manos.")
+		print("[PASS] Perspectiva 1P validada con exclusión de cabeza y near plane para manos.")
 
 		# Probar alternancia a TERCERA PERSONA (3P) con F5
 		var event_f5 = InputEventKey.new()
@@ -126,26 +126,26 @@ func _process(_delta):
 		assert(cam_dir.current_mode == CameraDirectorClass.PerspectiveMode.THIRD_PERSON, "F5 debe cambiar a 3P")
 		assert(cam_dir.cam_3p.cull_mask == (1 | 2), "En 3P, cabeza y cuerpo deben ser visibles")
 		assert(cam_dir.spring_arm_3p != null, "SpringArm_3P debe existir con colisión")
-		print("✓ Perspectiva 3P validada con SpringArm colisionable y avatar completo visible.")
+		print("[PASS] Perspectiva 3P validada con SpringArm colisionable y avatar completo visible.")
 
 		# Probar alternancia a SEGUNDA PERSONA (2P) con F5
 		cam_dir.handle_input(event_f5)
 		assert(cam_dir.current_mode == CameraDirectorClass.PerspectiveMode.SECOND_PERSON, "F5 debe cambiar a 2P")
 		assert(cam_dir.cam_2p != null, "Camera_2P debe existir")
 		assert(cam_dir.cam_2p.cull_mask == (1 | 2), "En 2P, cabeza y cuerpo deben ser visibles")
-		print("✓ Perspectiva 2P (Observador Frontal) validada.")
+		print("[PASS] Perspectiva 2P (Observador Frontal) validada.")
 
 		# Probar ciclo de retorno a PRIMERA PERSONA (1P) con F5
 		cam_dir.handle_input(event_f5)
 		assert(cam_dir.current_mode == CameraDirectorClass.PerspectiveMode.FIRST_PERSON, "F5 debe regresar a 1P")
-		print("✓ Ciclo completo de cámaras F5 (1P -> 3P -> 2P -> 1P) validado.")
+		print("[PASS] Ciclo completo de cámaras F5 (1P -> 3P -> 2P -> 1P) validado.")
 
 	elif _frames == 10:
 		# Validar Foot IK y Raycasts de Suelo
 		var foot_ik = _player.get_node_or_null("FootIKController")
 		assert(foot_ik != null, "FootIKController debe estar activo")
 		assert(foot_ik.ray_left != null and foot_ik.ray_right != null, "Raycasts de pies deben existir")
-		print("✓ FootIKController y raycasting de terreno validados.")
+		print("[PASS] FootIKController y raycasting de terreno validados.")
 		
 		# Validar HUD y Brújula de Tecate
 		var hud = _player.get_node_or_null("PlayerHUD")
@@ -170,13 +170,13 @@ func _process(_delta):
 		assert(hud._get_cardinal_direction(_player.current_heading_deg) == "W", "Debe ser W")
 		assert("Cuchumá" in hud._get_landmark_hint(_player.current_heading_deg), "Al Oeste debe apuntar hacia el Cerro Cuchumá")
 
-		print("✓ Brújula validada: Norte=0°, Este=90° (Rumorosa), Oeste=270° (Cuchumá).")
+		print("[PASS] Brújula validada: Norte=0°, Este=90° (Rumorosa), Oeste=270° (Cuchumá).")
 
 		# Validar cámara subjetiva adelantada al plano facial (evita ver clavícula)
 		var cam_dir = _player.camera_director
 		assert(cam_dir.eye_forward_offset >= 0.15, "eye_forward_offset debe ser >= 0.15 para evitar ver la clavícula")
 		assert(cam_dir.cam_1p.position.z < -0.10, "cam_1p debe situarse en Z negativo (adelante) para línea visual limpia")
-		print("✓ Posición de cámara 1P validada: Situada al frente en Z negativo, libre de clipping con clavícula.")
+		print("[PASS] Posición de cámara 1P validada: Situada al frente en Z negativo, libre de clipping con clavícula.")
 
 		# Validar huesos de extremidades inferiores para locomoción
 		assert(_player.bone_upperleg_l != -1 and _player.bone_upperleg_r != -1, "Huesos UpperLeg L/R deben estar vinculados")
@@ -184,7 +184,7 @@ func _process(_delta):
 		assert(_player.walk_speed >= 2.0, "walk_speed debe ser >= 2.0 m/s para desplazamiento ágil en Tecate")
 		assert(_player.crouch_speed > 1.0 and _player.crouch_speed < _player.walk_speed, "crouch_speed debe ser menor que walk_speed")
 		assert(not _player.is_flying, "El modo de vuelo debe estar permanentemente eliminado")
-		print("✓ Rig de locomoción validado: Huesos de piernas vinculados y velocidades de locomoción optimizadas.")
+		print("[PASS] Rig de locomoción validado: Huesos de piernas vinculados y velocidades de locomoción optimizadas.")
 
 		# Validar Modo Screenshot F1 (ocultar HUD y avatar, suspender inputs)
 		_player.set_input_enabled(true)
@@ -197,14 +197,14 @@ func _process(_delta):
 		assert(_player.is_f1_photo_mode == true, "Modo F1 debe activarse")
 		assert(hud.visible == false, "El HUD debe ocultarse en modo F1")
 		assert(_player.humanoid_scene.visible == false, "El avatar humanoide debe ocultarse en modo F1")
-		print("✓ Modo F1 activado: HUD y avatar ocultos correctamente para screenshots.")
+		print("[PASS] Modo F1 activado: HUD y avatar ocultos correctamente para screenshots.")
 
 		# Desactivar Modo Screenshot F1 con segundo toggle
 		_player._input(event_f1)
 		assert(_player.is_f1_photo_mode == false, "Modo F1 debe desactivarse")
 		assert(_player.humanoid_scene.visible == true, "El avatar debe volver a ser visible tras salir de F1")
 		assert(hud.visible == true, "El HUD debe restaurarse al salir de F1")
-		print("✓ Modo F1 desactivado: HUD y avatar restaurados, control restablecido.")
+		print("[PASS] Modo F1 desactivado: HUD y avatar restaurados, control restablecido.")
 
 	elif _frames == 12:
 		# Validar Composición de Rotaciones de Huesos (Brazos abajo, Piernas en piso)
@@ -229,7 +229,7 @@ func _process(_delta):
 		# El pie debe estar cerca del suelo (~0.05 - 0.25m), NUNCA dentro del torso (>0.50m)
 		assert(foot_pos.y < 0.35, "El pie no debe colapsar hacia el torso ni doblarse al revés")
 		assert(foot_pos.y >= 0.04, "El pie debe mantenerse sobre la superficie del suelo")
-		print("✓ Extremidades validadas: Brazos orientados hacia abajo y piernas en suelo natural.")
+		print("[PASS] Extremidades validadas: Brazos orientados hacia abajo y piernas en suelo natural.")
 
 		# Validar Eliminación de Vuelo y Controles Estándar de Locomoción
 		print("\n--- 5. Validación de Eliminación de Vuelo y Controles Estándar de Locomoción ---")
@@ -278,13 +278,13 @@ func _process(_delta):
 		_player._input(ev_rmb)
 		assert(_player.camera_director.is_aiming == false, "Soltar Clic Derecho debe desactivar el modo ADS")
 
-		print("✓ Controles estándar validados: Vuelo eliminado, [F] Golpe, [Ctrl] Agacharse, [Shift] Sprint, [RMB] ADS.")
+		print("[PASS] Controles estándar validados: Vuelo eliminado, [F] Golpe, [Ctrl] Agacharse, [Shift] Sprint, [RMB] ADS.")
 
 	elif _frames >= 16:
 		if _frames > 16:
 			return
 		print("\n==================================================================")
-		print("✓ TODAS LAS PRUEBAS DE HUMANOIDE Y LOCOMOCIÓN PASARON CON ÉXITO.")
+		print("[PASS] TODAS LAS PRUEBAS DE HUMANOIDE Y LOCOMOCIÓN PASARON CON ÉXITO.")
 		print("==================================================================")
 		if is_instance_valid(_main_scene):
 			_main_scene.queue_free()

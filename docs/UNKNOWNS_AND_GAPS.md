@@ -1,13 +1,13 @@
 # UNKNOWNS_AND_GAPS.md — Tecate Simulator: Unknowns, Gaps & Open Questions
 
 > This document catalogues **verified unknowns** — things the code does not answer, data that is missing, and design decisions that are ambiguous.  
-> Every item is labeled by severity: 🔴 Critical / 🟡 Important / 🟢 Minor.
+> Every item is labeled by severity: [CRÍTICO] Critical / [IMPORTANTE] Important / [RESUELTO] Minor.
 
 ---
 
 ## Category A: Coordinate System Gaps
 
-### A-1 🟢 RESOLVED: Terrain-Reconstruction Coordinate Alignment Is Defined
+### A-1 [RESUELTO] RESOLVED: Terrain-Reconstruction Coordinate Alignment Is Defined
 
 **Resolution**: Reverse-engineered and verified in September 2026.
 - The terrain GLB mesh (`tecate.glb`) uses a Web Mercator projection centered around an extended facsimile bounding box (extending ~2.84 km NW to Donohue Mountain/Cerro Cuchumá).
@@ -17,7 +17,7 @@
 
 ---
 
-### A-2 🟢 RESOLVED: Terrain Elevation and Snapping Prebaking
+### A-2 [RESUELTO] RESOLVED: Terrain Elevation and Snapping Prebaking
 
 **Resolution**: Implemented via offline prebaking script `scripts/bake_osm2world_terrain.py`.
 - Terrain elevation is resolved by raycasting down from $+2000\text{ m}$ onto the `tecate.glb` TIN mesh using Blender's `mathutils.bvhtree.BVHTree`.
@@ -27,7 +27,7 @@
 
 ---
 
-### A-3 🟢 RESOLVED: Minecraft Pipeline Discrepancies and Ledger Integration Strategy
+### A-3 [RESUELTO] RESOLVED: Minecraft Pipeline Discrepancies and Ledger Integration Strategy
 
 **Resolution**: Fully audited and documented in September 2026.
 - **Terrain Offset**: Identified a $5.50\text{ m}$ shift in `src/minecraft_pipeline/exporter.py` ($tx=28052.40, tz=-16620.38$) vs Godot ground truth ($tx=28057.90, tz=16614.89$).
@@ -40,7 +40,7 @@
 
 ## Category B: Pipeline Gaps
 
-### B-1 🔴 `TemporalVisualClassifier` Is Not Wired Into Pipeline
+### B-1 [CRÍTICO] `TemporalVisualClassifier` Is Not Wired Into Pipeline
 
 **What**: `src/temporal_filter/classifier.py` implements CV-based temporal classification of panorama images. It is never called in `prism_generator.py` or `main.py`.
 
@@ -52,7 +52,7 @@
 
 ---
 
-### B-2 🟡 `score_observation_candidate` Is Not Used
+### B-2 [IMPORTANTE] `score_observation_candidate` Is Not Used
 
 **What**: `UrbanBlockReconstructor.score_observation_candidate()` implements a multi-factor observation scoring function (alignment × distance × same-road bonus × visibility quality). It is never called.
 
@@ -64,7 +64,7 @@
 
 ---
 
-### B-3 🟡 `stitch_facades_with_similarity` Is Not Used
+### B-3 [IMPORTANTE] `stitch_facades_with_similarity` Is Not Used
 
 **What**: `find_horizontal_overlap_offset` and `stitch_facades_with_similarity` implement NCC-based sequential image stitching. Neither is called in the current pipeline.
 
@@ -76,7 +76,7 @@
 
 ---
 
-### B-4 🟡 `accepted_panos` Parameter Is Unused
+### B-4 [IMPORTANTE] `accepted_panos` Parameter Is Unused
 
 **What**: `UrbanBlockReconstructor.__init__` accepts `accepted_panos: list[dict] = None` but references to it are not found in any method.
 
@@ -86,7 +86,7 @@
 
 ---
 
-### B-5 🟡 `intercepted_panos` Network Interception Is Inactive
+### B-5 [IMPORTANTE] `intercepted_panos` Network Interception Is Inactive
 
 **What**: `GoogleStreetViewScraper.intercepted_panos = {}` is initialized but no `page.on("response", ...)` listener is registered. Network response interception is not active.
 
@@ -94,7 +94,7 @@
 
 ---
 
-### B-6 🟢 `stitching_cache.json` Is Empty
+### B-6 [RESUELTO] `stitching_cache.json` Is Empty
 
 **What**: `data/stitching_cache.json` contains `{}`. The stitching cache was designed to store NCC shift offsets between adjacent facade screenshots to avoid recomputation.
 
@@ -106,7 +106,7 @@
 
 ## Category C: Data Quality Gaps
 
-### C-1 🔴 ~19% of Panoramas Are Post-2009
+### C-1 [CRÍTICO] ~19% of Panoramas Are Post-2009
 
 **What**: Of 3,906 panoramas, ~740 are dated 2015–2025. These represent locations where Google had no 2009 coverage. These facades receive modern imagery in the "historical" reconstruction.
 
@@ -122,7 +122,7 @@
 
 ---
 
-### C-2 🟡 Building Heights Are Heuristic, Unvalidated
+### C-2 [IMPORTANTE] Building Heights Are Heuristic, Unvalidated
 
 **What**: All building heights are computed by `estimate_facade_segment_height()` using sky/roofline detection. Range: 3.2–11m. No ground-truth validation dataset exists.
 
@@ -134,7 +134,7 @@
 
 ---
 
-### C-3 🟡 Camera Alignment Quality Not Summarized
+### C-3 [IMPORTANTE] Camera Alignment Quality Not Summarized
 
 **What**: Each facade cache entry has `camera_alignment_diagnostics.dot_product` and `is_correct_side`. These are stored but never aggregated into a quality report.
 
@@ -146,7 +146,7 @@
 
 ---
 
-### C-4 🟢 `altitude` Is Null for Most Panoramas
+### C-4 [RESUELTO] `altitude` Is Null for Most Panoramas
 
 **What**: The `altitude` field in `panoramas_cache.json` is `null` for all sampled records.
 
@@ -158,7 +158,7 @@
 
 ## Category D: Architecture Gaps
 
-### D-1 🟡 No Test Suite
+### D-1 [IMPORTANTE] No Test Suite
 
 **What**: `pytest` is in `requirements.txt` but no test files (`.py` files beginning with `test_` or in a `tests/` directory) were found.
 
@@ -166,7 +166,7 @@
 
 ---
 
-### D-2 🟡 Absolute Paths in `reconstruction_export.json`
+### D-2 [IMPORTANTE] Absolute Paths in `reconstruction_export.json`
 
 **What**: `facade_textures` values and `texture_atlas_path` in `reconstruction_export.json` are **absolute filesystem paths**:
 ```
@@ -181,7 +181,7 @@
 
 ---
 
-### D-3 🟡 OSM Graph Has 82k Nodes vs Structural Graph's 1,655 Nodes
+### D-3 [IMPORTANTE] OSM Graph Has 82k Nodes vs Structural Graph's 1,655 Nodes
 
 **What**: The OSM cache graph has 82,872 nodes and 87,177 edges (from `reconstruction_export.json`). The structural graph (from `ArchivalDataMigrator`) has only 1,655 nodes and 1,814 edges.
 
@@ -193,7 +193,7 @@
 
 ---
 
-### D-4 🟡 `py360convert` Is in requirements.txt but Not Used
+### D-4 [IMPORTANTE] `py360convert` Is in requirements.txt but Not Used
 
 **What**: `py360convert>=1.0.4` is listed in `requirements.txt` but no active call to this library was found in the codebase.
 
@@ -201,7 +201,7 @@
 
 ---
 
-### D-5 🟢 `pano_yaw` and `projection_yaw` Are Both Stored
+### D-5 [RESUELTO] `pano_yaw` and `projection_yaw` Are Both Stored
 
 **What**: `panoramas_cache.json` stores both `projection_yaw` and `pano_yaw` with identical values:
 ```python
@@ -215,7 +215,7 @@
 
 ---
 
-### D-6 🟢 Blender Camera Uses Non-Standard Coordinate System
+### D-6 [RESUELTO] Blender Camera Uses Non-Standard Coordinate System
 
 **What**: The Blender scene uses world coordinates where local X=East, Y=North, Z=Up. However, Blender's default coordinate system is X=Right, Y=Forward, Z=Up. The pipeline works because it directly sets vertex coordinates — but the camera rotation `(48°, 0, 0)` is specified in Blender's Euler XYZ convention which may not intuitively correspond to a "48° pitch from horizontal" in the geographic sense.
 
@@ -225,7 +225,7 @@
 
 ## Category E: External Dependencies & Fragility
 
-### E-1 🔴 Pipeline Relies on Unauthenticated Google APIs
+### E-1 [CRÍTICO] Pipeline Relies on Unauthenticated Google APIs
 
 **What**: The entire metadata acquisition pipeline depends on:
 - `maps.googleapis.com/maps/api/js/GeoPhotoService.SingleImageSearch` (unauthenticated)
@@ -240,7 +240,7 @@
 
 ---
 
-### E-2 🟡 Playwright Requires Specific Chromium Version
+### E-2 [IMPORTANTE] Playwright Requires Specific Chromium Version
 
 **What**: `playwright install chromium` installs a pinned Chromium version. The CSS selectors and JS injection used to hide UI overlays are tied to Google Maps' current DOM structure.
 
@@ -248,7 +248,7 @@
 
 ---
 
-### E-3 🟢 Blender Version Compatibility
+### E-3 [RESUELTO] Blender Version Compatibility
 
 **What**: `blender_script.py` uses Blender Python API (`bpy`). The script references `mat.blend_method` and `mat.shadow_method` as `try/except AttributeError` — acknowledging Blender version differences.
 
@@ -268,24 +268,24 @@
 
 | ID | Category | Severity | Item |
 |----|----------|----------|------|
-| A-1 | Coordinates | 🔴 | Terrain-reconstruction alignment undefined |
-| A-2 | Coordinates | 🟡 | Building Z=0 vs actual terrain elevation |
-| B-1 | Pipeline | 🔴 | TemporalVisualClassifier not wired |
-| B-2 | Pipeline | 🟡 | score_observation_candidate unused |
-| B-3 | Pipeline | 🟡 | stitch_facades_with_similarity unused |
-| B-4 | Pipeline | 🟡 | accepted_panos parameter unused |
-| B-5 | Pipeline | 🟡 | Network interception inactive |
-| B-6 | Pipeline | 🟢 | Stitching cache empty |
-| C-1 | Data | 🔴 | ~19% panoramas are post-2009 |
-| C-2 | Data | 🟡 | Heights unvalidated |
-| C-3 | Data | 🟡 | Camera alignment not summarized |
-| C-4 | Data | 🟢 | Altitude null |
-| D-1 | Architecture | 🟡 | No test suite |
-| D-2 | Architecture | 🟡 | Absolute paths in export JSON |
-| D-3 | Architecture | 🟡 | OSM graph vs structural graph ID mismatch risk |
-| D-4 | Architecture | 🟡 | py360convert unused |
-| D-5 | Architecture | 🟢 | pano_yaw/projection_yaw redundancy |
-| D-6 | Architecture | 🟢 | Blender camera convention unclear |
-| E-1 | External | 🔴 | Unauthenticated Google API dependency |
-| E-2 | External | 🟡 | Playwright/DOM fragility |
-| E-3 | External | 🟢 | Blender version compatibility |
+| A-1 | Coordinates | [CRÍTICO] | Terrain-reconstruction alignment undefined |
+| A-2 | Coordinates | [IMPORTANTE] | Building Z=0 vs actual terrain elevation |
+| B-1 | Pipeline | [CRÍTICO] | TemporalVisualClassifier not wired |
+| B-2 | Pipeline | [IMPORTANTE] | score_observation_candidate unused |
+| B-3 | Pipeline | [IMPORTANTE] | stitch_facades_with_similarity unused |
+| B-4 | Pipeline | [IMPORTANTE] | accepted_panos parameter unused |
+| B-5 | Pipeline | [IMPORTANTE] | Network interception inactive |
+| B-6 | Pipeline | [RESUELTO] | Stitching cache empty |
+| C-1 | Data | [CRÍTICO] | ~19% panoramas are post-2009 |
+| C-2 | Data | [IMPORTANTE] | Heights unvalidated |
+| C-3 | Data | [IMPORTANTE] | Camera alignment not summarized |
+| C-4 | Data | [RESUELTO] | Altitude null |
+| D-1 | Architecture | [IMPORTANTE] | No test suite |
+| D-2 | Architecture | [IMPORTANTE] | Absolute paths in export JSON |
+| D-3 | Architecture | [IMPORTANTE] | OSM graph vs structural graph ID mismatch risk |
+| D-4 | Architecture | [IMPORTANTE] | py360convert unused |
+| D-5 | Architecture | [RESUELTO] | pano_yaw/projection_yaw redundancy |
+| D-6 | Architecture | [RESUELTO] | Blender camera convention unclear |
+| E-1 | External | [CRÍTICO] | Unauthenticated Google API dependency |
+| E-2 | External | [IMPORTANTE] | Playwright/DOM fragility |
+| E-3 | External | [RESUELTO] | Blender version compatibility |

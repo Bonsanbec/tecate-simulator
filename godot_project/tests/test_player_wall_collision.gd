@@ -54,7 +54,7 @@ func _process(_delta):
 				hit_kiosko = true
 				break
 		if hit_kiosko or _player.is_on_wall():
-			print("✓ ÉXITO: El jugador colisionó y fue detenido/restringido por la estructura del Kiosko!")
+			print("[PASS] ÉXITO: El jugador colisionó y fue detenido/restringido por la estructura del Kiosko!")
 		else:
 			print("Posición final Z = ", _player.global_position.z)
 			

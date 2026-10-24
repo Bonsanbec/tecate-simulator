@@ -117,7 +117,7 @@ def composite_card_with_background(fg_png_path, bg_image_path, out_card_path):
     bpy.data.images.remove(img_fg)
     bpy.data.images.remove(img_bg)
     bpy.data.images.remove(img_out)
-    print(f"✓ Tarjeta compuesta con fondo guardada en: {out_card_path}")
+    print(f"[OK] Tarjeta compuesta con fondo guardada en: {out_card_path}")
 
 def clear_lights_and_cameras(scene):
     for obj in list(scene.objects):
@@ -240,7 +240,7 @@ def render_axel():
     out_icon = os.path.join(ICONS_DIR, "axel_icon.png")
     scene.render.filepath = out_icon
     bpy.ops.render.render(write_still=True)
-    print(f"✓ Ícono transparente guardado en: {out_icon}")
+    print(f"[OK] Ícono transparente guardado en: {out_icon}")
 
     # 2. Render Tarjeta con Fondo de scratch/fondo_axel.tiff (Crop to Fit)
     bg_axel = prepare_axel_background()
@@ -307,7 +307,7 @@ def render_eli():
     out_icon = os.path.join(ICONS_DIR, "eli_icon.png")
     scene.render.filepath = out_icon
     bpy.ops.render.render(write_still=True)
-    print(f"✓ Ícono transparente señalando guardado en: {out_icon}")
+    print(f"[OK] Ícono transparente señalando guardado en: {out_icon}")
 
     # 2. Render Tarjeta con Fondo Abstracto de Triángulos (Diseño Moderno)
     bg_eli = prepare_eli_background()
@@ -343,7 +343,7 @@ def render_eli():
     out_portrait = os.path.join(ICONS_DIR, "eli_icon_portrait.png")
     scene.render.filepath = out_portrait
     bpy.ops.render.render(write_still=True)
-    print(f"✓ Ícono transparente retrato guardado en: {out_portrait}")
+    print(f"[OK] Ícono transparente retrato guardado en: {out_portrait}")
 
 # =============================================================================
 # 3. RENDER DE ASTORGA (scratch/humans/astorga.png)
@@ -466,7 +466,7 @@ def render_astorga():
     out_icon = os.path.join(ICONS_DIR, "astorga_icon.png")
     scene.render.filepath = out_icon
     bpy.ops.render.render(write_still=True)
-    print(f"✓ Ícono transparente guardado en: {out_icon}")
+    print(f"[OK] Ícono transparente guardado en: {out_icon}")
 
     # 2. Render Tarjeta con Fondo de scratch/fondo_astorga.tiff (Crop to Fit)
     bg_astorga = prepare_astorga_background()
@@ -487,7 +487,7 @@ def render_astorga():
 
     out_fb_card = os.path.join(SCRATCH_DIR, "astorga_fullbody_pose.png")
     composite_card_with_background(out_fb_icon, bg_astorga, out_fb_card)
-    print(f"✓ Render de cuerpo completo en pose guardado en: {out_fb_card}")
+    print(f"[OK] Render de cuerpo completo en pose guardado en: {out_fb_card}")
 
 def main():
     import sys
@@ -503,7 +503,7 @@ def main():
         render_astorga()
 
     print("=" * 60)
-    print("✓ RENDERS DE ÍCONOS DE PERSONAJES PROCESADOS EXITOSAMENTE")
+    print("[OK] RENDERS DE ÍCONOS DE PERSONAJES PROCESADOS EXITOSAMENTE")
     print("=" * 60)
 
 if __name__ == "__main__":

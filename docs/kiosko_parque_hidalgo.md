@@ -118,4 +118,4 @@ Kiosco_Root (Node3D / Empty en 0,0,0)
 ## 7. Metodología de Diseño, Aprendizajes y Prompting
 
 Para consultar la bitácora completa de los 6 aprendizajes morfológicos (tejas 3D volumétricas, arcos `|_^_|`, escalinatas saw-tooth, morteros decimonónicos y lateralidad), así como la plantilla técnica estandarizada y las 5 reglas de Prompt Engineering para futuros monumentos de Tecate, consulta:
-👉 [**Framework Metodológico: Aprendizajes, Plantilla de Especificación y Prompting para Assets Arquitectónicos Complejos**](APRENDIZAJES_Y_PLANTILLA_ASSETS_ARQUITECTONICOS.md).
+-> [**Framework Metodológico: Aprendizajes, Plantilla de Especificación y Prompting para Assets Arquitectónicos Complejos**](APRENDIZAJES_Y_PLANTILLA_ASSETS_ARQUITECTONICOS.md).

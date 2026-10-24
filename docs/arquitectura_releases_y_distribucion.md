@@ -107,8 +107,8 @@ flowchart TD
     Start["Inicio: ./scripts/release_local.sh"] --> L1["Nivel 1: Caché Local de Exportación"]
     L1 --> CheckLocal{"¿Las fuentes de godot_project/ y assets cambiaron?"}
     
-    CheckLocal -- No --> SkipBuild["🟢 CACHE HIT: Reutilizar .zip local existente"]
-    CheckLocal -- Sí o --force --> DoBuild["🔨 CACHE MISS: Compilar con export.sh y registrar nuevo hash"]
+    CheckLocal -- No --> SkipBuild["[RESUELTO] CACHE HIT: Reutilizar .zip local existente"]
+    CheckLocal -- Sí o --force --> DoBuild["[BUILD] CACHE MISS: Compilar con export.sh y registrar nuevo hash"]
     
     SkipBuild --> L2["Nivel 2: Evaluación SSOT contra GitHub Releases"]
     DoBuild --> L2
@@ -116,9 +116,9 @@ flowchart TD
     L2 --> FetchManifest["Descargar version_manifest.json del release latest en GitHub"]
     FetchManifest --> Compare{"Comparar hashes locales contra el manifiesto"}
     
-    Compare -- "Todos coinciden (0 cambios)" --> NoOp["🛑 NOTHING TO DO<br>Cancela la operación; todo está al día.<br>Cero duplicados en GitHub."]
+    Compare -- "Todos coinciden (0 cambios)" --> NoOp["[STOP] NOTHING TO DO<br>Cancela la operación; todo está al día.<br>Cero duplicados en GitHub."]
     
-    Compare -- "Al menos un binario cambió o es nuevo" --> CreateNew["🚀 CREATE RELEASE: Crear nuevo release YY.MM.DD-HH<br>1. Sube ÚNICAMENTE los binarios UPDATED.<br>2. Preserva los binarios PRESERVED referenciando su origen.<br>3. Genera nuevo version_manifest.json y notas con enlaces directos.<br>4. Marca como 'latest'."]
+    Compare -- "Al menos un binario cambió o es nuevo" --> CreateNew["[RELEASE] CREATE RELEASE: Crear nuevo release YY.MM.DD-HH<br>1. Sube ÚNICAMENTE los binarios UPDATED.<br>2. Preserva los binarios PRESERVED referenciando su origen.<br>3. Genera nuevo version_manifest.json y notas con enlaces directos.<br>4. Marca como 'latest'."]
 ```
 
 ---
@@ -132,12 +132,12 @@ Cuando se publica un nuevo release con binarios preservados, el script genera au
 
 Versión de release correspondiente a `2026-10-08T19:28:00 UTC` (Commit: `45ddac6ef9`).
 
-### 📦 Binarios y Plataformas Disponibles
+### [ARTEFACTO] Binarios y Plataformas Disponibles
 
 | Plataforma | Estado | Archivo | Tamaño | SHA-256 | Descarga Directa |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Windows (x86_64 Desktop)** | 🆕 **Actualizado** | `tecate-windows.zip` | 240.1 MB | `3a8c7b41e98d...` | [Descargar (v26.10.08-12)](https://github.com/Bonsanbec/tecate-simulator/releases/download/26.10.08-12/tecate-windows.zip) |
-| **macOS (Universal)** | ⏩ *Sin cambios (v26.10.08-10)* | `tecate-macos.zip` | 210.9 MB | `7b1f92a4c83e...` | [Descargar (v26.10.08-10)](https://github.com/Bonsanbec/tecate-simulator/releases/download/26.10.08-10/tecate-macos.zip) |
+| **Windows (x86_64 Desktop)** | [NUEVO] **Actualizado** | `tecate-windows.zip` | 240.1 MB | `3a8c7b41e98d...` | [Descargar (v26.10.08-12)](https://github.com/Bonsanbec/tecate-simulator/releases/download/26.10.08-12/tecate-windows.zip) |
+| **macOS (Universal)** | [SIN CAMBIOS] *Sin cambios (v26.10.08-10)* | `tecate-macos.zip` | 210.9 MB | `7b1f92a4c83e...` | [Descargar (v26.10.08-10)](https://github.com/Bonsanbec/tecate-simulator/releases/download/26.10.08-10/tecate-macos.zip) |
 
 > [!NOTE]
 > Los binarios marcados como *Sin cambios* preservan su integridad criptográfica y su enlace de origen para evitar re-cargas innecesarias y optimizar la descarga de actualizaciones.

@@ -71,11 +71,11 @@ func _process(_delta: float) -> bool:
 		print("========================================================")
 
 		if passed_tests == total_tests:
-			print("✓ TODAS LAS PRUEBAS DE SELECCIÓN DE PERSONAJE PASARON CON ÉXITO.\n")
+			print("[PASS] TODAS LAS PRUEBAS DE SELECCIÓN DE PERSONAJE PASARON CON ÉXITO.\n")
 			_screen.queue_free()
 			quit(0)
 		else:
-			printerr("✗ ALGUNAS PRUEBAS FALLARON.")
+			printerr("[FAIL] ALGUNAS PRUEBAS FALLARON.")
 			_screen.queue_free()
 			quit(1)
 	return false

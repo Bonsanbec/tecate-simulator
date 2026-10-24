@@ -189,14 +189,14 @@ The `.blend` file contains:
 
 | Category | Status | Notes |
 |----------|--------|-------|
-| Terrain models | ✅ Complete | 3 variants available in GLB + Babylon |
-| Road graph cache | ✅ Complete | 82k+ nodes |
-| Block cache | ✅ Complete | 4,239 blocks |
-| Facade cache | ✅ Complete | 22,289 facades |
-| Panorama cache | ✅ Substantial | 3,906 panoramas, ~80% from 2009 era |
-| Facade textures | ✅ Near-complete | 99.84% textured |
-| 3D Scene | ✅ Exported | 159 blocks in geometry.gltf |
-| Terrain-scene alignment | ✅ Complete | Resolved via `bake_osm2world_terrain.py` & `tecate_facsimile_polygon.geojson` |
-| Stereo/depth maps | ❌ Not present | No depth data or stereo output |
-| Orthophoto/DSM | ❌ Not present | No aerial or satellite imagery |
-| Temporal layering | ⚠️ Partial | Temporal filter exists but is not integrated into final output |
+| Terrain models | [OK] Complete | 3 variants available in GLB + Babylon |
+| Road graph cache | [OK] Complete | 82k+ nodes |
+| Block cache | [OK] Complete | 4,239 blocks |
+| Facade cache | [OK] Complete | 22,289 facades |
+| Panorama cache | [OK] Substantial | 3,906 panoramas, ~80% from 2009 era |
+| Facade textures | [OK] Near-complete | 99.84% textured |
+| 3D Scene | [OK] Exported | 159 blocks in geometry.gltf |
+| Terrain-scene alignment | [OK] Complete | Resolved via `bake_osm2world_terrain.py` & `tecate_facsimile_polygon.geojson` |
+| Stereo/depth maps | [PENDIENTE] Not present | No depth data or stereo output |
+| Orthophoto/DSM | [PENDIENTE] Not present | No aerial or satellite imagery |
+| Temporal layering | [AVISO] Partial | Temporal filter exists but is not integrated into final output |

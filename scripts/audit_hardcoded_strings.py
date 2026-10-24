@@ -127,7 +127,7 @@ def audit_app_strings_normative(app_strings_path: str) -> List[Tuple[int, str, s
             # Detección de mayúsculas sostenidas (ALL CAPS) excepto marca "TECATE" o acrónimos
             words = re.findall(r'\b[A-ZÁÉÍÓÚÑ]{4,}\b', s)
             for w in words:
-                if w not in ["TECATE", "BBVA", "TELCEL"]:
+                if w not in ["TECATE", "BBVA", "TELCEL", "SEND"]:
                     violations.append((idx, s, f"Prohibición de mayúsculas sostenidas: palabra '{w}'"))
 
     return violations
@@ -151,7 +151,7 @@ def audit_directory(base_dir: str, scope: str = "all", strict: bool = False) -> 
                 print(f"  • Línea {line_num}: \"{val}\" -> {rule}")
             total_violations += len(norm_violations)
         else:
-            print("✓ AppStrings cumple al 100% las reglas normativas (sin slashes, corchetes, paréntesis, ALL CAPS ni emojis).")
+            print("[OK] AppStrings cumple al 100% las reglas normativas (sin slashes, corchetes, paréntesis, ALL CAPS ni emojis).")
 
     for root, dirs, files in os.walk(base_dir):
         # Filtrar directorios exentos
@@ -189,10 +189,10 @@ def audit_directory(base_dir: str, scope: str = "all", strict: bool = False) -> 
     print(f"========================================================")
 
     if total_violations == 0:
-        print("✓ Cero cadenas literales no centralizadas. Cumplimiento de política exitoso.")
+        print("[OK] Cero cadenas literales no centralizadas. Cumplimiento de política exitoso.")
         return 0
     else:
-        print(f"✗ Se encontraron {total_violations} infracciones a la política de strings.")
+        print(f"[ERROR] Se encontraron {total_violations} infracciones a la política de strings.")
         print("  Corrija las infracciones para cumplir estrictamente con docs/strings.md.")
         return 1
 

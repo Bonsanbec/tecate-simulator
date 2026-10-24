@@ -44,7 +44,7 @@ func _init():
 	for item in targets:
 		_bake_target(item)
 		
-	print("\n✓ HORNEADO ESTÁTICO COMPLETADO EXITOSAMENTE.")
+	print("\n[OK] HORNEADO ESTÁTICO COMPLETADO EXITOSAMENTE.")
 	print("==================================================================")
 	quit(0)
 

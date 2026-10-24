@@ -47,7 +47,7 @@ def save_numpy_image(img_name, arr_rgba, out_paths):
         b_img.filepath_raw = os.path.abspath(out_path)
         b_img.file_format = 'PNG'
         b_img.save()
-        print(f"✓ Textura PBR guardada: {out_path} ({w}x{h})")
+        print(f"[OK] Textura PBR guardada: {out_path} ({w}x{h})")
 
 def height_to_normal_map(height, scale=1.8):
     h, w = height.shape

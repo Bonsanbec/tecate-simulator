@@ -1033,7 +1033,7 @@ def render_control_views():
         cam_obj.rotation_euler = rot_quat.to_euler()
         scene.render.filepath = out_p
         bpy.ops.render.render(write_still=True)
-        print(f"✓ Vista de control guardada: {out_p}")
+        print(f"[OK] Vista de control guardada: {out_p}")
 
 def main():
     print("=" * 65)
@@ -1062,19 +1062,19 @@ def main():
 
     # 1. Esqueleto canónico de 22 huesos
     arm_obj = build_skeleton()
-    print("✓ Armature canónico construido con 22 huesos.")
+    print("[OK] Armature canónico construido con 22 huesos.")
 
     # 2. Malla de Cabeza modular
     obj_head = build_head_mesh(mat_groups)
     assign_weights(obj_head, is_head=True)
     attach_armature_modifier(obj_head, arm_obj)
-    print("✓ Player_Head_Mesh generado con rostro auténtico y melena setentera continua 360°.")
+    print("[OK] Player_Head_Mesh generado con rostro auténtico y melena setentera continua 360°.")
 
     # 3. Malla de Cuerpo modular
     obj_body = build_body_mesh(mat_groups)
     assign_weights(obj_body, is_head=False)
     attach_armature_modifier(obj_body, arm_obj)
-    print("✓ Player_Body_Mesh generado con proporciones esbeltas, sastrería 3D y camisa vinotinto.")
+    print("[OK] Player_Body_Mesh generado con proporciones esbeltas, sastrería 3D y camisa vinotinto.")
 
     # Verificación matemática de pesos
     vg_h_l = obj_body.vertex_groups.get("Hand.L")
@@ -1087,11 +1087,11 @@ def main():
             g_ids = {g.group for g in v.groups if g.weight > 0.01}
             if hand_indices.intersection(g_ids) and any(lg in g_ids for lg in leg_groups):
                 leaks += 1
-    print(f"✓ Verificación matemática de pesos: {leaks} vértices de manos fugados a piernas.")
+    print(f"[OK] Verificación matemática de pesos: {leaks} vértices de manos fugados a piernas.")
 
     # Guardar archivo .blend canónico
     bpy.ops.wm.save_as_mainfile(filepath=OUTPUT_BLEND)
-    print(f"✓ Guardado .blend en: {OUTPUT_BLEND}")
+    print(f"[OK] Guardado .blend en: {OUTPUT_BLEND}")
 
     # Exportar archivo .glb canónico
     bpy.ops.export_scene.gltf(
@@ -1106,7 +1106,7 @@ def main():
         export_cameras=False,
         export_lights=False
     )
-    print(f"✓ Exportado .glb canónico en: {OUTPUT_GLB}")
+    print(f"[OK] Exportado .glb canónico en: {OUTPUT_GLB}")
 
     # Renders de validación multi-ángulo
     render_control_views()

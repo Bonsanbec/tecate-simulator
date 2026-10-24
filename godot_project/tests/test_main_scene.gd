@@ -9,7 +9,7 @@ func _init():
 	assert(main_scene != null, "main.tscn debe poder cargarse")
 	_instance = main_scene.instantiate()
 	root.add_child(_instance)
-	print("✓ main.tscn agregada al árbol de escena.")
+	print("[PASS] main.tscn agregada al árbol de escena.")
 
 func _process(_delta):
 	_frames += 1
@@ -31,9 +31,9 @@ func _process(_delta):
 		sky_sys.realtime_sync = false
 		sky_sys.manual_hour = 24.0
 		sky_sys._apply_manual_hour_to_simulated_time()
-		print("✓ manual_hour = 24.0 probado sin errores de datetime.")
+		print("[PASS] manual_hour = 24.0 probado sin errores de datetime.")
 	elif _frames >= 18:
-		print("✓ 18 frames ejecutados con éxito continuo.")
+		print("[PASS] 18 frames ejecutados con éxito continuo.")
 		_instance.queue_free()
 		quit(0)
 

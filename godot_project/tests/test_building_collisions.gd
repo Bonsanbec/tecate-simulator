@@ -64,7 +64,7 @@ func _init():
 	print("  Total StaticBodies estructurales : ", total_structural_bodies)
 	print("  Total CollisionShapes analíticas  : ", total_colliders)
 	print("  Colisiones prohibidas en textos  : ", forbidden_colliders)
-	print("✓ Todas las aserciones pasaron exitosamente.")
+	print("[PASS] Todas las aserciones pasaron exitosamente.")
 	print("========================================================\n")
 	
 	instance.queue_free()

@@ -55,7 +55,7 @@ El complejo comercial agrupa cinco comercios principales sobre Calle Presidente 
 4. **Crujía 4: Party Rentals - Kuroky ($Y \in [14.20, 19.30\text{ m}]$)**:
    - Muro en estuco ocre mostaza continuo con zócalo marrón chocolate.
    - Puerta de acceso comercial a la derecha ($Y \in [14.40, 15.45\text{ m}]$).
-   - Gran vitrina con **3 franjas de notas musicales blancas (`♫ ♬ ♪`)** impresas en el cristal ($Y \in [15.60, 18.80\text{ m}]$).
+   - Gran vitrina con **3 franjas de notas musicales blancas** impresas en el cristal ($Y \in [15.60, 18.80\text{ m}]$).
    - Buzones metálicos postales amarillos sobre la acera.
    - Panel rectangular blanco adosado sobre la marquesina: `PARTY RENTALS` en verde bold, logotipo `kuroky` con óvalo magenta, columnas de servicios en azul y lona colorida con fotos de fiestas e inflables a la izquierda.
    - Remate de esquina izquierda: pilastra vertical saliente blanca de concreto con remate oblicuo ascendente hacia Florería Orquídea.

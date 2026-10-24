@@ -512,7 +512,7 @@ class SpatialContext:
 
         if not is_inside and poly:
             warnings.append(
-                f"🚨 DETECCIÓN TOPOLÓGICA: El punto ({pos.x:.2f}, {pos.z:.2f}) se encuentra FUERA "
+                f"[ALERTA TOPOLÓGICA] El punto ({pos.x:.2f}, {pos.z:.2f}) se encuentra FUERA "
                 f"de la manzana {target_block_id}."
             )
             # Encontrar arista más cercana del polígono
@@ -525,11 +525,11 @@ class SpatialContext:
                 corrected_pos = proj - (best_edge.outward_normal * 4.0)
                 if point_in_polygon(corrected_pos, poly):
                     final_pos = corrected_pos
-                    warnings.append(f"✅ Retranqueo automático aplicado hacia el interior de la manzana: ({final_pos.x:.2f}, {final_pos.z:.2f}).")
+                    warnings.append(f"[OK] Retranqueo automático aplicado hacia el interior de la manzana: ({final_pos.x:.2f}, {final_pos.z:.2f}).")
                 else:
                     centroid = polygon_centroid(poly)
                     final_pos = centroid
-                    warnings.append(f"✅ Reubicación de emergencia en el centroide de la manzana: ({final_pos.x:.2f}, {final_pos.z:.2f}).")
+                    warnings.append(f"[OK] Reubicación de emergencia en el centroide de la manzana: ({final_pos.x:.2f}, {final_pos.z:.2f}).")
                 is_inside = True
 
         # 4. Determinar fachada principal y rotación
@@ -641,7 +641,7 @@ if __name__ == "__main__":
     ]
     for bname in sample_buildings:
         res = ctx.resolve_building(bname)
-        status = "✅ DENTRO" if res.is_inside_polygon else "🚨 FUERA"
+        status = "[DENTRO]" if res.is_inside_polygon else "[FUERA]"
         print(f"\n  Edificio: {res.name}")
         print(f"    Block ID: {res.block_id}")
         print(f"    Godot Pos: ({res.godot_pos.x:.2f}, {res.elevation_y:.2f}, {res.godot_pos.z:.2f}) | {status}")
@@ -649,7 +649,7 @@ if __name__ == "__main__":
             print(f"    Fachada: Arista {res.primary_edge.idx} | Heading: {res.outward_heading_deg:.1f}° ({res.primary_edge.cardinal})")
         print(f"    Transform3D:\n      {res.transform3d_tscn}")
         for w in res.warnings:
-            print(f"    ⚠️  {w}")
+            print(f"    [AVISO] {w}")
 
     print("\n" + "=" * 70)
     print("VERIFICACIÓN COMPLETADA SATISFACTORIAMENTE.")

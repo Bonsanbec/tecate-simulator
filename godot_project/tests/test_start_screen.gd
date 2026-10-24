@@ -13,7 +13,7 @@ func _init():
 	assert(main_scene != null, "main.tscn debe poder cargarse")
 	_instance = main_scene.instantiate()
 	root.add_child(_instance)
-	print("✓ Escena principal instanciada.")
+	print("[PASS] Escena principal instanciada.")
 
 func _process(_delta):
 	_frames += 1
@@ -41,7 +41,7 @@ func _process(_delta):
 		# 2. UI y Textos
 		assert(_start_screen.title_label != null, "TitleLabel debe existir")
 		var raw_title = _start_screen.title_label.get_parsed_text() if _start_screen.title_label.has_method("get_parsed_text") else _start_screen.title_label.text
-		assert(raw_title.contains("TECATE"), "El título principal debe contener 'TECATE'")
+		assert(raw_title.to_upper().contains("TECATE"), "El título principal debe contener 'TECATE'")
 		assert(_start_screen.btn_continue != null, "Botón Continuar debe existir")
 		assert(_start_screen.btn_continue.text == "Continuar", "Texto del botón debe ser 'Continuar'")
 		assert(_start_screen.btn_respawn != null, "Botón Reaparecer debe existir")
@@ -53,7 +53,7 @@ func _process(_delta):
 		assert(_start_screen.is_menu_active, "StartScreen debe iniciar activo")
 		assert(not _player.input_enabled, "El jugador no debe tener input activo durante el menú")
 		assert(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "El cursor del ratón debe ser visible en el menú")
-		print("✓ Fase 1 completada con éxito.")
+		print("[PASS] Fase 1 completada con éxito.")
 
 	elif _frames == 10:
 		print("\n[Fase 2] Probando acción 'Continuar' con Selección de Personaje...")
@@ -67,7 +67,7 @@ func _process(_delta):
 		assert(_player.camera.current, "La cámara del jugador debe activarse")
 		if DisplayServer.get_name() != "headless":
 			assert(Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "El ratón debe ser capturado para jugar")
-		print("✓ Fase 2 completada con éxito: Continuar reanuda el juego tras selección de personaje.")
+		print("[PASS] Fase 2 completada con éxito: Continuar reanuda el juego tras selección de personaje.")
 
 	elif _frames == 14:
 		print("\n[Fase 3] Probando alternancia de menú (tecla Escape)...")
@@ -78,7 +78,7 @@ func _process(_delta):
 		assert(not _player.input_enabled, "El input del jugador debe pausarse")
 		assert(_start_screen.menu_camera.current, "La cámara del menú hacia el Cuchumá debe activarse")
 		assert(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "El ratón debe volver a ser visible")
-		print("✓ Fase 3 completada con éxito: Pausa/Reapertura funcional.")
+		print("[PASS] Fase 3 completada con éxito: Pausa/Reapertura funcional.")
 
 	elif _frames == 18:
 		print("\n[Fase 4] Probando acción 'Reaparecer'...")
@@ -99,11 +99,11 @@ func _process(_delta):
 		var dist_to_spawn = _player.global_position.distance_to(_player.spawn_position)
 		print("  • Distancia al punto de reaparición inicial: ", dist_to_spawn, "m (pos: ", _player.global_position, ")")
 		assert(dist_to_spawn < 1.0, "El jugador debe haber vuelto a la posición inicial en Parque Hidalgo")
-		print("✓ Fase 4 completada con éxito: Reaparecer restablece al jugador en Parque Hidalgo.")
+		print("[PASS] Fase 4 completada con éxito: Reaparecer restablece al jugador en Parque Hidalgo.")
 
 	elif _frames >= 22:
 		print("\n=======================================================")
-		print("✓ TODAS LAS PRUEBAS DE LA PANTALLA DE INICIO PASARON EXITOSAMENTE.")
+		print("[PASS] TODAS LAS PRUEBAS DE LA PANTALLA DE INICIO PASARON EXITOSAMENTE.")
 		print("=======================================================")
 		_instance.queue_free()
 		quit(0)

@@ -63,7 +63,7 @@ def render_preview():
     output_path = os.path.abspath("godot_project/assets/characters/axel_preview.png")
     scene.render.filepath = output_path
     bpy.ops.render.render(write_still=True)
-    print(f"✓ Render preview guardado en: {output_path}")
+    print(f"[OK] Render preview guardado en: {output_path}")
 
 if __name__ == "__main__":
     render_preview()

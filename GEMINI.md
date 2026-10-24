@@ -42,3 +42,10 @@ Siempre que se te solicite crear, modificar, auditar o integrar un modelo 3D, ed
    - Consulta obligatoria y apego irrestricto a:
      [`docs/strings.md`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/docs/strings.md) y [`.agents/rules/strings_architecture.md`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/.agents/rules/strings_architecture.md).
 
+10. **Política Obligatoria de Cero "AI Slop" y Erradicación Total de Emojis**:
+   - Queda estrictamente prohibido el uso de emojis Unicode en cualquier capa del sistema (UI, 3D, consola, scripts, prompts y documentación).
+   - Queda terminantemente prohibido el uso de la estética genérica de IA: gradientes púrpura/índigo (*VibeCode*), iconos de chispas (*sparkles*), bento grids decorativos sin densidad de datos, *glassmorphism* sin alto contraste y porrismo adulador o complaciente (*RLHF cheerleading*).
+   - Consulta obligatoria y apego irrestricto a:
+     [`docs/normativa_ui_ux_anti_ai_slop.md`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/docs/normativa_ui_ux_anti_ai_slop.md) y [`.agents/rules/ui_ux_anti_slop_guidelines.md`](file:///Users/hakkindavid/Documents/GitHub/tecate-simulator/.agents/rules/ui_ux_anti_slop_guidelines.md).
+
+

@@ -33,10 +33,10 @@ func _init() -> void:
 	print("========================================================")
 
 	if passed_tests == total_tests:
-		print("✓ TODAS LAS PRUEBAS DE UNIFICACIÓN DE CIUDADANOS PASARON CON ÉXITO.\n")
+		print("[PASS] TODAS LAS PRUEBAS DE UNIFICACIÓN DE CIUDADANOS PASARON CON ÉXITO.\n")
 		quit(0)
 	else:
-		printerr("✗ ALGUNAS PRUEBAS FALLARON.")
+		printerr("[FAIL] ALGUNAS PRUEBAS FALLARON.")
 		quit(1)
 
 func assert_test(cond: bool, msg: String) -> void:

@@ -67,7 +67,7 @@ El edificio se compone de los siguientes cuerpos arquitectónicos fidedignamente
      - Planta alta y planta baja resueltas como **pared lisa** de mampostería blanca continua (sin ventanales).
      - En planta baja cuenta con una **puerta simple de hierro blanco** ($0.95\text{ m} \times 2.10\text{ m}$) con marco metálico, refuerzos tubulares y manija de acero.
    - 5 apliques lumínicos exteriores montados en las pilastras de planta baja.
-   - Rampa vehicular descendente con barandal tubular blanco, murete exterior en $X = 27.35\text{ m}$ y letrero ortogonal `ENTRADA BBVA ➔`.
+   - Rampa vehicular descendente con barandal tubular blanco, murete exterior en $X = 27.35\text{ m}$ y letrero ortogonal `ENTRADA BBVA ->`.
 
 5. **Posterior: Cara Sur en Rasante Cárdenas y Arco Cóncavo Directo (Ground Truth `media_1789784140324`)**:
    - **Cara Sur Lisa a Cota $Y = 30.00\text{ m}$**: Parte directamente desde donde concluye la fachada de Cárdenas ($X = -0.05\text{ m}, Y = 30.00\text{ m}$), extendiéndose de manera continua y lisa a lo largo de $17.40\text{ m}$ (hasta $X = 17.40\text{ m}, Y = 30.00\text{ m}$). Suprime el patio o retranqueo residual previo, sellando íntegramente la parte posterior del ala de consultorios DENTISTA. Cuenta con moldura horizontal intermedia a $Z = 3.20\text{ m}$, albardilla continua a $Z = 7.10 - 7.25\text{ m}$ y pilastra esquinera de remate en $X = 17.40\text{ m}$.

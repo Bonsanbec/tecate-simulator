@@ -23,7 +23,7 @@ var location_name: String = ""
 var primary_game_id: int = 1
 var game_ids: Array = []
 var accent_color: Color = Color(1.0, 0.72, 0.0, 1.0)
-var icon_text: String = "🎮"
+var icon_text: String = ""
 
 var marker_root: Node3D = null
 var ring_mesh: MeshInstance3D = null
@@ -50,7 +50,7 @@ func _load_from_catalog() -> void:
 		primary_game_id = int(info.get("primary_game_id", 1))
 		game_ids = info.get("game_ids", [1])
 		accent_color = info.get("color", Color(1.0, 0.72, 0.0, 1.0))
-		icon_text = info.get("icon", "🎮")
+		icon_text = info.get("icon", "")
 	else:
 		location_name = location_id
 
@@ -99,7 +99,7 @@ func _build_3d_marker() -> void:
 	for g in games:
 		game_titles.append(g.get("title", "Minijuego"))
 
-	title_label_3d.text = "%s %s" % [icon_text, " • ".join(game_titles)]
+	title_label_3d.text = ", ".join(game_titles)
 	title_label_3d.visibility_range_end = 42.0
 	title_label_3d.visibility_range_end_margin = 6.0
 	title_label_3d.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF

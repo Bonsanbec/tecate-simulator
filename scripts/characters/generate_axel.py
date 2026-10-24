@@ -1071,7 +1071,7 @@ def render_studio_views():
     scene.render.filepath = PREVIEW_PNG
     scene.render.image_settings.file_format = 'PNG'
     bpy.ops.render.render(write_still=True)
-    print(f"✓ Render preview principal guardado en: {PREVIEW_PNG}")
+    print(f"[OK] Render preview principal guardado en: {PREVIEW_PNG}")
 
     # Guardar vistas multi-ángulo de verificación en scratch
     scene.render.resolution_y = 1080
@@ -1087,7 +1087,7 @@ def render_studio_views():
         out_p = os.path.join(SCRATCH_DIR, fname)
         scene.render.filepath = out_p
         bpy.ops.render.render(write_still=True)
-        print(f"✓ Vista de control {fname} guardada en: {out_p}")
+        print(f"[OK] Vista de control {fname} guardada en: {out_p}")
 
 def main():
     print("=" * 60)
@@ -1129,21 +1129,21 @@ def main():
     }
 
     skel = build_skeleton()
-    print("✓ Armature canónico construido con 22 huesos.")
+    print("[OK] Armature canónico construido con 22 huesos.")
 
     head_obj = build_head_mesh(materials)
     assign_weights(head_obj, is_head=True)
     head_obj.parent = skel
     mod_h = head_obj.modifiers.new("Armature", type='ARMATURE')
     mod_h.object = skel
-    print("✓ Player_Head_Mesh generado con ojos a Z=1.515, párpados 3D, shape key 'blink' y 94 rizos 360°.")
+    print("[OK] Player_Head_Mesh generado con ojos a Z=1.515, párpados 3D, shape key 'blink' y 94 rizos 360°.")
 
     body_obj = build_body_mesh(materials)
     assign_weights(body_obj, is_head=False)
     body_obj.parent = skel
     mod_b = body_obj.modifiers.new("Armature", type='ARMATURE')
     mod_b.object = skel
-    print("✓ Player_Body_Mesh generado con chaleco sartorial en V, espalda cubierta, martingala y manos blindadas.")
+    print("[OK] Player_Body_Mesh generado con chaleco sartorial en V, espalda cubierta, martingala y manos blindadas.")
 
     # Verificación de pesos
     leg_groups = ["UpperLeg.L", "UpperLeg.R", "LowerLeg.L", "LowerLeg.R", "Foot.L", "Foot.R", "Toes.L", "Toes.R"]
@@ -1153,11 +1153,11 @@ def main():
             for g in v.groups:
                 if g.group == grp.index and g.weight > 0.0:
                     assert abs(v.co.x) <= 0.18, f"Fuga de vértice de mano a pierna detectada: {v.co}"
-    print("✓ Verificación matemática de pesos: 0 vértices de manos fugados a piernas.")
+    print("[OK] Verificación matemática de pesos: 0 vértices de manos fugados a piernas.")
 
     os.makedirs(os.path.dirname(OUTPUT_BLEND), exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=OUTPUT_BLEND)
-    print(f"✓ Guardado .blend en: {OUTPUT_BLEND}")
+    print(f"[OK] Guardado .blend en: {OUTPUT_BLEND}")
 
     bpy.ops.export_scene.gltf(
         filepath=OUTPUT_GLB,
@@ -1169,7 +1169,7 @@ def main():
         export_cameras=False,
         export_lights=False
     )
-    print(f"✓ Exportado .glb canónico en: {OUTPUT_GLB}")
+    print(f"[OK] Exportado .glb canónico en: {OUTPUT_GLB}")
 
     render_studio_views()
     print("=" * 60)

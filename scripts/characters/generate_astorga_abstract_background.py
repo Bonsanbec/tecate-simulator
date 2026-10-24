@@ -162,7 +162,7 @@ def create_acoustic_acoustic_background():
 
     scene.render.filepath = OUTPUT_BG
     bpy.ops.render.render(write_still=True)
-    print(f"✓ Fondo abstracto de Astorga guardado en: {OUTPUT_BG}")
+    print(f"[OK] Fondo abstracto de Astorga guardado en: {OUTPUT_BG}")
 
 if __name__ == "__main__":
     create_acoustic_acoustic_background()

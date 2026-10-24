@@ -140,8 +140,8 @@ func _init() -> void:
 
 	var err := cfg.save("res://export_presets.cfg")
 	if err == OK:
-		print("✅ export_presets.cfg generado correctamente.")
+		print("[OK] export_presets.cfg generado correctamente.")
 	else:
-		printerr("❌ Error al guardar export_presets.cfg: ", err)
+		printerr("[ERROR] Error al guardar export_presets.cfg: ", err)
 
 	quit()

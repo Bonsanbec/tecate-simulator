@@ -192,4 +192,4 @@ case "$TARGET" in
     ;;
 esac
 
-echo "✅ Exportaciones completadas exitosamente para objetivo: $TARGET"
+echo "[OK] Exportaciones completadas exitosamente para objetivo: $TARGET"

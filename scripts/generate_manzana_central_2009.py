@@ -1042,7 +1042,7 @@ def render_validation_suite(cameras):
         out_path = os.path.join(DOCS_IMAGES_DIR, f"{cam.name}.png")
         scene.render.filepath = out_path
         bpy.ops.render.render(write_still=True)
-        print(f"  ✓ Render guardado: {out_path}")
+        print(f"  [OK] Render guardado: {out_path}")
 
 # ---------------------------------------------------------------------------
 # 8. Ensamblaje Principal

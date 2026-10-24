@@ -89,23 +89,23 @@ fi
 # ------------------------------------------------------------------------------
 # 0. Verificación de Política de Cadenas (Zero Hardcoded Strings)
 # ------------------------------------------------------------------------------
-echo "🔍 [Auditoría] Ejecutando validación estricta de cadenas de texto (Zero Hardcoded Strings)..."
+echo "[AUDIT] Ejecutando validación estricta de cadenas de texto (Zero Hardcoded Strings)..."
 python3 scripts/audit_hardcoded_strings.py --scope ui
-echo "✅ Auditoría de cadenas superada con éxito."
+echo "[OK] Auditoría de cadenas superada con éxito."
 
 # ------------------------------------------------------------------------------
 # 1. Compilación modular con validación de caché local
 # ------------------------------------------------------------------------------
-echo "🔍 [Caché Local] Comprobando integridad de fuentes y artefactos existentes..."
+echo "[CACHE] Comprobando integridad de fuentes y artefactos existentes..."
 
 for t in "${TARGETS_TO_PROCESS[@]}"; do
   if [[ "$FORCE" == false ]] && python3 "$HASH_MGR" check-local-cache --target "$t" >/dev/null 2>&1; then
-    echo "🟢 [$t] Artefacto al día (las fuentes y assets no han cambiado). Omitiendo regeneración."
+    echo "[SYNC] [$t] Artefacto al día (las fuentes y assets no han cambiado). Omitiendo regeneración."
   else
-    echo "🔨 [$t] Compilando y empaquetando binario..."
+    echo "[BUILD] [$t] Compilando y empaquetando binario..."
     ./godot_project/export.sh "$t"
     python3 "$HASH_MGR" update-local-cache --target "$t"
-    echo "✅ [$t] Exportación completada y registrada en caché local."
+    echo "[OK] [$t] Exportación completada y registrada en caché local."
   fi
 done
 
@@ -134,11 +134,11 @@ for t in "${TARGETS_TO_PROCESS[@]}"; do
 done
 
 if [[ ${#BINARY_FILES[@]} -eq 0 ]]; then
-  echo "❌ Error: No se encontraron archivos binarios empaquetados en godot_project/build/."
+  echo "[ERROR] Error: No se encontraron archivos binarios empaquetados en godot_project/build/."
   exit 1
 fi
 
-echo "📦 Binarios locales evaluados:"
+echo "[PACKAGE] Binarios locales evaluados:"
 for f in "${BINARY_FILES[@]}"; do
   echo "   - $(basename "$f") ($(du -h "$f" | cut -f1))"
 done
@@ -147,16 +147,16 @@ done
 # 3. Evaluación SSOT contra version_manifest.json del último release
 # ------------------------------------------------------------------------------
 if command -v gh >/dev/null 2>&1; then
-  echo "📡 [GitHub] Consultando el último release para evaluar version_manifest.json..."
+  echo "[NET] [GitHub] Consultando el último release para evaluar version_manifest.json..."
   
   LATEST_TAG="$(gh release view --json tagName -q .tagName 2>/dev/null || true)"
   REMOTE_MANIFEST=""
   
   if [[ -n "$LATEST_TAG" ]]; then
-    echo "ℹ️ Último release en GitHub detectado: $LATEST_TAG"
+    echo "[INFO] Último release en GitHub detectado: $LATEST_TAG"
     REMOTE_MANIFEST="$(gh release download "$LATEST_TAG" -p "version_manifest.json" -O - 2>/dev/null || true)"
   else
-    echo "ℹ️ No se detectaron releases previos. Se inicializará el primer release del repositorio."
+    echo "[INFO] No se detectaron releases previos. Se inicializará el primer release del repositorio."
   fi
 
   EVAL_ARGS=("--new-tag" "$TAG")
@@ -177,11 +177,11 @@ if command -v gh >/dev/null 2>&1; then
 
   if [[ "$ACTION" == "NOTHING_TO_DO" ]]; then
     echo "================================================================="
-    echo "🟢 VALIDACIÓN SSOT: TODOS LOS ARTEFACTOS ESTÁN AL DÍA"
+    echo "[SYNC] VALIDACIÓN SSOT: TODOS LOS ARTEFACTOS ESTÁN AL DÍA"
     echo "================================================================="
     echo "$REASON"
     echo ""
-    echo "🛑 Se cancela la publicación. No se requieren cambios ni duplicados."
+    echo "[HALT] Se cancela la publicación. No se requieren cambios ni duplicados."
     echo "   (Para forzar una nueva versión, use: $0 --force)"
     echo "================================================================="
     exit 0
@@ -194,7 +194,7 @@ if command -v gh >/dev/null 2>&1; then
   NOTES_FILE="$(echo "$EVAL_JSON" | python3 -c "import sys, json; print(json.load(sys.stdin).get('notes_path', ''))")"
 
   echo "================================================================="
-  echo "🚀 PUBLICANDO NUEVO RELEASE: $TAG (latest)"
+  echo "[RELEASE] PUBLICANDO NUEVO RELEASE: $TAG (latest)"
   echo "================================================================="
   echo "  - Plataformas actualizadas (se suben ahora): ${UPDATED_PLATS:-ninguna}"
   echo "  - Plataformas preservadas  (referenciadas):  ${PRESERVED_PLATS:-ninguna}"
@@ -205,26 +205,26 @@ if command -v gh >/dev/null 2>&1; then
   # 4. Creación o actualización del Release en GitHub
   # ------------------------------------------------------------------------------
   if gh release view "$TAG" >/dev/null 2>&1; then
-    echo "ℹ️ El release $TAG ya existe en GitHub. Actualizando activos con --clobber..."
+    echo "[INFO] El release $TAG ya existe en GitHub. Actualizando activos con --clobber..."
     gh release upload "$TAG" "${FILES_TO_UPLOAD[@]}" --clobber
     gh release edit "$TAG" --notes-file "$NOTES_FILE" --latest --title "Tecate Simulator v$TAG"
   else
-    echo "ℹ️ Creando nuevo release $TAG como 'latest'..."
+    echo "[INFO] Creando nuevo release $TAG como 'latest'..."
     gh release create "$TAG" "${FILES_TO_UPLOAD[@]}" \
       --title "Tecate Simulator v$TAG" \
       --notes-file "$NOTES_FILE" \
       --latest
   fi
 
-  echo "✅ Release $TAG publicado exitosamente:"
+  echo "[OK] Release $TAG publicado exitosamente:"
   gh release view "$TAG" --web 2>/dev/null || gh release view "$TAG"
 
 else
   # Sin CLI de GitHub
   python3 "$HASH_MGR" eval-release --new-tag "$TAG" "${BINARY_FILES[@]}" >/dev/null
-  echo "⚠️ Advertencia: 'gh' CLI no está instalada o no está en el PATH."
+  echo "[WARN] Advertencia: 'gh' CLI no está instalada o no está en el PATH."
   echo "   Los binarios y 'version_manifest.json' están listos en 'godot_project/build/'."
   echo "   Para instalar GitHub CLI: brew install gh && gh auth login"
 fi
 
-echo "🎉 Proceso SSOT finalizado con éxito."
+echo "[DONE] Proceso SSOT finalizado con éxito."

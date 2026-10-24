@@ -29,7 +29,7 @@ def save_numpy_image(img_name, arr_rgba, out_paths):
         b_img.filepath_raw = os.path.abspath(out_path)
         b_img.file_format = 'PNG'
         b_img.save()
-        print(f"✓ Textura PBR guardada: {out_path} ({w}x{h})")
+        print(f"[OK] Textura PBR guardada: {out_path} ({w}x{h})")
 
 def height_to_normal_map(height, scale=1.5):
     h, w = height.shape
@@ -476,7 +476,7 @@ def main():
     generate_pants_and_accessories()
     generate_eye_texture()
     print("================================================================")
-    print("✓ SUITE DE TEXTURAS PBR DE ELI COMPLETADA EXITOSAMENTE")
+    print("[OK] SUITE DE TEXTURAS PBR DE ELI COMPLETADA EXITOSAMENTE")
     print("================================================================")
 
 if __name__ == "__main__":

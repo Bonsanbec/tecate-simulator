@@ -99,9 +99,9 @@ Se prohíbe el uso de paréntesis explicativos innecesarios `(...)` y aclaracion
 ---
 
 ### 2.5. Prohibición Absoluta de Símbolos, Emojis y Caracteres Decorativos Embebidos
-Está **estrictamente prohibido** incrustar glifos decorativos, viñetas, símbolos matemáticos no funcionales o emojis (`∞`, `🪙`, `•`, `➔`, `+`, `#`, `|`) dentro de las cadenas de texto:
+Está **estrictamente prohibido** incrustar glifos decorativos, viñetas, símbolos matemáticos no funcionales o emojis (`∞`, `•`, `+`, `#`, `|`) dentro de las cadenas de texto:
 - **Infinito (`∞`)**: Prohibido en cadenas de interfaz. Usar palabras funcionales (`"Ilimitado"`, `"Ruta continua"`).
-- **Emojis (`🪙`)**: Prohibidos en cadenas de texto. Las monedas e iconos son nodos `TextureRect` o fuentes de iconos dedicadas.
+- **Emojis**: Terminantemente prohibidos en cadenas de texto e interfaces. Todo icono debe ser un nodo `TextureRect`, un vector SVG o un dibujo procedural.
 - **Viñetas (`•`) y Pleonasmos**:
   - *Incorrecto*: `"Zona Centro • Tecate, Pueblo Mágico"`
   - *Correcto*: `"Zona Centro, Tecate"`
@@ -161,7 +161,7 @@ Todas las cadenas visibles del simulador se expresan en un español claro, natur
 
 1. **Auditor Estático en Python (`scripts/audit_hardcoded_strings.py`)**:
    - Valida la ausencia de cadenas crudas no centralizadas.
-   - Valida la ausencia de corchetes `[...]`, slashes `/`, paréntesis `(...)`, símbolos decorativos (`∞`, `🪙`, `•`) y mayúsculas sostenidas (*ALL CAPS*) en textos legibles por el usuario.
+   - Valida la ausencia de corchetes `[...]`, slashes `/`, paréntesis `(...)`, símbolos decorativos (`∞`, `•`) y mayúsculas sostenidas (*ALL CAPS*) en textos legibles por el usuario.
 
 2. **Suite de Pruebas en Godot Headless (`godot_project/tests/test_hardcoded_strings.gd`)**:
    - Comprueba mediante aserciones unitarias que ninguna cadena de `AppStrings` contenga corchetes, slashes no autorizados, mayúsculas sostenidas ni paréntesis.

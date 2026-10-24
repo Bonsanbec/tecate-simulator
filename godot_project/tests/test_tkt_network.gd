@@ -25,12 +25,12 @@ func _init():
 	assert(dec_hdr.session_id == 9876, "SessionID debe coincidir")
 	assert(dec_hdr.sequence == 12, "Sequence debe coincidir")
 	assert(dec_hdr.timestamp == 54321, "Timestamp debe coincidir")
-	print("✓ Cabecera TKT/1 (28 bytes Little-Endian) verificada.")
+	print("[PASS] Cabecera TKT/1 (28 bytes Little-Endian) verificada.")
 
 	# 2. Prueba de HELLO
 	var hello_bytes = TKTCodec.encode_hello("1.0.0", "token_abc")
 	assert(hello_bytes.size() > 0, "HELLO payload debe tener bytes")
-	print("✓ Payload HELLO codificado con éxito (%d bytes)." % hello_bytes.size())
+	print("[PASS] Payload HELLO codificado con éxito (%d bytes)." % hello_bytes.size())
 
 	# 3. Prueba de WELCOME
 	var sp_w = StreamPeerBuffer.new()
@@ -43,7 +43,7 @@ func _init():
 	assert(welcome_dict["session_id"] == 101, "SessionID debe ser 101")
 	assert(welcome_dict["player_entity_id"] == 5, "PlayerID debe ser 5")
 	assert(welcome_dict["server_tick"] == 300, "Tick debe ser 300")
-	print("✓ Payload WELCOME decodificado con éxito.")
+	print("[PASS] Payload WELCOME decodificado con éxito.")
 
 	# 4. Prueba de INPUT
 	var inp_bytes = TKTCodec.encode_input(
@@ -55,7 +55,7 @@ func _init():
 		5
 	)
 	assert(inp_bytes.size() == 38, "INPUT payload debe medir exactamente 38 bytes")
-	print("✓ Payload INPUT (38 bytes) verificado.")
+	print("[PASS] Payload INPUT (38 bytes) verificado.")
 
 	# 5. Prueba de SNAPSHOT
 	var sp_s = StreamPeerBuffer.new()
@@ -83,13 +83,13 @@ func _init():
 	assert(ent.entity_id == 7, "EntityID debe ser 7")
 	assert(is_equal_approx(ent.position.x, 10.0), "Pos.x debe ser 10.0")
 	assert(is_equal_approx(ent.yaw, 90.0), "Yaw debe ser 90.0")
-	print("✓ Payload SNAPSHOT decodificado con éxito.")
+	print("[PASS] Payload SNAPSHOT decodificado con éxito.")
 
 	# 6. Prueba de Checksum y paquete completo
 	var chat_bytes = TKTCodec.encode_chat(0, "Prueba TKT")
 	var full_pkt = TKTCodec.encode_packet(hdr, chat_bytes)
 	assert(full_pkt.size() == 28 + chat_bytes.size(), "Paquete completo debe sumar cabecera + payload")
-	print("✓ Paquete completo y cálculo de checksum verificados.")
+	print("[PASS] Paquete completo y cálculo de checksum verificados.")
 
 	# 7. Prueba de EVENT y VEHICLE_ENTER
 	var enter_data = TKTCodec.encode_vehicle_enter_data(1001, 1, true)
@@ -107,7 +107,7 @@ func _init():
 	assert(dec_ev["entity_id"] == 10, "Entity ID debe ser 10")
 	var inner_enter = TKTCodec.decode_vehicle_enter_data(dec_ev["data"])
 	assert(inner_enter["vehicle_id"] == 1001, "Inner vehicle ID debe ser 1001")
-	print("✓ Payload EVENT (VEHICLE_ENTER) verificado.")
+	print("[PASS] Payload EVENT (VEHICLE_ENTER) verificado.")
 
 	# 8. Prueba de VEHICLE_EXIT y VEHICLE_REFUEL
 	var exit_data = TKTCodec.encode_vehicle_exit_data(1001, 1)
@@ -115,14 +115,14 @@ func _init():
 	var dec_exit = TKTCodec.decode_vehicle_exit_data(exit_data)
 	assert(dec_exit["vehicle_id"] == 1001, "Vehicle ID debe ser 1001")
 	assert(dec_exit["seat_index"] == 1, "Seat index debe ser 1")
-	print("✓ Payload VEHICLE_EXIT verificado.")
+	print("[PASS] Payload VEHICLE_EXIT verificado.")
 
 	var refuel_data = TKTCodec.encode_vehicle_refuel_data(1001, 65.5)
 	assert(refuel_data.size() == 8, "VEHICLE_REFUEL data debe medir 8 bytes")
 	var dec_refuel = TKTCodec.decode_vehicle_refuel_data(refuel_data)
 	assert(dec_refuel["vehicle_id"] == 1001, "Vehicle ID debe ser 1001")
 	assert(is_equal_approx(dec_refuel["fuel_amount"], 65.5), "Fuel amount debe ser 65.5")
-	print("✓ Payload VEHICLE_REFUEL verificado.")
+	print("[PASS] Payload VEHICLE_REFUEL verificado.")
 
 	# 9. Prueba de SNAPSHOT con entidad de tipo VEHICLE
 	var sp_v = StreamPeerBuffer.new()
@@ -149,7 +149,7 @@ func _init():
 	assert(v_rec.entity_type == TKTCodec.EntityType.VEHICLE, "Entity type debe ser VEHICLE")
 	assert((v_rec.flags & TKTCodec.VehicleFlags.ROUTE_VEHICLE) != 0, "Debe tener flag ROUTE_VEHICLE")
 	assert(is_equal_approx(v_rec.pitch, -4.0), "Pitch topográfico debe ser -4.0")
-	print("✓ Payload SNAPSHOT con EntityType.VEHICLE verificado.")
+	print("[PASS] Payload SNAPSHOT con EntityType.VEHICLE verificado.")
 
 	print("=== TODAS LAS PRUEBAS DE TKT_CODEC EN GODOT COMPLETADAS EXITOSAMENTE ===")
 	quit(0)

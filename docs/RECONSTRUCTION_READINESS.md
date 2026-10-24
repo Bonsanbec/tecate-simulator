@@ -8,20 +8,20 @@
 
 | Dimension | Status | Evidence |
 |-----------|--------|---------|
-| OSM road graph | ✅ Complete | `tecate_osm_cache.json` — 82,872 nodes, 87,177 edges |
-| Block polygon extraction | ✅ Complete | `blocks_cache.json` — 4,239 blocks |
-| Panorama metadata | ✅ Substantial (3,906 records) | `panoramas_cache.json` — 80% from 2009 era |
-| Facade observations | ✅ Substantial (22,289 records) | `facades_cache.json` |
-| Image capture (screenshots) | ✅ In progress (partial) | `data/screenshots/pano/` |
-| Texture generation | ✅ Near-complete | 99.84% of 15,532 facades textured |
-| 3D Scene document | ✅ Available | `reconstruction_export.json` — 159 blocks |
-| Blender 3D model | ✅ Available | `tecate_reconstruction.blend1` (autosave) |
-| glTF export | ✅ Available | `geometry.gltf` + `geometry.bin` |
-| Terrain base model | ✅ Available | 3 GLB variants in `models/tecate/glb/` |
-| Terrain-reconstruction alignment | ✅ Complete | Resolved via `bake_osm2world_terrain.py` & `tecate_facsimile_polygon.geojson` |
-| Temporal accuracy | ⚠️ Partial | ~80% 2009 panos, but some 2015–2025 leakage |
-| Building height accuracy | ⚠️ Estimated | Vision-estimated from roofline, not ground truth |
-| Complete city coverage | ⚠️ Partial | 159/4,239 blocks reconstructed (3.75%) |
+| OSM road graph | [OK] Complete | `tecate_osm_cache.json` — 82,872 nodes, 87,177 edges |
+| Block polygon extraction | [OK] Complete | `blocks_cache.json` — 4,239 blocks |
+| Panorama metadata | [OK] Substantial (3,906 records) | `panoramas_cache.json` — 80% from 2009 era |
+| Facade observations | [OK] Substantial (22,289 records) | `facades_cache.json` |
+| Image capture (screenshots) | [OK] In progress (partial) | `data/screenshots/pano/` |
+| Texture generation | [OK] Near-complete | 99.84% of 15,532 facades textured |
+| 3D Scene document | [OK] Available | `reconstruction_export.json` — 159 blocks |
+| Blender 3D model | [OK] Available | `tecate_reconstruction.blend1` (autosave) |
+| glTF export | [OK] Available | `geometry.gltf` + `geometry.bin` |
+| Terrain base model | [OK] Available | 3 GLB variants in `models/tecate/glb/` |
+| Terrain-reconstruction alignment | [OK] Complete | Resolved via `bake_osm2world_terrain.py` & `tecate_facsimile_polygon.geojson` |
+| Temporal accuracy | [AVISO] Partial | ~80% 2009 panos, but some 2015–2025 leakage |
+| Building height accuracy | [AVISO] Estimated | Vision-estimated from roofline, not ground truth |
+| Complete city coverage | [AVISO] Partial | 159/4,239 blocks reconstructed (3.75%) |
 
 ---
 

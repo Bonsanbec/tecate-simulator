@@ -537,17 +537,17 @@ def main():
     mat_boots = create_pbr_material("Mat_Humanoid_Boots", (0.11, 0.10, 0.09, 1.0), roughness=0.6, metallic=0.1)
 
     arm_obj = build_humanoid_armature()
-    print("✓ Armature_Humanoid estructurado con 22 huesos.")
+    print("[OK] Armature_Humanoid estructurado con 22 huesos.")
 
     head_obj = build_head_mesh(arm_obj, mat_skin, mat_hair, mat_sunglasses)
-    print("✓ Player_Head_Mesh generado con rostro y peinado orgánico continuo.")
+    print("[OK] Player_Head_Mesh generado con rostro y peinado orgánico continuo.")
 
     body_obj = build_body_mesh(arm_obj, mat_jacket, mat_pants, mat_boots, mat_skin)
-    print("✓ Player_Body_Mesh generado con pesos desacoplados por extremidad.")
+    print("[OK] Player_Body_Mesh generado con pesos desacoplados por extremidad.")
 
     os.makedirs(os.path.dirname(OUTPUT_GLB), exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(OUTPUT_BLEND))
-    print(f"✓ Guardado .blend en: {OUTPUT_BLEND}")
+    print(f"[OK] Guardado .blend en: {OUTPUT_BLEND}")
 
     bpy.ops.export_scene.gltf(
         filepath=os.path.abspath(OUTPUT_GLB),
@@ -561,7 +561,7 @@ def main():
         export_lights=False,
         export_cameras=False
     )
-    print(f"✓ Exportado .glb en: {OUTPUT_GLB}")
+    print(f"[OK] Exportado .glb en: {OUTPUT_GLB}")
     print("==================================================")
     print("HUMANOIDE RIGGED GENERADO CON ÉXITO")
     print("==================================================")

@@ -276,7 +276,7 @@ def create_modern_triangle_background():
     os.makedirs(os.path.dirname(OUTPUT_BG), exist_ok=True)
     scene.render.filepath = OUTPUT_BG
     bpy.ops.render.render(write_still=True)
-    print(f"✓ Fondo abstracto moderno de triángulos guardado en: {OUTPUT_BG}")
+    print(f"[OK] Fondo abstracto moderno de triángulos guardado en: {OUTPUT_BG}")
 
 if __name__ == "__main__":
     create_modern_triangle_background()

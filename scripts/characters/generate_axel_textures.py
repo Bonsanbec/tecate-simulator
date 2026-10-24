@@ -33,7 +33,7 @@ def save_numpy_image(name, arr, output_path):
     img.file_format = 'PNG'
     img.save()
     bpy.data.images.remove(img)
-    print(f"✓ Textura guardada: {output_path}")
+    print(f"[OK] Textura guardada: {output_path}")
 
 def generate_noise_2d(h, w, freq=16):
     """Genera ruido fractal rápido mediante combinación de funciones sinusoidales."""

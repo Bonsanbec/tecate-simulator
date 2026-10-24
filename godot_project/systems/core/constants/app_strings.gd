@@ -168,6 +168,9 @@ const PHONE_SOFTKEY_SELECT: String = "Elegir"
 const PHONE_SOFTKEY_BACK: String = "Atrás"
 const PHONE_SOFTKEY_EXIT: String = "Salir"
 const PHONE_SOFTKEY_CALL: String = "Llamar"
+const PHONE_KEYPAD_SEND: String = "SEND"
+const PHONE_KEYPAD_OK: String = "OK"
+const PHONE_KEYPAD_END: String = "END"
 const PHONE_PROMPT_OPEN: String = "Abrir teléfono celular"
 const PHONE_PROMPT_SHORT: String = "Celular"
 const PROMPT_START_ACTIVITY: String = "Iniciar actividad"
@@ -193,7 +196,7 @@ const MINIGAMES_TAB_ALL_VS_ALL: String = "Retas grupales"
 const MINIGAMES_TAB_ONE_VS_ALL: String = "Desafíos comunitarios"
 const MINIGAMES_TAB_DUEL: String = "Mano a mano"
 
-const MINIGAMES_BADGE_PARTY_MODE: String = "Actividades"
+const MINIGAMES_BADGE_PARTY_MODE: String = "Modo fiesta"
 const MINIGAMES_BADGE_ALL_VS_ALL: String = "Grupales"
 const MINIGAMES_BADGE_ONE_VS_ALL: String = "Desafíos"
 const MINIGAMES_BADGE_DUEL: String = "Mano a mano"
@@ -425,5 +428,21 @@ static func format_minigame_winner(winner_id: int) -> String:
 ## Formatea una posición individual en la tabla de podio
 static func format_minigame_ranking_entry(rank: int, player_id: int) -> String:
 	return "%d. Jugador %d" % [rank, player_id]
+
+## Formatea un elemento de lista en el celular diegético
+static func format_phone_activity_item(id: int, title: String, location: String) -> String:
+	return "%02d. %s\n   %s" % [id, title, location]
+
+## Formatea el identificador y modalidad de una actividad
+static func format_phone_activity_category(id: int, category_name: String) -> String:
+	return "%02d, modalidad: %s" % [id, category_name]
+
+## Formatea la indicación de controles en el celular
+static func format_phone_controls(controls_summary: String) -> String:
+	return "Controles: %s" % controls_summary
+
+## Formatea la zona activa del filtro por ubicación
+static func format_phone_active_zone(zone_name: String) -> String:
+	return "Zona activa: %s" % zone_name
 
 

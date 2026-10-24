@@ -44,10 +44,10 @@ func _run_all_tests() -> void:
 	print("========================================================\n")
 
 	if _tests_passed == _tests_total:
-		print("✓ TODAS LAS PRUEBAS DE LA FASE 5 PASARON CON ÉXITO.")
+		print("[PASS] TODAS LAS PRUEBAS DE LA FASE 5 PASARON CON ÉXITO.")
 		quit(0)
 	else:
-		printerr("✗ ALGUNAS PRUEBAS FALLARON.")
+		printerr("[FAIL] ALGUNAS PRUEBAS FALLARON.")
 		quit(1)
 
 func assert_true(cond: bool, msg: String) -> void:

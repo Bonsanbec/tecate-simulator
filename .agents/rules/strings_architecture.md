@@ -41,5 +41,5 @@ Toda cadena debe obtenerse de:
    - Correcto: `"Ilimitado"`, `"%s lleno"`, `"Vista subjetiva"`, `"Duelo individual"`.
 
 5. **Prohibición Absoluta de Símbolos, Emojis y Glifos Decorativos Embebidos**:
-   - Prohibido incrustar el símbolo de infinito (`∞`), emojis (`🪙`), viñetas (`•`), flechas (`➔`) o barras decorativas (`|`) en las constantes de texto.
+   - Prohibido incrustar el símbolo de infinito (`∞`), emojis, viñetas (`•`), flechas o barras decorativas (`|`) en las constantes de texto.
    - El estilo visual, iconos y separadores pertenecen a la jerarquía de nodos de Godot (`TextureRect`, `VSeparator`, `Theme`).

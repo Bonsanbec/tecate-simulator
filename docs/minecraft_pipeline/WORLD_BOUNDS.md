@@ -35,7 +35,7 @@ El análisis arrojó tres capas de límites con distinto significado:
 ### Referencia geográfica
 
 - **Origen Minecraft (0, \*, 0)** = **Parque Hidalgo, Tecate, B.C.** (`32.573229°N, −116.626536°E`)
-- Verificado: `mc_to_gps(0, 0)` → `(32.573229, −116.626536)` ✓
+- Verificado: `mc_to_gps(0, 0)` → `(32.573229, −116.626536)` [OK]
 
 ### Offset vertical
 
@@ -197,10 +197,10 @@ Total chunks ocupados confirmados: 3,403,776
 Todos los archivos tienen exactamente 4,202,496 bytes (1,024 chunks × máximo posible de sectores), lo que indica regiones completamente escritas.
 
 **Coordenadas extremas confirmadas de los archivos por nombre:**
-- Región más al Oeste: `r.-25.5.mca`, `r.-25.6.mca` → X_bloque = −25×32×16 = −12,800 ✓
-- Región más al Este: `r.175.-17.mca` → X_bloque = 175×32×16 + 511 = 90,111 ✓  
-- Región más al Norte: `r.*.-18.mca` → Z_bloque = −18×32×16 = −9,216 ✓
-- Región más al Sur: `r.88.141.mca` → Z_bloque = 141×32×16 + 511 = 72,703 ✓
+- Región más al Oeste: `r.-25.5.mca`, `r.-25.6.mca` → X_bloque = −25×32×16 = −12,800 [OK]
+- Región más al Este: `r.175.-17.mca` → X_bloque = 175×32×16 + 511 = 90,111 [OK]  
+- Región más al Norte: `r.*.-18.mca` → Z_bloque = −18×32×16 = −9,216 [OK]
+- Región más al Sur: `r.88.141.mca` → Z_bloque = 141×32×16 + 511 = 72,703 [OK]
 
 #### 2. Chunk NBT — Confirmación de xPos/zPos/yPos
 Muestreo de 60 archivos repartidos uniformemente:
@@ -248,7 +248,7 @@ minecraft:yellow_concrete
 ```python
 mc_to_gps(0, 0) → (32.573229°N, -116.626536°E)
 ```
-El resultado es exactamente igual a `TECATE_LAT_CENTER, TECATE_LON_CENTER` en `src/core_io/coords.py`. El origen Minecraft `(0, 0)` apunta con precisión a **Parque Hidalgo**, centro histórico de Tecate. ✓
+El resultado es exactamente igual a `TECATE_LAT_CENTER, TECATE_LON_CENTER` en `src/core_io/coords.py`. El origen Minecraft `(0, 0)` apunta con precisión a **Parque Hidalgo**, centro histórico de Tecate. [OK]
 
 ---
 

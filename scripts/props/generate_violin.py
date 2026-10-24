@@ -290,7 +290,7 @@ def render_preview():
 
     scene.render.filepath = PREVIEW_PNG
     bpy.ops.render.render(write_still=True)
-    print(f"✓ Render de preview del violín guardado en: {PREVIEW_PNG}")
+    print(f"[OK] Render de preview del violín guardado en: {PREVIEW_PNG}")
 
 def main():
     print("=" * 65)
@@ -303,7 +303,7 @@ def main():
 
     # Guardar archivo .blend
     bpy.ops.wm.save_as_mainfile(filepath=OUTPUT_BLEND)
-    print(f"✓ Guardado .blend en: {OUTPUT_BLEND}")
+    print(f"[OK] Guardado .blend en: {OUTPUT_BLEND}")
 
     # Exportar archivo .glb
     bpy.ops.export_scene.gltf(
@@ -316,7 +316,7 @@ def main():
         export_cameras=False,
         export_lights=False
     )
-    print(f"✓ Exportado .glb en: {OUTPUT_GLB}")
+    print(f"[OK] Exportado .glb en: {OUTPUT_GLB}")
 
     render_preview()
     print("=" * 65)
