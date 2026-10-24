@@ -22,7 +22,7 @@ RUNNER_SCRIPT = ROOT_DIR / "scripts" / "desiccated_client_runner.gd"
 PID_FILE = Path("/tmp/tecate_client.pid")
 CMD_FILE = Path("/tmp/tecate_client_cmd.json")
 RESP_FILE = Path("/tmp/tecate_client_resp.json")
-LOG_FILE = Path("/tmp/godot.log")
+LOG_FILE = ROOT_DIR / "scratch" / "godot_client.log"
 
 
 def resolve_godot_path() -> str:
@@ -96,12 +96,15 @@ def cmd_run(args: argparse.Namespace) -> int:
     cmd = [
         godot,
         "--log-file", str(LOG_FILE),
-        "--rendering-driver", args.driver,
+    ]
+    if args.driver and args.driver != "auto":
+        cmd.extend(["--rendering-driver", args.driver])
+    cmd.extend([
         "-s", str(RUNNER_SCRIPT),
         "--resolution", "1280x720",
         "--windowed",
         "--"
-    ]
+    ])
 
     if args.scenario:
         cmd.extend(["--config", str(Path(args.scenario).resolve())])
@@ -131,7 +134,6 @@ def cmd_run(args: argparse.Namespace) -> int:
         print("[INFO] Ejecutando desde godot_project/:", " ".join(cmd), file=sys.stderr)
 
     env = os.environ.copy()
-    env["TMPDIR"] = "/tmp"
 
     proc = subprocess.Popen(
         cmd,
@@ -182,18 +184,20 @@ def cmd_start(args: argparse.Namespace) -> int:
     cmd = [
         godot,
         "--log-file", str(LOG_FILE),
-        "--rendering-driver", args.driver,
+    ]
+    if args.driver and args.driver != "auto":
+        cmd.extend(["--rendering-driver", args.driver])
+    cmd.extend([
         "-s", str(RUNNER_SCRIPT),
         "--resolution", "1280x720",
         "--windowed",
         "--",
         "--ipc-mode"
-    ]
+    ])
     if args.hour is not None:
         cmd.extend(["--hour", str(args.hour)])
 
     env = os.environ.copy()
-    env["TMPDIR"] = "/tmp"
 
     proc = subprocess.Popen(
         cmd,
@@ -296,7 +300,7 @@ def main() -> int:
     p_run.add_argument("--capture-path", type=str, default="scratch/desiccated_capture.png", help="Ruta de imagen")
     p_run.add_argument("--capture-frame", type=int, default=35, help="Frame exacto para la captura")
     p_run.add_argument("--total-frames", type=int, default=40, help="Total de frames a simular")
-    p_run.add_argument("--driver", default="opengl3", choices=["opengl3", "vulkan"], help="Driver de renderizado")
+    p_run.add_argument("--driver", default="auto", choices=["auto", "metal", "vulkan", "opengl3"], help="Driver de renderizado (auto utiliza la configuración nativa de project.godot)")
     p_run.add_argument("--reimport", action="store_true", help="Forzar reimportación de assets antes de ejecutar")
     p_run.add_argument("--pretty", action="store_true", help="Imprimir JSON formateado legible")
     p_run.add_argument("--verbose", action="store_true", help="Mostrar logs detallados de Godot")
@@ -305,7 +309,7 @@ def main() -> int:
     # Subcomando: start
     p_start = subparsers.add_parser("start", help="Iniciar sesión interactiva en segundo plano")
     p_start.add_argument("--hour", type=float, default=12.0, help="Hora simulada del día")
-    p_start.add_argument("--driver", default="opengl3", choices=["opengl3", "vulkan"], help="Driver de renderizado")
+    p_start.add_argument("--driver", default="auto", choices=["auto", "metal", "vulkan", "opengl3"], help="Driver de renderizado (auto utiliza la configuración nativa de project.godot)")
     p_start.add_argument("--reimport", action="store_true", help="Forzar reimportación de assets")
     p_start.set_defaults(func=cmd_start)
 
